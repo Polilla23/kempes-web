@@ -1,0 +1,19 @@
+{
+  "name": "kempes-web",
+  "version": "1.0.0",
+  "description": "Kempes Web created with NodeJs and React.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Polilla23/kempes-web.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Polilla23/kempes-web/issues"
+  },
+  "homepage": "https://github.com/Polilla23/kempes-web#readme"
+}
