@@ -1,4 +1,5 @@
 import fastify, { FastifyRegisterOptions, FastifyReply, FastifyRequest } from 'fastify'
+import { UserService } from '../services/user.service'
 
 export class UserController {
   private userService: UserService
