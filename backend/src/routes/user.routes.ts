@@ -1,6 +1,5 @@
 import { FastifyInstance } from 'fastify'
 import { userSchemas } from '../schemas/user.schema'
-import { UserController } from 'controllers/user.controller'
 
 export const userRoutes = async (fastify: FastifyInstance) => {
   const userController = (fastify as any).container.resolve('userController')

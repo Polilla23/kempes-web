@@ -3,7 +3,11 @@ import { IUserRepository } from '../interfaces/IUserRepository'
 import bcrypt from 'bcrypt'
 
 export class UserService {
-  constructor(private userRepository: IUserRepository) {}
+  private userRepository: IUserRepository
+
+  constructor( {userRepository} : { userRepository: IUserRepository}) {
+    this.userRepository = userRepository
+  }
 
   async registerUser({
     email,
@@ -14,11 +18,13 @@ export class UserService {
     password: string
     role?: 'admin' | 'user'
   }) {
+
     const existingUser = await this.userRepository.findOneByEmail(email)
 
     if (existingUser) throw new Error('User already exists.')
-    const hashedPassword = await bcrypt.hash(password, 10)
 
+    const hashedPassword = await bcrypt.hash(password, 10)
+    
     return await this.userRepository.save({ email, password: hashedPassword, role: role?.toUpperCase() as RoleType })
   }
 }

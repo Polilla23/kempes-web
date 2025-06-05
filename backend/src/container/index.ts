@@ -10,10 +10,17 @@ export function createDepencyContainer(fastify: FastifyInstance) {
   const container = createContainer()
 
   container.register({
-    userRepository: asClass(UserRepository).scoped(),
-    userController: asClass(UserController).scoped(),
-    userService: asClass(UserService).scoped(),
     prisma: asValue(prisma),
+    userRepository: asClass(UserRepository).singleton(),
+    userController: asClass(UserController).singleton(),
+    userService: asClass(UserService).singleton(),
   })
+
+  prisma.$connect()
+    .then(() => console.log('Connected to DB'))
+    .catch((e) => {
+      console.error('Failed to connect to DB', e)
+      process.exit(1)
+    })
   return container
 }
