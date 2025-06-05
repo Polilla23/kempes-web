@@ -8,9 +8,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
+    "baseUrl": "./src",
     "paths": {},
-    "typeRoots": ["./node_modules/@types", "./src/utils/types"]
+    "typeRoots": ["./node_modules/@types", "src/utils"],
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

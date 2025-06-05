@@ -1,3 +1,4 @@
+import { RoleType } from '@prisma/client'
 import { IUserRepository } from '../interfaces/IUserRepository'
 import bcrypt from 'bcrypt'
 
@@ -18,6 +19,6 @@ export class UserService {
     if (existingUser) throw new Error('User already exists.')
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    return await this.userRepository.save({ email, hashedPassword, role })
+    return await this.userRepository.save({ email, password: hashedPassword, role: role?.toUpperCase() as RoleType })
   }
 }

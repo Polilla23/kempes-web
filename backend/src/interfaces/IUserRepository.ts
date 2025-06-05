@@ -1,4 +1,6 @@
+import { Prisma, User } from "@prisma/client"
+
 export interface IUserRepository {
   findOneByEmail(email: string): Promise<any | null>
-  save(data: Partial<any>): Promise<any>
+  save(data: Prisma.UserCreateInput): Promise<User>
 }

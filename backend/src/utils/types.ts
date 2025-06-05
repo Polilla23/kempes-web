@@ -1,3 +1,4 @@
+import 'fastify'
 import { AwilixContainer } from 'awilix'
 
 declare module 'fastify' {
