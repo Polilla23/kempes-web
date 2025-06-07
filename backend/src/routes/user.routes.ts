@@ -8,16 +8,20 @@ export const userRoutes = async (fastify: FastifyInstance) => {
     schema: userSchemas.register,
     handler: userController.register.bind(userController),
   })
-  fastify.patch('/update/:id', {
-    schema: userSchemas.update,
-    handler: userController.register.bind(userController),
-  })
-  fastify.delete('/delete/:id', {
-    schema: userSchemas.delete,
-    handler: userController.register.bind(userController),
-  })
+
   fastify.get('/findAll', {
     schema: userSchemas.findAll,
-    handler: userController.register.bind(userController),
+    handler: userController.findAll.bind(userController),
   })
+
+  fastify.patch('/update/:id', {
+    schema: userSchemas.update,
+    handler: userController.update.bind(userController),
+  })
+  
+  fastify.delete('/delete/:id', {
+    schema: userSchemas.delete,
+    handler: userController.delete.bind(userController),
+  })
+  
 }

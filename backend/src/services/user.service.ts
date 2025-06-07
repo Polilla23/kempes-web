@@ -36,8 +36,10 @@ export class UserService {
     if (data.password) {
       const hashedPassword = await bcrypt.hash(data.password, 10)
       data.password = hashedPassword
+    }
 
-      return await this.userRepository.updateOneById(id, data)
+    if (data.role) {
+      data.role = data.role.toUpperCase() as RoleType
     }
 
     return await this.userRepository.updateOneById(id, data)
