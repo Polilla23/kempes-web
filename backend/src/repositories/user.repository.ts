@@ -14,12 +14,14 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  async save(data: Prisma.UserCreateInput) {
-    return await this.prisma.user.create({ data })
-  }
-
   async findAll() {
     return await this.prisma.user.findMany()
+  }
+
+  async findOneById(id: Prisma.UserWhereUniqueInput['id']) {
+    return await this.prisma.user.findUnique({
+      where: { id },
+    })
   }
 
   async updateOneById(id: Prisma.UserWhereUniqueInput['id'], data: Prisma.UserUpdateInput) {
@@ -37,9 +39,7 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  async findOneById(id: Prisma.UserWhereUniqueInput['id']) {
-    return await this.prisma.user.findUnique({
-      where: { id },
-    })
+  async save(data: Prisma.UserCreateInput) {
+    return await this.prisma.user.create({ data })
   }
 }
