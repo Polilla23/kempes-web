@@ -1,4 +1,4 @@
-import { emailConfig } from '../config/email.config'
+import { emailConfig, emailFrom } from '../config/email.config'
 import nodemailer from 'nodemailer'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -22,17 +22,30 @@ export class EmailService {
     }
 
     async sendVerificationEmail(to: string, verificationLink: string): Promise<void> {
-        console.log("Ya estoy dentro del sendVerificationEmail")
         try {
             const html = await this.loadTemplate('email.verification', {verificationLink})
-            const info = await this.transporter.sendMail({
-                from: emailConfig.from,
+            await this.transporter.sendMail({
+                from: emailFrom,
                 to: to,
                 subject: 'Kempes Master League / El link para verificar tu mail está listo!',
                 html: html
             })
         } catch (e) {
             throw new Error ('Failed to send verification email');
+        }
+    }
+
+    async sendPasswordResetEmail(to: string, resetLink: string): Promise<void> {
+        try {
+            const html = await this.loadTemplate('email.resetPassword', {resetLink})
+            await this.transporter.sendMail({
+                from: emailFrom,
+                to: to,
+                subject: 'Kempes Master League / El link para cambiar tu contraseña está listo!',
+                html: html
+            })
+        } catch (error) {
+            throw new Error ('Failed to send password reset email');
         }
     }
 }
