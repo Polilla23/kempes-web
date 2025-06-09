@@ -34,9 +34,7 @@ export class UserService {
     })
 
     const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
-    console.log("Verification Token: ", verificationToken)
-    console.log("Verification Link: ", verificationLink)
-    console.log("Llegué hasta acá")
+
     try {
       await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
     } catch (e) {
@@ -54,7 +52,7 @@ export class UserService {
     await this.userRepository.verifyUser(userFound.id)
   }
 
-  async handleResendEmailVerification(email: string): Promise<void> {
+  async handleResendEmailVerification(email: string ){
     const userFound = await this.userRepository.findOneByEmail(email);
 
     if (!userFound) {
@@ -62,7 +60,7 @@ export class UserService {
     }
 
     if (userFound.isVerified) {
-      throw new Error ('This user not need to be verified')
+      throw new Error ('This user its already verified')
     }
 
     const now = new Date()
@@ -75,11 +73,55 @@ export class UserService {
     const verificationToken = crypto.randomBytes(20).toString('hex');
     userFound.verificationToken = verificationToken;
     userFound.verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
-    await this.userRepository.save(userFound);
+    await this.userRepository.update(userFound);
 
     const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
 
     await this.emailService.sendVerificationEmail(userFound.email, verificationLink)
+  }
+
+  async handleRequestPasswordReset(email: string ){
+    const userFound = await this.userRepository.findOneByEmail(email);
+
+    if (!userFound) {
+      throw new Error ('User not found')
+    }
+
+    const now = new Date()
+
+    if (userFound.resetPasswordTokenExpires && userFound.resetPasswordTokenExpires > now) {
+      const timeRemaining = Math.ceil((userFound.resetPasswordTokenExpires.getTime() - now.getTime()) / (60 * 1000))
+      throw new Error (`Please wait ${timeRemaining} minutes before requesting another reset password`)
+    }
+
+    const resetPasswordToken = crypto.randomBytes(20).toString('hex');
+    userFound.resetPasswordToken = resetPasswordToken;
+    userFound.resetPasswordTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2);
+    await this.userRepository.update(userFound);
+
+    const resetLink = `${process.env.BACK_URL}/user/reset-password/${resetPasswordToken}`
+
+    await this.emailService.sendPasswordResetEmail(userFound.email, resetLink)
+  }
+
+  async handleResetPassword(token: string, password: string){
+    const userFound = await this.userRepository.findOneByResetPasswordToken(token);
+
+    if (!userFound) {
+      throw new Error ('User not found')
+    }
+
+    const isSamePassword = await bcrypt.compare(password, userFound.password);
+
+    if (isSamePassword) {
+      throw new Error ('Invalid new password. The password must be different from the old one')
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    userFound.password = hashedPassword;
+    userFound.resetPasswordToken = null;
+    userFound.resetPasswordTokenExpires = null;
+    await this.userRepository.update(userFound);
   }
 
   async findAllUsers() {

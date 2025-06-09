@@ -119,6 +119,81 @@ export const userSchemas = {
       }
     }
   },
+  requestPasswordReset: {
+    description: 'Request password reset',
+    tags: ['Auth'],
+    body: {
+      type: 'object',
+      required: ['email'],
+      properties: {
+        email: { type: 'string', format: 'email'}
+      }
+    },
+    response: {
+    200: {
+        description: 'Reset password email sent successfully',
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
+        }
+      },
+      400: {
+        description: 'Bad request',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      },
+      500: {
+        description: 'Failed to send reset password email',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
+  resetPassword: {
+    description: 'Reset password',
+    tags: ['Auth'],
+    params: {
+      type: 'object',
+      required: ['token'],
+      properties: {
+        email: { type: 'string' }
+      }
+    },
+    body: {
+      type: 'object',
+      required: ['password'],
+      properties: {
+        password: { type: 'string' }
+      }
+    },
+    response: {
+    200: {
+        description: 'Password has been reset successfully',
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
+        }
+      },
+      400: {
+        description: 'Bad request',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      },
+      500: {
+        description: 'Failed to reset password',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
   update: {
     description: 'Update a user by ID.',
     tags: ['User'],

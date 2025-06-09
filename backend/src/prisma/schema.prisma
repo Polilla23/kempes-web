@@ -14,8 +14,10 @@ model User {
   password String
   role     RoleType? @default(USER)
   isVerified Boolean @default(false)
-  verificationToken String?
+  verificationToken String? @unique
   verificationTokenExpires DateTime?
+  resetPasswordToken String? @unique
+  resetPasswordTokenExpires DateTime?
   club     Club[]
 
   @@map("users")

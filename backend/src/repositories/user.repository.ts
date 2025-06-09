@@ -24,11 +24,11 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  async findOneByVerificationToken(token: string) {
-    return await this.prisma.user.findFirst({
-      where: {
+  async findOneByVerificationToken(token: Prisma.UserWhereUniqueInput['verificationToken']) {
+    return await this.prisma.user.findUnique({
+      where: { 
         verificationToken: token,
-      }
+      },
     })
   }
 
@@ -39,6 +39,14 @@ export class UserRepository implements IUserRepository {
         isVerified: true,
         verificationToken: null,
         verificationTokenExpires: null,
+      }
+    })
+  }
+
+  async findOneByResetPasswordToken(token: Prisma.UserWhereUniqueInput['resetPasswordToken']) {
+    return await this.prisma.user.findUnique({
+      where: {
+        resetPasswordToken: token
       }
     })
   }
@@ -60,5 +68,13 @@ export class UserRepository implements IUserRepository {
 
   async save(data: Prisma.UserCreateInput) {
     return await this.prisma.user.create({ data })
+  }
+
+  async update(user: User) {
+    const { id, ...rest } = user;
+    return await this.prisma.user.update({
+      where: { id },
+      data: rest
+    })
   }
 }

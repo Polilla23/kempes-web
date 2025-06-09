@@ -4,9 +4,9 @@ import { createDepencyContainer } from './container'
 import { routes } from './routes/index.routes'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
-import { PrismaClient } from '@prisma/client'
+import path from 'path'
 
-dotenv.config()
+dotenv.config({ path: path.resolve(__dirname, '../../.env')});
 
 const app = Fastify({
   logger: false,
