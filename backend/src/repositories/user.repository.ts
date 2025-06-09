@@ -24,6 +24,25 @@ export class UserRepository implements IUserRepository {
     })
   }
 
+  async findOneByVerificationToken(token: string) {
+    return await this.prisma.user.findFirst({
+      where: {
+        verificationToken: token,
+      }
+    })
+  }
+
+  async verifyUser(id: Prisma.UserWhereUniqueInput['id']) {
+    return await this.prisma.user.update({
+      where: { id },
+      data: {
+        isVerified: true,
+        verificationToken: null,
+        verificationTokenExpires: null,
+      }
+    })
+  }
+
   async updateOneById(id: Prisma.UserWhereUniqueInput['id'], data: Prisma.UserUpdateInput) {
     return await this.prisma.user.update({
       where: {

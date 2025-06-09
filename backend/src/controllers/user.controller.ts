@@ -1,6 +1,7 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { UserService } from '../services/user.service'
 import { RoleType, User } from '@prisma/client'
+import { error } from 'console'
 
 export class UserController {
   private userService: UserService
@@ -32,6 +33,33 @@ export class UserController {
       return reply.status(400).send({
         message: 'Error while fetching users.',
         error: error instanceof Error ? error.message : error,
+      })
+    }
+  }
+
+  async verifyEmail(req: FastifyRequest<{ Params: { token: string} }>, reply: FastifyReply) {
+    const { token } = req.params
+    try {
+      await this.userService.handleEmailVerification(token)
+      return reply.status(200).send({ message: "User verified successfully."})
+    } catch (error) {
+      return reply.status(400).send({ 
+        message: "Verification failed.",
+        error: error instanceof Error ? error.message : error
+      })
+    }
+  }
+
+  async resendVerifyEmail(req: FastifyRequest, reply: FastifyReply) {
+    const { email } = req.body as { email: string };
+
+    try {
+      await this.userService.handleResendEmailVerification(email);
+      return reply.status(200).send({ message: 'Verification email resent successfully' })
+    } catch (error) {
+      return reply.status(400).send({ 
+        message: "Verification failed.",
+        error: error instanceof Error ? error.message : error
       })
     }
   }

@@ -51,6 +51,74 @@ export const userSchemas = {
       },
     },
   },
+  verifyEmail: {
+    description: 'Verify user email',
+    tags: ['Auth'],
+    params: {
+      type: 'object',
+      required: ['token'],
+      properties: {
+        token: { type: 'string' },
+      }
+    },
+    response: {
+      200: {
+        description: 'Email verified successfully',
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
+        }
+      },
+      400: {
+        description: 'Bad request',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' }
+        }
+      },
+      500: {
+        description: 'Failed to verify email',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
+  resendVerificationEmail: {
+    description: 'Resend verification email',
+    tags: ['Auth'],
+    body: {
+      type: 'object',
+      required: ['email'],
+      properties: {
+        email: { type: 'string', format: 'email'}
+      }
+    },
+    response: {
+      200: {
+        description: 'Verification email resent successfully',
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
+        }
+      },
+      400: {
+        description: 'Bad request',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      },
+      500: {
+        description: 'Failed to resend verification email',
+        type: 'object',
+        properties: {
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
   update: {
     description: 'Update a user by ID.',
     tags: ['User'],

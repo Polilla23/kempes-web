@@ -4,6 +4,7 @@ import { UserRepository } from '../repositories/user.repository'
 import { UserController } from '../controllers/user.controller'
 import { FastifyInstance } from 'fastify'
 import { PrismaClient } from '@prisma/client'
+import { EmailService } from '../services/email.service'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -14,6 +15,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     userRepository: asClass(UserRepository).singleton(),
     userController: asClass(UserController).singleton(),
     userService: asClass(UserService).singleton(),
+    emailService: asClass(EmailService).singleton(),
   })
 
   prisma.$connect()

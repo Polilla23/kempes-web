@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = "postgresql://postgres.ueccxxenutmvbqfapjqk:B4s3c0d31t!@aws-0-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
+  directUrl = "postgresql://postgres.ueccxxenutmvbqfapjqk:B4s3c0d31t!@aws-0-us-east-2.pooler.supabase.com:5432/postgres"
 }
 
 model User {
@@ -13,6 +13,9 @@ model User {
   email    String    @unique
   password String
   role     RoleType? @default(USER)
+  isVerified Boolean @default(false)
+  verificationToken String?
+  verificationTokenExpires DateTime?
   club     Club[]
 
   @@map("users")
