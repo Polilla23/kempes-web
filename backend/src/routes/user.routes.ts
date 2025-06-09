@@ -14,6 +14,16 @@ export const userRoutes = async (fastify: FastifyInstance) => {
     handler: userController.findAll.bind(userController),
   })
 
+  fastify.get('/verify-email/:token', {
+    schema: userSchemas.verifyEmail,
+    handler: userController.verifyEmail.bind(userController)
+  })
+
+  fastify.post('/resend-verification-email', {
+    schema: userSchemas.resendVerificationEmail,
+    handler: userController.resendVerifyEmail.bind(userController)
+  })
+
   fastify.patch('/update/:id', {
     schema: userSchemas.update,
     handler: userController.update.bind(userController),
