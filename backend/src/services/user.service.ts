@@ -60,7 +60,7 @@ export class UserService {
     }
 
     const token = this.jwtService.sign(
-      { id: (existingUser.id as string), role: existingUser.role },
+      { id: existingUser.id as string, role: existingUser.role },
       { expiresIn: "1h" }
     )
 
