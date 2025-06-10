@@ -28,6 +28,54 @@ export const userSchemas = {
       },
     },
   },
+  login: {
+    description: 'Login a user',
+    tags: ['Auth'],
+    body: {
+      type: 'object',
+      properties: {
+        email: { type: 'string' },
+        password: { type: 'string' }
+      },
+      required: ['email', 'password']
+    },
+    response: {
+      200: {
+        description: 'Successful login',
+        type: 'object',
+        properties: {
+          token: { type: 'string' }
+        }
+      },
+      400: {
+        description: 'Bad request',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
+  logout: {
+    description: 'Logout a user',
+    tags: ['Auth'],
+    response: {
+      200: {
+        description: 'Successful logout',
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
+        }
+      },
+      400: {
+        description: 'Bad request',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' }
+        }
+      }
+    }
+  },
   findAll: {
     description: 'Fetch all users.',
     tags: ['User'],
@@ -281,6 +329,4 @@ export const userSchemas = {
       },
     },
   },
-  login: {},
-  logout: {},
 }

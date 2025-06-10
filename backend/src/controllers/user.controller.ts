@@ -23,6 +23,44 @@ export class UserController {
     }
   }
 
+  async logIn(req: FastifyRequest, reply: FastifyReply) {
+    const { email, password } = req.body as { email: string, password: string };
+    const serverUserService = req.server.container.resolve<UserService>('userService')
+
+    try {
+      const token = await serverUserService.loginUser(email, password);
+      reply.setCookie('token', token, {
+        httpOnly: false,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+        domain: '', // Dominio del backend
+        maxAge: 24 * 60 * 60
+      })
+
+      return reply.status(200).send({ message: "Login successful"})
+    } catch (error) {
+      return reply.status(400).send({
+        message: 'Error while login',
+        error: error instanceof Error ? error.message : error,
+      })
+    }
+  }
+
+  async logOut(req: FastifyRequest, reply: FastifyReply) {
+    const userId = (req.user as { id: string }).id
+
+    try {
+      await this.userService.logOutUser(userId)
+
+      reply.clearCookie('token')
+      
+      return reply.status(200).send({ message: "LogOut successful" })
+    } catch (error) {
+      return reply.status(500).send({ error: 'Failed to logout' })
+    }
+  }
+
   async findAll(_req: FastifyRequest, reply: FastifyReply) {
     try {
       const users = await this.userService.findAllUsers()
