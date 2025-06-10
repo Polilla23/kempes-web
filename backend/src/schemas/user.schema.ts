@@ -160,7 +160,7 @@ export const userSchemas = {
       type: 'object',
       required: ['token'],
       properties: {
-        email: { type: 'string' }
+        token: { type: 'string' }
       }
     },
     body: {
