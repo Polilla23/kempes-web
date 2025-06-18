@@ -47,14 +47,13 @@ app.register(swaggerUi, {
 
 // Registro de fastifyCookie para manejar las cookies
 app.register(fastifyCookie, {
-  secret: process.env.FASTIFY_COOKIE_SECRET,  // La clave de firma para las cookies
+  secret: process.env.FASTIFY_COOKIE_SECRET || 'blaabla',  // La clave de firma para las cookies
   hook: 'preHandler',
   parseOptions: {
     httpOnly: false,    // La cookie no es accesible mediante JavaScript
-    secure: true,       // Solo en HTTPS si está en producción
-    sameSite: 'none',   // Puede ser 'strict' o 'lax', según la necesidad
+    secure: false,       // Solo en HTTPS si está en producción
+    sameSite: 'lax',   // Puede ser 'strict' o 'lax', según la necesidad
     path: '/',          // Ruta válida para la cookie
-    domain: 'tuweb.com' // Dominio del backend
   }
 } as FastifyCookieOptions);
 

@@ -53,7 +53,12 @@ export class UserController {
     try {
       await this.userService.logOutUser(userId)
 
-      reply.clearCookie('token')
+      reply.clearCookie('token', {
+        path: '/',
+        httpOnly: false,
+        secure: false,
+        sameSite: 'lax',
+      })
       
       return reply.status(200).send({ message: "LogOut successful" })
     } catch (error) {
