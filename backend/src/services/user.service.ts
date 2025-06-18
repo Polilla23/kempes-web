@@ -5,14 +5,17 @@ import { User } from '@prisma/client'
 import crypto from 'crypto'
 import { EmailService } from './email.service'
 import { RegisterUserInput } from 'utils/types'
+import { JWT } from '@fastify/jwt'
 
 export class UserService {
   private userRepository: IUserRepository
   private emailService: EmailService
+  private jwtService: JWT
 
-  constructor({ userRepository, emailService }: { userRepository: IUserRepository, emailService: EmailService }) {
+  constructor({ userRepository, emailService, jwtService }: { userRepository: IUserRepository, emailService: EmailService, jwtService: JWT }) {
     this.userRepository = userRepository
     this.emailService = emailService
+    this.jwtService = jwtService
   }
 
   async registerUser({ email, password, role }: RegisterUserInput) {
@@ -43,7 +46,40 @@ export class UserService {
     }
   }
 
-  async handleEmailVerification(token: string) {
+  async loginUser(email: string, password: string) {
+    const existingUser = await this.userRepository.findOneByEmail(email);
+
+    if(!existingUser) {
+      throw new Error('Invalid email or password')
+    }
+
+    const matchPw = await bcrypt.compare(password, existingUser.password);
+
+    if(!matchPw) {
+      throw new Error('Invalid email or password')
+    }
+
+    const token = this.jwtService.sign(
+      { id: existingUser.id as string, role: existingUser.role },
+      { expiresIn: "1h" }
+    )
+
+    if (!token) {
+      throw new Error('Failed to generate token')
+    }
+
+    return token
+  }
+
+  async logOutUser(id: string) {
+    const userFound = await this.userRepository.findOneById(id);
+
+    if (!userFound) {
+      throw new Error('User not found')
+    }
+  }
+
+  async handleEmailVerification(token: string): Promise<void>{
     const userFound = await this.userRepository.findOneByVerificationToken(token)
     if (!userFound || !userFound.verificationTokenExpires || userFound.verificationTokenExpires < new Date()) {
       throw new Error ('Invalid or expired token.')
@@ -52,7 +88,7 @@ export class UserService {
     await this.userRepository.verifyUser(userFound.id)
   }
 
-  async handleResendEmailVerification(email: string ){
+  async handleResendEmailVerification(email: string ): Promise<void>{
     const userFound = await this.userRepository.findOneByEmail(email);
 
     if (!userFound) {
@@ -80,7 +116,7 @@ export class UserService {
     await this.emailService.sendVerificationEmail(userFound.email, verificationLink)
   }
 
-  async handleRequestPasswordReset(email: string ){
+  async handleRequestPasswordReset(email: string ): Promise<void>{
     const userFound = await this.userRepository.findOneByEmail(email);
 
     if (!userFound) {
@@ -104,7 +140,7 @@ export class UserService {
     await this.emailService.sendPasswordResetEmail(userFound.email, resetLink)
   }
 
-  async handleResetPassword(token: string, password: string){
+  async handleResetPassword(token: string, password: string): Promise<void>{
     const userFound = await this.userRepository.findOneByResetPasswordToken(token);
 
     if (!userFound) {

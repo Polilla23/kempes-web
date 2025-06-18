@@ -8,7 +8,7 @@ export class UserRepository implements IUserRepository {
     this.prisma = prisma
   }
 
-  async findOneByEmail(email: Prisma.UserWhereUniqueInput['email']) {
+  async findOneByEmail(email: Prisma.UserWhereUniqueInput['email']){
     return await this.prisma.user.findUnique({
       where: { email },
     })

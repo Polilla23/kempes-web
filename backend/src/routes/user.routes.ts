@@ -9,6 +9,17 @@ export const userRoutes = async (fastify: FastifyInstance) => {
     handler: userController.register.bind(userController),
   })
 
+  fastify.post('/login', {
+    schema: userSchemas.login,
+    handler: userController.logIn.bind(userController)
+  })
+
+  fastify.get('/logout', {
+    preHandler: [fastify.authenticate],
+    schema: userSchemas.logout,
+    handler: userController.logOut.bind(userController)
+  })
+
   fastify.get('/findAll', {
     schema: userSchemas.findAll,
     handler: userController.findAll.bind(userController),
