@@ -24,21 +24,20 @@ export class UserController {
   }
 
   async logIn(req: FastifyRequest, reply: FastifyReply) {
-    const { email, password } = req.body as { email: string, password: string };
-    const serverUserService = req.server.container.resolve<UserService>('userService')
+    const { email, password } = req.body as { email: string; password: string }
 
     try {
-      const token = await serverUserService.loginUser(email, password);
+      const token = await this.userService.loginUser(email, password)
       reply.setCookie('token', token, {
         httpOnly: false,
         secure: true,
         sameSite: 'none',
         path: '/',
         domain: '', // Dominio del backend
-        maxAge: 24 * 60 * 60
+        maxAge: 24 * 60 * 60,
       })
 
-      return reply.status(200).send({ message: "Login successful"})
+      return reply.status(200).send({ message: 'Login successful' })
     } catch (error) {
       return reply.status(400).send({
         message: 'Error while login',
@@ -59,8 +58,8 @@ export class UserController {
         secure: false,
         sameSite: 'lax',
       })
-      
-      return reply.status(200).send({ message: "LogOut successful" })
+
+      return reply.status(200).send({ message: 'LogOut successful' })
     } catch (error) {
       return reply.status(500).send({ error: 'Failed to logout' })
     }
@@ -79,59 +78,59 @@ export class UserController {
     }
   }
 
-  async verifyEmail(req: FastifyRequest<{ Params: { token: string} }>, reply: FastifyReply) {
+  async verifyEmail(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
     const { token } = req.params
     try {
       await this.userService.handleEmailVerification(token)
-      return reply.status(200).send({ message: "User verified successfully."})
+      return reply.status(200).send({ message: 'User verified successfully.' })
     } catch (error) {
-      return reply.status(400).send({ 
-        message: "Verification failed.",
-        error: error instanceof Error ? error.message : error
+      return reply.status(400).send({
+        message: 'Verification failed.',
+        error: error instanceof Error ? error.message : error,
       })
     }
   }
 
   async resendVerifyEmail(req: FastifyRequest, reply: FastifyReply) {
-    const { email } = req.body as { email: string };
+    const { email } = req.body as { email: string }
 
     try {
-      await this.userService.handleResendEmailVerification(email);
+      await this.userService.handleResendEmailVerification(email)
 
       return reply.status(200).send({ message: 'Verification email resent successfully' })
     } catch (error) {
-      return reply.status(400).send({ 
-        message: "Verification failed.",
-        error: error instanceof Error ? error.message : error
+      return reply.status(400).send({
+        message: 'Verification failed.',
+        error: error instanceof Error ? error.message : error,
       })
     }
   }
 
   async requestPasswordReset(req: FastifyRequest, reply: FastifyReply) {
-    const { email } = req.body as { email: string };
+    const { email } = req.body as { email: string }
 
     try {
       await this.userService.handleRequestPasswordReset(email)
-      return reply.status(200).send({ message: 'Reset password email sent successfully.'})
+      return reply.status(200).send({ message: 'Reset password email sent successfully.' })
     } catch (error) {
       return reply.status(400).send({
         message: 'Reset password failed',
-        error: error instanceof Error ? error.message : error
+        error: error instanceof Error ? error.message : error,
       })
     }
   }
 
-  async resetPassword(req: FastifyRequest<{ Params: { token: string} }>, reply: FastifyReply) {
+  async resetPassword(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
     const { token } = req.params as { token: string }
     const { password } = req.body as { password: string }
 
     try {
-      await this.userService.handleResetPassword(token, password);
-      return reply.status(200).send({ message: 'Password has been reset successfully.'})
+      await this.userService.handleResetPassword(token, password)
+      return reply.status(200).send({ message: 'Password has been reset successfully.' })
     } catch (error) {
       return reply.status(400).send({
         message: 'Failed to reset password',
-        error: error instanceof Error ? error.message : error
+        error: error instanceof Error ? error.message : error,
       })
     }
   }

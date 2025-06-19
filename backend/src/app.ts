@@ -8,7 +8,7 @@ import fastifyJwt from '@fastify/jwt'
 import fastifyCookie, { FastifyCookieOptions } from '@fastify/cookie'
 import path from 'path'
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env')});
+dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 const app = Fastify({
   logger: false,
@@ -47,23 +47,23 @@ app.register(swaggerUi, {
 
 // Registro de fastifyCookie para manejar las cookies
 app.register(fastifyCookie, {
-  secret: process.env.FASTIFY_COOKIE_SECRET || 'blaabla',  // La clave de firma para las cookies
+  secret: process.env.FASTIFY_COOKIE_SECRET || 'blaabla', // La clave de firma para las cookies
   hook: 'preHandler',
   parseOptions: {
-    httpOnly: false,    // La cookie no es accesible mediante JavaScript
-    secure: false,       // Solo en HTTPS si está en producción
-    sameSite: 'lax',   // Puede ser 'strict' o 'lax', según la necesidad
-    path: '/',          // Ruta válida para la cookie
-  }
-} as FastifyCookieOptions);
+    httpOnly: false, // La cookie no es accesible mediante JavaScript
+    secure: false, // Solo en HTTPS si está en producción
+    sameSite: 'lax', // Puede ser 'strict' o 'lax', según la necesidad
+    path: '/', // Ruta válida para la cookie
+  },
+} as FastifyCookieOptions)
 
 // Registro de fastifyJwt para manejar token -> cookie
 app.register(fastifyJwt, {
   secret: process.env.JWT_SECRET || 'queondaperro',
   cookie: {
     cookieName: 'token',
-    signed: false
-  }
+    signed: false,
+  },
 })
 
 app.decorate('authenticate', async function (req: FastifyRequest, reply: FastifyReply) {
@@ -73,18 +73,17 @@ app.decorate('authenticate', async function (req: FastifyRequest, reply: Fastify
       return reply.status(401).send({ message: 'Authentication required' })
     }
 
-    const decoded = await req.jwtVerify<{ id: string, role: string}>();
+    const decoded = await req.jwtVerify<{ id: string; role: string }>()
     if (!decoded.role || !decoded.id) {
-      throw new Error('Invalid token estructure')
+      throw new Error('Invalid token structure')
     }
 
-    req.user = { id: decoded.id, role: decoded.role };
-
+    req.user = { id: decoded.id, role: decoded.role }
   } catch (error) {
-    console.log(`Error: ${error}`);
+    console.log(`Error: ${error}`)
     return reply.status(401).send({ message: 'Invalid token' })
   }
-}) 
+})
 
 // Registro de container
 app.register(async function (fastify) {

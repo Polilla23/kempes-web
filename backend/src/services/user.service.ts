@@ -12,7 +12,15 @@ export class UserService {
   private emailService: EmailService
   private jwtService: JWT
 
-  constructor({ userRepository, emailService, jwtService }: { userRepository: IUserRepository, emailService: EmailService, jwtService: JWT }) {
+  constructor({
+    userRepository,
+    emailService,
+    jwtService,
+  }: {
+    userRepository: IUserRepository
+    emailService: EmailService
+    jwtService: JWT
+  }) {
     this.userRepository = userRepository
     this.emailService = emailService
     this.jwtService = jwtService
@@ -33,7 +41,7 @@ export class UserService {
       password: hashedPassword,
       role: role?.toUpperCase() as RoleType,
       verificationToken,
-      verificationTokenExpires
+      verificationTokenExpires,
     })
 
     const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
@@ -42,26 +50,30 @@ export class UserService {
       await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
     } catch (e) {
       await this.userRepository.deleteOneById(newUser.id)
-      throw new Error ('Failed to send verification email. Please try registering again.')
+      throw new Error('Failed to send verification email. Please try registering again.')
     }
   }
 
   async loginUser(email: string, password: string) {
-    const existingUser = await this.userRepository.findOneByEmail(email);
+    const existingUser = await this.userRepository.findOneByEmail(email)
 
-    if(!existingUser) {
+    if (!existingUser) {
       throw new Error('Invalid email or password')
     }
 
-    const matchPw = await bcrypt.compare(password, existingUser.password);
+    if (!existingUser.isVerified) {
+      throw new Error('Email not verified')
+    }
 
-    if(!matchPw) {
+    const matchPw = await bcrypt.compare(password, existingUser.password)
+
+    if (!matchPw) {
       throw new Error('Invalid email or password')
     }
 
     const token = this.jwtService.sign(
       { id: existingUser.id as string, role: existingUser.role },
-      { expiresIn: "1h" }
+      { expiresIn: '1h' }
     )
 
     if (!token) {
@@ -72,92 +84,100 @@ export class UserService {
   }
 
   async logOutUser(id: string) {
-    const userFound = await this.userRepository.findOneById(id);
+    const userFound = await this.userRepository.findOneById(id)
 
     if (!userFound) {
       throw new Error('User not found')
     }
   }
 
-  async handleEmailVerification(token: string): Promise<void>{
+  async handleEmailVerification(token: string): Promise<void> {
     const userFound = await this.userRepository.findOneByVerificationToken(token)
-    if (!userFound || !userFound.verificationTokenExpires || userFound.verificationTokenExpires < new Date()) {
-      throw new Error ('Invalid or expired token.')
+    if (
+      !userFound ||
+      !userFound.verificationTokenExpires ||
+      userFound.verificationTokenExpires < new Date()
+    ) {
+      throw new Error('Invalid or expired token.')
     }
 
     await this.userRepository.verifyUser(userFound.id)
   }
 
-  async handleResendEmailVerification(email: string ): Promise<void>{
-    const userFound = await this.userRepository.findOneByEmail(email);
+  async handleResendEmailVerification(email: string): Promise<void> {
+    const userFound = await this.userRepository.findOneByEmail(email)
 
     if (!userFound) {
-      throw new Error ('User not found')
+      throw new Error('User not found')
     }
 
     if (userFound.isVerified) {
-      throw new Error ('This user its already verified')
+      throw new Error('This user its already verified')
     }
 
     const now = new Date()
 
     if (userFound.verificationTokenExpires && userFound.verificationTokenExpires > now) {
-      const timeRemaining = Math.ceil((userFound.verificationTokenExpires.getTime() - now.getTime()) / (60 * 1000));
-      throw new Error (`Please wait ${timeRemaining} minutes before requesting another verification email`)
+      const timeRemaining = Math.ceil(
+        (userFound.verificationTokenExpires.getTime() - now.getTime()) / (60 * 1000)
+      )
+      throw new Error(`Please wait ${timeRemaining} minutes before requesting another verification email`)
     }
 
-    const verificationToken = crypto.randomBytes(20).toString('hex');
-    userFound.verificationToken = verificationToken;
+    const verificationToken = crypto.randomBytes(20).toString('hex')
+    userFound.verificationToken = verificationToken
     userFound.verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
-    await this.userRepository.update(userFound);
+    await this.userRepository.update(userFound)
 
     const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
 
     await this.emailService.sendVerificationEmail(userFound.email, verificationLink)
   }
 
-  async handleRequestPasswordReset(email: string ): Promise<void>{
-    const userFound = await this.userRepository.findOneByEmail(email);
+  async handleRequestPasswordReset(email: string): Promise<void> {
+    const userFound = await this.userRepository.findOneByEmail(email)
 
     if (!userFound) {
-      throw new Error ('User not found')
+      throw new Error('User not found')
     }
 
     const now = new Date()
 
     if (userFound.resetPasswordTokenExpires && userFound.resetPasswordTokenExpires > now) {
-      const timeRemaining = Math.ceil((userFound.resetPasswordTokenExpires.getTime() - now.getTime()) / (60 * 1000))
-      throw new Error (`Please wait ${timeRemaining} minutes before requesting another reset password`)
+      const timeRemaining = Math.ceil(
+        (userFound.resetPasswordTokenExpires.getTime() - now.getTime()) / (60 * 1000)
+      )
+      throw new Error(`Please wait ${timeRemaining} minutes before requesting another reset password`)
     }
 
-    const resetPasswordToken = crypto.randomBytes(20).toString('hex');
-    userFound.resetPasswordToken = resetPasswordToken;
-    userFound.resetPasswordTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2);
-    await this.userRepository.update(userFound);
+    const resetPasswordToken = crypto.randomBytes(20).toString('hex')
+    userFound.resetPasswordToken = resetPasswordToken
+    userFound.resetPasswordTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
+    await this.userRepository.update(userFound)
 
     const resetLink = `${process.env.BACK_URL}/user/reset-password/${resetPasswordToken}`
 
     await this.emailService.sendPasswordResetEmail(userFound.email, resetLink)
   }
 
-  async handleResetPassword(token: string, password: string): Promise<void>{
-    const userFound = await this.userRepository.findOneByResetPasswordToken(token);
+  async handleResetPassword(token: string, password: string): Promise<void> {
+    const userFound = await this.userRepository.findOneByResetPasswordToken(token)
 
     if (!userFound) {
-      throw new Error ('User not found')
+      throw new Error('User not found')
     }
 
-    const isSamePassword = await bcrypt.compare(password, userFound.password);
+    const isSamePassword = await bcrypt.compare(password, userFound.password)
 
     if (isSamePassword) {
-      throw new Error ('Invalid new password. The password must be different from the old one')
+      throw new Error('Invalid new password. The password must be different from the old one.')
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    userFound.password = hashedPassword;
-    userFound.resetPasswordToken = null;
-    userFound.resetPasswordTokenExpires = null;
-    await this.userRepository.update(userFound);
+    const hashedPassword = await bcrypt.hash(password, 10)
+    userFound.password = hashedPassword
+    userFound.resetPasswordToken = null
+    userFound.resetPasswordTokenExpires = null
+    await this.userRepository.update(userFound)
   }
 
   async findAllUsers() {
