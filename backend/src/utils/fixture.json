@@ -1,0 +1,186 @@
+{
+  "season": 20,
+  "competition": 5,
+  "matchDays": [
+    {
+      "matchDay": 1,
+      "combinations": [
+        ["id1", "id2"],
+        ["id3", "id4"],
+        ["id5", "id6"],
+        ["id7", "id8"],
+        ["id9", "id10"]
+      ]
+    },
+    {
+      "matchDay": 2,
+      "combinations": [
+        ["id1", "id3"],
+        ["id4", "id5"],
+        ["id6", "id7"],
+        ["id8", "id9"],
+        ["id10", "id2"]
+      ]
+    },
+    {
+      "matchDay": 3,
+      "combinations": [
+        ["id1", "id4"],
+        ["id5", "id6"],
+        ["id7", "id8"],
+        ["id9", "id10"],
+        ["id2", "id3"]
+      ]
+    },
+    {
+      "matchDay": 4,
+      "combinations": [
+        ["id1", "id5"],
+        ["id6", "id7"],
+        ["id8", "id9"],
+        ["id10", "id2"],
+        ["id3", "id4"]
+      ]
+    },
+    {
+      "matchDay": 5,
+      "combinations": [
+        ["id1", "id6"],
+        ["id7", "id8"],
+        ["id9", "id10"],
+        ["id2", "id3"],
+        ["id4", "id5"]
+      ]
+    },
+    {
+      "matchDay": 6,
+      "combinations": [
+        ["id1", "id7"],
+        ["id8", "id9"],
+        ["id10", "id2"],
+        ["id3", "id4"],
+        ["id5", "id6"]
+      ]
+    },
+    {
+      "matchDay": 7,
+      "combinations": [
+        ["id1", "id8"],
+        ["id9", "id10"],
+        ["id2", "id3"],
+        ["id4", "id5"],
+        ["id6", "id7"]
+      ]
+    },
+    {
+      "matchDay": 8,
+      "combinations": [
+        ["id1", "id9"],
+        ["id10", "id2"],
+        ["id3", "id4"],
+        ["id5", "id6"],
+        ["id7", "id8"]
+      ]
+    },
+    {
+      "matchDay": 9,
+      "combinations": [
+        ["id1", "id10"],
+        ["id2", "id3"],
+        ["id4", "id5"],
+        ["id6", "id7"],
+        ["id8", "id9"]
+      ]
+    },
+    {
+      "matchDay": 10,
+      "combinations": [
+        ["id2", "id1"],
+        ["id4", "id3"],
+        ["id6", "id5"],
+        ["id8", "id7"],
+        ["id10", "id9"]
+      ]
+    },
+    {
+      "matchDay": 11,
+      "combinations": [
+        ["id3", "id1"],
+        ["id5", "id4"],
+        ["id7", "id6"],
+        ["id9", "id8"],
+        ["id2", "id10"]
+      ]
+    },
+    {
+      "matchDay": 12,
+      "combinations": [
+        ["id4", "id1"],
+        ["id6", "id5"],
+        ["id8", "id7"],
+        ["id10", "id9"],
+        ["id3", "id2"]
+      ]
+    },
+    {
+      "matchDay": 13,
+      "combinations": [
+        ["id5", "id1"],
+        ["id7", "id6"],
+        ["id9", "id8"],
+        ["id2", "id10"],
+        ["id4", "id3"]
+      ]
+    },
+    {
+      "matchDay": 14,
+      "combinations": [
+        ["id6", "id1"],
+        ["id8", "id7"],
+        ["id10", "id9"],
+        ["id3", "id2"],
+        ["id5", "id4"]
+      ]
+    },
+    {
+      "matchDay": 15,
+      "combinations": [
+        ["id7", "id1"],
+        ["id9", "id8"],
+        ["id2", "id10"],
+        ["id4", "id3"],
+        ["id6", "id5"]
+      ]
+    },
+    {
+      "matchDay": 16,
+      "combinations": [
+        ["id8", "id1"],
+        ["id10", "id9"],
+        ["id3", "id2"],
+        ["id5", "id4"],
+        ["id7", "id6"]
+      ]
+    },
+    {
+      "matchDay": 17,
+      "combinations": [
+        ["id9", "id1"],
+        ["id2", "id10"],
+        ["id4", "id3"],
+        ["id6", "id5"],
+        ["id8", "id7"]
+      ]
+    },
+    {
+      "matchDay": 18,
+      "combinations": [
+        ["id10", "id1"],
+        ["id3", "id2"],
+        ["id5", "id4"],
+        ["id7", "id6"],
+        ["id9", "id8"]
+      ]
+    }
+  ]
+}

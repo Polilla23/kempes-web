@@ -21,6 +21,12 @@ export type RegisterUserInput = {
   role?: RoleType
 }
 
+export type RegisterClubInput = {
+  name: string
+  logo?: string
+  userId: string
+}
+
 export type CreatePlayerInput = {
   name: string
   lastName: string
@@ -34,6 +40,7 @@ export type CreatePlayerInput = {
   isKempesita: boolean
   isActive: boolean
 }
+
 
 declare module '@fastify/jwt' {
   interface fastifyJwt {
