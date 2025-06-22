@@ -21,6 +21,12 @@ export type RegisterUserInput = {
   role?: RoleType
 }
 
+export type RegisterClubInput = {
+  name: string
+  logo?: string
+  userId: string
+}
+
 declare module '@fastify/jwt' {
   interface fastifyJwt {
     payload: {

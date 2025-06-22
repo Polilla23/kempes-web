@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output = "./generated/prisma/client"
 }
 
 datasource db {
@@ -26,9 +27,10 @@ model User {
 model Club {
   id     String @id @default(uuid())
   name   String @unique
-  logo   String
-  userId String
+  logo   String?
+  userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive Boolean @default(true) @map("is_active")
 
   @@index([userId])
   @@map("clubs")
