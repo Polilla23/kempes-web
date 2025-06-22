@@ -21,6 +21,20 @@ export type RegisterUserInput = {
   role?: RoleType
 }
 
+export type CreatePlayerInput = {
+  name: string
+  lastName: string
+  birthdate: string
+  actualClubId: string
+  ownerClubId: string
+  overall: number
+  salary: number
+  sofifaId: string
+  transfermarktId: string
+  isKempesita: boolean
+  isActive: boolean
+}
+
 declare module '@fastify/jwt' {
   interface fastifyJwt {
     payload: {

@@ -7,6 +7,9 @@ import { PrismaClient } from '@prisma/client'
 import { EmailService } from '../services/email.service'
 import { MyAccountService } from '../services/myAccount.service'
 import { myAccountController } from '../controllers/myAccount.controller'
+import { PlayerRepository } from '../repositories/player.repository'
+import { PlayerController } from '../controllers/player.controller'
+import { PlayerService } from '../services/player.service'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -16,12 +19,15 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     prisma: asValue(prisma),
 
     userRepository: asClass(UserRepository).singleton(),
+    playerRepository: asClass(PlayerRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(myAccountController).singleton(),
+    playerController: asClass(PlayerController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
+    playerService: asClass(PlayerService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
     

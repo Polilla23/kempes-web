@@ -13,11 +13,11 @@ model User {
   email    String    @unique
   password String
   role     RoleType? @default(USER)
-  isVerified Boolean @default(false)
-  verificationToken String? @unique
-  verificationTokenExpires DateTime?
-  resetPasswordToken String? @unique
-  resetPasswordTokenExpires DateTime?
+  isVerified Boolean @default(false)  @map("is_verified")
+  verificationToken String? @unique   @map("verification_token")
+  verificationTokenExpires DateTime?  @map("verification_token_expires")
+  resetPasswordToken String? @unique  @map("reset_password_token")
+  resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
   club     Club[]
 
   @@map("users")
@@ -27,11 +27,32 @@ model Club {
   id     String @id @default(uuid())
   name   String @unique
   logo   String
-  userId String
+  userId String @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerOwner Player[]  @relation("OwnerClub")
+  playerNow   Player[]  @relation("ActualClub")
 
   @@index([userId])
   @@map("clubs")
+}
+
+model Player {
+  id            String  @id @default(uuid())
+  name          String
+  lastName      String  @map("last_name")
+  birthdate     DateTime
+  actualClubId  String  @map("actual_club_id") @default("null")
+  ownerClubId   String  @map("owner_club_id") @default("null")
+  actualClub    Club    @relation("ActualClub", fields: [actualClubId], references: [id])
+  ownerClub     Club    @relation("OwnerClub", fields: [ownerClubId], references: [id])
+  overall       Int  @default(0)
+  salary        Float   @default(100.000)
+  sofifaId      String  @map("sofifa_id") @default("null")
+  transfermarktId String  @map("transfermarkt_id")  @default("null")
+  isKempesita   Boolean @map("is_kempesita")  @default(false)
+  isActive      Boolean @map("is_active") @default(true)
+
+  @@map("players")
 }
 
 enum RoleType {
