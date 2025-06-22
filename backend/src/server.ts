@@ -7,7 +7,7 @@ const start = async () => {
       port: port as number,
       host: '0.0.0.0',
     })
-    console.log(`Server running on http://localhost:${port}`)
+    console.log(`Server running on http://localhost:${port}. Check docs in http://localhost:${port}/apidocs`)
   } catch (error) {
     console.error(error)
     process.exit(1)
