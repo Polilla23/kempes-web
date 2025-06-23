@@ -3,6 +3,10 @@ import nodemailer from 'nodemailer'
 import * as fs from 'fs'
 import * as path from 'path'
 
+// Errors
+import { EmailSendError } from '../errors/emailSendError'
+import { EmailPasswordSendError } from '../errors/emailPasswordSendError'
+
 export class EmailService {
     private transporter: any
 
@@ -31,7 +35,7 @@ export class EmailService {
                 html: html
             })
         } catch (e) {
-            throw new Error ('Failed to send verification email');
+            throw new EmailSendError();
         }
     }
 
@@ -45,7 +49,7 @@ export class EmailService {
                 html: html
             })
         } catch (error) {
-            throw new Error ('Failed to send password reset email');
+            throw new EmailPasswordSendError()
         }
     }
 }

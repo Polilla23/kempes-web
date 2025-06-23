@@ -7,6 +7,17 @@ import { EmailService } from './email.service'
 import { RegisterUserInput } from 'utils/types'
 import { JWT } from '@fastify/jwt'
 
+// Errors
+import { UserAlreadyExistsError } from '../errors/userAlreadyExistsError'
+import { EmailSendError } from '../errors/emailSendError'
+import { AuthenticationError } from '../errors/authenticationError'
+import { GenerateTokenError } from '../errors/generateTokenError'
+import { UserNotFoundError } from '../errors/userNotFoundError'
+import { EmailNotVerifiedError } from '../errors/emailNotVerifiedError'
+import { InvalidTokenError } from '../errors/invalidTokenError'
+import { EmailAlreadyVerifiedError } from '../errors/emailAlreadyVerifiedError'
+import { SamePasswordError } from '../errors/samePasswordError'
+
 export class UserService {
   private userRepository: IUserRepository
   private emailService: EmailService
@@ -29,7 +40,9 @@ export class UserService {
   async registerUser({ email, password, role }: RegisterUserInput) {
     const existingUser = await this.userRepository.findOneByEmail(email)
 
-    if (existingUser) throw new Error('User already exists.')
+    if (existingUser) {
+      throw new UserAlreadyExistsError()
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -50,7 +63,7 @@ export class UserService {
       await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
     } catch (e) {
       await this.userRepository.deleteOneById(newUser.id)
-      throw new Error('Failed to send verification email. Please try registering again.')
+      throw new EmailSendError()
     }
   }
 
@@ -58,17 +71,17 @@ export class UserService {
     const existingUser = await this.userRepository.findOneByEmail(email)
 
     if (!existingUser) {
-      throw new Error('Invalid email or password')
+      throw new AuthenticationError()
     }
 
     if (!existingUser.isVerified) {
-      throw new Error('Email not verified')
+      throw new EmailNotVerifiedError()
     }
 
     const matchPw = await bcrypt.compare(password, existingUser.password)
 
     if (!matchPw) {
-      throw new Error('Invalid email or password')
+      throw new AuthenticationError()
     }
 
     const token = this.jwtService.sign(
@@ -77,7 +90,7 @@ export class UserService {
     )
 
     if (!token) {
-      throw new Error('Failed to generate token')
+      throw new GenerateTokenError()
     }
 
     return token
@@ -87,7 +100,7 @@ export class UserService {
     const userFound = await this.userRepository.findOneById(id)
 
     if (!userFound) {
-      throw new Error('User not found')
+      throw new UserNotFoundError()
     }
   }
 
@@ -98,7 +111,7 @@ export class UserService {
       !userFound.verificationTokenExpires ||
       userFound.verificationTokenExpires < new Date()
     ) {
-      throw new Error('Invalid or expired token.')
+      throw new InvalidTokenError()
     }
 
     await this.userRepository.verifyUser(userFound.id)
@@ -108,11 +121,11 @@ export class UserService {
     const userFound = await this.userRepository.findOneByEmail(email)
 
     if (!userFound) {
-      throw new Error('User not found')
+      throw new UserNotFoundError()
     }
 
     if (userFound.isVerified) {
-      throw new Error('This user its already verified')
+      throw new EmailAlreadyVerifiedError()
     }
 
     const now = new Date()
@@ -138,7 +151,7 @@ export class UserService {
     const userFound = await this.userRepository.findOneByEmail(email)
 
     if (!userFound) {
-      throw new Error('User not found')
+      throw new UserNotFoundError()
     }
 
     const now = new Date()
@@ -164,13 +177,13 @@ export class UserService {
     const userFound = await this.userRepository.findOneByResetPasswordToken(token)
 
     if (!userFound) {
-      throw new Error('User not found')
+      throw new UserNotFoundError()
     }
 
     const isSamePassword = await bcrypt.compare(password, userFound.password)
 
     if (isSamePassword) {
-      throw new Error('Invalid new password. The password must be different from the old one.')
+      throw new SamePasswordError()
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -185,9 +198,11 @@ export class UserService {
   }
 
   async updateUser(id: string, data: Partial<User>) {
-    const user = await this.userRepository.findOneById(id)
+    const userFound = await this.userRepository.findOneById(id)
 
-    if (!user) throw new Error('User not found')
+    if (!userFound) {
+      throw new UserNotFoundError()
+    }
 
     if (data.password) {
       const hashedPassword = await bcrypt.hash(data.password, 10)
@@ -202,8 +217,11 @@ export class UserService {
   }
 
   async deleteUser(id: string) {
-    const user = await this.userRepository.findOneById(id)
-    if (!user) throw new Error('User not found')
+    const userFound = await this.userRepository.findOneById(id)
+    
+    if (!userFound) {
+      throw new UserNotFoundError()
+    }
 
     return await this.userRepository.deleteOneById(id)
   }
