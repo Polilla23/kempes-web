@@ -2,6 +2,10 @@ import { Club } from '@prisma/client'
 import { IClubRepository } from 'interfaces/IClubRepository'
 import { RegisterClubInput } from 'utils/types'
 
+// Errors
+import { ClubNotFoundError } from '../errors/clubNotFoundError'
+import { ClubAlreadyExistsError } from '../errors/clubAlreadyExistsError'
+
 export class ClubService {
   private clubRepository: IClubRepository
 
@@ -14,16 +18,21 @@ export class ClubService {
   }
 
   async findClub(id: string) {
-    const club = await this.clubRepository.findOneById(id)
+    const clubFound = await this.clubRepository.findOneById(id)
 
-    if (!club) throw new Error('Club not found.')
-    return club
+    if (!clubFound) {
+      throw new ClubNotFoundError()
+    }
+
+    return clubFound
   }
 
   async createClub({ name, logo, userId }: RegisterClubInput) {
-    const club = await this.clubRepository.findOneByName(name)
+    const clubFound = await this.clubRepository.findOneByName(name)
 
-    if (club) throw new Error('Club already exists.')
+    if (clubFound) {
+      throw new ClubAlreadyExistsError()
+    }
 
     const newClub = await this.clubRepository.save({
       name,
@@ -35,17 +44,21 @@ export class ClubService {
   }
 
   async updateClub(id: string, data: Partial<Club>) {
-    const club = await this.clubRepository.findOneById(id)
+    const clubFound = await this.clubRepository.findOneById(id)
 
-    if (!club) throw new Error('Club not found.')
+    if (!clubFound) {
+      throw new ClubNotFoundError()
+    }
 
     return await this.clubRepository.updateOneById(id, data)
   }
 
   async deleteClub(id: string) {
-    const club = await this.clubRepository.findOneById(id)
+    const clubFound = await this.clubRepository.findOneById(id)
 
-    if (!club) throw new Error('Club not found.')
+    if (!clubFound) {
+      throw new ClubNotFoundError()
+    }
 
     return await this.clubRepository.deleteOneById(id)
   }

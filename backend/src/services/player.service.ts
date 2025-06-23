@@ -3,6 +3,9 @@ import { Player } from '@prisma/client'
 import { parseDateFromDDMMYYYY } from '../utils/date'
 import { CreatePlayerInput } from '../utils/types'
 
+// Errors
+import { PlayerNotFoundError } from '../errors/playerNotFoundError'
+
 export class PlayerService {
   private playerRepository: IPlayerRespository
 
@@ -46,9 +49,11 @@ export class PlayerService {
   }
 
   async updatePlayer(id: string, data: Partial<Player>) {
-    const player = await this.playerRepository.findOneById(id)
+    const playerFound = await this.playerRepository.findOneById(id)
 
-    if (!player) throw new Error('Player not found')
+    if (!playerFound) {
+      throw new PlayerNotFoundError()
+    }
 
     if (data.actualClubId) {
     }
@@ -61,6 +66,12 @@ export class PlayerService {
   }
 
   async findPlayerById(id: string) {
-    return await this.playerRepository.findOneById(id)
+    const playerFound = await this.playerRepository.findOneById(id)
+
+    if (!playerFound) {
+      throw new PlayerNotFoundError()
+    }
+
+    return playerFound
   }
 }

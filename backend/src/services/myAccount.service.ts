@@ -1,5 +1,8 @@
 import { UserRepository } from "../repositories/user.repository";
 
+// Errors
+import { UserNotFoundError } from "../errors/userNotFoundError";
+
 export class MyAccountService {
     private userRepository: UserRepository
     
@@ -8,16 +11,16 @@ export class MyAccountService {
     }
 
     async getUserData(id: string): Promise<{ email: string, isVerified: boolean, verificationTokenExpires: Date | any }> {
-        const user = await this.userRepository.findOneById(id);
+        const userFound = await this.userRepository.findOneById(id);
 
-        if (!user) {
-            throw new Error('User not found')
+        if (!userFound) {
+            throw new UserNotFoundError()
         }
 
         return {
-            email: user.email,
-            isVerified: user.isVerified,
-            verificationTokenExpires: user.verificationTokenExpires
+            email: userFound.email,
+            isVerified: userFound.isVerified,
+            verificationTokenExpires: userFound.verificationTokenExpires
         }
     }
 }
