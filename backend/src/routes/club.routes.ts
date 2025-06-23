@@ -13,17 +13,17 @@ export const clubRoutes = async (fastify: FastifyInstance) => {
     schema: clubSchemas.findAll,
     handler: clubController.findAll.bind(clubController),
   })
-  fastify.get('/findOne', {
+  fastify.get('/findOne/:id', {
     preHandler: [fastify.authenticate],
     schema: clubSchemas.findOne,
     handler: clubController.findOne.bind(clubController),
   })
-  fastify.patch('/update', {
+  fastify.patch('/update/:id', {
     preHandler: [fastify.authenticate],
     schema: clubSchemas.update,
     handler: clubController.update.bind(clubController),
   })
-  fastify.delete('/delete', {
+  fastify.delete('/delete/:id', {
     preHandler: [fastify.authenticate],
     schema: clubSchemas.delete,
     handler: clubController.delete.bind(clubController),

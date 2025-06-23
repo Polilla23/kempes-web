@@ -44,7 +44,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
   prisma
     .$connect()
     .then(() => console.log('Connected to DB'))
-    .catch((e) => {
+    .catch((e: Error) => {
       console.error('Failed to connect to DB', e)
       process.exit(1)
     })

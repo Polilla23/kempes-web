@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output = "./generated/prisma/client"
 }
 
 datasource db {
@@ -47,10 +46,10 @@ model Player {
   ownerClubId   String  @map("owner_club_id") @default("null")
   actualClub    Club    @relation("ActualClub", fields: [actualClubId], references: [id])
   ownerClub     Club    @relation("OwnerClub", fields: [ownerClubId], references: [id])
-  overall       Int  @default(0)
+  overall       Int?  @default(0)
   salary        Float   @default(100.000)
-  sofifaId      String  @map("sofifa_id") @default("null")
-  transfermarktId String  @map("transfermarkt_id")  @default("null")
+  sofifaId      String?  @map("sofifa_id") @default("null")
+  transfermarktId String?  @map("transfermarkt_id")  @default("null")
   isKempesita   Boolean @map("is_kempesita")  @default(false)
   isActive      Boolean @map("is_active") @default(true)
 
