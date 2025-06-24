@@ -6,6 +6,7 @@ import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import fastifyJwt from '@fastify/jwt'
 import fastifyCookie, { FastifyCookieOptions } from '@fastify/cookie'
+import fastifyCors from '@fastify/cors'
 import path from 'path'
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
@@ -64,6 +65,13 @@ app.register(fastifyJwt, {
     cookieName: 'token',
     signed: false,
   },
+})
+
+app.register(fastifyCors, {
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 })
 
 app.decorate('authenticate', async function (req: FastifyRequest, reply: FastifyReply) {
