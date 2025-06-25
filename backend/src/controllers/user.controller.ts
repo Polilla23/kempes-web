@@ -40,8 +40,7 @@ export class UserController {
       return reply.status(200).send({ message: 'Login successful' })
     } catch (error) {
       return reply.status(400).send({
-        message: 'Error while login',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Error while login',
       })
     }
   }
