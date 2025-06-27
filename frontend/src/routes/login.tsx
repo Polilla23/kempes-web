@@ -8,13 +8,18 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, XIcon } from 'lucide-react'
 import { AuthService } from '@/services/auth.service'
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/login')({
+  component: LoginPage,
+})
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(4, { message: 'Password must be at least 4 characters.' }),
 })
 
-const LoginPage = () => {
+function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)

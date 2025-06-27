@@ -57,7 +57,7 @@ export class UserService {
       verificationTokenExpires,
     })
 
-    const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
+    const verificationLink = `${process.env.BACK_URL}/verify-email/${verificationToken}`
 
     try {
       await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
@@ -142,7 +142,7 @@ export class UserService {
     userFound.verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
     await this.userRepository.update(userFound)
 
-    const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
+    const verificationLink = `${process.env.BACK_URL}/verify-email/${verificationToken}`
 
     await this.emailService.sendVerificationEmail(userFound.email, verificationLink)
   }
@@ -168,7 +168,7 @@ export class UserService {
     userFound.resetPasswordTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
     await this.userRepository.update(userFound)
 
-    const resetLink = `${process.env.BACK_URL}/user/reset-password/${resetPasswordToken}`
+    const resetLink = `${process.env.BACK_URL}/reset-password/${resetPasswordToken}`
 
     await this.emailService.sendPasswordResetEmail(userFound.email, resetLink)
   }
@@ -218,7 +218,7 @@ export class UserService {
 
   async deleteUser(id: string) {
     const userFound = await this.userRepository.findOneById(id)
-    
+
     if (!userFound) {
       throw new UserNotFoundError()
     }
