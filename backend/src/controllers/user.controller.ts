@@ -17,8 +17,7 @@ export class UserController {
       return reply.status(200).send({ message: 'User registered successfully.' })
     } catch (error) {
       return reply.status(400).send({
-        message: 'Error while registering new user.',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Error while registering new user.',
       })
     }
   }
@@ -60,7 +59,9 @@ export class UserController {
 
       return reply.status(200).send({ message: 'LogOut successful' })
     } catch (error) {
-      return reply.status(500).send({ error: 'Failed to logout' })
+      return reply.status(500).send({
+        message: error instanceof Error ? error.message : 'Failed to logout', 
+      })
     }
   }
 
@@ -71,8 +72,7 @@ export class UserController {
       return reply.status(200).send(users)
     } catch (error) {
       return reply.status(400).send({
-        message: 'Error while fetching users.',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Error while fetching users.',
       })
     }
   }
@@ -84,8 +84,7 @@ export class UserController {
       return reply.status(200).send({ message: 'User verified successfully.' })
     } catch (error) {
       return reply.status(400).send({
-        message: 'Verification failed.',
-        error: error instanceof Error ? error.message : error,
+        error: error instanceof Error ? error.message : 'Verification failed.',
       })
     }
   }
@@ -99,8 +98,7 @@ export class UserController {
       return reply.status(200).send({ message: 'Verification email resent successfully' })
     } catch (error) {
       return reply.status(400).send({
-        message: 'Verification failed.',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Verification failed.',
       })
     }
   }
@@ -113,8 +111,7 @@ export class UserController {
       return reply.status(200).send({ message: 'Reset password email sent successfully.' })
     } catch (error) {
       return reply.status(400).send({
-        message: 'Reset password failed',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Reset password failed',
       })
     }
   }
@@ -128,8 +125,7 @@ export class UserController {
       return reply.status(200).send({ message: 'Password has been reset successfully.' })
     } catch (error) {
       return reply.status(400).send({
-        message: 'Failed to reset password',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Failed to reset password',
       })
     }
   }
@@ -148,8 +144,7 @@ export class UserController {
         })
       }
       return reply.status(400).send({
-        message: 'Error while updating the user.',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Error while updating the user.',
       })
     }
   }
@@ -167,8 +162,7 @@ export class UserController {
         })
       }
       return reply.status(400).send({
-        message: 'Error while deleting the user.',
-        error: error instanceof Error ? error.message : error,
+        message: error instanceof Error ? error.message : 'Error while deleting the user.',
       })
     }
   }

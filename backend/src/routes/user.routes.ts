@@ -1,9 +1,11 @@
 import { FastifyInstance } from 'fastify'
 import { userSchemas } from '../schemas/user.schema'
+import { authorize } from '../middleware/authorize'
 
 export const userRoutes = async (fastify: FastifyInstance) => {
   const userController = fastify.container.resolve('userController')
   fastify.post('/register', {
+    preHandler: [fastify.authenticate, authorize(['ADMIN'])],
     schema: userSchemas.register,
     handler: userController.register.bind(userController),
   })

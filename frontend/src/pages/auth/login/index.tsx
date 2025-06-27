@@ -37,7 +37,7 @@ const LoginPage = () => {
       window.location.href = 'https://www.google.com'
     } catch (error: any) {
       console.error('Login failed:', error)
-      setLoginError(error.message)
+      setLoginError(error instanceof Error ? error.message : 'An error occurred while logging in.')
     } finally {
       setIsLoading(false)
     }
