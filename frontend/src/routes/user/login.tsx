@@ -10,7 +10,7 @@ import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, XIcon } from 'lucide-
 import { AuthService } from '@/services/auth.service'
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute('/user/login')({
   component: LoginPage,
 })
 
