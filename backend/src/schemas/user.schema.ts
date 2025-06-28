@@ -20,10 +20,9 @@ export const userSchemas = {
         },
       },
       400: {
-        description: 'Error while registering new user.',
+        description: 'message while registering new user.',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' },
         },
       },
     },
@@ -35,26 +34,25 @@ export const userSchemas = {
       type: 'object',
       properties: {
         email: { type: 'string' },
-        password: { type: 'string' }
+        password: { type: 'string' },
       },
-      required: ['email', 'password']
+      required: ['email', 'password'],
     },
     response: {
       200: {
         description: 'Successful login',
         type: 'object',
         properties: {
-          token: { type: 'string' }
-        }
+          token: { type: 'string' },
+        },
       },
       400: {
         description: 'Bad request',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' }
-        }
-      }
-    }
+        },
+      },
+    },
   },
   logout: {
     description: 'Logout a user',
@@ -64,17 +62,16 @@ export const userSchemas = {
         description: 'Successful logout',
         type: 'object',
         properties: {
-          message: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       400: {
         description: 'Bad request',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' }
-        }
-      }
-    }
+        },
+      },
+    },
   },
   findAll: {
     description: 'Fetch all users.',
@@ -91,10 +88,9 @@ export const userSchemas = {
         },
       },
       400: {
-        description: 'Error while fetching the users.',
+        description: 'message while fetching the users.',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' },
         },
       },
     },
@@ -107,31 +103,30 @@ export const userSchemas = {
       required: ['token'],
       properties: {
         token: { type: 'string' },
-      }
+      },
     },
     response: {
       200: {
         description: 'Email verified successfully',
         type: 'object',
         properties: {
-          message: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       400: {
         description: 'Bad request',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' }
-        }
+        },
       },
       500: {
         description: 'Failed to verify email',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
-      }
-    }
+          message: { type: 'string' },
+        },
+      },
+    },
   },
   resendVerificationEmail: {
     description: 'Resend verification email',
@@ -140,32 +135,32 @@ export const userSchemas = {
       type: 'object',
       required: ['email'],
       properties: {
-        email: { type: 'string', format: 'email'}
-      }
+        email: { type: 'string', format: 'email' },
+      },
     },
     response: {
       200: {
         description: 'Verification email resent successfully',
         type: 'object',
         properties: {
-          message: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       400: {
         description: 'Bad request',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       500: {
         description: 'Failed to resend verification email',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
-      }
-    }
+          message: { type: 'string' },
+        },
+      },
+    },
   },
   requestPasswordReset: {
     description: 'Request password reset',
@@ -174,32 +169,56 @@ export const userSchemas = {
       type: 'object',
       required: ['email'],
       properties: {
-        email: { type: 'string', format: 'email'}
-      }
+        email: { type: 'string', format: 'email' },
+      },
     },
     response: {
-    200: {
+      200: {
         description: 'Reset password email sent successfully',
         type: 'object',
         properties: {
-          message: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       400: {
         description: 'Bad request',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       500: {
         description: 'Failed to send reset password email',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
-      }
-    }
+          message: { type: 'string' },
+        },
+      },
+    },
+  },
+  verifyResetPasswordToken: {
+    description: 'Verify reset password token',
+    tags: ['Auth'],
+    params: {
+      type: 'object',
+      required: ['token'],
+    },
+    response: {
+      200: {
+        description: 'Reset password token verified',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+        },
+      },
+      400: {
+        description: 'Bad request',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+        },
+      },
+    },
   },
   resetPassword: {
     description: 'Reset password',
@@ -208,39 +227,39 @@ export const userSchemas = {
       type: 'object',
       required: ['token'],
       properties: {
-        token: { type: 'string' }
-      }
+        token: { type: 'string' },
+      },
     },
     body: {
       type: 'object',
       required: ['password'],
       properties: {
-        password: { type: 'string' }
-      }
+        password: { type: 'string' },
+      },
     },
     response: {
-    200: {
+      200: {
         description: 'Password has been reset successfully',
         type: 'object',
         properties: {
-          message: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       400: {
         description: 'Bad request',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
+          message: { type: 'string' },
+        },
       },
       500: {
         description: 'Failed to reset password',
         type: 'object',
         properties: {
-          error: { type: 'string' }
-        }
-      }
-    }
+          message: { type: 'string' },
+        },
+      },
+    },
   },
   update: {
     description: 'Update a user by ID.',
@@ -250,7 +269,7 @@ export const userSchemas = {
       properties: {
         email: { type: 'string' },
         pasword: { type: 'string' },
-        role: { type: 'string', enum: ['admin', 'user']}
+        role: { type: 'string', enum: ['admin', 'user'] },
       },
       additionalProperties: false,
     },
@@ -278,14 +297,12 @@ export const userSchemas = {
         type: 'object',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' },
         },
       },
       400: {
-        description: 'Error while updating the user.',
+        description: 'message while updating the user.',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' },
         },
       },
     },
@@ -317,14 +334,12 @@ export const userSchemas = {
         type: 'object',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' },
         },
       },
       400: {
-        description: 'Error while registering new user.',
+        description: 'message while registering new user.',
         properties: {
           message: { type: 'string' },
-          error: { type: 'string' },
         },
       },
     },

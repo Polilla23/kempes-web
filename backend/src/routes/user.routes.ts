@@ -41,6 +41,11 @@ export const userRoutes = async (fastify: FastifyInstance) => {
     handler: userController.requestPasswordReset.bind(userController),
   })
 
+  fastify.get('/verify-reset-password-token/:token', {
+    schema: userSchemas.verifyResetPasswordToken,
+    handler: userController.findOneByResetPasswordToken.bind(userController),
+  })
+
   fastify.post('/reset-password/:token', {
     schema: userSchemas.resetPassword,
     handler: userController.resetPassword.bind(userController),
