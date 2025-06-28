@@ -68,6 +68,16 @@ export class AuthService {
     }
   }
 
+  // Verificar si el token es válido
+  static async verifyResetPasswordToken(token: string): Promise<AuthResponse> {
+    try {
+      const response = await api.get<AuthResponse>(`/user/verify-reset-password-token/${token}`)
+      return response.data || { message: response.message || 'Reset password token verified' }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error verifying reset password token')
+    }
+  }
+
   // Reset de contraseña con token
   static async resetPassword(token: string, data: NewPasswordFormData): Promise<AuthResponse> {
     try {

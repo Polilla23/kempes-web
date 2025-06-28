@@ -60,7 +60,7 @@ export class UserController {
       return reply.status(200).send({ message: 'LogOut successful' })
     } catch (error) {
       return reply.status(500).send({
-        message: error instanceof Error ? error.message : 'Failed to logout', 
+        message: error instanceof Error ? error.message : 'Failed to logout',
       })
     }
   }
@@ -84,7 +84,7 @@ export class UserController {
       return reply.status(200).send({ message: 'User verified successfully.' })
     } catch (error) {
       return reply.status(400).send({
-        error: error instanceof Error ? error.message : 'Verification failed.',
+        message: error instanceof Error ? error.message : 'Verification failed.',
       })
     }
   }
@@ -112,6 +112,19 @@ export class UserController {
     } catch (error) {
       return reply.status(400).send({
         message: error instanceof Error ? error.message : 'Reset password failed',
+      })
+    }
+  }
+
+  async findOneByResetPasswordToken(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
+    const { token } = req.params as { token: string }
+    try {
+      const user = await this.userService.findOneByResetPasswordToken(token)
+      return reply.status(200).send(user)
+    } catch (error) {
+      return reply.status(400).send({
+        message:
+          error instanceof Error ? error.message : 'Error while fetching user by reset password token.',
       })
     }
   }

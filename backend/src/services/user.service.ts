@@ -57,7 +57,7 @@ export class UserService {
       verificationTokenExpires,
     })
 
-    const verificationLink = `${process.env.BACK_URL}/verify-email/${verificationToken}`
+    const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
 
     try {
       await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
@@ -134,7 +134,7 @@ export class UserService {
       const timeRemaining = Math.ceil(
         (userFound.verificationTokenExpires.getTime() - now.getTime()) / (60 * 1000)
       )
-      throw new Error(`Please wait ${timeRemaining} minutes before requesting another verification email`)
+      throw new Error(`Please wait ${timeRemaining} minutes before requesting another verification email.`)
     }
 
     const verificationToken = crypto.randomBytes(20).toString('hex')
@@ -142,7 +142,7 @@ export class UserService {
     userFound.verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
     await this.userRepository.update(userFound)
 
-    const verificationLink = `${process.env.BACK_URL}/verify-email/${verificationToken}`
+    const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
 
     await this.emailService.sendVerificationEmail(userFound.email, verificationLink)
   }
@@ -160,7 +160,7 @@ export class UserService {
       const timeRemaining = Math.ceil(
         (userFound.resetPasswordTokenExpires.getTime() - now.getTime()) / (60 * 1000)
       )
-      throw new Error(`Please wait ${timeRemaining} minutes before requesting another reset password`)
+      throw new Error(`Please wait ${timeRemaining} minutes before requesting another reset password.`)
     }
 
     const resetPasswordToken = crypto.randomBytes(20).toString('hex')
@@ -168,7 +168,7 @@ export class UserService {
     userFound.resetPasswordTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
     await this.userRepository.update(userFound)
 
-    const resetLink = `${process.env.BACK_URL}/reset-password/${resetPasswordToken}`
+    const resetLink = `${process.env.BACK_URL}/user/reset-password/${resetPasswordToken}`
 
     await this.emailService.sendPasswordResetEmail(userFound.email, resetLink)
   }
@@ -191,6 +191,10 @@ export class UserService {
     userFound.resetPasswordToken = null
     userFound.resetPasswordTokenExpires = null
     await this.userRepository.update(userFound)
+  }
+
+  async findOneByResetPasswordToken(token: string) {
+    return await this.userRepository.findOneByResetPasswordToken(token)
   }
 
   async findAllUsers() {

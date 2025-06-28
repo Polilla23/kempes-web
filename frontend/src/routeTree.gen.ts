@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
 import { Route as UserResendVerificationEmailRouteImport } from './routes/user/resend-verification-email'
-import { Route as UserRequestResetPasswordRouteImport } from './routes/user/request-reset-password'
 import { Route as UserLogoutRouteImport } from './routes/user/logout'
 import { Route as UserLoginRouteImport } from './routes/user/login'
+import { Route as UserForgotPasswordRouteImport } from './routes/user/forgot-password'
 import { Route as UserFindAllRouteImport } from './routes/user/findAll'
 import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
@@ -48,12 +48,6 @@ const UserResendVerificationEmailRoute =
     path: '/user/resend-verification-email',
     getParentRoute: () => rootRouteImport,
   } as any)
-const UserRequestResetPasswordRoute =
-  UserRequestResetPasswordRouteImport.update({
-    id: '/user/request-reset-password',
-    path: '/user/request-reset-password',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const UserLogoutRoute = UserLogoutRouteImport.update({
   id: '/user/logout',
   path: '/user/logout',
@@ -62,6 +56,11 @@ const UserLogoutRoute = UserLogoutRouteImport.update({
 const UserLoginRoute = UserLoginRouteImport.update({
   id: '/user/login',
   path: '/user/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserForgotPasswordRoute = UserForgotPasswordRouteImport.update({
+  id: '/user/forgot-password',
+  path: '/user/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const UserFindAllRoute = UserFindAllRouteImport.update({
@@ -152,9 +151,9 @@ export interface FileRoutesByFullPath {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/user/findAll': typeof UserFindAllRoute
+  '/user/forgot-password': typeof UserForgotPasswordRoute
   '/user/login': typeof UserLoginRoute
   '/user/logout': typeof UserLogoutRoute
-  '/user/request-reset-password': typeof UserRequestResetPasswordRoute
   '/user/resend-verification-email': typeof UserResendVerificationEmailRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
@@ -176,9 +175,9 @@ export interface FileRoutesByTo {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/user/findAll': typeof UserFindAllRoute
+  '/user/forgot-password': typeof UserForgotPasswordRoute
   '/user/login': typeof UserLoginRoute
   '/user/logout': typeof UserLogoutRoute
-  '/user/request-reset-password': typeof UserRequestResetPasswordRoute
   '/user/resend-verification-email': typeof UserResendVerificationEmailRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
@@ -201,9 +200,9 @@ export interface FileRoutesById {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/user/findAll': typeof UserFindAllRoute
+  '/user/forgot-password': typeof UserForgotPasswordRoute
   '/user/login': typeof UserLoginRoute
   '/user/logout': typeof UserLogoutRoute
-  '/user/request-reset-password': typeof UserRequestResetPasswordRoute
   '/user/resend-verification-email': typeof UserResendVerificationEmailRoute
   '/myaccount/': typeof MyaccountIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
@@ -227,9 +226,9 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/user/findAll'
+    | '/user/forgot-password'
     | '/user/login'
     | '/user/logout'
-    | '/user/request-reset-password'
     | '/user/resend-verification-email'
     | '/myaccount'
     | '/club/delete/$id'
@@ -251,9 +250,9 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/user/findAll'
+    | '/user/forgot-password'
     | '/user/login'
     | '/user/logout'
-    | '/user/request-reset-password'
     | '/user/resend-verification-email'
     | '/myaccount'
     | '/club/delete/$id'
@@ -275,9 +274,9 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/user/findAll'
+    | '/user/forgot-password'
     | '/user/login'
     | '/user/logout'
-    | '/user/request-reset-password'
     | '/user/resend-verification-email'
     | '/myaccount/'
     | '/club/delete/$id'
@@ -300,9 +299,9 @@ export interface RootRouteChildren {
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
   UserFindAllRoute: typeof UserFindAllRoute
+  UserForgotPasswordRoute: typeof UserForgotPasswordRoute
   UserLoginRoute: typeof UserLoginRoute
   UserLogoutRoute: typeof UserLogoutRoute
-  UserRequestResetPasswordRoute: typeof UserRequestResetPasswordRoute
   UserResendVerificationEmailRoute: typeof UserResendVerificationEmailRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
@@ -341,13 +340,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserResendVerificationEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/user/request-reset-password': {
-      id: '/user/request-reset-password'
-      path: '/user/request-reset-password'
-      fullPath: '/user/request-reset-password'
-      preLoaderRoute: typeof UserRequestResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/user/logout': {
       id: '/user/logout'
       path: '/user/logout'
@@ -360,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/user/login'
       fullPath: '/user/login'
       preLoaderRoute: typeof UserLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/forgot-password': {
+      id: '/user/forgot-password'
+      path: '/user/forgot-password'
+      fullPath: '/user/forgot-password'
+      preLoaderRoute: typeof UserForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/user/findAll': {
@@ -484,9 +483,9 @@ const rootRouteChildren: RootRouteChildren = {
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
   UserFindAllRoute: UserFindAllRoute,
+  UserForgotPasswordRoute: UserForgotPasswordRoute,
   UserLoginRoute: UserLoginRoute,
   UserLogoutRoute: UserLogoutRoute,
-  UserRequestResetPasswordRoute: UserRequestResetPasswordRoute,
   UserResendVerificationEmailRoute: UserResendVerificationEmailRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
   ClubDeleteIdRoute: ClubDeleteIdRoute,
