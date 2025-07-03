@@ -31,9 +31,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(true);
         try {
             const user = await AuthService.getProfile();
+            console.log("UserContext - user recibido:", user);
             setId(user?.id ?? null);
             setRole(user?.role ?? null);
-        } catch {
+        } catch (error) {
+            console.log("UserContext - error:", error);
+            if (error instanceof Error && error.message.includes('Invalid token')) {
+                console.log("UserContext - token inválido, limpiando sesión");
+            }
             setId(null);
             setRole(null);
         } finally {

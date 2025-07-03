@@ -7,10 +7,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, XIcon } from 'lucide-react'
 import { AuthService } from '@/services/auth.service'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import AuthCard from '@/components/ui/authCard'
+import { useUser } from '@/context/UserContext'
 
-export const Route = createFileRoute('/user/login')({
+export const Route = createFileRoute('/_user/login')({
   component: LoginPage,
 })
 
@@ -23,6 +24,8 @@ function LoginPage() {
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const navigate = useNavigate();
+  const { refreshUser } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,7 +40,8 @@ function LoginPage() {
 
     try {
       await AuthService.login(values)
-      window.location.href = 'https://www.google.com'
+      await refreshUser();
+      navigate({ to: '/' })
     } catch (error: any) {
       console.error('Login failed:', error)
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')

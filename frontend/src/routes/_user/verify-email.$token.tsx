@@ -4,7 +4,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-export const Route = createFileRoute('/user/verify-email/$token')({
+export const Route = createFileRoute('/_user/verify-email/$token')({
   component: RouteComponent,
 })
 
