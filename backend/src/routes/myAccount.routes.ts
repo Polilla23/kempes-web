@@ -10,4 +10,10 @@ export async function myAccountRoutes(fastify: FastifyInstance) {
     schema: myAccountSchemas.getUserData,
     handler: accountController.getUserData.bind(accountController),
   })
+
+  fastify.get('/profile', {
+    preHandler: [fastify.authenticate],
+    schema: myAccountSchemas.getUserRole,
+    handler: accountController.getProfile.bind(accountController),
+  })
 }

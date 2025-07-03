@@ -2,6 +2,7 @@ import { UserRepository } from "../repositories/user.repository";
 
 // Errors
 import { UserNotFoundError } from "../errors/userNotFoundError";
+import { RoleType } from "@prisma/client";
 
 export class MyAccountService {
     private userRepository: UserRepository
@@ -22,5 +23,15 @@ export class MyAccountService {
             isVerified: userFound.isVerified,
             verificationTokenExpires: userFound.verificationTokenExpires
         }
+    }
+
+    async getUserRole(id: string): Promise<{ role: RoleType }> {
+        const userFound = await this.userRepository.findOneById(id);
+
+        if (!userFound) {
+            throw new UserNotFoundError();
+        }
+
+        return { role: userFound.role as RoleType };
     }
 }

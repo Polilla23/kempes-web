@@ -67,6 +67,11 @@ export interface UserResponse {
   user?: User
 }
 
+export interface UserRoleResponse {
+  message: string
+  role?: 'ADMIN' | 'USER'
+}
+
 export interface UsersResponse {
   users: User[]
 }

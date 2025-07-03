@@ -18,4 +18,15 @@ export class myAccountController {
             
         }
     }
+
+    async getProfile(req: FastifyRequest, reply: FastifyReply) {
+        const { id } = req.user as { id: string };
+
+        try {
+            const userData = await this.myAccountService.getUserRole(id);
+            return reply.status(200).send(userData);
+        } catch (error) {
+            return reply.status(500).send({ message: 'Error al obtener el rol del usuario' });
+        }
+    }
 }
