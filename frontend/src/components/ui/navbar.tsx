@@ -1,7 +1,13 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut, UserRound } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+import { Link } from "@tanstack/react-router";
 
 export const Navbar = () => {
+    const { role, loading } = useUser();
+
+    if (loading) return null; // TODO: Añadir un loading spinner o skeleton
+    
     return (
         <header className="w-full bg-white shadow">
             <nav className="container mx-auto flex items-center justify-between py-4 px-6">
@@ -13,11 +19,42 @@ export const Navbar = () => {
 
                 <div className="flex items-center">
                     <ul className="flex gap-8 justify-center flex-1">
-                        <li className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">Home</li>
-                        <li className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">Standings</li>
-                        <li className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">Fixture</li>
-                        <li className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">Stats</li>
-                        <li className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">Transfers</li>
+                        {/* TODO: Añadir links a las rutas (to=".") */}
+                        <li>
+                            <Link to="." className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
+                                Home
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="." className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
+                                Standings
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="." className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
+                                Fixture
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="." className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
+                                Stats
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="." className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
+                                Transfers
+                            </Link>
+                        </li>
+                        {!loading && role === 'ADMIN' && (
+                            <li>
+                                <Link 
+                                    to="/admin"
+                                    className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition"
+                                >
+                                    Panel Admin
+                                </Link>
+                            </li>
+                        )}
                     </ul>
                 </div>
                 

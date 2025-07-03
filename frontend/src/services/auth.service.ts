@@ -5,6 +5,7 @@ import type {
   ResetPasswordFormData,
   NewPasswordFormData,
   AuthResponse,
+  UserRoleResponse,
 } from '../types'
 
 export class AuthService {
@@ -88,16 +89,26 @@ export class AuthService {
     }
   }
 
-  // Verificar si el usuario está autenticado
-  static async checkAuth(): Promise<boolean> {
+  // Obtener perfil del usuario autenticado
+  static async getProfile(): Promise<'ADMIN' | 'USER' | null> {
     try {
-      // Intentar hacer una petición que requiera autenticación
-      await api.get('/myaccount/profile')
-      return true
+      const response = await api.get<{ role?: 'ADMIN' | 'USER' }>('/myaccount/profile') as { role?: 'ADMIN' | 'USER' }
+      return response.role ?? null;
     } catch (error) {
-      return false
+      throw new Error(error instanceof Error ? error.message : 'Error al obtener el rol del usuario')
     }
   }
+
+  // Verificar si el usuario está autenticado
+  // static async checkAuth(): Promise<boolean> {
+  //   try {
+  //     // Intentar hacer una petición que requiera autenticación
+  //     await api.get('/myaccount/profile')
+  //     return true
+  //   } catch (error) {
+  //     return false
+  //   }
+  // }
 }
 
 export default AuthService
