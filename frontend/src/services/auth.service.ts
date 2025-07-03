@@ -5,7 +5,6 @@ import type {
   ResetPasswordFormData,
   NewPasswordFormData,
   AuthResponse,
-  UserRoleResponse,
 } from '../types'
 
 export class AuthService {
@@ -90,12 +89,12 @@ export class AuthService {
   }
 
   // Obtener perfil del usuario autenticado
-  static async getProfile(): Promise<'ADMIN' | 'USER' | null> {
+  static async getProfile(): Promise<{ id: string; role: 'ADMIN' | 'USER' } | null> {
     try {
-      const response = await api.get<{ role?: 'ADMIN' | 'USER' }>('/myaccount/profile') as { role?: 'ADMIN' | 'USER' }
-      return response.role ?? null;
+      const response = await api.get<{ id: string; role: 'ADMIN' | 'USER' }>('/myaccount/me') as { id: string; role: 'ADMIN' | 'USER' };
+      return response;
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Error al obtener el rol del usuario')
+      throw new Error(error instanceof Error ? error.message : 'Error al obtener el perfil del usuario');
     }
   }
 

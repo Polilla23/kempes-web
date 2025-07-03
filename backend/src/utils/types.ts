@@ -15,6 +15,17 @@ declare module 'fastify' {
   }
 }
 
+declare global {
+  namespace Fastify {
+    interface FastifyRequest {
+      user: {
+        id: string
+        role: string
+      }
+    }
+  }
+}
+
 export type RegisterUserInput = {
   email: string
   password: string

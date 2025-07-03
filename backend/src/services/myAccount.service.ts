@@ -24,14 +24,4 @@ export class MyAccountService {
             verificationTokenExpires: userFound.verificationTokenExpires
         }
     }
-
-    async getUserRole(id: string): Promise<{ role: RoleType }> {
-        const userFound = await this.userRepository.findOneById(id);
-
-        if (!userFound) {
-            throw new UserNotFoundError();
-        }
-
-        return { role: userFound.role as RoleType };
-    }
 }

@@ -11,9 +11,11 @@ export async function myAccountRoutes(fastify: FastifyInstance) {
     handler: accountController.getUserData.bind(accountController),
   })
 
-  fastify.get('/profile', {
+  fastify.get('/me', {
     preHandler: [fastify.authenticate],
-    schema: myAccountSchemas.getUserRole,
-    handler: accountController.getProfile.bind(accountController),
+    handler: async (req, reply) => {
+      const user = req.user as { id: string, role: string }
+      return { id: user.id, role: user.role }
+    }
   })
 }
