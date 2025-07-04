@@ -6,10 +6,8 @@ import { Button } from '@/components/ui/button'
 import { AuthService } from "@/services/auth.service";
 
 export const Navbar = () => {
-    const { role, loading, logout } = useUser();
+    const { role, logout } = useUser();
     const navigate = useNavigate();
-
-    if (loading) return null; // TODO: Añadir un loading spinner o skeleton
 
     const handleLogout = async () => {
         await AuthService.logout();
@@ -54,7 +52,7 @@ export const Navbar = () => {
                                 Transfers
                             </Link>
                         </li>
-                        {!loading && role === 'ADMIN' && (
+                        {role === 'ADMIN' && (
                             <li>
                                 <Link 
                                     to="/admin"
