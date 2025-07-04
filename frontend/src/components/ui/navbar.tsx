@@ -1,12 +1,19 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LogOut, UserRound } from "lucide-react";
 import { useUser } from "@/context/UserContext";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Button } from '@/components/ui/button'
+import { AuthService } from "@/services/auth.service";
 
 export const Navbar = () => {
-    const { role, loading } = useUser();
+    const { role, logout } = useUser();
+    const navigate = useNavigate();
 
-    if (loading) return null; // TODO: Añadir un loading spinner o skeleton
+    const handleLogout = async () => {
+        await AuthService.logout();
+        await logout();
+        navigate({ to: '/login' });
+    }
     
     return (
         <header className="w-full bg-white shadow">
@@ -21,7 +28,7 @@ export const Navbar = () => {
                     <ul className="flex gap-8 justify-center flex-1">
                         {/* TODO: Añadir links a las rutas (to=".") */}
                         <li>
-                            <Link to="." className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
+                            <Link to="/" className="text-lg font-semibold cursor-pointer hover:text-blue-600 transition">
                                 Home
                             </Link>
                         </li>
@@ -45,7 +52,7 @@ export const Navbar = () => {
                                 Transfers
                             </Link>
                         </li>
-                        {!loading && role === 'ADMIN' && (
+                        {role === 'ADMIN' && (
                             <li>
                                 <Link 
                                     to="/admin"
@@ -75,7 +82,9 @@ export const Navbar = () => {
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>
-                            Cerrar sesión<LogOut />
+                            <Button variant="ghost" onClick={handleLogout}>
+                                Cerrar sesión<LogOut />
+                            </Button>
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                     </DropdownMenu>

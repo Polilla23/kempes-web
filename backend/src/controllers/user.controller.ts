@@ -27,6 +27,8 @@ export class UserController {
 
     try {
       const token = await this.userService.loginUser(email, password)
+      console.log("Token generado:", token);
+      
       reply.setCookie('token', token, {
         httpOnly: false,
         secure: true,

@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { checkAuth } from '../auth';
 
-export const Route = createFileRoute('/club/update/$id')({
+export const Route = createFileRoute('/_user/findAll')({
   beforeLoad: async ({ location }) => {
     await checkAuth(location);
   },
@@ -9,5 +9,5 @@ export const Route = createFileRoute('/club/update/$id')({
 })
 
 function RouteComponent() {
-  return <div>Hello "/update/$id"!</div>
+  return <div>Hello "/findAll"!</div>
 }

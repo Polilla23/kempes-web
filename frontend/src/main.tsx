@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { routeTree } from './routeTree.gen'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { UserProvider } from './context/UserContext'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
@@ -16,6 +17,8 @@ declare module '@tanstack/react-router' {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <UserProvider>
+      <RouterProvider router={router} />
+    </UserProvider> 
   </StrictMode>
 )

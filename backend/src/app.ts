@@ -77,11 +77,14 @@ app.register(fastifyCors, {
 app.decorate('authenticate', async function (req: FastifyRequest, reply: FastifyReply) {
   try {
     const token = req.cookies.token
+    console.log("Token en cookie:", token);
     if (!token) {
       return reply.status(401).send({ message: 'Authentication required' })
     }
 
     const decoded = await req.jwtVerify<{ id: string; role: string }>()
+    console.log("Decoded token:", decoded);
+    
     if (!decoded.role || !decoded.id) {
       throw new Error('Invalid token structure')
     }

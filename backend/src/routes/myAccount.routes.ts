@@ -14,6 +14,10 @@ export async function myAccountRoutes(fastify: FastifyInstance) {
   fastify.get('/me', {
     preHandler: [fastify.authenticate],
     handler: async (req, reply) => {
+      console.log("Endpoint /me llamado");
+      console.log("Cookies:", req.cookies);
+      console.log("User:", req.user);
+      
       const user = req.user as { id: string, role: string }
       return { id: user.id, role: user.role }
     }
