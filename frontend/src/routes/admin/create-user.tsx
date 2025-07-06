@@ -10,6 +10,7 @@ import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, UserPlus, XIcon } fro
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const Route = createFileRoute('/admin/create-user')({
     component: CreateUserPage,
@@ -168,7 +169,7 @@ function CreateUserPage() {
                                 )}
                             />
 
-                            {/* <FormField
+                            <FormField
                                 control={form.control}
                                 name="role"
                                 render={({ field }) => (
@@ -188,7 +189,7 @@ function CreateUserPage() {
                                     <FormMessage />
                                 </FormItem>
                                 )}
-                            /> */}
+                            />
 
                             <Button
                                 className="w-full h-11 bg-cyan-600 hover:bg-cyan-700 text-white font-medium transition-colors duration-200 shadow-lg hover:shadow-xl"
