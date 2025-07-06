@@ -82,11 +82,10 @@ function ResetPasswordPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setVerificationStatus('loading')
-      console.log(token, values)
       await AuthService.resetPassword(token, values)
       setVerificationStatus('success')
       setTimeout(() => {
-        navigate({ to: '/user/login' })
+        navigate({ to: '/' })
       }, 5000)
     } catch (error: any) {
       setVerificationStatus('error')
@@ -122,7 +121,7 @@ function ResetPasswordPage() {
               The password reset link you're trying to use is invalid or has expired.
             </p>
             <Button
-              onClick={() => navigate({ to: '/user/forgot-password' })}
+              onClick={() => navigate({ to: '/forgot-password' })}
               className="bg-cyan-600 hover:bg-cyan-700 text-white"
             >
               Request New Reset Link

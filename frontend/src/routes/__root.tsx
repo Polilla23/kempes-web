@@ -13,8 +13,6 @@ function RootComponent() {
   const pathname = router.state.location.pathname
   const { loading } = useUser()
 
-  console.log("RootComponent - pathname:", pathname);
-
   // Rutas donde NO mostrar el Navbar
   const routesWithoutNavbar = [
     '/login',
@@ -26,8 +24,6 @@ function RootComponent() {
   ]
 
 const hideNavbar = routesWithoutNavbar.includes(pathname)
-
-  console.log("RootComponent - hideNavbar:", hideNavbar, "!hideNavbar:", !hideNavbar);
 
   return (
     <>
