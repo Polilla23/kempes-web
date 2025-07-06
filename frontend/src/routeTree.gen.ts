@@ -9,9 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
@@ -33,6 +33,11 @@ import { Route as UserResetPasswordTokenRouteImport } from './routes/_user/reset
 import { Route as UserRegisterTokenRouteImport } from './routes/_user/register.$token'
 import { Route as UserDeleteIdRouteImport } from './routes/_user/delete.$id'
 
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -41,11 +46,6 @@ const IndexRoute = IndexRouteImport.update({
 const MyaccountIndexRoute = MyaccountIndexRouteImport.update({
   id: '/myaccount/',
   path: '/myaccount/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayerFindAllRoute = PlayerFindAllRouteImport.update({
@@ -69,9 +69,9 @@ const ClubCreateRoute = ClubCreateRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminCreateUserRoute = AdminCreateUserRouteImport.update({
-  id: '/admin/create-user',
-  path: '/admin/create-user',
-  getParentRoute: () => rootRouteImport,
+  id: '/create-user',
+  path: '/create-user',
+  getParentRoute: () => AdminRoute,
 } as any)
 const UserResendVerificationEmailRoute =
   UserResendVerificationEmailRouteImport.update({
@@ -152,6 +152,7 @@ const UserDeleteIdRoute = UserDeleteIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/findAll': typeof UserFindAllRoute
   '/forgot-password': typeof UserForgotPasswordRoute
   '/login': typeof UserLoginRoute
@@ -161,7 +162,6 @@ export interface FileRoutesByFullPath {
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
-  '/admin': typeof AdminIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/delete/$id': typeof UserDeleteIdRoute
   '/register/$token': typeof UserRegisterTokenRoute
@@ -177,6 +177,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/findAll': typeof UserFindAllRoute
   '/forgot-password': typeof UserForgotPasswordRoute
   '/login': typeof UserLoginRoute
@@ -186,7 +187,6 @@ export interface FileRoutesByTo {
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
-  '/admin': typeof AdminIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/delete/$id': typeof UserDeleteIdRoute
   '/register/$token': typeof UserRegisterTokenRoute
@@ -203,6 +203,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/_user/findAll': typeof UserFindAllRoute
   '/_user/forgot-password': typeof UserForgotPasswordRoute
   '/_user/login': typeof UserLoginRoute
@@ -212,7 +213,6 @@ export interface FileRoutesById {
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
-  '/admin/': typeof AdminIndexRoute
   '/myaccount/': typeof MyaccountIndexRoute
   '/_user/delete/$id': typeof UserDeleteIdRoute
   '/_user/register/$token': typeof UserRegisterTokenRoute
@@ -230,6 +230,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/findAll'
     | '/forgot-password'
     | '/login'
@@ -239,7 +240,6 @@ export interface FileRouteTypes {
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
-    | '/admin'
     | '/myaccount'
     | '/delete/$id'
     | '/register/$token'
@@ -255,6 +255,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/findAll'
     | '/forgot-password'
     | '/login'
@@ -264,7 +265,6 @@ export interface FileRouteTypes {
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
-    | '/admin'
     | '/myaccount'
     | '/delete/$id'
     | '/register/$token'
@@ -280,6 +280,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/_user/findAll'
     | '/_user/forgot-password'
     | '/_user/login'
@@ -289,7 +290,6 @@ export interface FileRouteTypes {
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
-    | '/admin/'
     | '/myaccount/'
     | '/_user/delete/$id'
     | '/_user/register/$token'
@@ -306,16 +306,15 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   UserFindAllRoute: typeof UserFindAllRoute
   UserForgotPasswordRoute: typeof UserForgotPasswordRoute
   UserLoginRoute: typeof UserLoginRoute
   UserResendVerificationEmailRoute: typeof UserResendVerificationEmailRoute
-  AdminCreateUserRoute: typeof AdminCreateUserRoute
   ClubCreateRoute: typeof ClubCreateRoute
   ClubFindAllRoute: typeof ClubFindAllRoute
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
-  AdminIndexRoute: typeof AdminIndexRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
   UserDeleteIdRoute: typeof UserDeleteIdRoute
   UserRegisterTokenRoute: typeof UserRegisterTokenRoute
@@ -332,6 +331,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -344,13 +350,6 @@ declare module '@tanstack/react-router' {
       path: '/myaccount'
       fullPath: '/myaccount'
       preLoaderRoute: typeof MyaccountIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/': {
-      id: '/admin/'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/player/findAll': {
@@ -383,10 +382,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/create-user': {
       id: '/admin/create-user'
-      path: '/admin/create-user'
+      path: '/create-user'
       fullPath: '/admin/create-user'
       preLoaderRoute: typeof AdminCreateUserRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/_user/resend-verification-email': {
       id: '/_user/resend-verification-email'
@@ -496,18 +495,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminCreateUserRoute: typeof AdminCreateUserRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminCreateUserRoute: AdminCreateUserRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   UserFindAllRoute: UserFindAllRoute,
   UserForgotPasswordRoute: UserForgotPasswordRoute,
   UserLoginRoute: UserLoginRoute,
   UserResendVerificationEmailRoute: UserResendVerificationEmailRoute,
-  AdminCreateUserRoute: AdminCreateUserRoute,
   ClubCreateRoute: ClubCreateRoute,
   ClubFindAllRoute: ClubFindAllRoute,
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
-  AdminIndexRoute: AdminIndexRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
   UserDeleteIdRoute: UserDeleteIdRoute,
   UserRegisterTokenRoute: UserRegisterTokenRoute,

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouter } from "@tanstack/react-router"
-import { checkAuth } from "../auth";
+import { checkAuth } from "@/services/auth-guard";
 
 const adminMenu = [
     { label: 'Crear usuario', path: '/admin/create-user' },
@@ -7,7 +7,7 @@ const adminMenu = [
     { label: 'Crear jugador', path: '/admin/create-player' }
 ];
 
-export const Route = createFileRoute('/admin/')({
+export const Route = createFileRoute('/admin')({
     beforeLoad: async ({ location }) => {
         await checkAuth(location);
     },
@@ -45,4 +45,4 @@ export default function AdminPanelLayout() {
             </main>
         </div>
     )
-}
+} 
