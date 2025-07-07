@@ -43,7 +43,7 @@ export interface LoginFormData {
   password: string
 }
 
-export interface RegisterFormData {
+export interface RegisterUserFormData {
   email: string
   password: string
   role?: 'ADMIN' | 'USER'
@@ -55,6 +55,19 @@ export interface ResetPasswordFormData {
 
 export interface NewPasswordFormData {
   password: string
+}
+
+export interface RegisterClubFormData {
+  name: string
+  logo: string
+  user?: string
+}
+
+export interface ClubFormData {
+  name: string
+  logo?: string
+  user?: string
+  isActive?: boolean
 }
 
 // Tipos para respuestas de la API
@@ -79,10 +92,14 @@ export interface UsersResponse {
 export interface ClubResponse {
   message: string
   club?: Club
+  logo?: string
+  user?: string
 }
 
 export interface ClubsResponse {
   clubs: Club[]
+  logo?: string
+  user?: string
 }
 
 export interface PlayerResponse {

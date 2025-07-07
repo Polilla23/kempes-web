@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import AuthService from '@/services/auth.service';
-import type { RegisterFormData } from '@/types';
+import type { RegisterUserFormData } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, UserPlus, XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ function CreateUserPage() {
         setErrorMessage(null);
 
         try {
-            const userData: RegisterFormData = {
+            const userData: RegisterUserFormData = {
                 email: values.email,
                 password: values.password,
                 role: values.role,
