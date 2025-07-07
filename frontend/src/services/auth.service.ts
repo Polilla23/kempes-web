@@ -1,7 +1,7 @@
 import api from './api'
 import type {
   LoginFormData,
-  RegisterFormData,
+  RegisterUserFormData,
   ResetPasswordFormData,
   NewPasswordFormData,
   AuthResponse,
@@ -19,7 +19,7 @@ export class AuthService {
   }
 
   // Registro de usuario
-  static async register(userData: RegisterFormData): Promise<AuthResponse> {
+  static async register(userData: RegisterUserFormData): Promise<AuthResponse> {
     try {
       const response = await api.post<AuthResponse>('/user/register', userData)
       return response.data || { message: response.message || 'Registration successful' }
@@ -97,17 +97,6 @@ export class AuthService {
       throw new Error(error instanceof Error ? error.message : 'Error al obtener el perfil del usuario');
     }
   }
-
-  // Verificar si el usuario está autenticado
-  // static async checkAuth(): Promise<boolean> {
-  //   try {
-  //     // Intentar hacer una petición que requiera autenticación
-  //     await api.get('/myaccount/profile')
-  //     return true
-  //   } catch (error) {
-  //     return false
-  //   }
-  // }
 }
 
 export default AuthService

@@ -18,7 +18,7 @@ model User {
   verificationTokenExpires DateTime?  @map("verification_token_expires")
   resetPasswordToken String? @unique  @map("reset_password_token")
   resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
-  club     Club[]
+  club     Club?
 
   @@map("users")
 }
@@ -27,7 +27,7 @@ model Club {
   id     String @id @default(uuid())
   name   String @unique
   logo   String
-  userId String @map("user_id")
+  userId String @unique @map("user_id")
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   playerOwner Player[]  @relation("OwnerClub")
   playerNow   Player[]  @relation("ActualClub")

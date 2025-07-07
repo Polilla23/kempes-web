@@ -3,7 +3,7 @@ import { checkAuth } from "@/services/auth-guard";
 
 const adminMenu = [
     { label: 'Crear usuario', path: '/admin/create-user' },
-    { label: 'Crear equipo', path: '/admin/create-team' },
+    { label: 'Crear club', path: '/admin/create-club' },
     { label: 'Crear jugador', path: '/admin/create-player' }
 ];
 

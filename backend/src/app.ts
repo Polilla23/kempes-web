@@ -17,27 +17,27 @@ const app = Fastify({
 
 // Registro de Swagger
 app.register(swagger, {
-  swagger: {
+  openapi: {
     info: {
-      title: 'API Documentation',
+      title: 'Kempes Web API',
       description: 'API documentation for Kempes web application.',
       version: '1.0.0',
     },
-    consumes: ['application/json'],
-    produces: ['application/json'],
-    securityDefinitions: {
-      Bearer: {
-        type: 'apiKey',
-        name: 'Authorization',
-        in: 'header',
-        description: 'Bearer token authentication',
-      },
-    },
-    security: [
+    servers: [
       {
-        Bearer: [],
+        url: 'http://localhost:3000',
+        description: 'Development server',
       },
     ],
+    components: {
+      securitySchemes: {
+        Bearer: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
   },
 })
 

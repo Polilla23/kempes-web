@@ -5,14 +5,14 @@ export const userSchemas = {
     body: {
       type: 'object',
       properties: {
-        email: { type: 'string' },
-        password: { type: 'string' },
-        role: { type: 'string', enum: ['admin', 'user'] },
+        email: { type: 'string', format: 'email' },
+        password: { type: 'string', minLength: 8 },
+        role: { type: 'string', enum: ['ADMIN', 'USER'] },
       },
       required: ['email', 'password'],
     },
     response: {
-      200: {
+      201: {
         description: 'User registered successfully.',
         type: 'object',
         properties: {
@@ -20,7 +20,8 @@ export const userSchemas = {
         },
       },
       400: {
-        description: 'message while registering new user.',
+        description: 'Bad request while registering new user.',
+        type: 'object',
         properties: {
           message: { type: 'string' },
         },
@@ -33,7 +34,7 @@ export const userSchemas = {
     body: {
       type: 'object',
       properties: {
-        email: { type: 'string' },
+        email: { type: 'string', format: 'email' },
         password: { type: 'string' },
       },
       required: ['email', 'password'],
@@ -43,11 +44,20 @@ export const userSchemas = {
         description: 'Successful login',
         type: 'object',
         properties: {
-          token: { type: 'string' },
+          message: { type: 'string' },
+          user: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              email: { type: 'string' },
+              role: { type: 'string' },
+            },
+          },
         },
       },
       400: {
         description: 'Bad request',
+        type: 'object',
         properties: {
           message: { type: 'string' },
         },
@@ -78,13 +88,21 @@ export const userSchemas = {
     tags: ['User'],
     response: {
       200: {
-        description: '',
-        type: 'array',
+        description: 'Users retrieved successfully',
+        type: 'object',
         properties: {
-          id: { type: 'string' },
-          email: { type: 'string' },
-          password: { type: 'string' },
-          role: { type: 'string', enum: ['admin', 'user'] },
+          users: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                email: { type: 'string' },
+                role: { type: 'string' },
+                isVerified: { type: 'boolean' },
+              },
+            },
+          },
         },
       },
       400: {
