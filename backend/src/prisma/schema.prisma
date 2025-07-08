@@ -26,9 +26,9 @@ model User {
 model Club {
   id     String @id @default(uuid())
   name   String @unique
-  logo   String
-  userId String @unique @map("user_id")
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logo   String?
+  userId String? @unique @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   playerOwner Player[]  @relation("OwnerClub")
   playerNow   Player[]  @relation("ActualClub")
   isActive Boolean @default(true) @map("is_active")

@@ -4,7 +4,7 @@ export interface User {
   email: string
   role: 'ADMIN' | 'USER'
   isVerified: boolean
-  club?: Club[]
+  club?: Club | null
 }
 
 // Tipos de club
@@ -60,7 +60,7 @@ export interface NewPasswordFormData {
 export interface RegisterClubFormData {
   name: string
   logo: string
-  user?: string
+  userId?: string | null
 }
 
 export interface ClubFormData {

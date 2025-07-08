@@ -15,7 +15,11 @@ export class UserRepository implements IUserRepository {
   }
 
   async findAll() {
-    return await this.prisma.user.findMany()
+    return await this.prisma.user.findMany({
+      include: {
+        club: true
+      }
+    })
   }
 
   async findOneById(id: Prisma.UserWhereUniqueInput['id']) {

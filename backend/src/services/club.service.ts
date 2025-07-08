@@ -34,11 +34,17 @@ export class ClubService {
       throw new ClubAlreadyExistsError()
     }
 
-    const newClub = await this.clubRepository.save({
+    const clubData: any = {
       name,
       logo: logo as string,
-      user: { connect: { id: userId } },
-    })
+    }
+
+    // Only connect user if userId is provided
+    if (userId) {
+      clubData.user = { connect: { id: userId } }
+    }
+
+    const newClub = await this.clubRepository.save(clubData)
 
     return newClub
   }

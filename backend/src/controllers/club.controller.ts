@@ -10,7 +10,7 @@ export class ClubController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const { name, logo, userId } = req.body as { name: string; logo: string; userId: string }
+    const { name, logo, userId } = req.body as { name: string; logo: string; userId?: string | null }
     try {
       await this.clubService.createClub({ name, logo, userId })
 

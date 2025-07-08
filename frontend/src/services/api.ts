@@ -23,7 +23,8 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
   }
 
-  return response.json()
+  const data = await response.json()
+  return { data }
 }
 
 // Función helper para hacer peticiones
