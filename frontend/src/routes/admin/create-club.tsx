@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ClubService } from "@/services/club.service";
 import { UserService } from "@/services/user.service";
-import type { RegisterClubFormData } from "@/types";
+import type { RegisterClubFormData, User } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, UserPlus, XIcon } from "lucide-react";
@@ -26,7 +26,7 @@ const formSchema = z.object({
 function CreateClubPage() {
     const [ verificationStatus, setVerificationStatus ] = useState<'loading' | 'success' | 'error' | null>(null)
     const [ errorMessage, setErrorMessage ] = useState<string | null>(null)
-    const [ logoPreview, setLogoPreview ] = useState<string | null>(null)
+    // const [ logoPreview, setLogoPreview ] = useState<string | null>(null)
     const [ availableUsers, setAvailableUsers ] = useState<User[]>([])
     
     const form = useForm<z.infer<typeof formSchema>>({
@@ -43,7 +43,11 @@ function CreateClubPage() {
         const fetchAvailableUsers = async () => {
             try {
                 const response = await UserService.getUsers()
-                const usersWithoutClubs = response.users.filter(user => !user.club)
+                console.log('Raw API response:', response)
+                console.log('Users array:', response.users)
+                console.log('First user example:', response.users[0])
+                const usersWithoutClubs = response.users.filter((user: User) => !user.club)
+                console.log('Users without clubs:', usersWithoutClubs)
                 setAvailableUsers(usersWithoutClubs)
             } catch (error) {
                 console.error('Error fetching users:', error)
@@ -60,7 +64,7 @@ function CreateClubPage() {
             const clubData: RegisterClubFormData = {
                 name: values.name,
                 logo: values.logo || '',
-                user: values.userId || undefined
+                userId: values.userId === 'none' ? undefined : values.userId
             }
 
             await ClubService.createClub(clubData)
@@ -168,14 +172,14 @@ function CreateClubPage() {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-gray-700 font-medium">Club Owner</FormLabel>
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value || 'none'}>
                                             <FormControl>
                                                 <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
                                                     <SelectValue placeholder="Select club owner" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="">None</SelectItem>
+                                                <SelectItem value="none">None</SelectItem>
                                                 {availableUsers.map((user) => (
                                                     <SelectItem key={user.id} value={user.id}>
                                                         {user.email}

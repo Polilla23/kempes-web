@@ -11,7 +11,7 @@ export const Route = createRootRoute({
 function RootComponent() {
   const router = useRouter()
   const pathname = router.state.location.pathname
-  const { loading } = useUser()
+  const { loading, role } = useUser()
 
   // Rutas donde NO mostrar el Navbar
   const routesWithoutNavbar = [
@@ -24,10 +24,14 @@ function RootComponent() {
   ]
 
 const hideNavbar = routesWithoutNavbar.includes(pathname)
+const isAuthenticated = !loading && role !== null
+
+  // Only show navbar if user is authenticated and not loading
+  const shouldShowNavbar = !hideNavbar && isAuthenticated
 
   return (
     <>
-      {!hideNavbar && !loading && <Navbar />}
+      {shouldShowNavbar && <Navbar />}
         <Outlet />
         <TanStackRouterDevtools />
     </>   

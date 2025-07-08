@@ -7,9 +7,9 @@ export const clubSchemas = {
       properties: {
         name: { type: 'string' },
         logo: { type: 'string' },
-        userId: { type: 'string' },
+        userId: { type: 'string', nullable: true },
       },
-      required: ['name', 'userId'],
+      required: ['name'],
     },
     response: {
       200: {

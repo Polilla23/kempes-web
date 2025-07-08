@@ -35,7 +35,7 @@ export type RegisterUserInput = {
 export type RegisterClubInput = {
   name: string
   logo?: string
-  userId: string
+  userId?: string | null
 }
 
 export type CreatePlayerInput = {
