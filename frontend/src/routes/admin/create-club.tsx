@@ -39,35 +39,16 @@ function CreateClubPage() {
     })
 
     // Fetch users without clubs
-    useEffect(() => {
-        const fetchAvailableUsers = async () => {
-            try {
-                const response = await UserService.getUsers()
-                // console.log('Raw API response:', response)
-                // console.log('Users array:', response.users)
-                // console.log('First user example:', response.users[0])
-                // const usersWithoutClubs = response.users.filter((user: User) => !user.club)
-                // console.log('Users without clubs:', usersWithoutClubs)
-                // setAvailableUsers(usersWithoutClubs)
-                console.log('Raw API response:', response)
-                console.log('Response type:', typeof response)
-                console.log('Response.users type:', typeof response.users)
-                console.log('Response.users:', response.users)
-                console.log('Response.users length:', response.users?.length)
-                console.log('First user example:', response.users?.[0])
-                
-                if (response.users && Array.isArray(response.users)) {
-                    const usersWithoutClubs = response.users.filter((user: User) => !user.club)
-                    console.log('Users without clubs:', usersWithoutClubs)
-                    setAvailableUsers(usersWithoutClubs)
-                } else {
-                    console.error('Response.users is not an array:', response.users)
-                    setAvailableUsers([])
-                }
-            } catch (error) {
-                console.error('Error fetching users:', error)
-            }
+    const fetchAvailableUsers = async () => {
+        try {
+            const response = await UserService.getUsers()
+            const usersWithoutClubs = response.users.filter((user: User) => !user.club)
+            setAvailableUsers(usersWithoutClubs)
+        } catch (error) {
+            console.error('Error fetching users:', error)
         }
+    }
+    useEffect(() => {
         fetchAvailableUsers()
     }, [])
 
@@ -105,7 +86,10 @@ function CreateClubPage() {
                             <p className="text-gray-600 mt-2">The new club has been created successfully.</p>
                         </div>
                         <Button
-                            onClick={() => setVerificationStatus(null)}
+                            onClick={() => {
+                                setVerificationStatus(null)
+                                fetchAvailableUsers()
+                            }}
                             className="bg-cyan-600 hover:bg-cyan-700"
                         >
                             Create Another Club
