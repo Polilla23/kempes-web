@@ -66,7 +66,6 @@ function LoginPage() {
 
       refreshUser().catch(console.error)   
     } catch (error: any) {
-      console.error('Login failed:', error)
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')
       setVerificationStatus('error')
     } finally {

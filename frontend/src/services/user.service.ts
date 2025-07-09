@@ -5,9 +5,9 @@ export class UserService {
     // Obtener todos los usuarios
     static async getUsers(): Promise<UsersResponse> {
         try {
-            const response = await api.get<{ users: User[] }>('/user/findAll')
-            console.log('**RESPONSE FROM SERVICE:**', response)
-            console.log('**RESPONSE FROM SERVICE:**', response.data)
+            const response = await api.get<{users: User[]}>('/user/findAll')
+            console.log('UserService response:', response) // <-- Add this debugging
+            console.log('UserService response.data:', response.data) // <-- Add this debugging
             return response.data || { users: [] } 
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error fetching users')

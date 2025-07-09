@@ -71,9 +71,8 @@ export class UserController {
       const users = await this.userService.findAllUsers()
       console.log('Users from service:', users)
       console.log('Users length:', users?.length)
-      return reply.status(200).send(users)
+      return reply.status(200).send({users})
     } catch (error) {
-      console.error('Error in findAll:', error)
       return reply.status(400).send({
         message: error instanceof Error ? error.message : 'Error while fetching users.',
       })

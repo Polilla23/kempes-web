@@ -15,7 +15,7 @@ export async function myAccountRoutes(fastify: FastifyInstance) {
     preHandler: [fastify.authenticate],
     handler: async (req, reply) => {      
       const user = req.user as { id: string, role: string }
-      return { id: user.id, role: user.role }
+      return { data: { id: user.id, role: user.role } }
     }
   })
 }
