@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,8 +21,11 @@ export const Route = createFileRoute('/admin/create-club')({
 const formSchema = z.object({
     name: z.string().min(2, { message: 'Club name must be at least 2 characters.' }),
     logo: z.string().optional(),
-    userId: z.string().optional()
+    userId: z.string().optional(),
+    isActive: z.boolean()
 })
+
+type FormData = z.infer<typeof formSchema>
 
 function CreateClubPage() {
     const [ verificationStatus, setVerificationStatus ] = useState<'loading' | 'success' | 'error' | null>(null)
@@ -29,12 +33,13 @@ function CreateClubPage() {
     // const [ logoPreview, setLogoPreview ] = useState<string | null>(null)
     const [ availableUsers, setAvailableUsers ] = useState<User[]>([])
     
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: '',
             logo: '',
-            userId: ''
+            userId: '',
+            isActive: true
         }
     })
 
@@ -52,7 +57,7 @@ function CreateClubPage() {
         fetchAvailableUsers()
     }, [])
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: FormData) {
         setVerificationStatus('loading')
         setErrorMessage(null)
 
@@ -60,7 +65,8 @@ function CreateClubPage() {
             const clubData: RegisterClubFormData = {
                 name: values.name,
                 logo: values.logo || '',
-                userId: values.userId === 'none' ? undefined : values.userId
+                userId: values.userId === 'none' ? undefined : values.userId,
+                isActive: values.isActive
             }
 
             await ClubService.createClub(clubData)
@@ -187,6 +193,29 @@ function CreateClubPage() {
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="isActive"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel className="text-gray-700 font-medium">
+                                                Club is active
+                                            </FormLabel>
+                                            <p className="text-sm text-gray-500">
+                                                Enable this club to participate in competitions and transfers
+                                            </p>
+                                        </div>
                                     </FormItem>
                                 )}
                             />

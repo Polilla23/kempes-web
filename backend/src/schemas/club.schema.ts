@@ -8,6 +8,7 @@ export const clubSchemas = {
         name: { type: 'string' },
         logo: { type: 'string' },
         userId: { type: 'string', nullable: true },
+        isActive: { type: 'boolean' },
       },
       required: ['name'],
     },

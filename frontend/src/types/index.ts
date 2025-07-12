@@ -61,6 +61,7 @@ export interface RegisterClubFormData {
   name: string
   logo: string
   userId?: string | null
+  isActive?: boolean
 }
 
 export interface ClubFormData {

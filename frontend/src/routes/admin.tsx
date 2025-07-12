@@ -1,5 +1,6 @@
-import { createFileRoute, Link, Outlet, useRouter } from "@tanstack/react-router"
+import { createFileRoute, Link, Outlet, useRouter, useLocation, useNavigate } from "@tanstack/react-router"
 import { checkAuth } from "@/services/auth-guard";
+import { useEffect } from "react";
 
 const adminMenu = [
     { label: 'Crear usuario', path: '/admin/create-user' },
@@ -15,8 +16,8 @@ export const Route = createFileRoute('/admin')({
 })
 
 export default function AdminPanelLayout() {
-    const router = useRouter();
-    const currentPath = router.state.location.pathname;
+    const location = useLocation();
+    const currentPath = location.pathname;
 
     return (
         <div className="flex min-h-[80vh] max-w-5xl mx-auto mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
@@ -24,19 +25,22 @@ export default function AdminPanelLayout() {
             <aside className="w-64 bg-gray-100 border-r p-6 flex flex-col gap-4">
                 <h2 className="text-xl font-bold mb-6">Panel Admin</h2>
                 <nav className="flex flex-col gap-2">
-                    {adminMenu.map((item) => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            className={`px-4 py-2 rounded transition font-medium ${
-                                currentPath === item.path
-                                    ? 'bg-blue-600 text-white'
-                                    : 'hover:bg-blue-100 text-gray-700'
-                            }`}
-                        >
-                            {item.label}
-                        </Link>
-                    ))}
+                    {adminMenu.map((item) => {
+                        const isActive = currentPath === item.path;                       
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={`px-4 py-2 rounded transition font-medium ${
+                                    isActive
+                                        ? 'bg-blue-600 text-white'
+                                        : 'hover:bg-blue-100 text-gray-700'
+                                }`}
+                            >
+                                {item.label}
+                            </Link>
+                        );
+                    })}
                 </nav>
             </aside>
             {/* Main content */}

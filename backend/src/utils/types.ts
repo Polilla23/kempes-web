@@ -36,6 +36,7 @@ export type RegisterClubInput = {
   name: string
   logo?: string
   userId?: string | null
+  isActive?: boolean
 }
 
 export type CreatePlayerInput = {

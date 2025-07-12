@@ -10,9 +10,9 @@ export class ClubController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const { name, logo, userId } = req.body as { name: string; logo: string; userId?: string | null }
+    const { name, logo, userId, isActive } = req.body as { name: string; logo: string; userId?: string | null; isActive?: boolean}
     try {
-      await this.clubService.createClub({ name, logo, userId })
+      await this.clubService.createClub({ name, logo, userId, isActive })
 
       return reply.status(200).send({ message: 'Club created succesfully.' })
     } catch (error) {

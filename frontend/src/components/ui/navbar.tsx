@@ -3,16 +3,14 @@ import { LogOut, UserRound } from "lucide-react";
 import { useUser } from "@/context/UserContext";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from '@/components/ui/button'
-import { AuthService } from "@/services/auth.service";
 
 export const Navbar = () => {
     const { role, logout } = useUser();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
-        await AuthService.logout();
         await logout();
-        navigate({ to: '/login' });
+        navigate({ to: '/login', search: { redirect: '/login' } });
     }
     
     return (

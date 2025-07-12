@@ -27,7 +27,7 @@ export class ClubService {
     return clubFound
   }
 
-  async createClub({ name, logo, userId }: RegisterClubInput) {
+  async createClub({ name, logo, userId, isActive }: RegisterClubInput) {
     const clubFound = await this.clubRepository.findOneByName(name)
 
     if (clubFound) {
@@ -37,6 +37,7 @@ export class ClubService {
     const clubData: any = {
       name,
       logo: logo as string,
+      isActive: isActive ?? true,
     }
 
     // Only connect user if userId is provided
