@@ -15,7 +15,7 @@ export const playerSchemas = {
         sofifaId: { type: 'string' },
         transfermarktId: { type: 'string' },
         isKempesita: { type: 'boolean' },
-        isActive: { type: 'boolean' }
+        isActive: { type: 'boolean' },
       },
       required: ['name', 'lastName', 'birthdate', 'actualClubId', 'overall'],
     },
@@ -35,7 +35,7 @@ export const playerSchemas = {
           sofifaId: { type: 'string' },
           tranfermarktId: { type: 'string' },
           isKempesita: { type: 'boolean' },
-          isActive: { type: 'boolean' }
+          isActive: { type: 'boolean' },
         },
       },
       400: {
@@ -69,7 +69,7 @@ export const playerSchemas = {
             sofifaId: { type: 'string' },
             tranfermarktId: { type: 'string' },
             isKempesita: { type: 'boolean' },
-            isActive: { type: 'boolean' }
+            isActive: { type: 'boolean' },
           },
         },
       },
@@ -102,7 +102,7 @@ export const playerSchemas = {
           sofifaId: { type: 'string' },
           tranfermarktId: { type: 'string' },
           isKempesita: { type: 'boolean' },
-          isActive: { type: 'boolean' }
+          isActive: { type: 'boolean' },
         },
       },
       404: {
@@ -131,7 +131,7 @@ export const playerSchemas = {
         sofifaId: { type: 'string' },
         tranfermarktId: { type: 'string' },
         isKempesita: { type: 'boolean' },
-        isActive: { type: 'boolean' }
+        isActive: { type: 'boolean' },
       },
       additionalProperties: false,
     },
@@ -144,7 +144,7 @@ export const playerSchemas = {
           format: 'uuid',
         },
       },
-      required: ['id']
+      required: ['id'],
     },
     response: {
       200: {
@@ -177,7 +177,7 @@ export const playerSchemas = {
           format: 'uuid',
         },
       },
-      required: ['id',]
+      required: ['id'],
     },
     response: {
       204: {
@@ -191,6 +191,39 @@ export const playerSchemas = {
           message: { type: 'string' },
         },
       },
-    }
-  }
+    },
+  },
+  bulkCreate: {
+    description: 'Upload and process CSV file for bulk player creation using file upload.',
+    tags: ['Player'],
+    consumes: ['multipart/form-data'],
+    body: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'CSV file to upload',
+        },
+      },
+      required: ['file'],
+    },
+    response: {
+      200: {
+        description: 'Players processed and saved successfully.',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+        },
+      },
+      400: {
+        description: 'Error while processing players.',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+    },
+  },
 }
