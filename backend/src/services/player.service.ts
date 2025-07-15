@@ -27,7 +27,7 @@ export class PlayerService {
     isKempesita,
     isActive,
   }: CreatePlayerInput) {
-    const birthdateAsDate = parseDateFromDDMMYYYY(birthdate)
+    const birthdateAsDate = typeof birthdate === 'string' ? parseDateFromDDMMYYYY(birthdate) : birthdate
 
     const newPlayer = await this.playerRepository.save({
       name,
@@ -90,6 +90,7 @@ export class PlayerService {
     records.forEach((record: any, index: number) => {
       try {
         const playerData = this.transformCSVRecord(record)
+
         validPlayers.push(playerData)
       } catch (error) {
         errors.push({
@@ -131,10 +132,12 @@ export class PlayerService {
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
     }
 
+    const birthdateAsDate = parseDateFromDDMMYYYY(record.birthdate)
+
     return {
       name: validateString(record.name, 1),
       lastName: validateString(record.lastName, 1),
-      birthdate: record.birthdate,
+      birthdate: birthdateAsDate,
       actualClubId: record.actualClubId,
       ownerClubId: record.ownerClubId || record.actualClubId,
       overall: validateNumber(record.overall, 0, 99),
