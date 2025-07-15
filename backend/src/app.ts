@@ -7,6 +7,7 @@ import swaggerUi from '@fastify/swagger-ui'
 import fastifyJwt from '@fastify/jwt'
 import fastifyCookie, { FastifyCookieOptions } from '@fastify/cookie'
 import fastifyCors from '@fastify/cors'
+import fastifyMultipart from '@fastify/multipart'
 import path from 'path'
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') })
@@ -74,6 +75,8 @@ app.register(fastifyCors, {
   allowedHeaders: ['Content-Type', 'Authorization'],
 })
 
+app.register(fastifyMultipart)
+
 app.decorate('authenticate', async function (req: FastifyRequest, reply: FastifyReply) {
   try {
     const token = req.cookies.token
@@ -82,7 +85,7 @@ app.decorate('authenticate', async function (req: FastifyRequest, reply: Fastify
     }
 
     const decoded = await req.jwtVerify<{ id: string; role: string }>()
-    
+
     if (!decoded.role || !decoded.id) {
       throw new Error('Invalid token structure')
     }

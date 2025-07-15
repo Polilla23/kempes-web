@@ -2,6 +2,8 @@ import { IPlayerRespository } from '../interfaces/IPlayerRepository'
 import { Player } from '@prisma/client'
 import { parseDateFromDDMMYYYY } from '../utils/date'
 import { CreatePlayerInput } from '../utils/types'
+import { parse } from 'csv-parse/sync'
+import { validateNumber, validateBoolean, validateString } from '../utils/validation'
 
 // Errors
 import { PlayerNotFoundError } from '../errors/playerNotFoundError'
@@ -73,5 +75,74 @@ export class PlayerService {
     }
 
     return playerFound
+  }
+
+  async processCSVFile(csvContent: string) {
+    const records = parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    })
+
+    const validPlayers: CreatePlayerInput[] = []
+    const errors: Array<{ row: number; error: string }> = []
+
+    records.forEach((record: any, index: number) => {
+      try {
+        const playerData = this.transformCSVRecord(record)
+        validPlayers.push(playerData)
+      } catch (error) {
+        errors.push({
+          row: index + 2, // +2 para evitar el encabezado
+          error: error instanceof Error ? error.message : 'Invalid data',
+        })
+      }
+    })
+
+    // si hay errores no se guardan los jugadores
+    if (errors.length > 0) {
+      return {
+        success: false,
+        errors,
+        validPlayers: [],
+      }
+    }
+
+    try {
+      const result = await this.playerRepository.saveMany(validPlayers)
+      return {
+        success: true,
+        message: `Successfully created ${result.count} players`,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to save players to database',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    }
+  }
+
+  private transformCSVRecord(record: any): CreatePlayerInput {
+    const requiredFields = ['name', 'lastName', 'birthdate', 'actualClubId', 'overall']
+    const missingFields = requiredFields.filter((field) => !record[field])
+
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
+    }
+
+    return {
+      name: validateString(record.name, 1),
+      lastName: validateString(record.lastName, 1),
+      birthdate: record.birthdate,
+      actualClubId: record.actualClubId,
+      ownerClubId: record.ownerClubId || record.actualClubId,
+      overall: validateNumber(record.overall, 0, 99),
+      salary: validateNumber(record.salary, 0),
+      sofifaId: validateString(record.sofifaId || ''),
+      transfermarktId: validateString(record.transfermarktId || ''),
+      isKempesita: validateBoolean(record.isKempesita),
+      isActive: validateBoolean(record.isActive),
+    }
   }
 }
