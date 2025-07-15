@@ -42,7 +42,7 @@ export type RegisterClubInput = {
 export type CreatePlayerInput = {
   name: string
   lastName: string
-  birthdate: string
+  birthdate: Date
   actualClubId: string
   ownerClubId: string
   overall: number
@@ -52,7 +52,6 @@ export type CreatePlayerInput = {
   isKempesita: boolean
   isActive: boolean
 }
-
 
 declare module '@fastify/jwt' {
   interface fastifyJwt {
