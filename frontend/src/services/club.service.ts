@@ -1,5 +1,5 @@
 import api from './api'
-import type { RegisterClubFormData, ClubResponse, ClubsResponse } from '@/types'
+import type { RegisterClubFormData, ClubResponse, ClubsResponse, Club } from '@/types'
 
 export class ClubService {
     // Crear un nuevo club
@@ -15,7 +15,7 @@ export class ClubService {
     // Obtener todos los clubs
     static async getClubs(): Promise<ClubsResponse> {
         try {
-            const response = await api.get<ClubsResponse>('/club/findAll')
+            const response = await api.get<{clubs: Club[]}>('/club/findAll')
             return response.data || { clubs: [] }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error fetching clubs')

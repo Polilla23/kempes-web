@@ -69,8 +69,6 @@ export class UserController {
   async findAll(_req: FastifyRequest, reply: FastifyReply) {
     try {
       const users = await this.userService.findAllUsers()
-      console.log('Users from service:', users)
-      console.log('Users length:', users?.length)
       return reply.status(200).send({users})
     } catch (error) {
       return reply.status(400).send({

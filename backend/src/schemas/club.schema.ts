@@ -35,12 +35,20 @@ export const clubSchemas = {
     response: {
       200: {
         description: '',
-        type: 'array',
+        type: 'object',
         properties: {
-          id: { type: 'string' },
-          name: { type: 'string' },
-          logo: { type: 'string' },
-          userId: { type: 'string' },
+          clubs: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                logo: { type: 'string' },
+                userId: { type: 'string' },
+              },
+            },
+          },
         },
       },
       400: {

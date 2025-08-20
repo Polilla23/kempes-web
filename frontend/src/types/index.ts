@@ -71,7 +71,20 @@ export interface ClubFormData {
   isActive?: boolean
 }
 
-// Tipos para respuestas de la API
+export interface RegisterPlayerFormData {
+  name: string
+  lastName: string
+  birthdate: string
+  ownerClubId: string
+  actualClubId?: string | null
+  overall: number
+  salary: number | 100.000
+  sofifaId?: string | null
+  transfermarktId?: string | null
+  isKempesita: boolean
+  isActive: boolean
+}
+
 export interface AuthResponse {
   message: string
 }
@@ -99,8 +112,6 @@ export interface ClubResponse {
 
 export interface ClubsResponse {
   clubs: Club[]
-  logo?: string
-  user?: string
 }
 
 export interface PlayerResponse {

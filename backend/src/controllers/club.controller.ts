@@ -27,7 +27,7 @@ export class ClubController {
     try {
       const clubs = await this.clubService.findAllClubs()
 
-      return reply.status(200).send(clubs)
+      return reply.status(200).send({clubs})
     } catch (error) {
       return reply.status(400).send({
         message: 'Error while fetching the clubs.',

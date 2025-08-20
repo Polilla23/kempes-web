@@ -17,6 +17,7 @@ import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
 import { Route as AdminCreateUserRouteImport } from './routes/admin/create-user'
+import { Route as AdminCreatePlayerRouteImport } from './routes/admin/create-player'
 import { Route as AdminCreateClubRouteImport } from './routes/admin/create-club'
 import { Route as UserResendVerificationEmailRouteImport } from './routes/_user/resend-verification-email'
 import { Route as UserLoginRouteImport } from './routes/_user/login'
@@ -72,6 +73,11 @@ const ClubCreateRoute = ClubCreateRouteImport.update({
 const AdminCreateUserRoute = AdminCreateUserRouteImport.update({
   id: '/create-user',
   path: '/create-user',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCreatePlayerRoute = AdminCreatePlayerRouteImport.update({
+  id: '/create-player',
+  path: '/create-player',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCreateClubRoute = AdminCreateClubRouteImport.update({
@@ -164,6 +170,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof UserLoginRoute
   '/resend-verification-email': typeof UserResendVerificationEmailRoute
   '/admin/create-club': typeof AdminCreateClubRoute
+  '/admin/create-player': typeof AdminCreatePlayerRoute
   '/admin/create-user': typeof AdminCreateUserRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/login': typeof UserLoginRoute
   '/resend-verification-email': typeof UserResendVerificationEmailRoute
   '/admin/create-club': typeof AdminCreateClubRoute
+  '/admin/create-player': typeof AdminCreatePlayerRoute
   '/admin/create-user': typeof AdminCreateUserRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/_user/login': typeof UserLoginRoute
   '/_user/resend-verification-email': typeof UserResendVerificationEmailRoute
   '/admin/create-club': typeof AdminCreateClubRoute
+  '/admin/create-player': typeof AdminCreatePlayerRoute
   '/admin/create-user': typeof AdminCreateUserRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/resend-verification-email'
     | '/admin/create-club'
+    | '/admin/create-player'
     | '/admin/create-user'
     | '/club/create'
     | '/club/findAll'
@@ -271,6 +281,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/resend-verification-email'
     | '/admin/create-club'
+    | '/admin/create-player'
     | '/admin/create-user'
     | '/club/create'
     | '/club/findAll'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/_user/login'
     | '/_user/resend-verification-email'
     | '/admin/create-club'
+    | '/admin/create-player'
     | '/admin/create-user'
     | '/club/create'
     | '/club/findAll'
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/create-user'
       fullPath: '/admin/create-user'
       preLoaderRoute: typeof AdminCreateUserRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/create-player': {
+      id: '/admin/create-player'
+      path: '/create-player'
+      fullPath: '/admin/create-player'
+      preLoaderRoute: typeof AdminCreatePlayerRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/create-club': {
@@ -516,11 +535,13 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminCreateClubRoute: typeof AdminCreateClubRoute
+  AdminCreatePlayerRoute: typeof AdminCreatePlayerRoute
   AdminCreateUserRoute: typeof AdminCreateUserRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminCreateClubRoute: AdminCreateClubRoute,
+  AdminCreatePlayerRoute: AdminCreatePlayerRoute,
   AdminCreateUserRoute: AdminCreateUserRoute,
 }
 

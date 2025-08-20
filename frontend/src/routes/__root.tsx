@@ -29,11 +29,20 @@ const isAuthenticated = !loading && role !== null
   // Only show navbar if user is authenticated and not loading
   const shouldShowNavbar = !hideNavbar && isAuthenticated
 
+  if (loading) {
+    return (
+      <>
+        <Outlet />
+        <TanStackRouterDevtools />
+      </>
+    )
+  }
+
   return (
     <>
       {shouldShowNavbar && <Navbar />}
-        <Outlet />
-        <TanStackRouterDevtools />
+      <Outlet />
+      <TanStackRouterDevtools />
     </>   
   )
 }
