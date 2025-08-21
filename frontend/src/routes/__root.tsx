@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Navbar } from '../components/ui/navbar'
 import { useRouter } from '@tanstack/react-router'
 import { useUser } from '@/context/UserContext'
+import { Toaster } from '@/components/ui/sonner'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -23,10 +24,9 @@ function RootComponent() {
     '/resend-verification-email'
   ]
 
-const hideNavbar = routesWithoutNavbar.includes(pathname)
-const isAuthenticated = !loading && role !== null
-
-  // Only show navbar if user is authenticated and not loading
+  const hideNavbar = routesWithoutNavbar.includes(pathname)
+  
+  const isAuthenticated = !loading && role !== null
   const shouldShowNavbar = !hideNavbar && isAuthenticated
 
   if (loading) {
@@ -34,6 +34,7 @@ const isAuthenticated = !loading && role !== null
       <>
         <Outlet />
         <TanStackRouterDevtools />
+        <Toaster />
       </>
     )
   }
@@ -43,6 +44,7 @@ const isAuthenticated = !loading && role !== null
       {shouldShowNavbar && <Navbar />}
       <Outlet />
       <TanStackRouterDevtools />
+      <Toaster />
     </>   
   )
 }

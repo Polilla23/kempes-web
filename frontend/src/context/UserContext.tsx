@@ -34,9 +34,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
             setId(user?.id ?? null);
             setRole(user?.role ?? null);
         } catch (error) {
-            if (error instanceof Error && error.message.includes('Invalid token')) {
-                console.log("UserContext - token inválido, limpiando sesión");
-            }
+            console.log("UserContext - Authentication failed, clearing session", error);
             setId(null);
             setRole(null);
         } finally {
@@ -51,9 +49,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const refreshUser = fetchUser;
 
     const logout = async () => {
-        await AuthService.logout();
-        setId(null);
-        setRole(null);
+        try {
+            await AuthService.logout();
+        } catch (error) {
+            console.log("Logout error:", error);
+        } finally {
+            setId(null);
+            setRole(null);
+        }
     };
 
     return (
