@@ -9,14 +9,14 @@ export interface User {
 
 // Tipos de club
 export interface Club {
-  id: string
-  name: string
-  logo: string
-  userId: string
-  user: User
-  playerOwner: Player[]
-  playerNow: Player[]
-  isActive: boolean
+  id: string;
+  name: string;
+  logo?: string;
+  userId?: string;
+  user?: {
+    id: string;
+    email: string;
+  };
 }
 
 // Tipos de jugador

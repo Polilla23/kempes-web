@@ -46,6 +46,13 @@ export const clubSchemas = {
                 name: { type: 'string' },
                 logo: { type: 'string' },
                 userId: { type: 'string' },
+                user: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    email: { type: 'string' }
+                  }
+                }
               },
             },
           },

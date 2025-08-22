@@ -9,7 +9,16 @@ export class ClubRepository implements IClubRepository {
   }
 
   async findAll() {
-    return await this.prisma.club.findMany()
+    return await this.prisma.club.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true
+          }
+        }
+      }
+    })
   }
 
   async findOneById(id: Prisma.ClubWhereUniqueInput['id']) {
