@@ -19,13 +19,14 @@ export class PlayerService {
     name,
     lastName,
     birthdate,
-    actualClubId,
     overall,
     salary,
     sofifaId,
     transfermarktId,
     isKempesita,
     isActive,
+    actualClubId,
+    ownerClubId,
   }: CreatePlayerInput) {
     const birthdateAsDate = typeof birthdate === 'string' ? parseDateFromDDMMYYYY(birthdate) : birthdate
 
@@ -40,7 +41,7 @@ export class PlayerService {
       isKempesita,
       isActive,
       actualClub: { connect: { id: actualClubId } },
-      ownerClub: { connect: { id: actualClubId } },
+      ownerClub: { connect: { id: ownerClubId } },
     })
 
     return newPlayer
