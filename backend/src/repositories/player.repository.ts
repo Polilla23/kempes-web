@@ -9,7 +9,22 @@ export class PlayerRepository implements IPlayerRespository {
   }
 
   async findAll() {
-    return await this.prisma.player.findMany()
+    return await this.prisma.player.findMany({
+      include: {
+        ownerClub: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        actualClub: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    })
   }
 
   async findOneById(id: Prisma.PlayerWhereUniqueInput['id']) {

@@ -27,7 +27,7 @@ export class PlayerController {
     try {
       const players = await this.playerService.findAllPlayers()
 
-      return reply.status(200).send(players)
+      return reply.status(200).send({players})
     } catch (error) {
       return reply.status(400).send({
         message: 'Error while fetching players.',
@@ -96,8 +96,19 @@ export class PlayerController {
     }
     const csvContent = await data.toBuffer()
     try {
-      await this.playerService.processCSVFile(csvContent.toString('utf-8'))
-      return reply.status(200).send({ message: 'Players processed and saved successfully.' })
+      const result = await this.playerService.processCSVFile(csvContent.toString('utf-8'))
+      
+      if (result.success) {
+        return reply.status(200).send({ 
+          message: result.message || 'Players processed and saved successfully.' 
+        })
+      } else {
+        return reply.status(400).send({
+          message: 'Error while processing players.',
+          errors: result.errors,
+          error: result.message || 'Unknown error',
+        })
+      }
     } catch (error) {
       return reply.status(400).send({
         message: 'Error while processing players.',

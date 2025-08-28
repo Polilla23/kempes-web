@@ -30,14 +30,21 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
 // Función helper para hacer peticiones
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
-  const config = {
-    ...defaultConfig,
-    ...options,
-    headers: {
-      ...defaultConfig.headers,
-      ...options.headers,
-    },
-  }
+
+  const config = options.body instanceof FormData 
+    ? {
+      ...defaultConfig,
+      ...options,
+      headers: options.headers || {},
+      }
+    : {
+        ...defaultConfig,
+        ...options,
+        headers: {
+          ...defaultConfig.headers,
+          ...options.headers,
+        },
+      }
 
   try {
     const response = await fetch(url, config)
@@ -59,11 +66,19 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 export const api = {
   get: <T>(endpoint: string) => apiRequest<T>(endpoint),
 
-  post: <T>(endpoint: string, data?: any) =>
-    apiRequest<T>(endpoint, {
+  post: <T>(endpoint: string, data?: any) => {
+    if (data instanceof FormData) {
+      return apiRequest<T>(endpoint, {
+        method: 'POST',
+        body: data,
+      })
+    }
+  
+    return apiRequest<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    })
+  },
 
   patch: <T>(endpoint: string, data?: any) =>
     apiRequest<T>(endpoint, {

@@ -78,19 +78,21 @@ export class PlayerService {
   }
 
   async processCSVFile(csvContent: string) {
-    const records = parse(csvContent, {
+    const cleanCsvContent = csvContent.replace(/^\uFEFF/, '')
+
+    const records = parse(cleanCsvContent, {
       columns: true,
       skip_empty_lines: true,
       trim: true,
+      delimiter: ';',
     })
-
+    
     const validPlayers: CreatePlayerInput[] = []
     const errors: Array<{ row: number; error: string }> = []
 
     records.forEach((record: any, index: number) => {
       try {
         const playerData = this.transformCSVRecord(record)
-
         validPlayers.push(playerData)
       } catch (error) {
         errors.push({
@@ -124,11 +126,12 @@ export class PlayerService {
     }
   }
 
-  private transformCSVRecord(record: any): CreatePlayerInput {
+  private transformCSVRecord(record: any): CreatePlayerInput {  
     const requiredFields = ['name', 'lastName', 'birthdate', 'actualClubId', 'overall']
     const missingFields = requiredFields.filter((field) => !record[field])
 
     if (missingFields.length > 0) {
+      console.log("Missing fields:", missingFields)
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
     }
 
@@ -138,8 +141,8 @@ export class PlayerService {
       name: validateString(record.name, 1),
       lastName: validateString(record.lastName, 1),
       birthdate: birthdateAsDate,
-      actualClubId: record.actualClubId,
-      ownerClubId: record.ownerClubId || record.actualClubId,
+      actualClubId: record.actualClubId || '',
+      ownerClubId: record.ownerClubId || record.actualClubId || '',
       overall: validateNumber(record.overall, 0, 99),
       salary: validateNumber(record.salary, 0),
       sofifaId: validateString(record.sofifaId || ''),
