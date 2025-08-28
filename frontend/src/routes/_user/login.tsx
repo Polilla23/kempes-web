@@ -43,9 +43,9 @@ function LoginPage() {
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [passwordVisible, setPasswordVisible] = useState(false)
-  const navigate = useNavigate();
-  const { refreshUser } = useUser();
-  const search = Route.useSearch();
+  const navigate = useNavigate()
+  const { refreshUser } = useUser()
+  const search = Route.useSearch()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,10 +61,10 @@ function LoginPage() {
     try {
       await AuthService.login(values)
 
-      const redirectTo = search.redirect || '/';
+      const redirectTo = search.redirect || '/'
       await navigate({ to: redirectTo as any, replace: true })
 
-      refreshUser().catch(console.error)   
+      refreshUser().catch(console.error)
     } catch (error: any) {
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')
       setVerificationStatus('error')
@@ -95,22 +95,22 @@ function LoginPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-700 font-medium">Email</FormLabel>
+                <FormLabel className="text-gray-700 dark:text-gray-200 font-medium">Email</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10">
-                      <MailIcon className="w-4 h-4 text-gray-400" />
-                      <span className="mx-2 w-px h-6 bg-gray-300" />
+                      <MailIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                      <span className="mx-2 w-px h-6 bg-gray-300 dark:bg-gray-600" />
                     </div>
                     <Input
                       type="email"
                       placeholder="Enter your email"
-                      className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                      className="pl-12 h-11 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500 dark:focus:ring-cyan-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                       {...field}
                     />
                   </div>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-600 dark:text-red-400" />
               </FormItem>
             )}
           />
@@ -120,9 +120,9 @@ function LoginPage() {
             render={({ field }) => (
               <FormItem>
                 <div className="flex justify-between items-center">
-                  <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                  <FormLabel className="text-gray-700 dark:text-gray-200 font-medium">Password</FormLabel>
                   <a
-                    className="text-sm text-cyan-600 hover:text-cyan-700 hover:underline transition-colors"
+                    className="text-sm text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 hover:underline transition-colors"
                     href="/user/forgot-password"
                   >
                     Forgot password?
@@ -131,27 +131,27 @@ function LoginPage() {
                 <FormControl>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10">
-                      <LockIcon className="w-4 h-4 text-gray-400" />
-                      <span className="mx-2 w-px h-6 bg-gray-300" />
+                      <LockIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                      <span className="mx-2 w-px h-6 bg-gray-300 dark:bg-gray-600" />
                     </div>
                     <Input
                       type={passwordVisible ? 'text' : 'password'}
                       placeholder="Enter your password"
-                      className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                      className="pl-12 h-11 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500 dark:focus:ring-cyan-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                       {...field}
                     />
                     <Button
                       type="button"
                       size="icon"
                       variant="ghost"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       onClick={() => setPasswordVisible(!passwordVisible)}
                     >
                       {passwordVisible ? <EyeIcon className="w-4 h-4" /> : <EyeOffIcon className="w-4 h-4" />}
                     </Button>
                   </div>
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="text-red-600 dark:text-red-400" />
               </FormItem>
             )}
           />

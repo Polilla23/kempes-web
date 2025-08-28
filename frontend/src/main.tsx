@@ -4,6 +4,7 @@ import './index.css'
 import { routeTree } from './routeTree.gen'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { UserProvider } from './context/UserContext'
+import { ThemeProvider } from './context/theme-provider'
 
 // Create a new router instance
 const router = createRouter({ routeTree })
@@ -17,8 +18,10 @@ declare module '@tanstack/react-router' {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <UserProvider>
-      <RouterProvider router={router} />
-    </UserProvider> 
+    <ThemeProvider defaultTheme="system" storageKey="kempes-web-theme">
+      <UserProvider>
+        <RouterProvider router={router} />
+      </UserProvider>
+    </ThemeProvider>
   </StrictMode>
 )
