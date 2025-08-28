@@ -34,7 +34,7 @@ export const clubSchemas = {
     tags: ['Club'],
     response: {
       200: {
-        description: '',
+        description: 'List of clubs',
         type: 'object',
         properties: {
           clubs: {

@@ -30,7 +30,7 @@ export const playerRoutes = async (fastify: FastifyInstance) => {
   })
 
   fastify.post('/bulkCreate', {
-    schema: playerSchemas.bulkCreate,
+    // schema: playerSchemas.bulkCreate,
     handler: playerController.uploadCSVFile.bind(playerController),
   })
 }

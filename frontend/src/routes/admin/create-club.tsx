@@ -1,16 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +43,9 @@ function CreateClubPage() {
     const [ sortDirection, setSortDirection ] = useState<'asc' | 'desc'>('asc')
     const [ debouncedSearchTerm, setDebouncedSearchTerm ] = useState('')
 
+    // Add state for dialog loading
+    const [ isLoadingDialog, setIsLoadingDialog ] = useState(false)
+
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -62,21 +56,11 @@ function CreateClubPage() {
         }
     })
 
-    // Debounce search term
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearchTerm(searchTerm)
-        }, 500) // 0.5 second delay
-
-        return () => clearTimeout(timer)
-    }, [searchTerm])
-
     // Fetch clubs
     const fetchClubs = async () => {
         try {
             setIsLoadingClubs(true)
             const response = await ClubService.getClubs()
-            console.log("CLUBS EN LA DB:", response)
             setClubs(response.clubs || [])
         } catch (error) {
             console.error('Error fetching clubs:', error)
@@ -102,12 +86,22 @@ function CreateClubPage() {
         }
     }
 
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm)
+        }, 500) // 0.5 second delay
+
+        return () => clearTimeout(timer)
+    }, [searchTerm])
+
     // Handle dialog open/close
     const handleDialogOpenChange = async (open: boolean) => {
         setIsDialogOpen(open)
         if (open) {
-            // Fetch users when dialog opens
-            await fetchAvailableUsers()
+            setIsLoadingDialog(true) // Show skeleton immediately
+            await fetchAvailableUsers() // Load data
+            setIsLoadingDialog(false) // Hide skeleton
         }
     }
 
@@ -115,7 +109,7 @@ function CreateClubPage() {
         fetchClubs()
     }, [])
 
-    // Filter and sort clubs - Fixed to handle missing user data
+    // Filter and sort clubs
     const filteredAndSortedClubs = useMemo(() => {
         const filtered = clubs.filter(club => {
             if (!debouncedSearchTerm) return true
@@ -246,105 +240,146 @@ function CreateClubPage() {
                                                 Fill in the details to create a new club.
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <Form {...form}>
-                                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                                <FormField
-                                                    control={form.control}
-                                                    name="name"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-gray-700 font-medium">Club Name</FormLabel>
-                                                            <FormControl>
-                                                                <Input
-                                                                    type="text"
-                                                                    placeholder="Enter club name"
-                                                                    className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                                                                    {...field}
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name="logo"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-gray-700 font-medium">Club Logo URL</FormLabel>
-                                                            <FormControl>
-                                                                <Input
-                                                                    type="text"
-                                                                    placeholder="Enter club logo URL"
-                                                                    className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                                                                    {...field}
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name="userId"
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel className="text-gray-700 font-medium">Club Owner</FormLabel>
-                                                            <Select onValueChange={field.onChange} value={field.value || 'none'}>
+                                        
+                                        {isLoadingDialog ? (
+                                            // Skeleton while loading
+                                            <div className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                                                    <div className="h-11 bg-gray-200 rounded animate-pulse"></div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                                                    <div className="h-11 bg-gray-200 rounded animate-pulse"></div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="h-4 bg-gray-200 rounded w-28 animate-pulse"></div>
+                                                    <div className="h-11 bg-gray-200 rounded animate-pulse"></div>
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="h-4 w-4 bg-gray-200 rounded animate-pulse"></div>
+                                                    <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                                                </div>
+                                                <div className="flex justify-end gap-2">
+                                                    <div className="h-10 bg-gray-200 rounded w-20 animate-pulse"></div>
+                                                    <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            // Actual form content
+                                            <Form {...form}>
+                                                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="name"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel className="text-gray-700 font-medium">Club Name</FormLabel>
                                                                 <FormControl>
-                                                                    <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                                                                        <SelectValue placeholder="Select club owner" />
-                                                                    </SelectTrigger>
+                                                                    <Input
+                                                                        type="text"
+                                                                        placeholder="Enter club name"
+                                                                        className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                                                                        {...field}
+                                                                    />
                                                                 </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="none">None</SelectItem>
-                                                                    {availableUsers.map((user) => (
-                                                                        <SelectItem key={user.id} value={user.id}>
-                                                                            {user.email}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name="isActive"
-                                                    render={({ field }) => (
-                                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                                                            <FormControl>
-                                                                <Checkbox
-                                                                    checked={field.value}
-                                                                    onCheckedChange={field.onChange}
-                                                                />
-                                                            </FormControl>
-                                                            <div className="space-y-1 leading-none">
-                                                                <FormLabel className="text-gray-700 font-medium">
-                                                                    Club is active
-                                                                </FormLabel>
-                                                                <p className="text-sm text-gray-500">
-                                                                    Enable this club to participate in competitions and transfers
-                                                                </p>
-                                                            </div>
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="logo"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel className="text-gray-700 font-medium">Club Logo URL</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="text"
+                                                                        placeholder="Enter club logo URL"
+                                                                        className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                                                                        {...field}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
 
-                                                <DialogFooter>
-                                                    <DialogClose asChild>
-                                                        <Button variant="outline">Cancel</Button>
-                                                    </DialogClose>
-                                                    <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700">
-                                                        Create Club
-                                                    </Button>
-                                                </DialogFooter>
-                                            </form>
-                                        </Form>
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="userId"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel className="text-gray-700 font-medium">Club Owner</FormLabel>
+                                                                <Select onValueChange={field.onChange} value={field.value || 'none'}>
+                                                                    <FormControl>
+                                                                        <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
+                                                                            <SelectValue placeholder="Select club owner" />
+                                                                        </SelectTrigger>
+                                                                    </FormControl>
+                                                                    <SelectContent>
+                                                                        {isLoadingUsers ? (
+                                                                            <SelectItem value="loading" disabled>Loading available users...</SelectItem>
+                                                                        ) : (
+                                                                            <>
+                                                                                <SelectItem value="none">None</SelectItem>
+                                                                                {availableUsers.map((user) => (
+                                                                                    <SelectItem key={user.id} value={user.id}>
+                                                                                        {user.email}
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                            </>
+                                                                        )}
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="isActive"
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                        checked={field.value}
+                                                                        onCheckedChange={field.onChange}
+                                                                    />
+                                                                </FormControl>
+                                                                <div className="space-y-1 leading-none">
+                                                                    <FormLabel className="text-gray-700 font-medium">
+                                                                        Club is active
+                                                                    </FormLabel>
+                                                                    <p className="text-sm text-gray-500">
+                                                                        Enable this club to participate in competitions and transfers
+                                                                    </p>
+                                                                </div>
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <DialogFooter>
+                                                        <DialogClose asChild>
+                                                            <Button variant="outline">Cancel</Button>
+                                                        </DialogClose>
+                                                        <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700" disabled={isLoadingUsers || form.formState.isSubmitting}>
+                                                            {isLoadingUsers ? (
+                                                                <>
+                                                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                                    Preparing...
+                                                                </>
+                                                            ) : (
+                                                                "Create Club"
+                                                            )}
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </Form>
+                                        )}
                                     </DialogContent>
                                 </Dialog>
                             </div>

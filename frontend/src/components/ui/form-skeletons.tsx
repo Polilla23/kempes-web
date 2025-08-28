@@ -141,6 +141,54 @@ export function PlayerFormSkeleton() {
     )
 }
 
+// Table skeleton for player list
+export function PlayerTableSkeleton({ rows = 11 }: { rows?: number }) {
+    return (
+        <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-32" />
+                <Skeleton className="h-10 w-10 rounded-full" />
+            </div>
+
+            {/* Table */}
+            <div className="border rounded-lg overflow-hidden">
+                {/* Table Header */}
+                <div className="bg-gray-50 px-6 py-3 border-b">
+                    <div className="grid grid-cols-9 gap-4">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-4 w-8" />
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-4 w-18" />
+                        <Skeleton className="h-4 w-18" />
+                        <Skeleton className="h-4 w-12" />
+                        <Skeleton className="h-4 w-12" />
+                    </div>
+                </div>
+
+                {/* Table Rows */}
+                {Array.from({ length: rows }).map((_, index) => (
+                    <div key={index} className="px-6 py-4 border-b last:border-b-0">
+                        <div className="grid grid-cols-9 gap-4">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-4 w-8" />
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-4 w-18" />
+                            <Skeleton className="h-4 w-18" />
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-4 w-12" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 // Club form field skeleton
 export function ClubFormSkeleton() {
     return (
@@ -160,37 +208,37 @@ export function ClubFormSkeleton() {
 // Table skeleton for club list
 export function ClubTableSkeleton({ rows = 5 }: { rows?: number }) {
     return (
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-10 w-10 rounded-full" />
-        </div>
-        
-        {/* Table */}
-        <div className="border rounded-lg overflow-hidden">
-          {/* Table Header */}
-          <div className="bg-gray-50 px-6 py-3 border-b">
-            <div className="grid grid-cols-4 gap-4">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-16" />
+        <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-10 w-10 rounded-full" />
             </div>
-          </div>
-          
-          {/* Table Rows */}
-          {Array.from({ length: rows }).map((_, index) => (
-            <div key={index} className="px-6 py-4 border-b last:border-b-0">
-              <div className="grid grid-cols-4 gap-4 items-center">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-8 w-8 rounded" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-6 w-6 rounded" />
-              </div>
+            
+            {/* Table */}
+            <div className="border rounded-lg overflow-hidden">
+            {/* Table Header */}
+            <div className="bg-gray-50 px-6 py-3 border-b">
+                <div className="grid grid-cols-4 gap-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+                </div>
             </div>
-          ))}
+            
+            {/* Table Rows */}
+            {Array.from({ length: rows }).map((_, index) => (
+                <div key={index} className="px-6 py-4 border-b last:border-b-0">
+                <div className="grid grid-cols-4 gap-4 items-center">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-6 w-6 rounded" />
+                </div>
+                </div>
+            ))}
+            </div>
         </div>
-      </div>
     )
   }

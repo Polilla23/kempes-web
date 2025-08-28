@@ -78,7 +78,7 @@ export interface RegisterPlayerFormData {
   ownerClubId: string
   actualClubId?: string | null
   overall: number
-  salary: number | 100.000
+  salary: number | 100000
   sofifaId?: string | null
   transfermarktId?: string | null
   isKempesita: boolean

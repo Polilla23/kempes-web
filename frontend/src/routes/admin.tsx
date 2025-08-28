@@ -3,9 +3,9 @@ import { checkAuth } from "@/services/auth-guard";
 import { useEffect } from "react";
 
 const adminMenu = [
-    { label: 'Crear usuario', path: '/admin/create-user' },
-    { label: 'Crear club', path: '/admin/create-club' },
-    { label: 'Crear jugador', path: '/admin/create-player' }
+    { label: 'User management', path: '/admin/create-user' },
+    { label: 'Club management', path: '/admin/create-club' },
+    { label: 'Player management', path: '/admin/create-player' }
 ];
 
 export const Route = createFileRoute('/admin')({
@@ -20,7 +20,7 @@ export default function AdminPanelLayout() {
     const currentPath = location.pathname;
 
     return (
-        <div className="flex min-h-[80vh] max-w-5xl mx-auto mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="flex min-h-[80vh] max-w-7xl mx-auto mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
             {/* Sidebar */}
             <aside className="w-64 bg-gray-100 border-r p-6 flex flex-col gap-4">
                 <h2 className="text-xl font-bold mb-6">Panel Admin</h2>

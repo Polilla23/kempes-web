@@ -54,23 +54,49 @@ export const playerSchemas = {
     response: {
       200: {
         description: 'List of players',
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            name: { type: 'string' },
-            lastName: { type: 'string' },
-            birthdate: { type: 'string', format: 'date-time' },
-            actualClubId: { type: 'string', format: 'uuid' },
-            ownerClubId: { type: 'string', format: 'uuid' },
-            overall: { type: 'number' },
-            salary: { type: 'number' },
-            sofifaId: { type: 'string' },
-            tranfermarktId: { type: 'string' },
-            isKempesita: { type: 'boolean' },
-            isActive: { type: 'boolean' },
-          },
+        type: 'object',
+        properties: {
+          players: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                name: { type: 'string' },
+                lastName: { type: 'string' },
+                birthdate: { type: 'string', format: 'date-time' },
+                actualClubId: { type: 'string', format: 'uuid' },
+                ownerClubId: { type: 'string', format: 'uuid' },
+                overall: { type: 'number' },
+                salary: { type: 'number' },
+                sofifaId: { type: 'string' },
+                tranfermarktId: { type: 'string' },
+                isKempesita: { type: 'boolean' },
+                isActive: { type: 'boolean' },
+                ownerClub: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' }
+                  }
+                },
+                actualClub: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' }
+                  }
+                }
+              },
+            }
+          }
+        },
+      },
+      400: {
+        description: 'Error while fetching the players.',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
         },
       },
     },
