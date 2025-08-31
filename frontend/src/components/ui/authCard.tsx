@@ -18,10 +18,10 @@ const authCard = ({
           alt="football field background"
           className="w-full h-full object-cover blur-sm"
         />
-        <div className="absolute inset-0 bg-black/40 dark:bg-black/60"></div>
+        <div className="absolute inset-0 "></div>
       </div>
-      <Card className="relative z-10 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-2xl flex flex-col justify-center px-8 w-full max-w-md">
-        <CardHeader className="text-center pb-6">
+      <Card className="relative z-10  backdrop-blur-sm shadow-2xl flex flex-col justify-center px-8 w-full max-w-md">
+        <CardHeader className="text-center pb-2">
           {/* Kempes Logo acá */}
           <CardTitle className="font-bold text-3xl text-gray-900 dark:text-gray-100">
             Kempes Master League
@@ -29,9 +29,7 @@ const authCard = ({
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              {title}
-            </h2>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{title}</h2>
             <p className="text-gray-700 dark:text-gray-300">{description}</p>
           </div>
           {children}
