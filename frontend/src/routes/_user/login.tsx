@@ -76,7 +76,7 @@ function LoginPage() {
   return (
     <AuthCard title="Welcome back!" description="Sign in to your account to continue.">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           {errorMessage && (
             <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg flex justify-between items-center animate-in slide-in-from-top-2">
               <span className="flex-1">{errorMessage}</span>
@@ -99,13 +99,12 @@ function LoginPage() {
                 <FormControl>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10">
-                      <MailIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                      <span className="mx-2 w-px h-6 bg-gray-300 dark:bg-gray-600" />
+                      <MailIcon className="size-4" />
                     </div>
                     <Input
                       type="email"
                       placeholder="Enter your email"
-                      className="pl-12 h-11 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500 dark:focus:ring-cyan-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                      className="pl-9 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500 dark:focus:ring-cyan-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                       {...field}
                     />
                   </div>
@@ -131,13 +130,12 @@ function LoginPage() {
                 <FormControl>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10">
-                      <LockIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                      <span className="mx-2 w-px h-6 bg-gray-300 dark:bg-gray-600" />
+                      <LockIcon className="size-4" />
                     </div>
                     <Input
                       type={passwordVisible ? 'text' : 'password'}
                       placeholder="Enter your password"
-                      className="pl-12 h-11 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500 dark:focus:ring-cyan-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                      className="pl-9 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:border-cyan-500 dark:focus:border-cyan-400 focus:ring-cyan-500 dark:focus:ring-cyan-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                       {...field}
                     />
                     <Button
