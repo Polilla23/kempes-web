@@ -6,13 +6,13 @@ import NavbarFooter from './navbar-footer'
 export const Navbar = () => {
   return (
     <Sidebar collapsible="icon">
+      <NavbarHeader />
       <SidebarContent className="flex flex-col justify-between h-full">
         <div>
-          <NavbarHeader />
           <NavbarContent />
         </div>
+        <NavbarFooter/>
       </SidebarContent>
-      <NavbarFooter />
       <SidebarRail />
     </Sidebar>
   )
