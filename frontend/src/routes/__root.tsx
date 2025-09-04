@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { Navbar } from '../components/ui/navBar/navbar'
+import { Navbar } from '../components/navBar/navbar'
 import { useRouter } from '@tanstack/react-router'
 import { useUser } from '@/context/UserContext'
 import { Toaster } from '@/components/ui/sonner'
@@ -37,13 +37,22 @@ function RootComponent() {
     )
   }
 
-  return (
-    <div className={shouldShowNavbar ? 'flex' : 'w-full'}>
-      {shouldShowNavbar && <Navbar />}
-      <main className={shouldShowNavbar ? 'flex-1 p-4' : 'w-full'}>
+  if (shouldShowNavbar) {
+    return (
+      <div className="flex h-screen w-full">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center p-4 w-full overflow-auto">
+          <Outlet />
+        </main>
+        <Toaster />
+      </div>
+    )
+  } else {
+    return (
+      <main className="w-full h-screen flex items-center justify-center">
         <Outlet />
+        <Toaster />
       </main>
-      <Toaster />
-    </div>
-  )
+    )
+  }
 }

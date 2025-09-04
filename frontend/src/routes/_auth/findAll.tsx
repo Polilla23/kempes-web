@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { checkAuth } from '../../services/auth-guard';
 
-export const Route = createFileRoute('/_user/delete/$id')({
+export const Route = createFileRoute('/_auth/findAll')({
   beforeLoad: async ({ location }) => {
     await checkAuth(location);
   },
@@ -9,5 +9,5 @@ export const Route = createFileRoute('/_user/delete/$id')({
 })
 
 function RouteComponent() {
-  return <div>Hello "/delete/$id"!</div>
+  return <div>Hello "/findAll"!</div>
 }

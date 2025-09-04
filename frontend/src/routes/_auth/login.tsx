@@ -11,7 +11,7 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import AuthCard from '@/components/ui/authCard'
 import { useUser } from '@/context/UserContext'
 
-export const Route = createFileRoute('/_user/login')({
+export const Route = createFileRoute('/_auth/login')({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       redirect: search.redirect as string | undefined,

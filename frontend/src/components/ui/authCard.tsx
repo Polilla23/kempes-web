@@ -11,7 +11,7 @@ const authCard = ({
   children: React.ReactNode
 }) => {
   return (
-    <div className="relative h-screen flex items-center justify-center p-4">
+    <div className="relative h-screen flex items-center justify-center p-4 w-full">
       <div className="absolute inset-0 w-full h-full">
         <img
           src="/Football-Field-Fake-Grass.jpg"
@@ -20,7 +20,7 @@ const authCard = ({
         />
         <div className="absolute inset-0 "></div>
       </div>
-      <Card className="relative z-10  backdrop-blur-sm shadow-2xl flex flex-col justify-center px-8 w-full max-w-md">
+      <Card className="relative z-10  backdrop-blur-sm shadow-2xl flex flex-col justify-center px-8 w-full max-w-md h-full max-h-fit sm:h-auto py-6">
         <CardHeader className="text-center pb-2">
           {/* Kempes Logo acá */}
           <CardTitle className="font-bold text-3xl text-gray-900 dark:text-gray-100">

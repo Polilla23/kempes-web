@@ -10,7 +10,7 @@ import {
   UserCog,
   Users,
 } from 'lucide-react'
-import { Label } from '../label'
+import { Label } from '../ui/label'
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -20,7 +20,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '../sidebar'
+} from '../ui/sidebar'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/context/UserContext'
@@ -33,10 +33,10 @@ const navItems = [
   { label: 'Transfers', icon: ArrowLeftRight, to: '/transfers' },
 ]
 const adminItems = [
-  { label: 'Users', icon: UserCog, to: '/admin/users' },
-  { label: 'Clubs', icon: Shield, to: '/admin/teams' },
-  { label: 'Players', icon: Users, to: '/admin/clubs' },
-  { label: 'Salary Rates', icon: CircleDollarSign, to: '/admin/salary-rates' },
+  { label: 'Users', icon: UserCog, to: '/management/users' },
+  { label: 'Clubs', icon: Shield, to: '/management/clubs' },
+  { label: 'Players', icon: Users, to: '/management/players' },
+  { label: 'Salary Rates', icon: CircleDollarSign, to: '/management/salary-rates' },
 ]
 
 const NavbarContent = () => {
@@ -60,7 +60,7 @@ const NavbarContent = () => {
             {navItems.map((item) => (
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton asChild>
-                  <Link to={item.to}>
+                  <Link className="cursor-pointer" to={item.to}>
                     <item.icon />
                     <span>{item.label}</span>
                   </Link>

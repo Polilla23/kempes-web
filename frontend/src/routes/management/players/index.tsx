@@ -25,7 +25,7 @@ import { useForm } from "react-hook-form";
 import z from "zod";
 
 
-export const Route = createFileRoute('/admin/create-player')({
+export const Route = createFileRoute('/management/players/')({
     component: CreatePlayerPage,
 })
 
@@ -282,7 +282,7 @@ function CreatePlayerPage() {
                         ) : showCreateForm ? (
                             isLoadingForm ? (
                                 // Skeleton while form data loads
-                                <div className="space-y-4">
+                                (<div className="space-y-4">
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
                                     </div>
@@ -314,10 +314,10 @@ function CreatePlayerPage() {
                                             ))}
                                         </div>
                                     </div>
-                                </div>
+                                </div>)
                             ) : (
                                 // Actual form content
-                                <div className="space-y-4">
+                                (<div className="space-y-4">
                                     <Tabs defaultValue="single" className="w-full">
                                         <TabsList className="grid w-full grid-cols-2">
                                             <TabsTrigger value="single">One Player</TabsTrigger>
@@ -677,11 +677,11 @@ function CreatePlayerPage() {
                                             </div>
                                         </TabsContent>
                                     </Tabs>
-                                </div>
+                                </div>)
                             )
                         ) : (
                             // Table view
-                            <div className="space-y-4">
+                            (<div className="space-y-4">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <h3 className="text-lg sm:text-xl font-semibold text-gray-900">All Players</h3>
                                     
@@ -704,7 +704,6 @@ function CreatePlayerPage() {
                                         Create Player
                                     </Button>
                                 </div>
-
                                 {/* Results Count */}
                                 <div className="flex items-center justify-between text-sm text-gray-600">
                                     <span>
@@ -714,7 +713,6 @@ function CreatePlayerPage() {
                                         )}
                                     </span>
                                 </div>
-                                
                                 {/* Players Table - Responsive Design */}
                                 <div className="border rounded-lg overflow-hidden">
                                     {/* Desktop Table */}
@@ -1066,7 +1064,7 @@ function CreatePlayerPage() {
                                         )}
                                     </div>
                                 </div>
-                            </div>
+                            </div>)
                         )}
                     </CardContent>
                 </Card>
