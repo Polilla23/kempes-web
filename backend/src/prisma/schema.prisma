@@ -33,6 +33,10 @@ model Club {
   playerNow   Player[]  @relation("ActualClub")
   isActive Boolean @default(true) @map("is_active")
 
+  homeMatches Match[] @relation("HomeMatches")
+  awayMatches Match[] @relation("AwayMatches")
+  competitions  Competition[] @relation("CompetitionTeams")
+
   @@index([userId])
   @@map("clubs")
 }
@@ -56,7 +60,97 @@ model Player {
   @@map("players")
 }
 
+model Season {
+  id            String  @id @default(uuid())
+  number        Int @unique
+  isActive      Boolean @default(false)
+  competitions  Competition[]
+}
+
+model Competition {
+  id            String  @id @default(uuid())
+  name          String  // Nombre constuido, ej: "Liga A Mayores - T7", "Copa de Oro - T10"
+  system        CompetitionStage // Sitema de juego de ESTA instancia/fase
+
+  seasonId      String
+  competitionTypeId String
+
+  // Para conectar fases (ej. Copa de Oro es hija de Copa Kempes)
+  parentCompetitionId String? @unique
+  parentCompetition Competition?  @relation("CompetitionPhases", fields: [parentCompetitionId], references: [id])
+  childCompetition  Competition?  @relation("CompetitionPhases")
+
+  // El cerebro de la flexibilidad: Aquí guardamos las reglas específicas.
+  rules         Json
+  /* Ejemplo de 'rules' para LIGA A:
+    {
+      "roundType": "ida_y_vuelta", // 'ida' o 'ida_y_vuelta'
+      "playoffs": { "type": "TOP_3_FINALS", "teams": [1, 2, 3] },
+      "playouts": { "type": "5_VS_6", "teams": [5, 6]},
+      "promotions": {
+        "A_vs_B": { "a_team_rank": 7, "b_team_rank": 2 },
+        "A_vs_B_playout": { "a_team_rank": 6, "b_team_rank": 3 }
+      }
+    }
+
+    Ejemplo de 'rules' para COPA KEMPES:
+    {
+      "numGroups": 5,
+      "teamsPerGroup": 8,
+      "qualifyToGold": 2, // Los 2 primeros de cada grupo a Copa de Oro
+      "qualifyToSilver": 2 // El 3ro y 4to a Copa de Plata
+    }
+  */
+
+  season        Season  @relation(fields: [seasonId], references: [id])
+  competitionType CompetitionType @relation(fields: [competitionTypeId], references:[id])
+  matches       Match[]
+  teams         Club[]  @relation("CompetitionTeams")
+}
+
+model CompetitionType {
+  id            String  @id @default(uuid())
+  name          String  // "Liga A Mayores", "Copa Kempes", "Copa de Plata", "Liga B Kempesita"
+  format        CompetitionFormat // Es una LIGA o una COPA
+  competitions  Competition[]
+}
+
+model Match {
+  id            String  @id @default(uuid())
+  matchdayOrder Int // Fecha 1, 2... o Fase (16 = 16vos, 8 = 8vos)
+  status        MatchStatus @default(PENDIENTE)
+  homeClubId    String?
+  awayClubId    String?
+  homePlaceholder String?
+  awayPlaceHolder String?
+  homeClubGoals Int @default(0)
+  awayClubGoals Int @default(0)
+  competitionId String
+
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  homeClub      Club? @relation("HomeMatches", fields: [homeClubId], references: [id])
+  awayClub      Club? @relation("AwayMatches", fields: [awayClubId], references: [id])
+}
+
+// ENUMS AND TYPES
+
 enum RoleType {
   ADMIN
   USER
+}
+
+enum MatchStatus {
+  PENDIENTE
+  FINALIZADO
+  CANCELADO
+}
+
+enum CompetitionFormat {
+  LEAGUE
+  CUP
+}
+
+enum CompetitionStage {
+  ROUND_ROBIN // Todos contra todos (Ligas, Fase de Grupos)
+  KNOCKOUT // Eliminación directa
 }
