@@ -100,7 +100,7 @@ export const userSchemas = {
                 email: { type: 'string' },
                 role: { type: 'string' },
                 isVerified: { type: 'boolean' },
-                club: { type: ['object', 'null'] },
+                club: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' } } },
               },
             },
           },

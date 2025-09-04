@@ -1,0 +1,20 @@
+import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
+import { checkAuth } from '@/services/auth-guard'
+
+export const Route = createFileRoute('/management/layout')({
+  beforeLoad: async ({ location }) => {
+    await checkAuth(location)
+  },
+  component: AdminPanelLayout,
+})
+
+export default function AdminPanelLayout() {
+  return (
+    <div className="flex items-center justify-center max-h-max max-w-7xl mx-auto mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Main content */}
+      <main className="flex items-center justify-center w-full max-h-full p-6 overflow-auto">
+        <Outlet />
+      </main>
+    </div>
+  )
+}

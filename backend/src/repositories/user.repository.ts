@@ -8,7 +8,7 @@ export class UserRepository implements IUserRepository {
     this.prisma = prisma
   }
 
-  async findOneByEmail(email: Prisma.UserWhereUniqueInput['email']){
+  async findOneByEmail(email: Prisma.UserWhereUniqueInput['email']) {
     return await this.prisma.user.findUnique({
       where: { email },
     })
@@ -17,8 +17,13 @@ export class UserRepository implements IUserRepository {
   async findAll() {
     return await this.prisma.user.findMany({
       include: {
-        club: true
-      }
+        club: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     })
   }
 
@@ -30,7 +35,7 @@ export class UserRepository implements IUserRepository {
 
   async findOneByVerificationToken(token: Prisma.UserWhereUniqueInput['verificationToken']) {
     return await this.prisma.user.findUnique({
-      where: { 
+      where: {
         verificationToken: token,
       },
     })
@@ -43,15 +48,15 @@ export class UserRepository implements IUserRepository {
         isVerified: true,
         verificationToken: null,
         verificationTokenExpires: null,
-      }
+      },
     })
   }
 
   async findOneByResetPasswordToken(token: Prisma.UserWhereUniqueInput['resetPasswordToken']) {
     return await this.prisma.user.findUnique({
       where: {
-        resetPasswordToken: token
-      }
+        resetPasswordToken: token,
+      },
     })
   }
 
@@ -75,10 +80,10 @@ export class UserRepository implements IUserRepository {
   }
 
   async update(user: User) {
-    const { id, ...rest } = user;
+    const { id, ...rest } = user
     return await this.prisma.user.update({
       where: { id },
-      data: rest
+      data: rest,
     })
   }
 }

@@ -9,37 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
 import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
-import { Route as AdminCreateUserRouteImport } from './routes/admin/create-user'
-import { Route as AdminCreatePlayerRouteImport } from './routes/admin/create-player'
-import { Route as AdminCreateClubRouteImport } from './routes/admin/create-club'
-import { Route as UserResendVerificationEmailRouteImport } from './routes/_user/resend-verification-email'
-import { Route as UserLoginRouteImport } from './routes/_user/login'
-import { Route as UserForgotPasswordRouteImport } from './routes/_user/forgot-password'
-import { Route as UserFindAllRouteImport } from './routes/_user/findAll'
+import { Route as AuthResendVerificationEmailRouteImport } from './routes/_auth/resend-verification-email'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as AuthFindAllRouteImport } from './routes/_auth/findAll'
+import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
+import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
+import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
 import { Route as PlayerUpdateIdRouteImport } from './routes/player/update.$id'
 import { Route as PlayerFindIdRouteImport } from './routes/player/find.$id'
 import { Route as PlayerDeleteIdRouteImport } from './routes/player/delete.$id'
 import { Route as ClubUpdateIdRouteImport } from './routes/club/update.$id'
 import { Route as ClubFindOneIdRouteImport } from './routes/club/findOne.$id'
 import { Route as ClubDeleteIdRouteImport } from './routes/club/delete.$id'
-import { Route as UserVerifyEmailTokenRouteImport } from './routes/_user/verify-email.$token'
-import { Route as UserUpdateIdRouteImport } from './routes/_user/update.$id'
-import { Route as UserResetPasswordTokenRouteImport } from './routes/_user/reset-password.$token'
-import { Route as UserRegisterTokenRouteImport } from './routes/_user/register.$token'
-import { Route as UserDeleteIdRouteImport } from './routes/_user/delete.$id'
+import { Route as AuthVerifyEmailTokenRouteImport } from './routes/_auth/verify-email.$token'
+import { Route as AuthUpdateIdRouteImport } from './routes/_auth/update.$id'
+import { Route as AuthResetPasswordTokenRouteImport } from './routes/_auth/reset-password.$token'
+import { Route as AuthRegisterTokenRouteImport } from './routes/_auth/register.$token'
+import { Route as AuthDeleteIdRouteImport } from './routes/_auth/delete.$id'
 
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -70,40 +64,40 @@ const ClubCreateRoute = ClubCreateRouteImport.update({
   path: '/club/create',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminCreateUserRoute = AdminCreateUserRouteImport.update({
-  id: '/create-user',
-  path: '/create-user',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCreatePlayerRoute = AdminCreatePlayerRouteImport.update({
-  id: '/create-player',
-  path: '/create-player',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCreateClubRoute = AdminCreateClubRouteImport.update({
-  id: '/create-club',
-  path: '/create-club',
-  getParentRoute: () => AdminRoute,
-} as any)
-const UserResendVerificationEmailRoute =
-  UserResendVerificationEmailRouteImport.update({
-    id: '/_user/resend-verification-email',
+const AuthResendVerificationEmailRoute =
+  AuthResendVerificationEmailRouteImport.update({
+    id: '/_auth/resend-verification-email',
     path: '/resend-verification-email',
     getParentRoute: () => rootRouteImport,
   } as any)
-const UserLoginRoute = UserLoginRouteImport.update({
-  id: '/_user/login',
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/_auth/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserForgotPasswordRoute = UserForgotPasswordRouteImport.update({
-  id: '/_user/forgot-password',
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/_auth/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserFindAllRoute = UserFindAllRouteImport.update({
-  id: '/_user/findAll',
+const AuthFindAllRoute = AuthFindAllRouteImport.update({
+  id: '/_auth/findAll',
   path: '/findAll',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementUsersIndexRoute = ManagementUsersIndexRouteImport.update({
+  id: '/management/users/',
+  path: '/management/users/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementPlayersIndexRoute = ManagementPlayersIndexRouteImport.update({
+  id: '/management/players/',
+  path: '/management/players/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementClubsIndexRoute = ManagementClubsIndexRouteImport.update({
+  id: '/management/clubs/',
+  path: '/management/clubs/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlayerUpdateIdRoute = PlayerUpdateIdRouteImport.update({
@@ -136,126 +130,119 @@ const ClubDeleteIdRoute = ClubDeleteIdRouteImport.update({
   path: '/club/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserVerifyEmailTokenRoute = UserVerifyEmailTokenRouteImport.update({
-  id: '/_user/verify-email/$token',
+const AuthVerifyEmailTokenRoute = AuthVerifyEmailTokenRouteImport.update({
+  id: '/_auth/verify-email/$token',
   path: '/verify-email/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserUpdateIdRoute = UserUpdateIdRouteImport.update({
-  id: '/_user/update/$id',
+const AuthUpdateIdRoute = AuthUpdateIdRouteImport.update({
+  id: '/_auth/update/$id',
   path: '/update/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserResetPasswordTokenRoute = UserResetPasswordTokenRouteImport.update({
-  id: '/_user/reset-password/$token',
+const AuthResetPasswordTokenRoute = AuthResetPasswordTokenRouteImport.update({
+  id: '/_auth/reset-password/$token',
   path: '/reset-password/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserRegisterTokenRoute = UserRegisterTokenRouteImport.update({
-  id: '/_user/register/$token',
+const AuthRegisterTokenRoute = AuthRegisterTokenRouteImport.update({
+  id: '/_auth/register/$token',
   path: '/register/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UserDeleteIdRoute = UserDeleteIdRouteImport.update({
-  id: '/_user/delete/$id',
+const AuthDeleteIdRoute = AuthDeleteIdRouteImport.update({
+  id: '/_auth/delete/$id',
   path: '/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/findAll': typeof UserFindAllRoute
-  '/forgot-password': typeof UserForgotPasswordRoute
-  '/login': typeof UserLoginRoute
-  '/resend-verification-email': typeof UserResendVerificationEmailRoute
-  '/admin/create-club': typeof AdminCreateClubRoute
-  '/admin/create-player': typeof AdminCreatePlayerRoute
-  '/admin/create-user': typeof AdminCreateUserRoute
+  '/findAll': typeof AuthFindAllRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/resend-verification-email': typeof AuthResendVerificationEmailRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/myaccount': typeof MyaccountIndexRoute
-  '/delete/$id': typeof UserDeleteIdRoute
-  '/register/$token': typeof UserRegisterTokenRoute
-  '/reset-password/$token': typeof UserResetPasswordTokenRoute
-  '/update/$id': typeof UserUpdateIdRoute
-  '/verify-email/$token': typeof UserVerifyEmailTokenRoute
+  '/delete/$id': typeof AuthDeleteIdRoute
+  '/register/$token': typeof AuthRegisterTokenRoute
+  '/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/update/$id': typeof AuthUpdateIdRoute
+  '/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
+  '/management/clubs': typeof ManagementClubsIndexRoute
+  '/management/players': typeof ManagementPlayersIndexRoute
+  '/management/users': typeof ManagementUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/findAll': typeof UserFindAllRoute
-  '/forgot-password': typeof UserForgotPasswordRoute
-  '/login': typeof UserLoginRoute
-  '/resend-verification-email': typeof UserResendVerificationEmailRoute
-  '/admin/create-club': typeof AdminCreateClubRoute
-  '/admin/create-player': typeof AdminCreatePlayerRoute
-  '/admin/create-user': typeof AdminCreateUserRoute
+  '/findAll': typeof AuthFindAllRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/resend-verification-email': typeof AuthResendVerificationEmailRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/myaccount': typeof MyaccountIndexRoute
-  '/delete/$id': typeof UserDeleteIdRoute
-  '/register/$token': typeof UserRegisterTokenRoute
-  '/reset-password/$token': typeof UserResetPasswordTokenRoute
-  '/update/$id': typeof UserUpdateIdRoute
-  '/verify-email/$token': typeof UserVerifyEmailTokenRoute
+  '/delete/$id': typeof AuthDeleteIdRoute
+  '/register/$token': typeof AuthRegisterTokenRoute
+  '/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/update/$id': typeof AuthUpdateIdRoute
+  '/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
+  '/management/clubs': typeof ManagementClubsIndexRoute
+  '/management/players': typeof ManagementPlayersIndexRoute
+  '/management/users': typeof ManagementUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
-  '/_user/findAll': typeof UserFindAllRoute
-  '/_user/forgot-password': typeof UserForgotPasswordRoute
-  '/_user/login': typeof UserLoginRoute
-  '/_user/resend-verification-email': typeof UserResendVerificationEmailRoute
-  '/admin/create-club': typeof AdminCreateClubRoute
-  '/admin/create-player': typeof AdminCreatePlayerRoute
-  '/admin/create-user': typeof AdminCreateUserRoute
+  '/_auth/findAll': typeof AuthFindAllRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/resend-verification-email': typeof AuthResendVerificationEmailRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/myaccount/': typeof MyaccountIndexRoute
-  '/_user/delete/$id': typeof UserDeleteIdRoute
-  '/_user/register/$token': typeof UserRegisterTokenRoute
-  '/_user/reset-password/$token': typeof UserResetPasswordTokenRoute
-  '/_user/update/$id': typeof UserUpdateIdRoute
-  '/_user/verify-email/$token': typeof UserVerifyEmailTokenRoute
+  '/_auth/delete/$id': typeof AuthDeleteIdRoute
+  '/_auth/register/$token': typeof AuthRegisterTokenRoute
+  '/_auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
+  '/_auth/update/$id': typeof AuthUpdateIdRoute
+  '/_auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
+  '/management/clubs/': typeof ManagementClubsIndexRoute
+  '/management/players/': typeof ManagementPlayersIndexRoute
+  '/management/users/': typeof ManagementUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/findAll'
     | '/forgot-password'
     | '/login'
     | '/resend-verification-email'
-    | '/admin/create-club'
-    | '/admin/create-player'
-    | '/admin/create-user'
     | '/club/create'
     | '/club/findAll'
     | '/player/create'
@@ -272,17 +259,16 @@ export interface FileRouteTypes {
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
+    | '/management/clubs'
+    | '/management/players'
+    | '/management/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/findAll'
     | '/forgot-password'
     | '/login'
     | '/resend-verification-email'
-    | '/admin/create-club'
-    | '/admin/create-player'
-    | '/admin/create-user'
     | '/club/create'
     | '/club/findAll'
     | '/player/create'
@@ -299,69 +285,66 @@ export interface FileRouteTypes {
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
+    | '/management/clubs'
+    | '/management/players'
+    | '/management/users'
   id:
     | '__root__'
     | '/'
-    | '/admin'
-    | '/_user/findAll'
-    | '/_user/forgot-password'
-    | '/_user/login'
-    | '/_user/resend-verification-email'
-    | '/admin/create-club'
-    | '/admin/create-player'
-    | '/admin/create-user'
+    | '/_auth/findAll'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/resend-verification-email'
     | '/club/create'
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
     | '/myaccount/'
-    | '/_user/delete/$id'
-    | '/_user/register/$token'
-    | '/_user/reset-password/$token'
-    | '/_user/update/$id'
-    | '/_user/verify-email/$token'
+    | '/_auth/delete/$id'
+    | '/_auth/register/$token'
+    | '/_auth/reset-password/$token'
+    | '/_auth/update/$id'
+    | '/_auth/verify-email/$token'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
+    | '/management/clubs/'
+    | '/management/players/'
+    | '/management/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
-  UserFindAllRoute: typeof UserFindAllRoute
-  UserForgotPasswordRoute: typeof UserForgotPasswordRoute
-  UserLoginRoute: typeof UserLoginRoute
-  UserResendVerificationEmailRoute: typeof UserResendVerificationEmailRoute
+  AuthFindAllRoute: typeof AuthFindAllRoute
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthResendVerificationEmailRoute: typeof AuthResendVerificationEmailRoute
   ClubCreateRoute: typeof ClubCreateRoute
   ClubFindAllRoute: typeof ClubFindAllRoute
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
-  UserDeleteIdRoute: typeof UserDeleteIdRoute
-  UserRegisterTokenRoute: typeof UserRegisterTokenRoute
-  UserResetPasswordTokenRoute: typeof UserResetPasswordTokenRoute
-  UserUpdateIdRoute: typeof UserUpdateIdRoute
-  UserVerifyEmailTokenRoute: typeof UserVerifyEmailTokenRoute
+  AuthDeleteIdRoute: typeof AuthDeleteIdRoute
+  AuthRegisterTokenRoute: typeof AuthRegisterTokenRoute
+  AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
+  AuthUpdateIdRoute: typeof AuthUpdateIdRoute
+  AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
   ClubUpdateIdRoute: typeof ClubUpdateIdRoute
   PlayerDeleteIdRoute: typeof PlayerDeleteIdRoute
   PlayerFindIdRoute: typeof PlayerFindIdRoute
   PlayerUpdateIdRoute: typeof PlayerUpdateIdRoute
+  ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
+  ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
+  ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -404,53 +387,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/create-user': {
-      id: '/admin/create-user'
-      path: '/create-user'
-      fullPath: '/admin/create-user'
-      preLoaderRoute: typeof AdminCreateUserRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/create-player': {
-      id: '/admin/create-player'
-      path: '/create-player'
-      fullPath: '/admin/create-player'
-      preLoaderRoute: typeof AdminCreatePlayerRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/create-club': {
-      id: '/admin/create-club'
-      path: '/create-club'
-      fullPath: '/admin/create-club'
-      preLoaderRoute: typeof AdminCreateClubRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/_user/resend-verification-email': {
-      id: '/_user/resend-verification-email'
+    '/_auth/resend-verification-email': {
+      id: '/_auth/resend-verification-email'
       path: '/resend-verification-email'
       fullPath: '/resend-verification-email'
-      preLoaderRoute: typeof UserResendVerificationEmailRouteImport
+      preLoaderRoute: typeof AuthResendVerificationEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/login': {
-      id: '/_user/login'
+    '/_auth/login': {
+      id: '/_auth/login'
       path: '/login'
       fullPath: '/login'
-      preLoaderRoute: typeof UserLoginRouteImport
+      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/forgot-password': {
-      id: '/_user/forgot-password'
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
-      preLoaderRoute: typeof UserForgotPasswordRouteImport
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/findAll': {
-      id: '/_user/findAll'
+    '/_auth/findAll': {
+      id: '/_auth/findAll'
       path: '/findAll'
       fullPath: '/findAll'
-      preLoaderRoute: typeof UserFindAllRouteImport
+      preLoaderRoute: typeof AuthFindAllRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/users/': {
+      id: '/management/users/'
+      path: '/management/users'
+      fullPath: '/management/users'
+      preLoaderRoute: typeof ManagementUsersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/players/': {
+      id: '/management/players/'
+      path: '/management/players'
+      fullPath: '/management/players'
+      preLoaderRoute: typeof ManagementPlayersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/clubs/': {
+      id: '/management/clubs/'
+      path: '/management/clubs'
+      fullPath: '/management/clubs'
+      preLoaderRoute: typeof ManagementClubsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/player/update/$id': {
@@ -495,81 +478,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubDeleteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/verify-email/$token': {
-      id: '/_user/verify-email/$token'
+    '/_auth/verify-email/$token': {
+      id: '/_auth/verify-email/$token'
       path: '/verify-email/$token'
       fullPath: '/verify-email/$token'
-      preLoaderRoute: typeof UserVerifyEmailTokenRouteImport
+      preLoaderRoute: typeof AuthVerifyEmailTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/update/$id': {
-      id: '/_user/update/$id'
+    '/_auth/update/$id': {
+      id: '/_auth/update/$id'
       path: '/update/$id'
       fullPath: '/update/$id'
-      preLoaderRoute: typeof UserUpdateIdRouteImport
+      preLoaderRoute: typeof AuthUpdateIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/reset-password/$token': {
-      id: '/_user/reset-password/$token'
+    '/_auth/reset-password/$token': {
+      id: '/_auth/reset-password/$token'
       path: '/reset-password/$token'
       fullPath: '/reset-password/$token'
-      preLoaderRoute: typeof UserResetPasswordTokenRouteImport
+      preLoaderRoute: typeof AuthResetPasswordTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/register/$token': {
-      id: '/_user/register/$token'
+    '/_auth/register/$token': {
+      id: '/_auth/register/$token'
       path: '/register/$token'
       fullPath: '/register/$token'
-      preLoaderRoute: typeof UserRegisterTokenRouteImport
+      preLoaderRoute: typeof AuthRegisterTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_user/delete/$id': {
-      id: '/_user/delete/$id'
+    '/_auth/delete/$id': {
+      id: '/_auth/delete/$id'
       path: '/delete/$id'
       fullPath: '/delete/$id'
-      preLoaderRoute: typeof UserDeleteIdRouteImport
+      preLoaderRoute: typeof AuthDeleteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AdminRouteChildren {
-  AdminCreateClubRoute: typeof AdminCreateClubRoute
-  AdminCreatePlayerRoute: typeof AdminCreatePlayerRoute
-  AdminCreateUserRoute: typeof AdminCreateUserRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminCreateClubRoute: AdminCreateClubRoute,
-  AdminCreatePlayerRoute: AdminCreatePlayerRoute,
-  AdminCreateUserRoute: AdminCreateUserRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
-  UserFindAllRoute: UserFindAllRoute,
-  UserForgotPasswordRoute: UserForgotPasswordRoute,
-  UserLoginRoute: UserLoginRoute,
-  UserResendVerificationEmailRoute: UserResendVerificationEmailRoute,
+  AuthFindAllRoute: AuthFindAllRoute,
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthResendVerificationEmailRoute: AuthResendVerificationEmailRoute,
   ClubCreateRoute: ClubCreateRoute,
   ClubFindAllRoute: ClubFindAllRoute,
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
-  UserDeleteIdRoute: UserDeleteIdRoute,
-  UserRegisterTokenRoute: UserRegisterTokenRoute,
-  UserResetPasswordTokenRoute: UserResetPasswordTokenRoute,
-  UserUpdateIdRoute: UserUpdateIdRoute,
-  UserVerifyEmailTokenRoute: UserVerifyEmailTokenRoute,
+  AuthDeleteIdRoute: AuthDeleteIdRoute,
+  AuthRegisterTokenRoute: AuthRegisterTokenRoute,
+  AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
+  AuthUpdateIdRoute: AuthUpdateIdRoute,
+  AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,
   ClubUpdateIdRoute: ClubUpdateIdRoute,
   PlayerDeleteIdRoute: PlayerDeleteIdRoute,
   PlayerFindIdRoute: PlayerFindIdRoute,
   PlayerUpdateIdRoute: PlayerUpdateIdRoute,
+  ManagementClubsIndexRoute: ManagementClubsIndexRoute,
+  ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,
+  ManagementUsersIndexRoute: ManagementUsersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
