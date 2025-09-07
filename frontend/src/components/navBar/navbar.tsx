@@ -11,9 +11,9 @@ export const Navbar = () => {
         <div>
           <NavbarContent />
         </div>
-        <NavbarFooter/>
+        <NavbarFooter />
       </SidebarContent>
-      <SidebarRail />
+      <SidebarRail className="select-none" />
     </Sidebar>
   )
 }
