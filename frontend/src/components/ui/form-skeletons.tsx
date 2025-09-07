@@ -141,6 +141,22 @@ export function PlayerFormSkeleton() {
     )
 }
 
+// Club form field skeleton
+export function ClubFormSkeleton() {
+    return (
+        <FormSkeleton
+            fields={[
+                { type: 'single', leftLabelWidth: 'w-24' }, // Club Name
+                { type: 'single', leftLabelWidth: 'w-32' }, // Club Logo URL
+                { type: 'single', leftLabelWidth: 'w-28' }, // Club Owner
+            ]}
+            checkboxFields={[
+                { labelWidth: 'w-32', descriptionWidth: 'w-80' }, // isActive
+            ]}
+        />
+    )
+}
+
 // Table skeleton for player list
 export function PlayerTableSkeleton({ rows = 11 }: { rows?: number }) {
     return (
@@ -189,24 +205,8 @@ export function PlayerTableSkeleton({ rows = 11 }: { rows?: number }) {
     )
 }
 
-// Club form field skeleton
-export function ClubFormSkeleton() {
-    return (
-        <FormSkeleton
-            fields={[
-                { type: 'single', leftLabelWidth: 'w-24' }, // Club Name
-                { type: 'single', leftLabelWidth: 'w-32' }, // Club Logo URL
-                { type: 'single', leftLabelWidth: 'w-28' }, // Club Owner
-            ]}
-            checkboxFields={[
-                { labelWidth: 'w-32', descriptionWidth: 'w-80' }, // isActive
-            ]}
-        />
-    )
-}
-
-// Table skeleton for club list
-export function ClubTableSkeleton({ rows = 5 }: { rows?: number }) {
+// Table skeleton for club list and user list
+export function ClubAndUserTableSkeleton({ rows = 5 }: { rows?: number }) {
     return (
         <div className="space-y-4">
             {/* Header */}
@@ -218,7 +218,7 @@ export function ClubTableSkeleton({ rows = 5 }: { rows?: number }) {
             {/* Table */}
             <div className="border rounded-lg overflow-hidden">
             {/* Table Header */}
-            <div className="bg-gray-50 px-6 py-3 border-b">
+            <div className="px-6 py-3 border-b">
                 <div className="grid grid-cols-4 gap-4">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-4 w-16" />

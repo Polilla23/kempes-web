@@ -18,6 +18,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import CreateUserForm from './create-user-form'
+import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
+
+export const Route = createFileRoute('/management/users/')({
+  component: UserManagement,
+})
 
 const columnHelper = createColumnHelper<User>()
 
@@ -81,9 +86,6 @@ const columns = [
   }),
 ]
 
-export const Route = createFileRoute('/management/users/')({
-  component: UserManagement,
-})
 
 function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
@@ -134,25 +136,29 @@ function UserManagement() {
   }, [debouncedSearch, users])
 
   return (
-    <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
-      <h1 className="text-2xl font-bold mb-10 mt-8">Users Management</h1>
-      <div className="flex justify-between gap-3 mb-4 w-full relative">
-        <Label htmlFor="search" className="sr-only">
-          Search
-        </Label>
-        <Input
-          id="search"
-          type="text"
-          placeholder="Search..."
-          className="pl-8"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
-        <CreateUserForm />
+    (isLoadingUsers) ? (
+      <ClubAndUserTableSkeleton rows={8} />
+    ) : (
+      <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
+        <h1 className="text-2xl font-bold mb-10 mt-8">Users Management</h1>
+        <div className="flex justify-between gap-3 mb-4 w-full relative">
+          <Label htmlFor="search" className="sr-only">
+            Search
+          </Label>
+          <Input
+            id="search"
+            type="text"
+            placeholder="Search..."
+            className="pl-8"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+          <CreateUserForm />
+        </div>
+        <DataTable<User, any> columns={columns} data={filteredUsers} />
       </div>
-      <DataTable<User, any> columns={columns} data={filteredUsers} />
-    </div>
+    )
   )
 }
 
