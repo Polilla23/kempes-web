@@ -18,8 +18,9 @@ const NavbarFooter = () => {
 
   const handleLogout = async () => {
     await logout()
-    navigate({ to: '/login', search: { redirect: '/login' } })
+    navigate({ to: '/login', search: { redirect: '/' } })
   }
+  
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="select-none">Preferences</SidebarGroupLabel>
