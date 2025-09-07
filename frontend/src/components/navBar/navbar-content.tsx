@@ -45,8 +45,8 @@ const NavbarContent = () => {
   return (
     <>
       <SidebarGroup className={cn('pt-3', sidebarState === 'collapsed' && 'hidden')}>
-        <SidebarGroupContent className="relative">
-          <Label htmlFor="search" className="sr-only">
+        <SidebarGroupContent className="relative select-none">
+          <Label htmlFor="search" className="sr-only select-none">
             Search
           </Label>
           <SidebarInput id="search" type="text" placeholder="Search..." className="pl-8" />
@@ -56,11 +56,11 @@ const NavbarContent = () => {
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel className="select-none">Navigation</SidebarGroupLabel>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.label}>
                 <SidebarMenuButton asChild>
-                  <Link className="cursor-pointer" to={item.to}>
+                  <Link className="select-none" to={item.to}>
                     <item.icon />
                     <span>{item.label}</span>
                   </Link>
@@ -74,11 +74,11 @@ const NavbarContent = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarGroupLabel> Management & Administration</SidebarGroupLabel>
+              <SidebarGroupLabel className="select-none"> Management & Administration</SidebarGroupLabel>
               {adminItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton asChild>
-                    <Link to={item.to}>
+                    <Link className="select-none" to={item.to}>
                       <item.icon />
                       <span>{item.label}</span>
                     </Link>

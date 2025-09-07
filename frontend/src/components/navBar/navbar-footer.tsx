@@ -22,12 +22,12 @@ const NavbarFooter = () => {
   }
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Preferences</SidebarGroupLabel>
+      <SidebarGroupLabel className="select-none">Preferences</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           <ModeToggle />
-          <SidebarMenuButton className="cursor-pointer" onClick={handleLogout}>
-            <LogOut className="size-4" />
+          <SidebarMenuButton className="cursor-pointer select-none" onClick={handleLogout}>
+            <LogOut className="size-4 select-none" />
             {sidebarState === 'expanded' && <span>Logout</span>}
           </SidebarMenuButton>
         </SidebarMenu>

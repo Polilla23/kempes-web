@@ -16,7 +16,6 @@ import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
 import { Route as AuthResendVerificationEmailRouteImport } from './routes/_auth/resend-verification-email'
-import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as AuthFindAllRouteImport } from './routes/_auth/findAll'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
@@ -33,6 +32,7 @@ import { Route as AuthUpdateIdRouteImport } from './routes/_auth/update.$id'
 import { Route as AuthResetPasswordTokenRouteImport } from './routes/_auth/reset-password.$token'
 import { Route as AuthRegisterTokenRouteImport } from './routes/_auth/register.$token'
 import { Route as AuthDeleteIdRouteImport } from './routes/_auth/delete.$id'
+import { Route as AuthLoginLoginRouteImport } from './routes/_auth/_login/login'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,11 +70,6 @@ const AuthResendVerificationEmailRoute =
     path: '/resend-verification-email',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/_auth/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/_auth/forgot-password',
   path: '/forgot-password',
@@ -155,18 +150,23 @@ const AuthDeleteIdRoute = AuthDeleteIdRouteImport.update({
   path: '/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthLoginLoginRoute = AuthLoginLoginRouteImport.update({
+  id: '/_auth/_login/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/findAll': typeof AuthFindAllRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
-  '/login': typeof AuthLoginRoute
   '/resend-verification-email': typeof AuthResendVerificationEmailRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/myaccount': typeof MyaccountIndexRoute
+  '/login': typeof AuthLoginLoginRoute
   '/delete/$id': typeof AuthDeleteIdRoute
   '/register/$token': typeof AuthRegisterTokenRoute
   '/reset-password/$token': typeof AuthResetPasswordTokenRoute
@@ -186,13 +186,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/findAll': typeof AuthFindAllRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
-  '/login': typeof AuthLoginRoute
   '/resend-verification-email': typeof AuthResendVerificationEmailRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/myaccount': typeof MyaccountIndexRoute
+  '/login': typeof AuthLoginLoginRoute
   '/delete/$id': typeof AuthDeleteIdRoute
   '/register/$token': typeof AuthRegisterTokenRoute
   '/reset-password/$token': typeof AuthResetPasswordTokenRoute
@@ -213,13 +213,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth/findAll': typeof AuthFindAllRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
-  '/_auth/login': typeof AuthLoginRoute
   '/_auth/resend-verification-email': typeof AuthResendVerificationEmailRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/myaccount/': typeof MyaccountIndexRoute
+  '/_auth/_login/login': typeof AuthLoginLoginRoute
   '/_auth/delete/$id': typeof AuthDeleteIdRoute
   '/_auth/register/$token': typeof AuthRegisterTokenRoute
   '/_auth/reset-password/$token': typeof AuthResetPasswordTokenRoute
@@ -241,13 +241,13 @@ export interface FileRouteTypes {
     | '/'
     | '/findAll'
     | '/forgot-password'
-    | '/login'
     | '/resend-verification-email'
     | '/club/create'
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
     | '/myaccount'
+    | '/login'
     | '/delete/$id'
     | '/register/$token'
     | '/reset-password/$token'
@@ -267,13 +267,13 @@ export interface FileRouteTypes {
     | '/'
     | '/findAll'
     | '/forgot-password'
-    | '/login'
     | '/resend-verification-email'
     | '/club/create'
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
     | '/myaccount'
+    | '/login'
     | '/delete/$id'
     | '/register/$token'
     | '/reset-password/$token'
@@ -293,13 +293,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth/findAll'
     | '/_auth/forgot-password'
-    | '/_auth/login'
     | '/_auth/resend-verification-email'
     | '/club/create'
     | '/club/findAll'
     | '/player/create'
     | '/player/findAll'
     | '/myaccount/'
+    | '/_auth/_login/login'
     | '/_auth/delete/$id'
     | '/_auth/register/$token'
     | '/_auth/reset-password/$token'
@@ -320,13 +320,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthFindAllRoute: typeof AuthFindAllRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
-  AuthLoginRoute: typeof AuthLoginRoute
   AuthResendVerificationEmailRoute: typeof AuthResendVerificationEmailRoute
   ClubCreateRoute: typeof ClubCreateRoute
   ClubFindAllRoute: typeof ClubFindAllRoute
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
+  AuthLoginLoginRoute: typeof AuthLoginLoginRoute
   AuthDeleteIdRoute: typeof AuthDeleteIdRoute
   AuthRegisterTokenRoute: typeof AuthRegisterTokenRoute
   AuthResetPasswordTokenRoute: typeof AuthResetPasswordTokenRoute
@@ -392,13 +392,6 @@ declare module '@tanstack/react-router' {
       path: '/resend-verification-email'
       fullPath: '/resend-verification-email'
       preLoaderRoute: typeof AuthResendVerificationEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_auth/login': {
-      id: '/_auth/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/forgot-password': {
@@ -513,6 +506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthDeleteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/_login/login': {
+      id: '/_auth/_login/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -520,13 +520,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthFindAllRoute: AuthFindAllRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
-  AuthLoginRoute: AuthLoginRoute,
   AuthResendVerificationEmailRoute: AuthResendVerificationEmailRoute,
   ClubCreateRoute: ClubCreateRoute,
   ClubFindAllRoute: ClubFindAllRoute,
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
+  AuthLoginLoginRoute: AuthLoginLoginRoute,
   AuthDeleteIdRoute: AuthDeleteIdRoute,
   AuthRegisterTokenRoute: AuthRegisterTokenRoute,
   AuthResetPasswordTokenRoute: AuthResetPasswordTokenRoute,
