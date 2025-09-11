@@ -25,7 +25,12 @@ const NavbarHeader = () => {
           >
             Kempes Master League
           </h2>
-          <p className="text-muted-foreground italic text-xs select-none mx-2 text-center">
+          <p
+            className={cn(
+              'text-muted-foreground italic text-xs select-none mx-2 text-center transition-all duration-300',
+              sidebarState === 'collapsed' && 'hidden'
+            )}
+          >
             Donde el futbol es vida y la gloria es la victoria...
           </p>
         </div>

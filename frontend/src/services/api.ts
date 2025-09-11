@@ -31,20 +31,23 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
 
-  const config = options.body instanceof FormData 
-    ? {
-      ...defaultConfig,
-      ...options,
-      headers: options.headers || {},
-      }
-    : {
-        ...defaultConfig,
-        ...options,
-        headers: {
-          ...defaultConfig.headers,
-          ...options.headers,
-        },
-      }
+  const hasBody = options.body !== undefined && options.body !== null
+
+  const config =
+    options.body instanceof FormData
+      ? {
+          ...defaultConfig,
+          ...options,
+          headers: options.headers || {},
+        }
+      : {
+          ...defaultConfig,
+          ...options,
+          headers: {
+            ...(hasBody ? defaultConfig.headers : {}), // Only include default headers if there's a body
+            ...options.headers,
+          },
+        }
 
   try {
     const response = await fetch(url, config)
@@ -73,7 +76,7 @@ export const api = {
         body: data,
       })
     }
-  
+
     return apiRequest<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,

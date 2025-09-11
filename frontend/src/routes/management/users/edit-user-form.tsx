@@ -1,3 +1,8 @@
+import { useState } from 'react'
+import type { UserRole } from '@/types'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
@@ -8,60 +13,54 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
-import AuthService from '@/services/auth.service'
+import type { User } from '@/types'
 import { toast } from 'sonner'
-import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, Plus, UserPlus } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import FormSchemas from '@/lib/form-schemas'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { useState } from 'react'
+import UserService from '@/services/user.service'
+import { Loader2, MailIcon, UserPlus } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-interface CreateUserFormProps {
+interface EditUserFormProps {
+  user: User
   onSuccess?: () => void
+  onClose?: () => void
 }
 
-const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
-  const [open, setOpen] = useState(false)
-  const [passwordVisible, setPasswordVisible] = useState(false)
+function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
-  const form = useForm<z.infer<typeof FormSchemas.createUserSchema>>({
-    resolver: zodResolver(FormSchemas.createUserSchema),
+  const form = useForm<z.infer<typeof FormSchemas.editUserSchema>>({
+    resolver: zodResolver(FormSchemas.editUserSchema),
     defaultValues: {
-      email: '',
-      role: 'USER',
-      password: '',
+      email: user.email,
+      role: user.role,
     },
   })
 
-  async function onSubmit(values: z.infer<typeof FormSchemas.createUserSchema>) {
+  async function onSubmit(values: z.infer<typeof FormSchemas.editUserSchema>) {
     try {
       setVerificationStatus('loading')
-      await AuthService.register({ ...values, password: 'defaultPassword' })
-      toast.success('User created successfully!')
+      const transformedValues = { ...values, role: values.role as UserRole }
+      console.log('Transformed values:', transformedValues)
+      await UserService.updateUser(user.id, transformedValues)
+
+      toast.success('User updated successfully!')
       onSuccess?.()
-      setOpen(false)
     } catch (error) {
-      console.error('Error creating user:', error)
+      console.error('Error updating user:', error)
       toast.error('The operation has failed.')
+    } finally {
+      onClose?.()
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="ml-auto">
-          New User <Plus className="size-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={!!user} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New User</DialogTitle>
-          <DialogDescription>Add a new user</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">Edit User</DialogTitle>
+          <DialogDescription>Make changes to the user here. Click save when you're done.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -82,38 +81,6 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
                         className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                         {...field}
                       />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="select-none">Password</FormLabel>
-                  <FormControl>
-                    <div className="relative select-none">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center select-none h-10">
-                        <LockIcon className="size-4 text-gray-400 select-none" />
-                      </div>
-                      <Input
-                        type={passwordVisible ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                        {...field}
-                      />
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="ghost"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 select-none text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                        onClick={() => setPasswordVisible(!passwordVisible)}
-                      >
-                        {passwordVisible ? <EyeIcon className="size-4" /> : <EyeOffIcon className="size-4" />}
-                      </Button>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -150,12 +117,12 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Creating user...
+                    Updating user...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <UserPlus className="size-4" />
-                    Create User
+                    Update User
                   </div>
                 )}
               </Button>
@@ -167,4 +134,4 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   )
 }
 
-export default CreateUserForm
+export default EditUserForm

@@ -7,7 +7,7 @@ import type {
   AuthResponse,
 } from '../types'
 
-export class AuthService {
+class AuthService {
   // Login de usuario
   static async login(credentials: LoginFormData): Promise<AuthResponse> {
     try {
@@ -91,10 +91,10 @@ export class AuthService {
   // Obtener perfil del usuario autenticado
   static async getProfile(): Promise<{ id: string; role: 'ADMIN' | 'USER' } | null> {
     try {
-      const response = await api.get<{ data: { id: string; role: 'ADMIN' | 'USER' } }>('/myaccount/me');
-      return response.data?.data || null;
+      const response = await api.get<{ data: { id: string; role: 'ADMIN' | 'USER' } }>('/myaccount/me')
+      return response.data?.data || null
     } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Error al obtener el perfil del usuario');
+      throw new Error(error instanceof Error ? error.message : 'Error al obtener el perfil del usuario')
     }
   }
 }

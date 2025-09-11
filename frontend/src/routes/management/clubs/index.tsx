@@ -5,13 +5,12 @@ import type { Club, User } from '@/types'
 import { useEffect, useState, useMemo } from 'react'
 import { ClubService } from '@/services/club.service'
 import { toast } from 'sonner'
-import { Checkbox } from '@/components/ui/checkbox'
 import { DefaultHeader } from '@/components/table/table-header'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Ellipsis, Pencil, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -42,7 +41,7 @@ const columns = [
       const user: User | null | undefined = row.getValue('user')
       const name = user?.email || 'No owner'
       return <span>{name}</span>
-    }
+    },
   }),
   // columnHelper.accessor('isActive', {
   //   header: (info) => <DefaultHeader info={info} name="Active" type="boolean" />,
@@ -103,7 +102,7 @@ function ClubManagement() {
     fetchClubs()
   }, [])
 
-   // Debounce search term
+  // Debounce search term
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search)
@@ -116,7 +115,7 @@ function ClubManagement() {
     const lowerCaseSearch = debouncedSearch.toLowerCase()
     return clubs.filter((club) => {
       return (
-        club.name.toLowerCase().includes(lowerCaseSearch) || 
+        club.name.toLowerCase().includes(lowerCaseSearch) ||
         (club.user?.email.toLowerCase() || 'No owner').includes(lowerCaseSearch)
       )
     })
@@ -145,30 +144,28 @@ function ClubManagement() {
   //   }
   // }
 
-  return (
-    (isLoadingClubs) ? (
-      <ClubAndUserTableSkeleton rows={8} />
-    ) : (
+  return isLoadingClubs ? (
+    <ClubAndUserTableSkeleton rows={8} />
+  ) : (
     <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
-        <h1 className="text-2xl font-bold mb-10 mt-8">Clubs Management</h1>
-        <div className="flex justify-between gap-3 mb-4 w-full relative">
-          <Label htmlFor="search" className="sr-only">
-            Search
-          </Label>
-          <Input
-            id="search"
-            type="text"
-            placeholder="Search..."
-            className="pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
-          <CreateClubForm />
-        </div>
-        <DataTable<Club, any> columns={columns} data={filteredClubs} />
+      <h1 className="text-2xl font-bold mb-10 mt-8">Clubs Management</h1>
+      <div className="flex justify-between gap-3 mb-4 w-full relative">
+        <Label htmlFor="search" className="sr-only">
+          Search
+        </Label>
+        <Input
+          id="search"
+          type="text"
+          placeholder="Search..."
+          className="pl-8"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+        <CreateClubForm />
       </div>
-    )
+      <DataTable<Club, any> columns={columns} data={filteredClubs} />
+    </div>
   )
 }
 

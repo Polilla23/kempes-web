@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { ClubService } from '@/services/club.service'
-import { UserService } from '@/services/user.service'
+import UserService from '@/services/user.service'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import {
   Dialog,
@@ -62,18 +62,17 @@ const CreateClubForm = () => {
     }
   }
 
-    // Handle dialog open/close
-    const handleDialogOpenChange = async (open: boolean) => {
-      setIsOpen(open)
-      if (open) {
-        setIsLoadingDialog(true) // Show skeleton immediately
-        await fetchAvailableUsers() // Load data
-        setIsLoadingDialog(false) // Hide skeleton
-      }
+  // Handle dialog open/close
+  const handleDialogOpenChange = async (open: boolean) => {
+    setIsOpen(open)
+    if (open) {
+      setIsLoadingDialog(true) // Show skeleton immediately
+      await fetchAvailableUsers() // Load data
+      setIsLoadingDialog(false) // Hide skeleton
     }
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    
     try {
       const clubData: RegisterClubFormData = {
         name: values.name,
@@ -97,7 +96,8 @@ const CreateClubForm = () => {
     <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
-          Create Club<Plus className="size-4" />
+          Create Club
+          <Plus className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

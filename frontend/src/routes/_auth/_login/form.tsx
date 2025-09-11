@@ -6,15 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon } from 'lucide-react'
-
-// Your form schema
-export const formSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address.' }),
-  password: z.string().min(4, { message: 'Password must be at least 4 characters.' }),
-})
+import FormSchemas from '@/lib/form-schemas'
 
 // Define the type for the onSubmit function
-type OnSubmitFn = (values: z.infer<typeof formSchema>) => Promise<void> | void
+type OnSubmitFn = (values: z.infer<typeof FormSchemas.loginSchema>) => Promise<void> | void
 
 interface LoginFormProps {
   onSubmit: OnSubmitFn
@@ -26,8 +21,8 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, errorMessage }) => {
   const [passwordVisible, setPasswordVisible] = useState(false)
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof FormSchemas.loginSchema>>({
+    resolver: zodResolver(FormSchemas.loginSchema),
     defaultValues: {
       email: '',
       password: '',
@@ -38,16 +33,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {errorMessage && (
-          <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-4 text-sm text-destructive bg-red-50 border border-red-200 rounded-lg">
             {errorMessage}
           </div>
         )}
-        <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-2xl font-bold select-none">Login to your account</h1>
-          <p className="text-muted-foreground text-sm text-balance select-none">
-            Enter your email below to login to your account
-          </p>
-        </div>
         <FormField
           control={form.control}
           name="email"
@@ -76,7 +65,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="select-none">Password</FormLabel>
+              <div className="flex justify-between items-end">
+                <FormLabel className="select-none">Password</FormLabel>
+                <a
+                  href="/forgot-password"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 select-none"
+                >
+                  Forgot your password?
+                </a>
+              </div>
               <FormControl>
                 <div className="relative select-none">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center select-none h-10">

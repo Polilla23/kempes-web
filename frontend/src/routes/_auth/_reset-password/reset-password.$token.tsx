@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-export const Route = createFileRoute('/_auth/reset-password/$token')({
+export const Route = createFileRoute('/_auth/_reset-password/reset-password/$token')({
   component: ResetPasswordPage,
 })
 const formSchema = z
