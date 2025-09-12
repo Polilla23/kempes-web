@@ -96,8 +96,8 @@ const CreateClubForm = () => {
     <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
-          Create Club
           <Plus className="size-4" />
+          Create Club
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

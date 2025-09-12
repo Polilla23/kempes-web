@@ -55,7 +55,7 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
-          New User <Plus className="size-4" />
+          <Plus className="size-4"/> New User 
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

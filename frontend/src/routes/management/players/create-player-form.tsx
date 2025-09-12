@@ -121,7 +121,8 @@ const CreatePlayerForm = () => {
     <Dialog open={isOpen} onOpenChange={handleDialogOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
-          Create Player<Plus className="size-4" />
+          <Plus className="size-4"/>
+          Create Player
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -142,7 +143,7 @@ const CreatePlayerForm = () => {
             
             <TabsContent value="single">
                 <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-900">Create New Player</h4>
+                    <h4 className="text-lg font-semibold">Create New Player</h4>
                 </div>
                 
                 <Form {...form}>
@@ -153,7 +154,7 @@ const CreatePlayerForm = () => {
                                 name="name"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Name</FormLabel>
+                                        <FormLabel className="font-medium">Name</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="text"
@@ -172,7 +173,7 @@ const CreatePlayerForm = () => {
                                 name="lastName"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Last Name</FormLabel>
+                                        <FormLabel className="font-medium">Last Name</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="text"
@@ -193,7 +194,7 @@ const CreatePlayerForm = () => {
                                 name="birthdate"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Birthdate (DD/MM/YYYY)</FormLabel>
+                                        <FormLabel className="font-medium">Birthdate (DD/MM/YYYY)</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="text"
@@ -212,7 +213,7 @@ const CreatePlayerForm = () => {
                                 name="overall"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Overall (0-99)</FormLabel>
+                                        <FormLabel className="font-medium">Overall (0-99)</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
@@ -231,7 +232,7 @@ const CreatePlayerForm = () => {
                                 name="salary"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Salary</FormLabel>
+                                        <FormLabel className="font-medium">Salary</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="number"
@@ -252,7 +253,7 @@ const CreatePlayerForm = () => {
                                 name="ownerClubId"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Owner Club</FormLabel>
+                                        <FormLabel className="font-medium">Owner Club</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || 'none'} disabled={isLoadingClubs}>
                                             <FormControl>
                                                 <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500" disabled={isLoadingClubs}>
@@ -284,7 +285,7 @@ const CreatePlayerForm = () => {
                                 name="actualClubId"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Actual Club</FormLabel>
+                                        <FormLabel className="font-medium">Actual Club</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value || 'none'} disabled={isLoadingClubs}>
                                             <FormControl>
                                                 <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500" disabled={isLoadingClubs}>
@@ -318,7 +319,7 @@ const CreatePlayerForm = () => {
                                 name="sofifaId"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Sofifa ID (optional)</FormLabel>
+                                        <FormLabel className="font-medium">Sofifa ID (optional)</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="text"
@@ -337,7 +338,7 @@ const CreatePlayerForm = () => {
                                 name="transfermarktId"
                                 render={({ field }) => (
                                   <FormItem>
-                                        <FormLabel className="text-gray-700 font-medium">Transfermarkt ID (optional)</FormLabel>
+                                        <FormLabel className="font-medium">Transfermarkt ID (optional)</FormLabel>
                                         <FormControl>
                                             <Input
                                                 type="text"
@@ -365,7 +366,7 @@ const CreatePlayerForm = () => {
                                                 />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
-                                            <FormLabel className="text-gray-700 font-medium">
+                                            <FormLabel className="font-medium">
                                                 Kempesita
                                             </FormLabel>
                                             <p className="text-sm text-gray-500">
@@ -388,7 +389,7 @@ const CreatePlayerForm = () => {
                                                 />
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
-                                            <FormLabel className="text-gray-700 font-medium">
+                                            <FormLabel className="font-medium">
                                                 Active
                                             </FormLabel>
                                             <p className="text-sm text-gray-500">
@@ -426,11 +427,11 @@ const CreatePlayerForm = () => {
             <TabsContent value="multiple">
                 <div className="space-y-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-gray-900">Create Multiple Players</h4>
+                        <h4 className="text-lg font-semibold">Create Multiple Players</h4>
                     </div>
                     
                     <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="border border-blue-200 rounded-lg p-4">
                             <h5 className="font-medium text-blue-900 mb-2">CSV Format Requirements</h5>
                             <p className="text-sm text-blue-700 mb-2">
                                 Your CSV file should contain the following columns:

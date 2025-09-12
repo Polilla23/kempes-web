@@ -170,7 +170,7 @@ export function PlayerTableSkeleton({ rows = 11 }: { rows?: number }) {
             {/* Table */}
             <div className="border rounded-lg overflow-hidden">
                 {/* Table Header */}
-                <div className="bg-gray-50 px-6 py-3 border-b">
+                <div className="px-6 py-3 border-b">
                     <div className="grid grid-cols-9 gap-4">
                         <Skeleton className="h-4 w-16" />
                         <Skeleton className="h-4 w-20" />

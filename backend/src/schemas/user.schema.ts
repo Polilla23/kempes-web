@@ -288,7 +288,7 @@ export const userSchemas = {
       properties: {
         email: { type: 'string' },
         pasword: { type: 'string' },
-        role: { type: 'string', enum: ['admin', 'user'] },
+        role: { type: 'string', enum: ['ADMIN', 'USER'] },
       },
       additionalProperties: false,
     },

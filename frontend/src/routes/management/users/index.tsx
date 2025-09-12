@@ -119,7 +119,8 @@ function UserManagement() {
       columnHelper.accessor('club', {
         header: (info) => <DefaultHeader info={info} name="Club" type="string" />,
         cell: ({ row }) => {
-          const club: Club | null | undefined = row.original.club
+          // const club: Club | null | undefined = row.original.club
+          const club: Club | null | undefined = row.getValue('club')
           const name = club?.name || 'No Club'
           return <span>{name}</span>
         },
@@ -139,7 +140,7 @@ function UserManagement() {
                   }
                 }}
               >
-                <DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="cursor-pointer">
                     <Ellipsis className="size-4" />
                   </Button>

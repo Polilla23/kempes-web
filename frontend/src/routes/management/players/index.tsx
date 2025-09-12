@@ -55,29 +55,29 @@ const columns = [
         })
     }),
     columnHelper.accessor('ownerClub', {
-        header: (info) => <DefaultHeader info={info} name="Ownerclub" type="string" />,
+        header: (info) => <DefaultHeader info={info} name="Owner Club" type="string" />,
         // cell: (info) => info.getValue(),
         cell: ({ row }) => {
-            const club: Club | null | undefined = row.getValue('club')
+            const club: Club | null | undefined = row.getValue('ownerClub')
             const name = club?.name || 'No club'
             return <span>{name}</span>
         }
     }),
     columnHelper.accessor('actualClub', {
-        header: (info) => <DefaultHeader info={info} name="Actualclub" type="string" />,
+        header: (info) => <DefaultHeader info={info} name="Actual Club" type="string" />,
         // cell: (info) => info.getValue(),
         cell: ({ row }) => {
-            const club: Club | null | undefined = row.getValue('club')
+            const club: Club | null | undefined = row.getValue('actualClub')
             const name = club?.name || 'No club'
             return <span>{name}</span>
         }
     }),
     columnHelper.accessor('sofifaId', {
-        header: (info) => <DefaultHeader info={info} name="SofifaId" type="number" />,
+        header: (info) => <DefaultHeader info={info} name="Sofifa Id" type="number" />,
         cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('transfermarktId', {
-        header: (info) => <DefaultHeader info={info} name="TransfermarktId" type="number" />,
+        header: (info) => <DefaultHeader info={info} name="Transfermarkt Id" type="number" />,
         cell: (info) => info.getValue(),
     }),
     columnHelper.display({
@@ -206,19 +206,19 @@ function CreatePlayerPage() {
             <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
                 <h1 className="text-2xl font-bold mb-10 mt-8">Players Management</h1>
                 <div className="flex justify-between gap-3 mb-4 w-full relative">
-                <Label htmlFor="search" className="sr-only">
-                    Search
-                </Label>
-                <Input
-                    id="search"
-                    type="text"
-                    placeholder="Search..."
-                    className="pl-8"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-                <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
-                <CreatePlayerForm />
+                    <Label htmlFor="search" className="sr-only">
+                        Search
+                    </Label>
+                    <Input
+                        id="search"
+                        type="text"
+                        placeholder="Search..."
+                        className="pl-8"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                    <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+                    <CreatePlayerForm />
                 </div>
                 <DataTable<Player, any> columns={columns} data={filteredPlayers} />
             </div>

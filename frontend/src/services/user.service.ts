@@ -6,7 +6,6 @@ class UserService {
   static async getUsers(): Promise<UsersResponse> {
     try {
       const response = await api.get<{ users: User[] }>('/user/findAll')
-      console.log('DATA DE USUARIOS', response.data)
       return response.data || { users: [] }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error fetching users')
@@ -22,6 +21,7 @@ class UserService {
       throw new Error(error instanceof Error ? error.message : 'Error updating user')
     }
   }
+
   static async deleteUser(userId: string): Promise<void> {
     try {
       await api.delete<void>(`/user/delete/${userId}`)
