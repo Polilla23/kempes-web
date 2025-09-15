@@ -32,7 +32,12 @@ const formSchema = z.object({
   isActive: z.boolean(),
 })
 
-const CreateClubForm = () => {
+
+type CreateClubFormProps = {
+  onCreated?: () => void
+}
+
+const CreateClubForm = ({ onCreated }: CreateClubFormProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
@@ -85,7 +90,7 @@ const CreateClubForm = () => {
       toast.success('Club created successfully')
       form.reset()
       setIsOpen(false)
-      fetchClubs() // Refresh the list
+      onCreated?.()
     } catch (error: any) {
       console.error('Error creating club:', error)
       toast.error(error instanceof Error ? error.message : 'An error occurred while creating the club.')

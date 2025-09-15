@@ -162,7 +162,7 @@ function ClubManagement() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
-        <CreateClubForm />
+        <CreateClubForm onCreated={fetchClubs}/>
       </div>
       <DataTable<Club, any> columns={columns} data={filteredClubs} />
     </div>
