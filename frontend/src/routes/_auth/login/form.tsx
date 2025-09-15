@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon } from 'lucide-react'
 import FormSchemas from '@/lib/form-schemas'
 
-// Define the type for the onSubmit function
+// OnSubmit function type
 type OnSubmitFn = (values: z.infer<typeof FormSchemas.loginSchema>) => Promise<void> | void
 
 interface LoginFormProps {

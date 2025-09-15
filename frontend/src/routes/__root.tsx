@@ -1,53 +1,55 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { createRootRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-import { Navbar } from '../components/navBar/navbar'
-import { useRouter } from '@tanstack/react-router'
+import { UserProvider } from '@/context/UserContext'
+import { ThemeProvider } from '@/context/theme-provider'
+import { SidebarProvider } from '@/components/ui/sidebar'
 import { useUser } from '@/context/UserContext'
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from 'sonner'
+import Navbar from '@/components/navBar/navbar'
 
 export const Route = createRootRoute({
   component: RootComponent,
 })
 
 function RootComponent() {
-  const router = useRouter()
-  const pathname = router.state.location.pathname
-  const { loading, role } = useUser()
+  return (
+    <ThemeProvider defaultTheme="system" storageKey="kempes-web-theme">
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
+    </ThemeProvider>
+  )
+}
 
-  const routesWithoutNavbar = [
-    '/login',
-    '/register',
-    '/forgot-password',
-    '/reset-password',
-    '/verify-email',
-    '/resend-verification-email',
-  ]
+function AppContent() {
+  const { loading } = useUser()
+  const location = useLocation()
 
-  const hideNavbar = routesWithoutNavbar.includes(pathname)
-  const isAuthenticated = !loading && role !== null
-  const shouldShowNavbar = !hideNavbar && isAuthenticated
+  // Debug logging
+  console.log('Current pathname:', location.pathname)
+  console.log('Loading state:', loading)
 
+  // Show loading screen while checking authentication
   if (loading) {
     return (
-      <>
-        <TanStackRouterDevtools position="bottom-right" />
-        <Outlet />
-        <Toaster />
-      </>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
     )
   }
 
-  if (shouldShowNavbar) {
-    return (
-      <div className="flex h-screen w-full">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center p-4 w-full overflow-auto">
-          <Outlet />
-        </main>
-        <Toaster />
-      </div>
-    )
-  } else {
+  // Check if current route is an auth route
+  const isAuthRoute =
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/forgot-password') ||
+    location.pathname.startsWith('/reset-password') ||
+    location.pathname.startsWith('/verify-email')
+
+  console.log('Is auth route:', isAuthRoute)
+
+  // Render without sidebar for auth routes
+  if (isAuthRoute) {
+    console.log('Rendering without sidebar')
     return (
       <main className="w-full h-screen flex items-center justify-center">
         <Outlet />
@@ -55,4 +57,19 @@ function RootComponent() {
       </main>
     )
   }
+
+  // Render with sidebar for all other routes
+  console.log('Rendering with sidebar')
+  return (
+    <SidebarProvider>
+      <div className="flex h-screen w-full">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center p-4 w-full overflow-auto">
+          <Outlet />
+        </main>
+        <Toaster />
+      </div>
+      <TanStackRouterDevtools position="top-right" />
+    </SidebarProvider>
+  )
 }

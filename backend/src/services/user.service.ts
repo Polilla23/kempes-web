@@ -168,7 +168,7 @@ export class UserService {
     userFound.resetPasswordTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
     await this.userRepository.update(userFound)
 
-    const resetLink = `${process.env.BACK_URL}/user/reset-password/${resetPasswordToken}`
+    const resetLink = `${process.env.BACK_URL}/reset-password/${resetPasswordToken}`
 
     await this.emailService.sendPasswordResetEmail(userFound.email, resetLink)
   }

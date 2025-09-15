@@ -1,42 +1,28 @@
 import AuthService from '@/services/auth.service'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useUser } from '@/context/UserContext'
-import { useNavigate } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 import LoginForm from './form'
-import type { z } from 'zod'
-import { useState } from 'react'
 import AuthLayout from '../auth-layout'
+import type { z } from 'zod'
 import type FormSchemas from '@/lib/form-schemas'
 
-export const Route = createFileRoute('/_auth/_login/login')({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      redirect: search.redirect as string | undefined,
-    }
-  },
-  beforeLoad: async ({ location }) => {
-    try {
-      await AuthService.getProfile()
-      // If we get here, user is authenticated, redirect to home or intended destination
-      const searchParams = new URLSearchParams(location.search)
-      const redirectTo = searchParams.get('redirect') || '/'
-      throw redirect({ to: redirectTo as any })
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('redirect')) {
-        throw error
-      }
-      return
-    }
-  },
+export const Route = createFileRoute('/_auth/login/')({
   component: LoginPage,
 })
 
 function LoginPage() {
+  const { isAuthenticated, loading, refreshUser } = useUser()
   const navigate = useNavigate()
-  const { refreshUser } = useUser()
-  const search = Route.useSearch()
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // Redirect to home if already authenticated (Disabled while in development)
+  // useEffect(() => {
+  //   if (!loading && isAuthenticated) {
+  //     navigate({ to: '/' })
+  //   }
+  // }, [isAuthenticated, loading, navigate])
 
   async function onSubmit(values: z.infer<typeof FormSchemas.loginSchema>) {
     setVerificationStatus('loading')
@@ -44,15 +30,21 @@ function LoginPage() {
 
     try {
       await AuthService.login(values)
-
-      const redirectTo = search.redirect || '/'
-      await navigate({ to: redirectTo as any, replace: true })
-
       refreshUser().catch(console.error)
+      setVerificationStatus('success')
+      await navigate({ to: '/', replace: true })
     } catch (error: any) {
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')
       setVerificationStatus('error')
     }
+  }
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  if (isAuthenticated) {
+    return null
   }
 
   return (

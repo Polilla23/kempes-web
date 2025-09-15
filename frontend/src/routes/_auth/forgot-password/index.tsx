@@ -7,7 +7,7 @@ import AuthLayout from '../auth-layout'
 import ForgotPasswordForm from './form'
 import FormSchemas from '@/lib/form-schemas'
 
-export const Route = createFileRoute('/_auth/_forgot-password/forgot-password')({
+export const Route = createFileRoute('/_auth/forgot-password/')({
   component: ForgotPasswordPage,
 })
 

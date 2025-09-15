@@ -1,10 +1,10 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { AuthService } from '@/services/auth.service'
+import AuthService from '@/services/auth.service'
 import { createFileRoute } from '@tanstack/react-router'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-export const Route = createFileRoute('/_auth/_verify-email/verify-email/$token')({
+export const Route = createFileRoute('/_auth/verify-email/index/$token')({
   component: RouteComponent,
 })
 
