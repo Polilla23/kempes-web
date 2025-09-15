@@ -4,6 +4,8 @@ import { UserProvider } from '@/context/UserContext'
 import { ThemeProvider } from '@/context/theme-provider'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { useUser } from '@/context/UserContext'
+import { Toaster } from 'sonner'
+import Navbar from '@/components/navBar/navbar'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -49,10 +51,10 @@ function AppContent() {
   if (isAuthRoute) {
     console.log('Rendering without sidebar')
     return (
-      <>
+      <main className="w-full h-screen flex items-center justify-center">
         <Outlet />
-        <TanStackRouterDevtools />
-      </>
+        <Toaster />
+      </main>
     )
   }
 
@@ -60,13 +62,14 @@ function AppContent() {
   console.log('Rendering with sidebar')
   return (
     <SidebarProvider>
-      <div className="flex h-screen">
-        {/* Make sure sidebar content is visible */}
-        <div className="flex-1">
+      <div className="flex h-screen w-full">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center p-4 w-full overflow-auto">
           <Outlet />
-        </div>
+        </main>
+        <Toaster />
       </div>
-      <TanStackRouterDevtools />
+      <TanStackRouterDevtools position="top-right" />
     </SidebarProvider>
   )
 }
