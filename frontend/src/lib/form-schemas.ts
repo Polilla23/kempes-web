@@ -16,6 +16,15 @@ class FormSchemas {
   static forgotPasswordSchema = z.object({
     email: z.string().email({ message: 'Invalid email address.' }),
   })
+  static resetPasswordSchema = z
+    .object({
+      password: z.string().min(4, { message: 'Password is required.' }),
+      revalidatPassword: z.string().min(4, { message: 'Password confirmation is required.' }),
+    })
+    .refine((data) => data.password === data.revalidatPassword, {
+      message: 'Passwords must be the same.',
+      path: ['revalidatPassword'],
+    })
 }
 
 export default FormSchemas
