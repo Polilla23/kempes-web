@@ -45,6 +45,7 @@ export const clubSchemas = {
                 id: { type: 'string' },
                 name: { type: 'string' },
                 logo: { type: 'string' },
+                isActive: { type: 'boolean' },
                 user: {
                   type: 'object',
                   properties: {

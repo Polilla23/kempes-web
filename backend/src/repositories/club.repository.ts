@@ -14,10 +14,10 @@ export class ClubRepository implements IClubRepository {
         user: {
           select: {
             id: true,
-            email: true
-          }
-        }
-      }
+            email: true,
+          },
+        },
+      },
     })
   }
 

@@ -13,6 +13,7 @@ export interface Club {
   name: string
   logo?: string
   userId?: string
+  isActive: boolean
   user?: {
     id: string
     email: string
@@ -59,7 +60,7 @@ export interface NewPasswordFormData {
 
 export interface RegisterClubFormData {
   name: string
-  logo: string
+  logo?: string
   userId?: string | null
   isActive?: boolean
 }
