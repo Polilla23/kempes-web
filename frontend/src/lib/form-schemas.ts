@@ -25,6 +25,26 @@ class FormSchemas {
       message: 'Passwords must be the same.',
       path: ['revalidatPassword'],
     })
+
+  static PlayerSchema = z.object({
+    name: z.string().min(1, { message: 'Name is required.' }),
+    lastName: z.string().min(1, { message: 'Last name is required.' }),
+    birthdate: z.date(),
+    ownerClubId: z.string().min(1, { message: 'Owner club is required.' }),
+    actualClubId: z.string().optional(),
+    overall: z.coerce.number().min(0).max(99),
+    salary: z.coerce.number().min(0),
+    sofifaId: z.string().optional(),
+    transfermarktId: z.string().optional(),
+    isKempesita: z.boolean(),
+    isActive: z.boolean(),
+  })
+  static ClubSchema = z.object({
+    name: z.string().min(2, { message: 'Club name must be at least 2 characters.' }),
+    logo: z.string().optional(),
+    userId: z.string().optional(),
+    isActive: z.boolean(),
+  })
 }
 
 export default FormSchemas

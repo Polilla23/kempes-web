@@ -20,7 +20,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
 
   return (
     <div className="overflow-hidden rounded-md border w-full">
-      <Table>
+      <Table className="select-none">
         <TableHeader className="sticky top-0 z-10 shadow-md bg-background">
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -36,7 +36,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
+        <TableBody className="select-none">
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>

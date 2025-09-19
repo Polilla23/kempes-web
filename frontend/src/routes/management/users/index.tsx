@@ -29,11 +29,11 @@ const columnHelper = createColumnHelper<User>()
 
 function UserManagement() {
   const [users, setUsers] = useState<User[]>([])
-  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
-  const [search, setSearch] = useState('')
+  const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(true)
+  const [search, setSearch] = useState<string>('')
   const [debouncedSearch, setDebouncedSearch] = useState(search)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false)
 
   // Fetch clubs
   const fetchUsers = async () => {
@@ -112,7 +112,7 @@ function UserManagement() {
         header: (info) => <DefaultHeader info={info} name="Verified?" type="boolean" />,
         cell: ({ row }) => (
           <div className="pl-5">
-            <Checkbox className="" checked={row.original.isVerified} disabled />
+            <Checkbox checked={row.original.isVerified} disabled />
           </div>
         ),
       }),
@@ -166,7 +166,7 @@ function UserManagement() {
     <ClubAndUserTableSkeleton rows={8} />
   ) : (
     <div className="flex flex-col items-center gap-2 h-full w-full max-w-3/4">
-      <h1 className="text-3xl font-bold mb-10 mt-8">Users Management</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">Users Management</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
           Search
