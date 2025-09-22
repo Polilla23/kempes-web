@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import LoginForm from './form'
 import AuthLayout from '../auth-layout'
 import type { z } from 'zod'
-import type FormSchemas from '@/lib/form-schemas'
+import type FormSchemas from '@/routes/management/utils/form-schemas'
 
 export const Route = createFileRoute('/_auth/login/')({
   component: LoginPage,

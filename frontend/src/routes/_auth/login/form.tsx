@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon } from 'lucide-react'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 
 // OnSubmit function type
 type OnSubmitFn = (values: z.infer<typeof FormSchemas.loginSchema>) => Promise<void> | void

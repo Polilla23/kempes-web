@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog'
 import type { User } from '@/types'
 import { toast } from 'sonner'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 import UserService from '@/services/user.service'
 import { Loader2, MailIcon, UserPlus } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'

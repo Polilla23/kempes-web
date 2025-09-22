@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, MailIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 
 type OnSubmitFn = (values: z.infer<typeof FormSchemas.forgotPasswordSchema>) => Promise<void> | void
 

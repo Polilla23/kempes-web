@@ -31,7 +31,7 @@ import { InputFile } from '@/components/ui/input-file'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { PlayerFormSkeleton } from '@/components/ui/form-skeletons'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
@@ -184,7 +184,6 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         )}
                       />
                     </div>
-                    {/* Calendar selection doesn't work */}
                     <FormField
                       control={form.control}
                       name="birthdate"

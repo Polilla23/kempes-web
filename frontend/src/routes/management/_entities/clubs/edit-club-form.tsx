@@ -1,133 +1,79 @@
 import { Button } from '@/components/ui/button'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 import { ClubService } from '@/services/club.service'
-import UserService from '@/services/user.service'
-import { toast } from 'sonner'
-import { Loader2, Plus, Building2, Image, UserIcon } from 'lucide-react'
-import FormSchemas from '@/lib/form-schemas'
+import type { Club, User } from '@/types'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Building2, Image, Loader2, UserIcon } from 'lucide-react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { useState, useEffect } from 'react'
-import type { RegisterClubFormData, User } from '@/types'
+import { toast } from 'sonner'
+import type { z } from 'zod'
 
-interface CreateClubFormProps {
+interface EditClubFormProps {
   onSuccess?: () => void
+  onClose?: () => void
+  club: Club
+  availableUsers: User[]
 }
 
-const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
-  const [open, setOpen] = useState(false)
-  const [availableUsers, setAvailableUsers] = useState<User[]>([])
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
+function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubFormProps) {
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.ClubSchema>>({
     resolver: zodResolver(FormSchemas.ClubSchema),
     defaultValues: {
-      name: '',
-      logo: '',
-      userId: '',
-      isActive: true,
+      name: club.name || '',
+      logo: club.logo || '',
+      userId: club.userId || 'none',
+      isActive: club.isActive ?? true,
     },
   })
-
-  // Fetch available users when dialog opens
-  useEffect(() => {
-    if (open) {
-      fetchUsers()
-    }
-  }, [open])
-
-  const fetchUsers = async () => {
-    try {
-      setIsLoadingUsers(true) // Set loading to true
-      const response = await UserService.getUsers()
-      const availableUsersFiltered =
-        response.users?.filter((user: User) => {
-          // Check if club is null, undefined, or an empty object
-          return (
-            !user.club ||
-            user.club === null ||
-            user.club === undefined ||
-            (typeof user.club === 'object' && Object.keys(user.club).length === 0)
-          )
-        }) || []
-      setAvailableUsers(availableUsersFiltered)
-      console.log('Available users for clubs:', availableUsersFiltered)
-    } catch (error) {
-      console.error('Error fetching users:', error)
-      setAvailableUsers([])
-      toast.error('Failed to fetch users')
-    } finally {
-      setIsLoadingUsers(false) // Set loading to false
-    }
-  }
 
   async function onSubmit(values: z.infer<typeof FormSchemas.ClubSchema>) {
     try {
       setVerificationStatus('loading')
 
-      const clubData: RegisterClubFormData = {
+      const updateData = {
         name: values.name,
         logo: values.logo || '',
-        userId: values.userId === 'none' || values.userId === '' ? undefined : values.userId,
+        userId: values.userId === 'none' ? undefined : values.userId,
         isActive: values.isActive,
       }
 
-      await ClubService.createClub(clubData)
-      toast.success('Club created successfully!')
-
-      // Reset form and close dialog
-      form.reset()
-      setOpen(false)
+      await ClubService.updateClub(club.id, updateData)
+      setVerificationStatus('success')
+      toast.success('Club updated successfully!')
       onSuccess?.()
-    } catch (error: any) {
-      console.error('Error creating club:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while creating the club.')
+    } catch (error) {
+      console.error('Error updating club:', error)
       setVerificationStatus('error')
-    }
-  }
-
-  const handleDialogChange = (newOpen: boolean) => {
-    setOpen(newOpen)
-    if (!newOpen) {
-      // Reset form and states when closing
-      form.reset()
-      setVerificationStatus(null)
-      setAvailableUsers([])
+      toast.error(error instanceof Error ? error.message : 'Failed to update club')
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="ml-auto">
-          <Plus className="size-4" />
-          New Club
-        </Button>
-      </DialogTrigger>
+    <Dialog open={!!club} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Club</DialogTitle>
-          <DialogDescription>Add a new club to the system</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">Edit Club</DialogTitle>
+          <DialogDescription>Make changes to the club here. Click save when you're done.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Club Name Field */}
             <FormField
               control={form.control}
               name="name"
@@ -152,7 +98,6 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               )}
             />
 
-            {/* Logo URL Field */}
             <FormField
               control={form.control}
               name="logo"
@@ -177,18 +122,13 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               )}
             />
 
-            {/* Club Owner Field */}
             <FormField
               control={form.control}
               name="userId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="select-none">Club Owner</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value || 'none'}
-                    disabled={isLoadingUsers}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value || 'none'}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
                         <div className="flex items-center gap-3">
@@ -198,22 +138,17 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {isLoadingUsers ? (
-                        <SelectItem value="loading" disabled>
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="size-4 animate-spin" />
-                            Loading users...
-                          </div>
+                      <SelectItem value="none">No owner assigned</SelectItem>
+                      {availableUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          <div className="flex items-center gap-2">{user.email}</div>
                         </SelectItem>
-                      ) : (
-                        <>
-                          <SelectItem value="none">No owner assigned</SelectItem>
-                          {availableUsers.map((user) => (
-                            <SelectItem key={user.id} value={user.id}>
-                              <div className="flex items-center gap-2">{user.email}</div>
-                            </SelectItem>
-                          ))}
-                        </>
+                      ))}
+                      {/* Include the current owner if they have one */}
+                      {club.user && !availableUsers.find((u) => u.id === club.user?.id) && (
+                        <SelectItem value={club.user.id}>
+                          <div className="flex items-center gap-2">{club.user.email} (Current Owner)</div>
+                        </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -222,7 +157,6 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               )}
             />
 
-            {/* Active Status Field */}
             <FormField
               control={form.control}
               name="isActive"
@@ -252,17 +186,17 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               <Button
                 type="submit"
                 className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium transition-colors duration-200 shadow-lg hover:shadow-xl"
-                disabled={verificationStatus === 'loading' || isLoadingUsers}
+                disabled={verificationStatus === 'loading'}
               >
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Creating club...
+                    Updating club...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Building2 className="size-4" />
-                    Create Club
+                    Update Club
                   </div>
                 )}
               </Button>
@@ -274,4 +208,4 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
   )
 }
 
-export default CreateClubForm
+export default EditClubForm

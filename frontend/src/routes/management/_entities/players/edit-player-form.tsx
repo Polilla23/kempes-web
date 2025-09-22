@@ -22,7 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 import { cn } from '@/lib/utils'
 import { PlayerService } from '@/services/player.service'
 import type { Player, Club } from '@/types'

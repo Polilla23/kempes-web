@@ -15,9 +15,9 @@ import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
-import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
-import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
-import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
+import { Route as ManagementUsersIndexRouteImport } from './routes/management/_entities/users/index'
+import { Route as ManagementPlayersIndexRouteImport } from './routes/management/_entities/players/index'
+import { Route as ManagementClubsIndexRouteImport } from './routes/management/_entities/clubs/index-old'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
 import { Route as AuthForgotPasswordIndexRouteImport } from './routes/_auth/forgot-password/index'
 import { Route as PlayerUpdateIdRouteImport } from './routes/player/update.$id'
@@ -114,18 +114,16 @@ const ClubDeleteIdRoute = ClubDeleteIdRouteImport.update({
   path: '/club/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyEmailIndexTokenRoute =
-  AuthVerifyEmailIndexTokenRouteImport.update({
-    id: '/_auth/verify-email/index/$token',
-    path: '/verify-email/index/$token',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthResetPasswordIndexTokenRoute =
-  AuthResetPasswordIndexTokenRouteImport.update({
-    id: '/_auth/reset-password/index/$token',
-    path: '/reset-password/index/$token',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const AuthVerifyEmailIndexTokenRoute = AuthVerifyEmailIndexTokenRouteImport.update({
+  id: '/_auth/verify-email/index/$token',
+  path: '/verify-email/index/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthResetPasswordIndexTokenRoute = AuthResetPasswordIndexTokenRouteImport.update({
+  id: '/_auth/reset-password/index/$token',
+  path: '/reset-password/index/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -438,6 +436,4 @@ const rootRouteChildren: RootRouteChildren = {
   AuthResetPasswordIndexTokenRoute: AuthResetPasswordIndexTokenRoute,
   AuthVerifyEmailIndexTokenRoute: AuthVerifyEmailIndexTokenRoute,
 }
-export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()

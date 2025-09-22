@@ -14,7 +14,7 @@ import AuthService from '@/services/auth.service'
 import { toast } from 'sonner'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, Plus, UserPlus } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -55,7 +55,7 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
-          <Plus className="size-4"/> New User 
+          <Plus className="size-4" /> New User
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

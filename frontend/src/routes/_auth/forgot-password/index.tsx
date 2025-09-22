@@ -5,7 +5,7 @@ import AuthService from '@/services/auth.service'
 import { CheckCircle, XCircle } from 'lucide-react'
 import AuthLayout from '../auth-layout'
 import ForgotPasswordForm from './form'
-import FormSchemas from '@/lib/form-schemas'
+import FormSchemas from '@/routes/management/utils/form-schemas'
 
 export const Route = createFileRoute('/_auth/forgot-password/')({
   component: ForgotPasswordPage,
