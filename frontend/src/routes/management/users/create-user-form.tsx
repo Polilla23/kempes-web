@@ -33,15 +33,15 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
     resolver: zodResolver(FormSchemas.createUserSchema),
     defaultValues: {
       email: '',
-      role: 'USER',
       password: '',
+      role: 'USER',
     },
   })
 
   async function onSubmit(values: z.infer<typeof FormSchemas.createUserSchema>) {
     try {
       setVerificationStatus('loading')
-      await AuthService.register({ ...values, password: 'defaultPassword' })
+      await AuthService.register(values)
       toast.success('User created successfully!')
       onSuccess?.()
       setOpen(false)
@@ -55,7 +55,7 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
-          <Plus className="size-4"/> New User 
+          <Plus className="size-4" /> New User
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
