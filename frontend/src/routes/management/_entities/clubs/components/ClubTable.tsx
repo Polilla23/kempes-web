@@ -7,11 +7,11 @@ interface ClubsTableProps {
   clubs: Club[]
   onEdit: () => void
   onDelete: () => void
-  isLoading?: boolean
+  columns?: any
 }
 
-export function ClubsTable({ clubs, onEdit, onDelete, isLoading }: ClubsTableProps) {
-  const columns = useMemo(() => createClubColumns({ onEdit, onDelete }), [onEdit, onDelete])
+export function ClubsTable({ clubs, onEdit, onDelete, columns }: ClubsTableProps) {
+  const memoizedColumns = useMemo(() => createClubColumns({ onEdit, onDelete }), [onEdit, onDelete])
 
-  return <DataTable columns={columns} data={clubs} />
+  return <DataTable columns={columns || memoizedColumns} data={clubs} />
 }

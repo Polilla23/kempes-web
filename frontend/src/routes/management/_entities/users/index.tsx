@@ -21,7 +21,7 @@ import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import CreateUserForm from './create-user-form'
 import EditUserForm from './edit-user-form'
 
-export const Route = createFileRoute('/management/users/')({
+export const Route = createFileRoute('/management/_entities/users/')({
   component: UserManagement,
 })
 

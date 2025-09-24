@@ -7,21 +7,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import type React from 'react'
 import type { ReactNode } from 'react'
+import { useFormDialog } from '../hooks/useFormDialog'
 
 interface FormDialogProps {
   title: string
   description: string
   open: boolean
-  onOpenChange: (open: boolean) => void
-  children: React.ReactNode
+  // onOpenChange: () => void
+  children: ReactNode
   trigger?: ReactNode
 }
 
-export function FormDialog({ title, description, open, onOpenChange, children, trigger }: FormDialogProps) {
-  const DialogWrapper = ({ children: dialogChildren }: { children: React.ReactNode }) => (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+export function FormDialog({ title, description, children, trigger }: FormDialogProps) {
+  const { isOpen } = useFormDialog()
+  const DialogWrapper = ({ children: dialogChildren }: { children: ReactNode }) => (
+    <Dialog open={isOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>

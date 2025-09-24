@@ -15,19 +15,20 @@ import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
-import { Route as ManagementUsersIndexRouteImport } from './routes/management/_entities/users/index'
-import { Route as ManagementPlayersIndexRouteImport } from './routes/management/_entities/players/index'
-import { Route as ManagementClubsIndexRouteImport } from './routes/management/_entities/clubs/index-old'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
 import { Route as AuthForgotPasswordIndexRouteImport } from './routes/_auth/forgot-password/index'
 import { Route as PlayerUpdateIdRouteImport } from './routes/player/update.$id'
 import { Route as PlayerFindIdRouteImport } from './routes/player/find.$id'
 import { Route as PlayerDeleteIdRouteImport } from './routes/player/delete.$id'
+import { Route as ManagementComponentsManagementSkeletonRouteImport } from './routes/management/components/ManagementSkeleton'
 import { Route as ClubUpdateIdRouteImport } from './routes/club/update.$id'
 import { Route as ClubFindOneIdRouteImport } from './routes/club/findOne.$id'
 import { Route as ClubDeleteIdRouteImport } from './routes/club/delete.$id'
 import { Route as AuthVerifyEmailIndexTokenRouteImport } from './routes/_auth/verify-email/index.$token'
 import { Route as AuthResetPasswordIndexTokenRouteImport } from './routes/_auth/reset-password/index.$token'
+import { Route as ManagementEntitiesUsersIndexRouteImport } from './routes/management/_entities/users/index'
+import { Route as ManagementEntitiesPlayersIndexRouteImport } from './routes/management/_entities/players/index'
+import { Route as ManagementEntitiesClubsIndexRouteImport } from './routes/management/_entities/clubs/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,21 +60,6 @@ const ClubCreateRoute = ClubCreateRouteImport.update({
   path: '/club/create',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ManagementUsersIndexRoute = ManagementUsersIndexRouteImport.update({
-  id: '/management/users/',
-  path: '/management/users/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManagementPlayersIndexRoute = ManagementPlayersIndexRouteImport.update({
-  id: '/management/players/',
-  path: '/management/players/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManagementClubsIndexRoute = ManagementClubsIndexRouteImport.update({
-  id: '/management/clubs/',
-  path: '/management/clubs/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
   id: '/_auth/login/',
   path: '/login/',
@@ -99,6 +85,12 @@ const PlayerDeleteIdRoute = PlayerDeleteIdRouteImport.update({
   path: '/player/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementComponentsManagementSkeletonRoute =
+  ManagementComponentsManagementSkeletonRouteImport.update({
+    id: '/management/components/ManagementSkeleton',
+    path: '/management/components/ManagementSkeleton',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ClubUpdateIdRoute = ClubUpdateIdRouteImport.update({
   id: '/club/update/$id',
   path: '/club/update/$id',
@@ -114,16 +106,36 @@ const ClubDeleteIdRoute = ClubDeleteIdRouteImport.update({
   path: '/club/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyEmailIndexTokenRoute = AuthVerifyEmailIndexTokenRouteImport.update({
-  id: '/_auth/verify-email/index/$token',
-  path: '/verify-email/index/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthResetPasswordIndexTokenRoute = AuthResetPasswordIndexTokenRouteImport.update({
-  id: '/_auth/reset-password/index/$token',
-  path: '/reset-password/index/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthVerifyEmailIndexTokenRoute =
+  AuthVerifyEmailIndexTokenRouteImport.update({
+    id: '/_auth/verify-email/index/$token',
+    path: '/verify-email/index/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthResetPasswordIndexTokenRoute =
+  AuthResetPasswordIndexTokenRouteImport.update({
+    id: '/_auth/reset-password/index/$token',
+    path: '/reset-password/index/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementEntitiesUsersIndexRoute =
+  ManagementEntitiesUsersIndexRouteImport.update({
+    id: '/management/_entities/users/',
+    path: '/management/users/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementEntitiesPlayersIndexRoute =
+  ManagementEntitiesPlayersIndexRouteImport.update({
+    id: '/management/_entities/players/',
+    path: '/management/players/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementEntitiesClubsIndexRoute =
+  ManagementEntitiesClubsIndexRouteImport.update({
+    id: '/management/_entities/clubs/',
+    path: '/management/clubs/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -135,14 +147,15 @@ export interface FileRoutesByFullPath {
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
+  '/management/components/ManagementSkeleton': typeof ManagementComponentsManagementSkeletonRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
   '/forgot-password': typeof AuthForgotPasswordIndexRoute
   '/login': typeof AuthLoginIndexRoute
-  '/management/clubs': typeof ManagementClubsIndexRoute
-  '/management/players': typeof ManagementPlayersIndexRoute
-  '/management/users': typeof ManagementUsersIndexRoute
+  '/management/clubs': typeof ManagementEntitiesClubsIndexRoute
+  '/management/players': typeof ManagementEntitiesPlayersIndexRoute
+  '/management/users': typeof ManagementEntitiesUsersIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
 }
@@ -156,14 +169,15 @@ export interface FileRoutesByTo {
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
+  '/management/components/ManagementSkeleton': typeof ManagementComponentsManagementSkeletonRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
   '/forgot-password': typeof AuthForgotPasswordIndexRoute
   '/login': typeof AuthLoginIndexRoute
-  '/management/clubs': typeof ManagementClubsIndexRoute
-  '/management/players': typeof ManagementPlayersIndexRoute
-  '/management/users': typeof ManagementUsersIndexRoute
+  '/management/clubs': typeof ManagementEntitiesClubsIndexRoute
+  '/management/players': typeof ManagementEntitiesPlayersIndexRoute
+  '/management/users': typeof ManagementEntitiesUsersIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
 }
@@ -178,14 +192,15 @@ export interface FileRoutesById {
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
+  '/management/components/ManagementSkeleton': typeof ManagementComponentsManagementSkeletonRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
   '/_auth/forgot-password/': typeof AuthForgotPasswordIndexRoute
   '/_auth/login/': typeof AuthLoginIndexRoute
-  '/management/clubs/': typeof ManagementClubsIndexRoute
-  '/management/players/': typeof ManagementPlayersIndexRoute
-  '/management/users/': typeof ManagementUsersIndexRoute
+  '/management/_entities/clubs/': typeof ManagementEntitiesClubsIndexRoute
+  '/management/_entities/players/': typeof ManagementEntitiesPlayersIndexRoute
+  '/management/_entities/users/': typeof ManagementEntitiesUsersIndexRoute
   '/_auth/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/_auth/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
 }
@@ -201,6 +216,7 @@ export interface FileRouteTypes {
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
+    | '/management/components/ManagementSkeleton'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
@@ -222,6 +238,7 @@ export interface FileRouteTypes {
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
+    | '/management/components/ManagementSkeleton'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
@@ -243,14 +260,15 @@ export interface FileRouteTypes {
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
+    | '/management/components/ManagementSkeleton'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
     | '/_auth/forgot-password/'
     | '/_auth/login/'
-    | '/management/clubs/'
-    | '/management/players/'
-    | '/management/users/'
+    | '/management/_entities/clubs/'
+    | '/management/_entities/players/'
+    | '/management/_entities/users/'
     | '/_auth/reset-password/index/$token'
     | '/_auth/verify-email/index/$token'
   fileRoutesById: FileRoutesById
@@ -265,14 +283,15 @@ export interface RootRouteChildren {
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
   ClubUpdateIdRoute: typeof ClubUpdateIdRoute
+  ManagementComponentsManagementSkeletonRoute: typeof ManagementComponentsManagementSkeletonRoute
   PlayerDeleteIdRoute: typeof PlayerDeleteIdRoute
   PlayerFindIdRoute: typeof PlayerFindIdRoute
   PlayerUpdateIdRoute: typeof PlayerUpdateIdRoute
   AuthForgotPasswordIndexRoute: typeof AuthForgotPasswordIndexRoute
   AuthLoginIndexRoute: typeof AuthLoginIndexRoute
-  ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
-  ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
-  ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
+  ManagementEntitiesClubsIndexRoute: typeof ManagementEntitiesClubsIndexRoute
+  ManagementEntitiesPlayersIndexRoute: typeof ManagementEntitiesPlayersIndexRoute
+  ManagementEntitiesUsersIndexRoute: typeof ManagementEntitiesUsersIndexRoute
   AuthResetPasswordIndexTokenRoute: typeof AuthResetPasswordIndexTokenRoute
   AuthVerifyEmailIndexTokenRoute: typeof AuthVerifyEmailIndexTokenRoute
 }
@@ -321,27 +340,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/management/users/': {
-      id: '/management/users/'
-      path: '/management/users'
-      fullPath: '/management/users'
-      preLoaderRoute: typeof ManagementUsersIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/management/players/': {
-      id: '/management/players/'
-      path: '/management/players'
-      fullPath: '/management/players'
-      preLoaderRoute: typeof ManagementPlayersIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/management/clubs/': {
-      id: '/management/clubs/'
-      path: '/management/clubs'
-      fullPath: '/management/clubs'
-      preLoaderRoute: typeof ManagementClubsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_auth/login/': {
       id: '/_auth/login/'
       path: '/login'
@@ -375,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/player/delete/$id'
       fullPath: '/player/delete/$id'
       preLoaderRoute: typeof PlayerDeleteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/components/ManagementSkeleton': {
+      id: '/management/components/ManagementSkeleton'
+      path: '/management/components/ManagementSkeleton'
+      fullPath: '/management/components/ManagementSkeleton'
+      preLoaderRoute: typeof ManagementComponentsManagementSkeletonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/club/update/$id': {
@@ -412,6 +417,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordIndexTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/_entities/users/': {
+      id: '/management/_entities/users/'
+      path: '/management/users'
+      fullPath: '/management/users'
+      preLoaderRoute: typeof ManagementEntitiesUsersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/_entities/players/': {
+      id: '/management/_entities/players/'
+      path: '/management/players'
+      fullPath: '/management/players'
+      preLoaderRoute: typeof ManagementEntitiesPlayersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/_entities/clubs/': {
+      id: '/management/_entities/clubs/'
+      path: '/management/clubs'
+      fullPath: '/management/clubs'
+      preLoaderRoute: typeof ManagementEntitiesClubsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -425,15 +451,19 @@ const rootRouteChildren: RootRouteChildren = {
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,
   ClubUpdateIdRoute: ClubUpdateIdRoute,
+  ManagementComponentsManagementSkeletonRoute:
+    ManagementComponentsManagementSkeletonRoute,
   PlayerDeleteIdRoute: PlayerDeleteIdRoute,
   PlayerFindIdRoute: PlayerFindIdRoute,
   PlayerUpdateIdRoute: PlayerUpdateIdRoute,
   AuthForgotPasswordIndexRoute: AuthForgotPasswordIndexRoute,
   AuthLoginIndexRoute: AuthLoginIndexRoute,
-  ManagementClubsIndexRoute: ManagementClubsIndexRoute,
-  ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,
-  ManagementUsersIndexRoute: ManagementUsersIndexRoute,
+  ManagementEntitiesClubsIndexRoute: ManagementEntitiesClubsIndexRoute,
+  ManagementEntitiesPlayersIndexRoute: ManagementEntitiesPlayersIndexRoute,
+  ManagementEntitiesUsersIndexRoute: ManagementEntitiesUsersIndexRoute,
   AuthResetPasswordIndexTokenRoute: AuthResetPasswordIndexTokenRoute,
   AuthVerifyEmailIndexTokenRoute: AuthVerifyEmailIndexTokenRoute,
 }
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()

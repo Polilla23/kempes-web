@@ -14,7 +14,7 @@ export interface Club {
   logo?: string
   userId?: string
   isActive: boolean
-  user?: {
+  user: {
     id: string
     email: string
   }

@@ -23,7 +23,7 @@ import { DefaultHeader } from '@/components/table/table-header'
 import EditPlayerForm from './edit-player-form'
 import { ClubService } from '@/services/club.service'
 
-export const Route = createFileRoute('/management/players/')({
+export const Route = createFileRoute('/management/_entities/players/')({
   component: PlayerManagement,
 })
 
@@ -87,7 +87,7 @@ function PlayerManagement() {
     return players.filter((player) => {
       return (
         // Safe string checks with optional chaining and fallbacks
-        (player.name?.toLowerCase() || '').includes(lowerCaseSearch) ||
+        ((player.name?.toLowerCase() || '').includes(lowerCaseSearch) ||
         (player.lastName?.toLowerCase() || '').includes(lowerCaseSearch) ||
         (player.birthdate?.toLowerCase() || '').includes(lowerCaseSearch) ||
         // Convert numbers to strings for searching
@@ -97,8 +97,7 @@ function PlayerManagement() {
         (player.ownerClub?.name?.toLowerCase() || '').includes(lowerCaseSearch) ||
         (player.actualClub?.name?.toLowerCase() || '').includes(lowerCaseSearch) ||
         // Safe optional field searches
-        (player.sofifaId?.toLowerCase() || '').includes(lowerCaseSearch) ||
-        (player.transfermarktId?.toLowerCase() || '').includes(lowerCaseSearch)
+        (player.sofifaId?.toLowerCase() || '').includes(lowerCaseSearch) || (player.transfermarktId?.toLowerCase() || '').includes(lowerCaseSearch))
       )
     })
   }, [debouncedSearch, players])

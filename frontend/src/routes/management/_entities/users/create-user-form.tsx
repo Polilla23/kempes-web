@@ -41,7 +41,7 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   async function onSubmit(values: z.infer<typeof FormSchemas.createUserSchema>) {
     try {
       setVerificationStatus('loading')
-      await AuthService.register({ ...values, password: 'defaultPassword' })
+      await AuthService.register({ ...values })
       toast.success('User created successfully!')
       onSuccess?.()
       setOpen(false)

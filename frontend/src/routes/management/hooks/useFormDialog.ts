@@ -1,50 +1,51 @@
-// A custom hook to manage form dialog state for create/edit operations
+// A custom hook that contains:
+// - State and handlers for opening/closing a form dialog
+// - State for the selected item (for edit mode)
+// - Mode state ('create' or 'edit')
+// This hook can be used in any component that needs to open a form dialog for creating or editing an item.
 
-import { useState, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 
-interface UseFormDialogOptions {
-  onSuccess?: () => void
-}
+type FormMode = 'create' | 'edit'
 
-export function useFormDialog<T = any>(options?: UseFormDialogOptions) {
-  const [isOpen, setIsOpen] = useState<boolean>(false)
+export function useFormDialog<T = any>() {
   const [selectedItem, setSelectedItem] = useState<T | null>(null)
-  const [mode, setMode] = useState<'create' | 'edit'>('create')
+  const [isOpen, setIsOpen] = useState(false)
+  const [mode, setMode] = useState<FormMode>('create')
+
+  const handleEdit = useCallback(
+    (item: T) => {
+      console.log('📝 useFormDialog: Opening edit dialog', item) // Debug
+      setSelectedItem(item)
+      setMode('edit')
+      setIsOpen(true)
+    },
+    []
+  )
+
+  const handleClose = useCallback(() => {
+    console.log('❌ useFormDialog: Closing dialog') // Debug
+    setIsOpen(false)
+    // Add a small delay before clearing the item to prevent render issues
+    setTimeout(() => {
+      setSelectedItem(null)
+      setMode('create')
+    }, 150) // Small delay for dialog animation
+  }, [])
 
   const handleCreate = useCallback(() => {
+    console.log('➕ useFormDialog: Opening create dialog') // Debug
     setSelectedItem(null)
     setMode('create')
     setIsOpen(true)
   }, [])
 
-  const handleEdit = useCallback((item: T) => {
-    setSelectedItem(item)
-    setMode('edit')
-    setIsOpen(true)
-  }, [])
-
-  const handleClose = useCallback(() => {
-    setIsOpen(false)
-    setSelectedItem(null)
-    // Don't reset mode immediately to avoid flicker
-    setTimeout(() => setMode('create'), 150) // Small delay for smooth transition
-  }, [])
-
-  const handleSuccess = useCallback(() => {
-    options?.onSuccess?.()
-    handleClose()
-  }, [options?.onSuccess, handleClose])
-
   return {
-    isOpen,
     selectedItem,
+    isOpen,
     mode,
-    handleCreate,
     handleEdit,
     handleClose,
-    handleSuccess,
-    setIsOpen,
-    setSelectedItem,
-    setMode,
+    handleCreate,
   }
 }

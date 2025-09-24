@@ -1,0 +1,125 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { DataTable } from '@/components/table/data-table'
+import type { Club, User } from '@/types'
+import { useEffect, useState, useMemo } from 'react'
+import { ClubService } from '@/services/club.service'
+import { toast } from 'sonner'
+import { Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import CreateClubForm from './create-club-form'
+import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
+import EditClubForm from './edit-club-form'
+import { useClubs } from './hooks/useClubs'
+import { createClubColumns } from '../../utils/createColumns' // 👈 NEW IMPORT
+
+export const Route = createFileRoute('/management/_entities/clubs/')({
+  component: ClubManagement,
+})
+
+function ClubManagement() {
+  const [clubs, setClubs] = useState<Club[]>([])
+  const [isLoadingClubs, setIsLoadingClubs] = useState(true)
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [selectedClub, setSelectedClub] = useState<Club | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const { fetchClubs, fetchAvailableUsers } = useClubs()
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const filteredClubs = useMemo(() => {
+    const lowerCaseSearch = debouncedSearch.toLowerCase()
+    return clubs.filter((club) => {
+      return (
+        club.name.toLowerCase().includes(lowerCaseSearch) ||
+        (club.user?.email.toLowerCase() || 'No owner').includes(lowerCaseSearch)
+      )
+    })
+  }, [debouncedSearch, clubs])
+
+  const handleDeleteClub = async (clubId: string) => {
+    try {
+      await ClubService.deleteClub(clubId)
+      toast.success('Club deleted successfully')
+      await Promise.all([fetchClubs(), fetchAvailableUsers()]) // Fixed function name
+    } catch (error) {
+      console.error('Error deleting club:', error)
+      toast.error('Failed to delete club')
+    }
+  }
+
+  const handleEditClick = (club: Club) => {
+    setSelectedClub(club)
+    setIsEditModalOpen(true)
+  }
+
+  const handleEditClose = () => {
+    setSelectedClub(null)
+    setIsEditModalOpen(false)
+  }
+
+  // 👈 SIMPLIFIED: Just use the extracted columns function
+  const columns = useMemo(
+    () =>
+      createClubColumns({
+        onEdit: handleEditClick,
+        onDelete: handleDeleteClub,
+      }),
+    [isEditModalOpen]
+  )
+
+  if (isLoadingClubs || isLoadingUsers) {
+    return <ClubAndUserTableSkeleton rows={8} />
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
+      <h1 className="text-2xl font-bold mb-10 mt-8 select-none">Clubs Management</h1>
+      <div className="flex justify-between gap-3 mb-4 w-full relative">
+        <Label htmlFor="search" className="sr-only">
+          Search
+        </Label>
+        <Input
+          id="search"
+          type="text"
+          placeholder="Search..."
+          className="pl-8 max-w-md w-full"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+        <CreateClubForm
+          onSuccess={() => {
+            fetchClubs()
+            fetchAvailableUsers()
+          }}
+        />
+      </div>
+      <DataTable<Club, any> columns={columns} data={filteredClubs} />
+      {selectedClub && (
+        <EditClubForm
+          club={selectedClub}
+          availableUsers={availableUsers}
+          onSuccess={() => {
+            fetchClubs()
+            fetchAvailableUsers()
+            handleEditClose()
+          }}
+          onClose={handleEditClose}
+        />
+      )}
+    </div>
+  )
+}
+
+export default ClubManagement

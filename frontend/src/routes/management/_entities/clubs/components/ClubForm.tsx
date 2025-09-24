@@ -8,15 +8,12 @@ interface ClubFormProps {
   mode: 'create' | 'edit'
   club?: Club
   availableUsers: User[]
-  onSuccess?: () => void
-  onCancel?: () => void
 }
 
-export function ClubForm({ mode, club, availableUsers, onSuccess, onCancel }: ClubFormProps) {
-  const { form, onSubmit, isLoading } = useClubForm({
+export function ClubForm({ mode, club, availableUsers }: ClubFormProps) {
+  const { form, onSubmit, isLoading, handleFormCancel } = useClubForm({
     mode,
     club,
-    onSuccess,
   })
 
   return (
@@ -24,11 +21,9 @@ export function ClubForm({ mode, club, availableUsers, onSuccess, onCancel }: Cl
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <ClubFormFields form={form} availableUsers={availableUsers} isLoadingUsers={isLoading} />
         <div className="flex justify-end gap-3">
-          {onCancel && (
-            <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-              Cancel
-            </Button>
-          )}
+          <Button variant="outline" onClick={handleFormCancel} disabled={isLoading}>
+            Cancel
+          </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Saving...' : mode === 'create' ? 'Create Club' : 'Update Club'}
           </Button>

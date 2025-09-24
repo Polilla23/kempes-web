@@ -10,14 +10,14 @@ interface SearchInputProps {
 export function SearchInput({ search, setSearch }: SearchInputProps) {
   return (
     <>
-      <Label htmlFor="search" className="sr-only">
+      <Label htmlFor="search" className="sr-only select-none">
         Search
       </Label>
       <Input
         id="search"
         type="text"
         placeholder="Search..."
-        className="pl-8"
+        className="pl-8 max-w-md w-full select-none"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />

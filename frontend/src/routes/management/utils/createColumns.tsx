@@ -1,7 +1,6 @@
 // Contains functions to define:
 // - Column configurations
 // - Cell renderers
-// - Sorting logic
 // - Action column setup
 
 import type { Club, Player, User } from '@/types'
@@ -10,17 +9,16 @@ import ActionsDropdown from '../components/ActionDropdown'
 import { DefaultHeader } from '@/components/table/table-header'
 import { Checkbox } from '@/components/ui/checkbox'
 
-// Shared types
 interface ColumnsProps {
-  onEdit: (data: Club | Player | User) => void
+  onEdit: (data: any) => void
   onDelete: (id: string) => void
 }
 
-// Shared cell renderers - reusable across entities
+// Shared cell renderers
 export const CellRenderers = {
   checkbox: (checked: boolean) => (
     <div className="pl-5">
-      <Checkbox checked={checked} disabled />
+      <Checkbox className="cursor-default pointer-events-none" checked={checked} disabled />
     </div>
   ),
 
@@ -28,7 +26,7 @@ export const CellRenderers = {
 
   logo: (logo: string | undefined) =>
     logo ? (
-      <img src={logo} alt="Logo" className="h-8 w-8 rounded" />
+      <img src={logo} alt="Logo" className="size-5 rounded" />
     ) : (
       <span className="text-gray-500">No logo</span>
     ),
@@ -75,7 +73,12 @@ export function createClubColumns({ onEdit, onDelete }: ColumnsProps) {
     columnHelper.display({
       id: 'actions',
       header: () => <span className="text-center">Actions</span>,
-      cell: ({ row }) => CellRenderers.actions(row.original, () => onEdit(row.original), onDelete),
+      cell: ({ row }) =>
+        CellRenderers.actions(
+          row.original,
+          () => onEdit(row.original),
+          () => onDelete(row.original.id)
+        ),
     }),
   ]
 }
@@ -103,7 +106,12 @@ export function createUserColumns({ onEdit, onDelete }: ColumnsProps) {
     columnHelper.display({
       id: 'actions',
       header: () => <span className="text-center">Actions</span>,
-      cell: ({ row }) => CellRenderers.actions(row.original, () => onEdit(row.original), onDelete),
+      cell: ({ row }) =>
+        CellRenderers.actions(
+          row.original,
+          () => onEdit(row.original),
+          () => onDelete(row.original.id)
+        ),
     }),
   ]
 }
@@ -151,12 +159,16 @@ export function createPlayerColumns({ onEdit, onDelete }: ColumnsProps) {
     columnHelper.display({
       id: 'actions',
       header: () => <span className="text-center">Actions</span>,
-      cell: ({ row }) => CellRenderers.actions(row.original, () => onEdit(row.original), onDelete),
+      cell: ({ row }) =>
+        CellRenderers.actions(
+          row.original,
+          () => onEdit(row.original),
+          () => onDelete(row.original.id)
+        ),
     }),
   ]
 }
 
-// Export all column creators for easy importing
 export const ColumnCreators = {
   clubs: createClubColumns,
   users: createUserColumns,
