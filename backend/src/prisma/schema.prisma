@@ -72,6 +72,7 @@ model Competition {
   name          String  // Nombre constuido, ej: "Liga A Mayores - T7", "Copa de Oro - T10"
   system        CompetitionStage // Sitema de juego de ESTA instancia/fase
   seasonId      String
+  isActive      Boolean @default(true)
   competitionTypeId String
   // Para conectar fases (ej. Copa de Oro es hija de Copa Kempes)
   parentCompetitionId String? @unique
@@ -79,7 +80,7 @@ model Competition {
   childCompetition  Competition?  @relation("CompetitionPhases")
   // El cerebro de la flexibilidad: Aquí guardamos las reglas específicas.
   rules         Json
-  
+
   season        Season  @relation(fields: [seasonId], references: [id])
   competitionType CompetitionType @relation(fields: [competitionTypeId], references:[id])
   teams         Club[]  @relation("CompetitionTeams")
@@ -88,7 +89,9 @@ model Competition {
 
 model CompetitionType {
   id            String  @id @default(uuid())
-  name          String  // "Liga A Mayores", "Copa Kempes", "Copa de Plata", "Liga B Kempesita"
+  category      CompetitionCategory // "SENIOR" o "KEMPESITA"
+  hierarchy      Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
+  name          CompetitionName // "Liga A", "Copa Kempes"          
   format        CompetitionFormat // Es una LIGA o una COPA
   competitions  Competition[]
 }
@@ -131,4 +134,22 @@ enum CompetitionFormat {
 enum CompetitionStage {
   ROUND_ROBIN // Todos contra todos (Ligas, Fase de Grupos)
   KNOCKOUT // Eliminación directa
+}
+
+enum CompetitionCategory {
+  SENIOR    // For "Mayores" competitions
+  KEMPESITA // For "Kempesitas" competitions
+}
+
+enum CompetitionName {
+  LEAGUE_A
+  LEAGUE_B
+  LEAGUE_C
+  LEAGUE_D
+  LEAGUE_E
+  KEMPES_CUP
+  GOLD_CUP
+  SILVER_CUP
+  CINDOR_CUP
+  SUPER_CUP
 }

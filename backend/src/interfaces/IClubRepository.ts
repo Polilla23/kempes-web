@@ -7,5 +7,5 @@ export interface IClubRepository {
   findOneByUserId(id: Prisma.ClubWhereUniqueInput['userId']): Promise<Club | null>
   save(data: Prisma.ClubCreateInput): Promise<Club>
   updateOneById(id: Prisma.ClubWhereUniqueInput['id'], data: Prisma.ClubUpdateInput): Promise<Club>
-  deleteOneById(id: Prisma.ClubWhereUniqueInput['id']): Promise<Club>
+  deleteOneById(id: Prisma.ClubWhereUniqueInput['id']): Promise<Club> // TODO: change to promise<void>
 }
