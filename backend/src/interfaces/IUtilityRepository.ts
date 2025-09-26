@@ -1,6 +1,6 @@
-import { Prisma } from '@prisma/client'
+import { LeaguesRules, KempesCupRules } from 'utils/types'
 
-export interface IClubRepository {
+export interface IUtilityRepository {
   generateFixture(): Promise<[] | null> // TODO: Return type (Prisma Fixture Model or null)
-  savePlayersByCsv(): Promise<void>
+  createCompetition(config: LeaguesRules | KempesCupRules): Promise<void>
 }
