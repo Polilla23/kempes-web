@@ -1,8 +1,28 @@
 import 'fastify'
 import { AwilixContainer } from 'awilix'
-import { Competition, CompetitionType, RoleType, Season } from '@prisma/client'
+import {
+  CompetitionCategory,
+  CompetitionFormat,
+  CompetitionName,
+  CompetitionType,
+  RoleType,
+  Season,
+} from '@prisma/client'
 import { JWT } from '@fastify/jwt'
 
+export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+// FASTIFY TOKEN TYPES
+declare global {
+  namespace Fastify {
+    interface FastifyRequest {
+      user: {
+        id: string
+        role: string
+      }
+    }
+  }
+}
 declare module 'fastify' {
   interface FastifyRequest {
     jwt: JWT
@@ -14,25 +34,29 @@ declare module 'fastify' {
     jwt: JWT
   }
 }
-
-declare global {
-  namespace Fastify {
-    interface FastifyRequest {
-      user: {
-        id: string
-        role: string
-      }
+declare module '@fastify/jwt' {
+  interface fastifyJwt {
+    payload: {
+      id: string
+      role: string
     }
   }
 }
 
-export type RegisterUserInput = {
+export interface Token {
+  access_token: string
+  token_type: string
+  expires_in: number
+}
+
+// INPUT TYPES
+export type CreateUserInput = {
   email: string
   password: string
   role?: RoleType
 }
 
-export type RegisterClubInput = {
+export type CreateClubInput = {
   name: string
   logo?: string
   userId?: string | null
@@ -53,22 +77,12 @@ export type CreatePlayerInput = {
   isActive: boolean
 }
 
-declare module '@fastify/jwt' {
-  interface fastifyJwt {
-    payload: {
-      id: string
-      role: string
-    }
-  }
+export type CreateCompetitionTypeInput = {
+  category: CompetitionCategory
+  hierarchy: number
+  name: CompetitionName
+  format: CompetitionFormat
 }
-
-export interface Token {
-  access_token: string
-  token_type: string
-  expires_in: number
-}
-
-export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 // tournament rules json types
 

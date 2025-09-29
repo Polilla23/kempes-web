@@ -1,5 +1,5 @@
 import { IPlayerRespository } from '../interfaces/IPlayerRepository'
-import { Prisma, PrismaClient, Player } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 export class PlayerRepository implements IPlayerRespository {
   private prisma: PrismaClient
@@ -14,16 +14,16 @@ export class PlayerRepository implements IPlayerRespository {
         ownerClub: {
           select: {
             id: true,
-            name: true
-          }
+            name: true,
+          },
         },
         actualClub: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     })
   }
 

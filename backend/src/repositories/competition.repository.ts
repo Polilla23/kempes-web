@@ -1,7 +1,7 @@
 import { Competition, CompetitionStage, PrismaClient } from '@prisma/client'
-import { ICompetitionRepository } from 'interfaces/ICompetitionRepository'
-import { isKempesCupRules, isLeaguesRules } from 'utils/jsonTypeChecker'
-import type { KempesCupRules, LeaguesRules } from 'utils/types'
+import { ICompetitionRepository } from '../interfaces/ICompetitionRepository'
+import { isKempesCupRules, isLeaguesRules } from '../utils/jsonTypeChecker'
+import type { KempesCupRules, LeaguesRules } from '../utils/types'
 
 export class CompetitionRepository implements ICompetitionRepository {
   private prisma: PrismaClient
@@ -57,6 +57,11 @@ export class CompetitionRepository implements ICompetitionRepository {
   async findOneById(id: string): Promise<Competition | null> {
     return await this.prisma.competition.findUnique({
       where: { id },
+    })
+  }
+  async findOneBySeasonId(seasonId: string): Promise<Competition[] | null> {
+    return await this.prisma.competition.findMany({
+      where: { seasonId },
     })
   }
 }

@@ -91,7 +91,7 @@ model CompetitionType {
   id            String  @id @default(uuid())
   category      CompetitionCategory // "SENIOR" o "KEMPESITA"
   hierarchy      Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
-  name          CompetitionName // "Liga A", "Copa Kempes"          
+  name          CompetitionName @unique // "Liga A", "Copa Kempes"          
   format        CompetitionFormat // Es una LIGA o una COPA
   competitions  Competition[]
 }

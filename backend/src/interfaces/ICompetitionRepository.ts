@@ -8,4 +8,5 @@ export interface ICompetitionRepository {
   deleteOneById(id: string): Promise<void>
   findAll(): Promise<Competition[] | null>
   findOneById(id: string): Promise<Competition | null>
+  findOneBySeasonId(seasonId: string): Promise<Competition[] | null>
 }
