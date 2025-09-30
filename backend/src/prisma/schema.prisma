@@ -71,46 +71,27 @@ model Competition {
   id            String  @id @default(uuid())
   name          String  // Nombre constuido, ej: "Liga A Mayores - T7", "Copa de Oro - T10"
   system        CompetitionStage // Sitema de juego de ESTA instancia/fase
-
   seasonId      String
+  isActive      Boolean @default(true)
   competitionTypeId String
-
   // Para conectar fases (ej. Copa de Oro es hija de Copa Kempes)
   parentCompetitionId String? @unique
   parentCompetition Competition?  @relation("CompetitionPhases", fields: [parentCompetitionId], references: [id])
   childCompetition  Competition?  @relation("CompetitionPhases")
-
   // El cerebro de la flexibilidad: Aquí guardamos las reglas específicas.
   rules         Json
-  /* Ejemplo de 'rules' para LIGA A:
-    {
-      "roundType": "ida_y_vuelta", // 'ida' o 'ida_y_vuelta'
-      "playoffs": { "type": "TOP_3_FINALS", "teams": [1, 2, 3] },
-      "playouts": { "type": "5_VS_6", "teams": [5, 6]},
-      "promotions": {
-        "A_vs_B": { "a_team_rank": 7, "b_team_rank": 2 },
-        "A_vs_B_playout": { "a_team_rank": 6, "b_team_rank": 3 }
-      }
-    }
-
-    Ejemplo de 'rules' para COPA KEMPES:
-    {
-      "numGroups": 5,
-      "teamsPerGroup": 8,
-      "qualifyToGold": 2, // Los 2 primeros de cada grupo a Copa de Oro
-      "qualifyToSilver": 2 // El 3ro y 4to a Copa de Plata
-    }
-  */
 
   season        Season  @relation(fields: [seasonId], references: [id])
   competitionType CompetitionType @relation(fields: [competitionTypeId], references:[id])
-  matches       Match[]
   teams         Club[]  @relation("CompetitionTeams")
+  matches       Match[]
 }
 
 model CompetitionType {
   id            String  @id @default(uuid())
-  name          String  // "Liga A Mayores", "Copa Kempes", "Copa de Plata", "Liga B Kempesita"
+  category      CompetitionCategory // "SENIOR" o "KEMPESITA"
+  hierarchy      Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
+  name          CompetitionName @unique // "Liga A", "Copa Kempes"          
   format        CompetitionFormat // Es una LIGA o una COPA
   competitions  Competition[]
 }
@@ -153,4 +134,22 @@ enum CompetitionFormat {
 enum CompetitionStage {
   ROUND_ROBIN // Todos contra todos (Ligas, Fase de Grupos)
   KNOCKOUT // Eliminación directa
+}
+
+enum CompetitionCategory {
+  SENIOR    // For "Mayores" competitions
+  KEMPESITA // For "Kempesitas" competitions
+}
+
+enum CompetitionName {
+  LEAGUE_A
+  LEAGUE_B
+  LEAGUE_C
+  LEAGUE_D
+  LEAGUE_E
+  KEMPES_CUP
+  GOLD_CUP
+  SILVER_CUP
+  CINDOR_CUP
+  SUPER_CUP
 }

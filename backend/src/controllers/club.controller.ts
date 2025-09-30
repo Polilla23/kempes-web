@@ -10,7 +10,12 @@ export class ClubController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const { name, logo, userId, isActive } = req.body as { name: string; logo: string; userId?: string | null; isActive?: boolean}
+    const { name, logo, userId, isActive } = req.body as {
+      name: string
+      logo: string
+      userId?: string | null
+      isActive?: boolean
+    }
     try {
       await this.clubService.createClub({ name, logo, userId, isActive })
 
@@ -27,7 +32,7 @@ export class ClubController {
     try {
       const clubs = await this.clubService.findAllClubs()
 
-      return reply.status(200).send({clubs})
+      return reply.status(200).send({ clubs })
     } catch (error) {
       return reply.status(400).send({
         message: 'Error while fetching the clubs.',
@@ -35,8 +40,8 @@ export class ClubController {
       })
     }
   }
-  async findOne(req: FastifyRequest, reply: FastifyReply) {
-    const { id } = req.params as { id: string }
+  async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
     try {
       const club = await this.clubService.findClub(id)
 

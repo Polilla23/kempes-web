@@ -4,19 +4,18 @@ import bcrypt from 'bcrypt'
 import { User } from '@prisma/client'
 import crypto from 'crypto'
 import { EmailService } from './email.service'
-import { RegisterUserInput } from 'utils/types'
+import { CreateUserInput } from 'utils/types'
 import { JWT } from '@fastify/jwt'
 
 // Errors
-import { UserAlreadyExistsError } from '../errors/userAlreadyExistsError'
-import { EmailSendError } from '../errors/emailSendError'
-import { AuthenticationError } from '../errors/authenticationError'
-import { GenerateTokenError } from '../errors/generateTokenError'
-import { UserNotFoundError } from '../errors/userNotFoundError'
-import { EmailNotVerifiedError } from '../errors/emailNotVerifiedError'
-import { InvalidTokenError } from '../errors/invalidTokenError'
-import { EmailAlreadyVerifiedError } from '../errors/emailAlreadyVerifiedError'
-import { SamePasswordError } from '../errors/samePasswordError'
+import { UserAlreadyExistsError, UserNotFoundError } from '../errors/user.errors'
+import { EmailSendError, EmailAlreadyVerifiedError, EmailNotVerifiedError } from '../errors/email.errors'
+import {
+  AuthenticationError,
+  GenerateTokenError,
+  InvalidTokenError,
+  SamePasswordError,
+} from '../errors/auth.errors'
 
 export class UserService {
   private userRepository: IUserRepository
@@ -37,7 +36,7 @@ export class UserService {
     this.jwtService = jwtService
   }
 
-  async registerUser({ email, password, role }: RegisterUserInput) {
+  async registerUser({ email, password, role }: CreateUserInput) {
     const existingUser = await this.userRepository.findOneByEmail(email)
 
     if (existingUser) {

@@ -1,10 +1,10 @@
-import { Club } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { IClubRepository } from 'interfaces/IClubRepository'
-import { RegisterClubInput } from 'utils/types'
+import { CreateClubInput } from 'utils/types'
 
 // Errors
-import { ClubNotFoundError } from '../errors/clubNotFoundError'
-import { ClubAlreadyExistsError } from '../errors/clubAlreadyExistsError'
+import { ClubNotFoundError } from '../errors/club.errors'
+import { ClubAlreadyExistsError } from '../errors/club.errors'
 
 export class ClubService {
   private clubRepository: IClubRepository
@@ -23,18 +23,17 @@ export class ClubService {
     if (!clubFound) {
       throw new ClubNotFoundError()
     }
-
     return clubFound
   }
 
-  async createClub({ name, logo, userId, isActive }: RegisterClubInput) {
+  async createClub({ name, logo, userId, isActive }: CreateClubInput) {
     const clubFound = await this.clubRepository.findOneByName(name)
 
     if (clubFound) {
       throw new ClubAlreadyExistsError()
     }
 
-    const clubData: any = {
+    const clubData: Prisma.ClubCreateInput = {
       name,
       logo: logo as string,
       isActive: isActive ?? true,
@@ -50,7 +49,7 @@ export class ClubService {
     return newClub
   }
 
-  async updateClub(id: string, data: Partial<Club>) {
+  async updateClub(id: string, data: Prisma.ClubUpdateInput) {
     const clubFound = await this.clubRepository.findOneById(id)
 
     if (!clubFound) {

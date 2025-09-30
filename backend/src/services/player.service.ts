@@ -6,7 +6,7 @@ import { parse } from 'csv-parse/sync'
 import { validateNumber, validateBoolean, validateString } from '../utils/validation'
 
 // Errors
-import { PlayerNotFoundError } from '../errors/playerNotFoundError'
+import { PlayerNotFoundError } from '../errors/player.errors'
 
 export class PlayerService {
   private playerRepository: IPlayerRespository
@@ -87,7 +87,7 @@ export class PlayerService {
       trim: true,
       delimiter: ';',
     })
-    
+
     const validPlayers: CreatePlayerInput[] = []
     const errors: Array<{ row: number; error: string }> = []
 
@@ -127,12 +127,12 @@ export class PlayerService {
     }
   }
 
-  private transformCSVRecord(record: any): CreatePlayerInput {  
+  private transformCSVRecord(record: any): CreatePlayerInput {
     const requiredFields = ['name', 'lastName', 'birthdate', 'actualClubId', 'overall']
     const missingFields = requiredFields.filter((field) => !record[field])
 
     if (missingFields.length > 0) {
-      console.log("Missing fields:", missingFields)
+      console.log('Missing fields:', missingFields)
       throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
     }
 
