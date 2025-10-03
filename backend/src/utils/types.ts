@@ -167,3 +167,76 @@ export type KempesCupRules = {
   qualifyToGold: number
   qualifyToSilver: number
 }
+
+export type BracketMatch = {
+  round: 'ROUND_OF_16' | 'QUARTERFINAL' | 'SEMIFINAL' | 'FINAL'
+  position: number // Position within the round (1-8 for R16, 1-4 for QF, 1-2 for SF, 1 for Final)
+
+  homeTeam: BracketClub
+  awayTeam: BracketClub
+}
+
+export type BracketClub = {
+  type: 'DIRECT' | 'FROM_MATCH' | 'FROM_GROUP'
+
+  // Used when type === 'DIRECT'
+  clubId?: string
+
+  // Used when type === 'FROM_MATCH'
+  sourceRound?: 'ROUND_OF_16' | 'QUARTERFINAL' | 'SEMIFINAL' | 'FINAL'
+  sourcePosition?: number // Position in source round
+  sourceClubPosition?: 'WINNER' | 'LOSER'
+
+  // Used when type === 'FROM_GROUP'
+  groupReference?: string // e.g., 'GROUP_A_1' for 1st place in Group A
+}
+
+export type GroupStageFixtureInput = {
+  competitionId: string
+  groups: Array<{
+    groupName: string // "GROUP_A", "GROUP_B", etc.
+    clubIds: string[] // List of club IDs in the group
+  }>
+}
+
+export type LeagueFixtureInput = {
+  competitionId: string
+  clubIds: string[] // List of club IDs participating in the league
+  roundType: 'match' | 'match_and_rematch'
+}
+
+export type FinishMatchInput = {
+  matchId: string
+  homeClubGoals: number
+  awayClubGoals: number
+}
+
+export type FiniMatchResponse = {
+  success: boolean
+  match: any // The finished match
+  dependentMatchesUpdated: number 
+  updatedMatches: any[] // Matches that got updated with winners/losers
+}
+
+export type GroupStageFixtureResponse = {
+  success: boolean
+  matchesCreated: number
+  competitionId: string
+}
+
+export type LeagueFixtureResponse = {
+  success: boolean
+  matchesCreated: number
+  competitionId: string
+}
+
+export type KnockoutFixtureInput = {
+  competitionId: string
+  brackets: BracketMatch[]
+}
+
+export type KnockoutFixtureResponse = {
+  success: boolean
+  matchesCreated: number
+  competitionId: string
+}

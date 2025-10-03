@@ -100,17 +100,34 @@ model Match {
   id            String  @id @default(uuid())
   matchdayOrder Int // Fecha 1, 2... o Fase (16 = 16vos, 8 = 8vos)
   status        MatchStatus @default(PENDIENTE)
+  stage         CompetitionStage // "ROUND_ROBIN" o "KNOCKOUT"
+
   homeClubId    String?
   awayClubId    String?
   homePlaceholder String?
-  awayPlaceHolder String?
+  awayPlaceholder String?
   homeClubGoals Int @default(0)
   awayClubGoals Int @default(0)
   competitionId String
 
+  homeSourceMatchId String? @map("home_source_match_id")
+  awaySourceMatchId String? @map("away_source_match_id")
+  homeSourcePosition String? @map("home_source_position") // "WINNER" or "LOSER"
+  awaySourcePosition String? @map("away_source_position") // "WINNER" or "LOSER"
+
   competition   Competition @relation(fields: [competitionId], references: [id])
   homeClub      Club? @relation("HomeMatches", fields: [homeClubId], references: [id])
   awayClub      Club? @relation("AwayMatches", fields: [awayClubId], references: [id])
+
+  homeSourceMatch Match? @relation("HomeSourceMatch", fields: [homeSourceMatchId], references: [id])
+  homeNextMatches Match[] @relation("HomeSourceMatch")
+
+  awaySourceMatch Match? @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id])
+  dependentMatches Match[] @relation("AwaySourceMatch")
+
+  @@index([competitionId])
+  @@index([homeSourceMatchId])
+  @@index([awaySourceMatchId])
 }
 
 // ENUMS AND TYPES
