@@ -1,13 +1,13 @@
-import { FastifyInstance } from "fastify";
-import { fixtureSchemas } from "schemas/fixture.schema";
+import { FastifyInstance } from "fastify"
+import { fixtureSchemas } from "../schemas/fixture.schema"
 
 export const fixtureRoutes = async (fastify: FastifyInstance) => {
-    const fixtureController = (fastify as any).container.resolve("fixtureController");
+    const fixtureController = fastify.container.resolve("fixtureController")
 
     fastify.post("/fixtures/knockout", {
         preHandler: [fastify.authenticate],
         schema: fixtureSchemas.createKnockout,
-        handler: fixtureController.create.bind(fixtureController),
+        handler: fixtureController.createKnockoutFixture.bind(fixtureController),
     });
 
     fastify.post("/fixtures/group-stage", {

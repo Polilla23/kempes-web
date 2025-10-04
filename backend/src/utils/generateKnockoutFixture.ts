@@ -1,6 +1,5 @@
-import { Prisma, CompetitionStage, MatchStatus } from "@prisma/client";
-import { BracketMatch } from "./types";
-import { match } from "assert";
+import { Prisma, CompetitionStage, MatchStatus } from '@prisma/client'
+import { BracketMatch } from './types'
 
 /**
  * Sort brackets by round order to ensure proper creation sequence.
@@ -14,12 +13,12 @@ import { match } from "assert";
  * 4. FINAL
  */
 export function sortBracketsByRound(brackets: BracketMatch[]): BracketMatch[] {
-    const roundOrder: Record<string, number> = {
-        ROUND_OF_16: 1,
-        QUARTERFINAL: 2,
-        SEMIFINAL: 3,
-        FINAL: 4,
-    }
+  const roundOrder: Record<string, number> = {
+    ROUND_OF_16: 1,
+    QUARTERFINAL: 2,
+    SEMIFINAL: 3,
+    FINAL: 4
+  }
 
     return brackets.sort((a, b) => {
         const orderDiff = roundOrder[a.round] - roundOrder[b.round];
@@ -39,13 +38,13 @@ export function sortBracketsByRound(brackets: BracketMatch[]): BracketMatch[] {
  * to show Final first, then Semifinals, etc.
 */
 export function getRoundOrder(round: string): number {
-    const orderMap: Record<string, number> = {
-        ROUND_OF_16: 16,
-        QUARTERFINAL: 8,
-        SEMIFINAL: 4,
-        FINAL: 2,
-    }
-    return orderMap[round] || 1
+  const orderMap: Record<string, number> = {
+    ROUND_OF_16: 16,
+    QUARTERFINAL: 8,
+    SEMIFINAL: 4,
+    FINAL: 2
+  }
+  return orderMap[round] || 1
 }
 
 /** 
@@ -76,7 +75,7 @@ export function generatePlaceholder(team: BracketMatch['homeTeam']): string | nu
         return `${team.sourceClubPosition}_${team.sourceRound}_${team.sourcePosition}`;
     }
 
-    return null
+  return null
 }
 
 /**
@@ -144,7 +143,7 @@ export function buildKnockoutMatchData(
                         )!
                     }
                 },
-                homeSourcePosition: bracket.homeTeam.sourcePosition
+                homeSourcePosition: bracket.homeTeam.sourceClubPosition
             }),
 
         // If awayTeam comes FROM_MATCH, link it to the source match
@@ -158,7 +157,7 @@ export function buildKnockoutMatchData(
                         )!
                     }
                 },
-                awaySourcePosition: bracket.awayTeam.sourcePosition
+                awaySourcePosition: bracket.awayTeam.sourceClubPosition
             })
     }
 

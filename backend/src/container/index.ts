@@ -22,9 +22,9 @@ import { CompetitionTypeService } from '../services/competitionType.service'
 import { CompetitionRepository } from '../repositories/competition.repository'
 import { CompetitionController } from '../controllers/competition.controller'
 import { CompetitionService } from '../services/competition.service'
-import { FixtureRepository } from 'repositories/fixture.repository'
-import { FixtureService } from 'services/fixture.service'
-import { FixtureController } from 'controllers/fixture.controller'
+import { FixtureRepository } from '../repositories/fixture.repository'
+import { FixtureService } from '../services/fixture.service'
+import { FixtureController } from '../controllers/fixture.controller'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
