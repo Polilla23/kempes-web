@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import { FixtureController } from "../controllers/fixture.controller";
 import { fixtureSchemas } from "schemas/fixture.schema";
 
 export const fixtureRoutes = async (fastify: FastifyInstance) => {
