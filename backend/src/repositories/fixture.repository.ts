@@ -94,7 +94,7 @@ export class FixtureRepository implements IFixtureRepository {
 
     async getMatchesByCompetition(id: string): Promise<Match[]> {
         return await this.prisma.match.findMany({
-            where: { id },
+            where: { competitionId: id },
             include: {
                 homeClub: true,
                 awayClub: true,

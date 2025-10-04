@@ -16,9 +16,9 @@ import { match } from "assert";
 export function sortBracketsByRound(brackets: BracketMatch[]): BracketMatch[] {
     const roundOrder: Record<string, number> = {
         ROUND_OF_16: 1,
-        QUARTER_FINALS: 2,
-        SEMI_FINALS: 3,
-        FINALS: 4,
+        QUARTERFINAL: 2,
+        SEMIFINAL: 3,
+        FINAL: 4,
     }
 
     return brackets.sort((a, b) => {
@@ -38,12 +38,12 @@ export function sortBracketsByRound(brackets: BracketMatch[]): BracketMatch[] {
  * Why descending? Because in Prisma queries we order by matchdayOrder DESC
  * to show Final first, then Semifinals, etc.
 */
-export function getRoundOder(round: string): number {
+export function getRoundOrder(round: string): number {
     const orderMap: Record<string, number> = {
         ROUND_OF_16: 16,
-        QUARTER_FINALS: 8,
-        SEMI_FINALS: 4,
-        FINALS: 2,
+        QUARTERFINAL: 8,
+        SEMIFINAL: 4,
+        FINAL: 2,
     }
     return orderMap[round] || 1
 }
@@ -105,7 +105,7 @@ export function buildKnockoutMatchData(
         competition: {
             connect: { id: competitionId }
         },
-        matchdayOrder: getRoundOder(bracket.round),
+        matchdayOrder: getRoundOrder(bracket.round),
         stage: CompetitionStage.KNOCKOUT,
         status: MatchStatus.PENDIENTE,
 
@@ -144,7 +144,7 @@ export function buildKnockoutMatchData(
                         )!
                     }
                 },
-                homeSourcePosition: bracket.homeTeam.sourcePosition.toString()
+                homeSourcePosition: bracket.homeTeam.sourcePosition
             }),
 
         // If awayTeam comes FROM_MATCH, link it to the source match
@@ -158,7 +158,7 @@ export function buildKnockoutMatchData(
                         )!
                     }
                 },
-                awaySourcePosition: bracket.awayTeam.sourcePosition.toString()
+                awaySourcePosition: bracket.awayTeam.sourcePosition
             })
     }
 

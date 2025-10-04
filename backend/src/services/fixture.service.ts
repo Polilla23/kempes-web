@@ -10,7 +10,7 @@ import {
     GroupStageFixtureInput, 
     GroupStageFixtureResponse, 
     FinishMatchInput, 
-    FiniMatchResponse 
+    FinishMatchResponse 
 } from '../utils/types'
 import { sortBracketsByRound, buildKnockoutMatchData } from '../utils/generateKnockoutFixture';
 import { generateLeagueFixture, generateGroupStageFixture } from '../utils/generateFixture';
@@ -56,7 +56,7 @@ export class FixtureService {
      * Finish match and auto-update dependent matches
      */
 
-    async finishMatch(input: FinishMatchInput): Promise<FiniMatchResponse> {
+    async finishMatch(input: FinishMatchInput): Promise<FinishMatchResponse> {
         const match = await this.fixtureRepository.findById(input.matchId)
         if (!match) {
             throw new Error('Match not found')

@@ -22,6 +22,9 @@ import { CompetitionTypeService } from '../services/competitionType.service'
 import { CompetitionRepository } from '../repositories/competition.repository'
 import { CompetitionController } from '../controllers/competition.controller'
 import { CompetitionService } from '../services/competition.service'
+import { FixtureRepository } from 'repositories/fixture.repository'
+import { FixtureService } from 'services/fixture.service'
+import { FixtureController } from 'controllers/fixture.controller'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -35,6 +38,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     clubRepository: asClass(ClubRepository).singleton(),
     competitionTypeRepository: asClass(CompetitionTypeRepository).singleton(),
     competitionRepository: asClass(CompetitionRepository).singleton(),
+    fixtureRepository: asClass(FixtureRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(myAccountController).singleton(),
@@ -42,6 +46,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     clubController: asClass(ClubController).singleton(),
     competitionTypeController: asClass(CompetitionTypeController).singleton(),
     competitionController: asClass(CompetitionController).singleton(),
+    fixtureController: asClass(FixtureController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -49,6 +54,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     clubService: asClass(ClubService).singleton(),
     competitionTypeService: asClass(CompetitionTypeService).singleton(),
     competitionService: asClass(CompetitionService).singleton(),
+    fixtureService: asClass(FixtureService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
 

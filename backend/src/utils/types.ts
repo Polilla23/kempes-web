@@ -211,7 +211,7 @@ export type FinishMatchInput = {
   awayClubGoals: number
 }
 
-export type FiniMatchResponse = {
+export type FinishMatchResponse = {
   success: boolean
   match: any // The finished match
   dependentMatchesUpdated: number 
