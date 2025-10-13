@@ -209,6 +209,7 @@ export type FinishMatchInput = {
   matchId: string
   homeClubGoals: number
   awayClubGoals: number
+  // TODO: Agregar detalles de goles, asistencias, tarjetas, etc.
 }
 
 export type FinishMatchResponse = {

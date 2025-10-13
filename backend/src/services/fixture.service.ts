@@ -59,25 +59,25 @@ export class FixtureService {
     async finishMatch(input: FinishMatchInput): Promise<FinishMatchResponse> {
         const match = await this.fixtureRepository.findById(input.matchId)
         if (!match) {
-            throw new Error('Match not found')
+            throw new Error('Match not found') // TODO: Custom error
         }
 
         if (match.status === MatchStatus.FINALIZADO) {
-            throw new Error('Match already finalized')
+            throw new Error('Match already finalized') // TODO: Custom error
         }
 
         if (!match.homeClubId || !match.awayClubId) {
-            throw new Error('Both teams must be assigned before finishing the match')
+            throw new Error('Both teams must be assigned before finishing the match') // TODO: Custom error
         }
 
         if (match.stage === CompetitionStage.KNOCKOUT && input.homeClubGoals === input.awayClubGoals) {
-            throw new Error('Knockout matches cannot end in a draw')
+            throw new Error('Knockout matches cannot end in a draw') // TODO: Custom error
         }
 
         const updatedMatch = await this.fixtureRepository.updateMatch(input.matchId, {
             homeClubGoals: input.homeClubGoals,
             awayClubGoals: input.awayClubGoals,
-            status: MatchStatus.FINALIZADO
+            status: MatchStatus.FINALIZADO // TODO: Agregar mas detalles (goles, asistencias, tarjetas, etc.)
         })
 
         const winnerId = input.homeClubGoals > input.awayClubGoals ? match.homeClubId : match.awayClubId
