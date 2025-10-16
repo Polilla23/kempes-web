@@ -84,6 +84,12 @@ export type CreateCompetitionTypeInput = {
   format: CompetitionFormat
 }
 
+export type CreateEvent = {
+  typeId: string
+  playerId: string
+  matchId: string
+}
+
 // tournament rules json types
 
 //ENUMS
@@ -215,7 +221,7 @@ export type FinishMatchInput = {
 export type FinishMatchResponse = {
   success: boolean
   match: any // The finished match
-  dependentMatchesUpdated: number 
+  dependentMatchesUpdated: number
   updatedMatches: any[] // Matches that got updated with winners/losers
 }
 

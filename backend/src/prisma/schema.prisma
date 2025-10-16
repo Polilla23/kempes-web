@@ -56,6 +56,7 @@ model Player {
   transfermarktId String?  @map("transfermarkt_id")  @default("null")
   isKempesita   Boolean @map("is_kempesita")  @default(false)
   isActive      Boolean @map("is_active") @default(true)
+  events        Event[]
 
   @@map("players")
 }
@@ -109,6 +110,7 @@ model Match {
   homeClubGoals Int @default(0)
   awayClubGoals Int @default(0)
   competitionId String
+  events       Event[]
 
   homeSourceMatchId String? @map("home_source_match_id")
   awaySourceMatchId String? @map("away_source_match_id")
@@ -128,6 +130,25 @@ model Match {
   @@index([competitionId])
   @@index([homeSourceMatchId])
   @@index([awaySourceMatchId])
+}
+
+model EventType {
+  id   String @id @default(uuid())
+  name EventTypeName @unique
+  events Event[]
+}
+model Event {
+  id        String   @id @default(uuid())
+  typeId    String
+  playerId  String
+  matchId   String
+
+  player    Player @relation(fields: [playerId], references: [id])
+  match     Match  @relation(fields: [matchId], references: [id])
+  type      EventType @relation(fields: [typeId], references: [id])
+
+  @@index([playerId])
+  @@index([matchId])
 }
 
 // ENUMS AND TYPES
@@ -169,4 +190,12 @@ enum CompetitionName {
   SILVER_CUP
   CINDOR_CUP
   SUPER_CUP
+}
+
+enum EventTypeName {
+  GOAL
+  YELLOW_CARD
+  RED_CARD
+  SUBSTITUTION_IN
+  SUBSTITUTION_OUT
 }
