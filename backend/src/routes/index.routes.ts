@@ -5,6 +5,8 @@ import { playerRoutes } from './player.routes'
 import { clubRoutes } from './club.routes'
 import { competitionRoutes } from './competition.routes'
 import { competitionTypeRoutes } from './competitionType.routes'
+import { fixtureRoutes } from './fixture.routes'
+import { eventRoutes } from './event.routes'
 
 export const routes = async (fastify: FastifyInstance) => {
   fastify.register(userRoutes, { prefix: '/user' })
@@ -13,4 +15,6 @@ export const routes = async (fastify: FastifyInstance) => {
   fastify.register(clubRoutes, { prefix: '/club' })
   fastify.register(competitionRoutes, { prefix: '/competition' })
   fastify.register(competitionTypeRoutes, { prefix: '/competitiontype' })
+  fastify.register(fixtureRoutes, { prefix: '/fixture' })
+  fastify.register(eventRoutes, { prefix: '/event' })
 }
