@@ -39,6 +39,34 @@ export class EventController {
     }
   }
 
+  async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+    try {
+      const event = await this.eventService.findEventById(id)
+
+      return reply.status(200).send(event)
+    } catch (error) {
+      return reply.status(400).send({
+        message: 'Error while fetching event.',
+        error: error instanceof Error ? error.message : error,
+      })
+    }
+  }
+
+  async findByMatchId(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+    try {
+      const events = await this.eventService.findEventsByMatchId(id)
+
+      return reply.status(200).send({ events })
+    } catch (error) {
+      return reply.status(400).send({
+        message: 'Error while fetching events by match ID.',
+        error: error instanceof Error ? error.message : error,
+      })
+    }
+  }
+
   async update(req: FastifyRequest<{ Params: { id: string }; Body: Partial<Event> }>, reply: FastifyReply) {
     const data = req.body
     const { id } = req.params
@@ -73,20 +101,6 @@ export class EventController {
       }
       return reply.status(400).send({
         message: 'Error while updating the event.',
-        error: error instanceof Error ? error.message : error,
-      })
-    }
-  }
-
-  async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-    const { id } = req.params
-    try {
-      const event = await this.eventService.findEventById(id)
-
-      return reply.status(200).send(event)
-    } catch (error) {
-      return reply.status(400).send({
-        message: 'Error while fetching event.',
         error: error instanceof Error ? error.message : error,
       })
     }

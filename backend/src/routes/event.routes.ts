@@ -18,6 +18,16 @@ export const eventRoutes = async (fastify: FastifyInstance) => {
     schema: eventSchemas.findOne,
     handler: eventController.findOne.bind(eventController),
   })
+  fastify.get('/findOneByMatchId/:id', {
+    preHandler: [fastify.authenticate],
+    schema: eventSchemas.findOneByMatchId,
+    handler: eventController.findOneByMatchId.bind(eventController),
+  })
+  fastify.get('/findOneByPlayerId/:id', {
+    preHandler: [fastify.authenticate],
+    schema: eventSchemas.findOneByPlayerId,
+    handler: eventController.findOneByPlayerId.bind(eventController),
+  })
   fastify.patch('/update/:id', {
     preHandler: [fastify.authenticate],
     schema: eventSchemas.update,

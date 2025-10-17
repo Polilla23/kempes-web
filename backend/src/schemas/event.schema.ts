@@ -147,6 +147,94 @@ export const eventSchemas = {
     },
   },
 
+  findOneByMatchId: {
+    description: 'Fetch an event by match ID.',
+    tags: ['Event'],
+    params: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          description: 'ID of the match.',
+          format: 'uuid',
+        },
+      },
+      required: ['id'],
+    },
+    response: {
+      200: {
+        description: 'Event details',
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            description: { type: 'string' },
+          },
+        },
+      },
+      400: {
+        description: 'Error while fetching event.',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+      404: {
+        description: 'Events not found.',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+    },
+  },
+
+  findOneByPlayerId: {
+    description: 'Fetch an event by player ID.',
+    tags: ['Event'],
+    params: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          description: 'ID of the player.',
+          format: 'uuid',
+        },
+      },
+      required: ['id'],
+    },
+    response: {
+      200: {
+        description: 'Event details',
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            description: { type: 'string' },
+          },
+        },
+      },
+      400: {
+        description: 'Error while fetching event.',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+      404: {
+        description: 'Events not found.',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+    },
+  },
+
   update: {
     description: 'Update an event by ID.',
     tags: ['Event'],

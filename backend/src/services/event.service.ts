@@ -24,25 +24,50 @@ export class EventService {
 
   async findEventById(id: Prisma.EventWhereUniqueInput['id']): Promise<Event | null> {
     const event = await this.eventRepository.findOneById(id)
+
     if (!event) {
       throw new EventNotFoundError()
     }
     return event
   }
 
+  async findEventsByMatchId(id: string): Promise<Event[] | null> {
+    const events = await this.eventRepository.findManyByMatchId(id)
+
+    if (!events) {
+      throw new EventNotFoundError()
+    }
+
+    return events
+  }
+
+  async findEventsByPlayerId(id: string): Promise<Event[] | null> {
+    const events = await this.eventRepository.findManyByPlayerId(id)
+
+    if (!events) {
+      throw new EventNotFoundError()
+    }
+
+    return events
+  }
+
   async updateEvent(id: Prisma.EventWhereUniqueInput['id'], data: Prisma.EventUpdateInput): Promise<void> {
     const event = await this.eventRepository.findOneById(id)
+
     if (!event) {
       throw new EventNotFoundError()
     }
+
     await this.eventRepository.updateOneById(id, data)
   }
 
   async deleteEvent(id: Prisma.EventWhereUniqueInput['id']): Promise<void> {
     const event = await this.eventRepository.findOneById(id)
+
     if (!event) {
       throw new EventNotFoundError()
     }
+
     await this.eventRepository.deleteOneById(id)
   }
 }

@@ -6,4 +6,6 @@ export interface IEventRepository {
   findOneById(id: Prisma.EventWhereUniqueInput['id']): Promise<Event | null>
   updateOneById(id: Prisma.EventWhereUniqueInput['id'], data: Prisma.EventUpdateInput): Promise<void>
   deleteOneById(id: Prisma.EventWhereUniqueInput['id']): Promise<void>
+  findManyByMatchId(matchId: string): Promise<Event[] | null>
+  findManyByPlayerId(playerId: string): Promise<Event[] | null>
 }

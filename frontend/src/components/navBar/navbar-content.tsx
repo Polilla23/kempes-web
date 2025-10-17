@@ -9,6 +9,7 @@ import {
   Trophy,
   UserCog,
   Users,
+  ListOrdered,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -27,7 +28,7 @@ import { useUser } from '@/context/UserContext'
 
 const navItems = [
   { label: 'Home', icon: House, to: '/' },
-  { label: 'Standings', icon: Trophy, to: '/standings' },
+  { label: 'Standings', icon: ListOrdered, to: '/standings' },
   { label: 'Fixture', icon: CalendarRange, to: '/fixture' },
   { label: 'Statistics', icon: ChartColumn, to: '/stats' },
   { label: 'Transfers', icon: ArrowLeftRight, to: '/transfers' },
@@ -37,6 +38,7 @@ const adminItems = [
   { label: 'Clubs', icon: Shield, to: '/management/clubs' },
   { label: 'Players', icon: Users, to: '/management/players' },
   { label: 'Salary Rates', icon: CircleDollarSign, to: '/management/salary-rates' },
+  { label: 'Competitions', icon: Trophy, to: '/management/competitions' },
 ]
 
 const NavbarContent = () => {
