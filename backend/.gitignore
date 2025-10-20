@@ -1,7 +1,7 @@
 node_modules
 # Keep environment variables out of version control
 .env
-
+backend/API_REFACTOR_SUMMARY.md
 /src/generated/prisma
 
 /src/generated/prisma
