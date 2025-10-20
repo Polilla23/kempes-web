@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma, Event } from '@prisma/client'
-import { IEventRepository } from '@/features/events/IEventRepository'
+import { IEventRepository } from '@/features/events/interface/IEventRepository'
 
 export class EventRepository implements IEventRepository {
   private prisma: PrismaClient

@@ -1,4 +1,4 @@
-import { IClubRepository } from 'features/clubs/interfaces/IClubRepository'
+import { IClubRepository } from '@/features/clubs/interfaces/IClubRepository'
 import { Prisma, PrismaClient } from '@prisma/client'
 
 export class ClubRepository implements IClubRepository {

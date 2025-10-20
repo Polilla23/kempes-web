@@ -37,7 +37,7 @@ export const clubsSchemas = {
         description: 'List of clubs',
         type: 'object',
         properties: {
-          clubs: {
+          data: {
             type: 'array',
             items: {
               type: 'object',
