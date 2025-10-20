@@ -9,8 +9,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "./src",
-    "paths": {},
-    "typeRoots": ["./node_modules/@types", "src/utils"],
+    "paths": {
+      "@/*": ["*"]
+    },
+    "typeRoots": ["./node_modules/@types", "src/features/utils"],
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
