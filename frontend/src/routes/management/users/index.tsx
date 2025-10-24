@@ -40,8 +40,8 @@ function UserManagement() {
     try {
       setIsLoadingUsers(true)
       const response = await UserService.getUsers()
-      console.log('Fetched users:', response.users)
-      setUsers(response.users || [])
+      console.log('Fetched users:', response)
+      setUsers(response || [])
     } catch (error) {
       console.error('Error fetching users:', error)
       toast.error('Failed to fetch users')

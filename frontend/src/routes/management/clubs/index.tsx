@@ -41,7 +41,7 @@ function ClubManagement() {
       setIsLoadingUsers(true) // Set loading to true
       const response = await UserService.getUsers()
       const availableUsersFiltered =
-        response.users?.filter((user: User) => {
+        response?.filter((user: User) => {
           // Check if club is null, undefined, or an empty object
           return (
             !user.club ||
@@ -69,8 +69,8 @@ function ClubManagement() {
     try {
       setIsLoadingClubs(true)
       const response = await ClubService.getClubs()
-      setClubs(response.clubs || [])
-      console.log('Fetched clubs:', response.clubs)
+      setClubs(response || [])
+      console.log('Fetched clubs:', response)
     } catch (error) {
       console.error('Error fetching clubs:', error)
       toast.error('Failed to fetch clubs')

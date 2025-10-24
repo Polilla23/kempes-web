@@ -70,7 +70,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
     try {
       setIsLoadingClubs(true)
       const response = await ClubService.getClubs()
-      setClubs(response.clubs || [])
+      setClubs(response || [])
     } catch (error) {
       console.error('Error fetching clubs:', error)
       toast.error('Failed to fetch clubs')

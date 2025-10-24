@@ -1,32 +1,35 @@
 import api from './api'
-import type { RegisterClubFormData, ClubResponse, ClubsResponse, Club } from '@/types'
+import type { RegisterClubFormData, ClubResponse, Club, DataEnvelope } from '@/types'
 
 export class ClubService {
     // Crear un nuevo club
     static async createClub(clubData: RegisterClubFormData): Promise<ClubResponse> {
         try {
-            const response = await api.post<ClubResponse>('/club/create', clubData)
-            return response.data || { message: response.message || 'Club created successfully' }
+            const response = await api.post<DataEnvelope<Club>>('/clubs', clubData)
+            return { 
+                message: 'Club created successfully',
+                club: response.data?.data 
+            }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error creating club')
         }
     }
 
     // Obtener todos los clubs
-    static async getClubs(): Promise<ClubsResponse> {
+    static async getClubs(): Promise<Club[]> {
         try {
-            const response = await api.get<{clubs: Club[]}>('/club/findAll')
-            return response.data || { clubs: [] }
+            const response = await api.get<DataEnvelope<Club[]>>('/clubs')
+            return response.data?.data || []
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error fetching clubs')
         }
     }
 
     // Obtener un club por su ID
-    static async getClubById(id: string): Promise<ClubResponse> {
+    static async getClubById(id: string): Promise<Club | null> {
         try {
-            const response = await api.get<ClubResponse>(`/club/findOne/${id}`)
-            return response.data || { message: response.message || 'Club fetched successfully' }
+            const response = await api.get<DataEnvelope<Club>>(`/clubs/${id}`)
+            return response.data?.data || null
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error fetching club')
         }
@@ -35,8 +38,11 @@ export class ClubService {
     // Actualizar un club
     static async updateClub(id: string, clubData: RegisterClubFormData): Promise<ClubResponse> {
         try {
-            const response = await api.patch<ClubResponse>(`/club/update/${id}`, clubData)
-            return response.data || { message: response.message || 'Club updated successfully' }
+            const response = await api.patch<DataEnvelope<Club>>(`/clubs/${id}`, clubData)
+            return { 
+                message: 'Club updated successfully',
+                club: response.data?.data 
+            }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error updating club')
         }
@@ -45,8 +51,8 @@ export class ClubService {
     // Eliminar un club
     static async deleteClub(id: string): Promise<ClubResponse> {
         try {
-            const response = await api.delete<ClubResponse>(`/club/delete/${id}`)
-            return response.data || { message: response.message || 'Club deleted successfully' }
+            await api.delete(`/clubs/${id}`)
+            return { message: 'Club deleted successfully' }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error deleting club')
         }

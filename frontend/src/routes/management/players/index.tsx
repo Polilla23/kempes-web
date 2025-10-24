@@ -41,8 +41,8 @@ function PlayerManagement() {
     try {
       setIsLoadingPlayers(true)
       const response = await PlayerService.getPlayers()
-      console.log('PLAYERS DATA: ', response.players)
-      setPlayers(response.players || [])
+      console.log('PLAYERS DATA: ', response)
+      setPlayers(response || [])
     } catch (error) {
       console.error('Error fetching players: ', error)
       toast.error('Failed to fetch players')
@@ -55,7 +55,7 @@ function PlayerManagement() {
   const fetchClubs = async () => {
     try {
       const response = await ClubService.getClubs()
-      setClubs(response.clubs || [])
+      setClubs(response || [])
     } catch (error) {
       console.error('Error fetching clubs: ', error)
       toast.error('Failed to fetch clubs')

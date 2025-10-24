@@ -1,7 +1,7 @@
 import Fastify, { FastifyReply, FastifyRequest } from 'fastify'
 import dotenv from 'dotenv'
 import { createDepencyContainer } from '@/features/core/container'
-import { routes } from '@/features/api/routes'
+import apiRoutes from '@/features/api/routes'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import fastifyJwt from '@fastify/jwt'
@@ -103,6 +103,6 @@ app.register(async function (fastify) {
 })
 
 // Registro de rutas
-app.register(routes)
+app.register(apiRoutes)
 
 export default app

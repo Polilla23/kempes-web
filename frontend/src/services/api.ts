@@ -1,5 +1,5 @@
 // Configuración base de la API
-const API_BASE_URL = 'http://localhost:3000'
+const API_BASE_URL = 'http://localhost:3000/api/v1'
 
 // Tipos para las respuestas de la API
 export interface ApiResponse<T = any> {

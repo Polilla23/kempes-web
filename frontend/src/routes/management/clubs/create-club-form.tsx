@@ -56,7 +56,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
       setIsLoadingUsers(true) // Set loading to true
       const response = await UserService.getUsers()
       const availableUsersFiltered =
-        response.users?.filter((user: User) => {
+        response?.filter((user: User) => {
           // Check if club is null, undefined, or an empty object
           return (
             !user.club ||

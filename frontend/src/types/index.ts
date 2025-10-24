@@ -124,4 +124,9 @@ export interface PlayersResponse {
   players: Player[]
 }
 
+// NEW: Data envelope types for RESTful API responses
+export interface DataEnvelope<T> {
+  data: T
+}
+
 export type UserRole = 'ADMIN' | 'USER'

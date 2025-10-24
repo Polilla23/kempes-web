@@ -1,7 +1,7 @@
 import AuthService from '@/services/auth.service'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useUser } from '@/context/UserContext'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LoginForm from './form'
 import AuthLayout from '../auth-layout'
 import type { z } from 'zod'
@@ -16,13 +16,6 @@ function LoginPage() {
   const navigate = useNavigate()
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  // Redirect to home if already authenticated (Disabled while in development)
-  // useEffect(() => {
-  //   if (!loading && isAuthenticated) {
-  //     navigate({ to: '/' })
-  //   }
-  // }, [isAuthenticated, loading, navigate])
 
   async function onSubmit(values: z.infer<typeof FormSchemas.loginSchema>) {
     setVerificationStatus('loading')
