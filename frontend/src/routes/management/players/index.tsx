@@ -13,10 +13,11 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Ellipsis, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { PlayerService } from '@/services/player.service'
 import type { Club, Player } from '@/types'
 import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import CreatePlayerForm from './create-player-form'
 import { createColumnHelper } from '@tanstack/react-table'
 import { DefaultHeader } from '@/components/table/table-header'
@@ -33,16 +34,15 @@ function PlayerManagement() {
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(true)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [isEditingModalOpen, setIsEditingModalOpen] = useState<boolean>(false)
   const [selectedPlayer, setSetelectedPlayer] = useState<Player | null>(null)
 
   // Fetch players
-  const fetchPlayers = async () => {
+  const fetchPlayers = useCallback(async () => {
     try {
       setIsLoadingPlayers(true)
-      const response = await PlayerService.getPlayers()
-      console.log('PLAYERS DATA: ', response.players)
-      setPlayers(response.players || [])
+      const players = await PlayerService.getPlayers()
+      console.log('PLAYERS DATA: ', players)
+      setPlayers(players || [])
     } catch (error) {
       console.error('Error fetching players: ', error)
       toast.error('Failed to fetch players')
@@ -50,22 +50,22 @@ function PlayerManagement() {
     } finally {
       setIsLoadingPlayers(false)
     }
-  }
+  }, [])
 
-  const fetchClubs = async () => {
+  const fetchClubs = useCallback(async () => {
     try {
-      const response = await ClubService.getClubs()
-      setClubs(response.clubs || [])
+      const clubs = await ClubService.getClubs()
+      setClubs(clubs || [])
     } catch (error) {
       console.error('Error fetching clubs: ', error)
       toast.error('Failed to fetch clubs')
       setClubs([])
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchClubs()
-  }, [])
+  }, [fetchClubs])
 
   // Debounce search term
   useEffect(() => {
@@ -78,7 +78,7 @@ function PlayerManagement() {
 
   useEffect(() => {
     fetchPlayers()
-  }, [])
+  }, [fetchPlayers])
 
   const filteredPlayers = useMemo(() => {
     if (!debouncedSearch.trim()) return players // Return all players if no search term
@@ -105,7 +105,6 @@ function PlayerManagement() {
 
   const handleEditPlayer = (player: Player) => {
     setSetelectedPlayer(player)
-    setIsEditingModalOpen(true)
   }
 
   // const handleSavePlayer = async (playerId: string, updatedData: { name: string; lastName: string; birthdate: string; overall: number; salary: number; ownerClubId: string; sofifaId: string; transfermarktId: string; isKempesita: boolean; isActive: boolean;}) => {
@@ -144,103 +143,177 @@ function PlayerManagement() {
 
   const handleEditClose = () => {
     setSetelectedPlayer(null)
-    setIsEditingModalOpen(false)
   }
 
-  const handleDeletePlayer = async (playerId: string) => {
-    try {
-      await PlayerService.deletePlayer(playerId)
-      toast.success('Player deleted successfully')
-      fetchPlayers() // Refresh the player list
-    } catch (error) {
-      console.error('Error deleting player:', error)
-      toast.error('Failed to delete player')
-    }
-  }
+  const handleDeletePlayer = useCallback(
+    async (playerId: string) => {
+      try {
+        await PlayerService.deletePlayer(playerId)
+        toast.success('Player deleted successfully')
+        fetchPlayers() // Refresh the player list
+      } catch (error) {
+        console.error('Error deleting player:', error)
+        toast.error('Failed to delete player')
+      }
+    },
+    [fetchPlayers]
+  )
 
   const columnHelper = createColumnHelper<Player>()
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name="Firstname" type="string" />,
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('lastName', {
-        header: (info) => <DefaultHeader info={info} name="Lastname" type="string" />,
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('birthdate', {
-        header: (info) => <DefaultHeader info={info} name="Birthdate" type="string" />,
-        cell: (info) => new Date(info.getValue()).toLocaleDateString('en-GB'),
+        header: (info) => <DefaultHeader info={info} name="Name" type="string" />,
+        cell: ({ row }) => {
+          const player = row.original
+          const fullName = `${player.name} ${player.lastName}`
+
+          return (
+            <div className="flex flex-col">
+              <span className="font-semibold">{fullName}</span>
+              <span className="text-xs text-muted-foreground">
+                {new Date(player.birthdate).toLocaleDateString('en-GB')}
+              </span>
+            </div>
+          )
+        },
       }),
       columnHelper.accessor('overall', {
-        header: (info) => <DefaultHeader info={info} name="Overall" type="number" />,
-        cell: (info) => info.getValue(),
+        header: () => (
+          <div className="flex justify-center">
+            <span className="text-xs font-semibold uppercase tracking-wider">Overall</span>
+          </div>
+        ),
+        cell: ({ row }) => {
+          const overall = row.getValue('overall') as number
+          const color =
+            overall >= 80
+              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+              : overall >= 70
+                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+
+          return (
+            <div className="flex justify-center">
+              <Badge variant="outline" className={`font-semibold ${color}`}>
+                {overall}
+              </Badge>
+            </div>
+          )
+        },
       }),
       columnHelper.accessor('salary', {
         header: (info) => <DefaultHeader info={info} name="Salary" type="number" />,
-        cell: (info) =>
-          info.getValue().toLocaleString('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }),
+        cell: (info) => {
+          const salary = info.getValue()
+          return (
+            <span className="font-medium">
+              {salary.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          )
+        },
       }),
       columnHelper.accessor('ownerClub', {
         header: (info) => <DefaultHeader info={info} name="Owner Club" type="string" />,
-        // cell: (info) => info.getValue(),
         cell: ({ row }) => {
           const club: Club | null | undefined = row.getValue('ownerClub')
-          const name = club?.name || 'No club'
-          return <span>{name}</span>
+
+          if (!club) {
+            return <span className="text-muted-foreground italic">No club</span>
+          }
+
+          return (
+            <div className="flex items-center gap-2">
+              {club.logo ? (
+                <img
+                  src={club.logo}
+                  alt={`${club.name} logo`}
+                  className="h-7 w-7 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center border border-border">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {club.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <span className="font-medium">{club.name}</span>
+            </div>
+          )
         },
       }),
       columnHelper.accessor('actualClub', {
-        header: (info) => <DefaultHeader info={info} name="Actual Club" type="string" />,
-        // cell: (info) => info.getValue(),
+        header: (info) => <DefaultHeader info={info} name="Current Club" type="string" />,
         cell: ({ row }) => {
           const club: Club | null | undefined = row.getValue('actualClub')
-          const name = club?.name || 'No club'
-          return <span>{name}</span>
+          const ownerClub: Club | null | undefined = row.getValue('ownerClub')
+
+          if (!club) {
+            return <span className="text-muted-foreground italic">No club</span>
+          }
+
+          const isOnLoan = ownerClub && ownerClub.id !== club.id
+
+          return (
+            <div className="flex items-center gap-2">
+              {club.logo ? (
+                <img
+                  src={club.logo}
+                  alt={`${club.name} logo`}
+                  className="h-7 w-7 rounded-full object-cover border border-border"
+                />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center border border-border">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {club.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col">
+                <span className="font-medium">{club.name}</span>
+                {isOnLoan && (
+                  <Badge variant="secondary" className="text-xs w-fit">
+                    On Loan
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )
         },
-      }),
-      columnHelper.accessor('sofifaId', {
-        header: (info) => <DefaultHeader info={info} name="Sofifa Id" type="number" />,
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('transfermarktId', {
-        header: (info) => <DefaultHeader info={info} name="Transfermarkt Id" type="number" />,
-        cell: (info) => info.getValue(),
       }),
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">Actions</span>,
+        header: () => <span className="sr-only">Actions</span>,
         cell: ({ row }) => {
           const player = row.original
 
           return (
             <div className="flex justify-center">
-              <DropdownMenu
-                onOpenChange={(open) => {
-                  if (!open) {
-                    handleEditClose()
-                  }
-                }}
-              >
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="cursor-pointer">
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Ellipsis className="size-4" />
+                    <span className="sr-only">Open menu</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditPlayer(player)}>
-                    <Pencil className="size-4" /> Edit
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => handleEditPlayer(player)}>
+                    <Pencil className="size-4" />
+                    <span>Edit</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => handleDeletePlayer(player.id)}>
-                    <Trash2 className="size-4 text-destructive" /> Delete
+                  <DropdownMenuItem
+                    className="cursor-pointer gap-2 text-destructive focus:text-destructive"
+                    onClick={() => handleDeletePlayer(player.id)}
+                  >
+                    <Trash2 className="size-4" />
+                    <span>Delete</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -249,28 +322,37 @@ function PlayerManagement() {
         },
       }),
     ],
-    [players, selectedPlayer, isEditingModalOpen]
+    [columnHelper, handleDeletePlayer]
   )
   return isLoadingPlayers ? (
     <PlayerTableSkeleton rows={8} />
   ) : (
-    <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
-      <h1 className="text-2xl font-bold mb-10 mt-8">Players Management</h1>
-      <div className="flex justify-between gap-3 mb-4 w-full relative">
-        <Label htmlFor="search" className="sr-only">
-          Search
-        </Label>
-        <Input
-          id="search"
-          type="text"
-          placeholder="Search..."
-          className="pl-8"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+    <div className="container mx-auto max-w-7xl p-6 space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Players Management</h1>
+        <p className="text-muted-foreground">
+          Manage your players, track their stats, and monitor loan status
+        </p>
+      </div>
+
+      <div className="flex justify-between items-center gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Label htmlFor="search" className="sr-only">
+            Search
+          </Label>
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-4 select-none text-muted-foreground" />
+          <Input
+            id="search"
+            type="text"
+            placeholder="Search players..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
         <CreatePlayerForm fetchPlayers={fetchPlayers} />
       </div>
+
       <DataTable<Player, any> columns={columns} data={filteredPlayers} />
       {selectedPlayer && (
         <EditPlayerForm

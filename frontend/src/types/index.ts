@@ -12,6 +12,7 @@ export interface Club {
   id: string
   name: string
   logo?: string
+  logoUrl?: string
   userId?: string
   isActive: boolean
   user?: {
@@ -26,6 +27,7 @@ export interface Player {
   name: string
   lastName: string
   birthdate: string
+  photoUrl?: string
   actualClubId: string | null
   ownerClubId: string | null
   actualClub: Club | null
