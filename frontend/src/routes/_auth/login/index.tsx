@@ -1,7 +1,7 @@
 import AuthService from '@/services/auth.service'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useUser } from '@/context/UserContext'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import LoginForm from './form'
 import AuthLayout from '../auth-layout'
 import type { z } from 'zod'

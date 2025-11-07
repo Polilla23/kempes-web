@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "players" ALTER COLUMN "overall" SET DEFAULT '0',
+ALTER COLUMN "salary" SET DEFAULT 100.000,
+ALTER COLUMN "is_active" SET DEFAULT true;

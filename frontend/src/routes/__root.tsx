@@ -64,7 +64,7 @@ function AppContent() {
     <SidebarProvider>
       <div className="flex h-screen w-full">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center p-4 w-full overflow-auto">
+        <main className="flex-1 w-full overflow-auto">
           <Outlet />
         </main>
         <Toaster />

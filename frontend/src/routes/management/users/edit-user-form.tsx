@@ -45,18 +45,35 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
       console.log('Transformed values:', transformedValues)
       await UserService.updateUser(user.id, transformedValues)
 
+      setVerificationStatus('success')
       toast.success('User updated successfully!')
-      onSuccess?.()
+
+      // Wait for onSuccess to complete before closing
+      if (onSuccess) {
+        await onSuccess()
+      }
+
+      // Small delay to ensure state updates complete
+      setTimeout(() => {
+        onClose?.()
+      }, 0)
     } catch (error) {
       console.error('Error updating user:', error)
+      setVerificationStatus('error')
       toast.error('The operation has failed.')
-    } finally {
+    }
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    if (!open) {
+      form.reset()
+      setVerificationStatus(null)
       onClose?.()
     }
   }
 
   return (
-    <Dialog open={!!user} onOpenChange={onClose}>
+    <Dialog open={!!user} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Edit User</DialogTitle>

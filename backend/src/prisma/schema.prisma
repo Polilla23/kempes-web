@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id       String    @id @default(uuid())
+  email    String    @unique
+  password String
+  role     RoleType? @default(USER)
+  isVerified Boolean @default(false)  @map("is_verified")
+  verificationToken String? @unique   @map("verification_token")
+  verificationTokenExpires DateTime?  @map("verification_token_expires")
+  resetPasswordToken String? @unique  @map("reset_password_token")
+  resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
+  club     Club?
+
+  @@map("users")
+}
+
+model Club {
+  id     String @id @default(uuid())
+  name   String @unique
+  logo   String?
+  userId String? @unique @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerOwner Player[]  @relation("OwnerClub")
+  playerNow   Player[]  @relation("ActualClub")
+  isActive Boolean @default(true) @map("is_active")
+
+  homeMatches Match[] @relation("HomeMatches")
+  awayMatches Match[] @relation("AwayMatches")
+  competitions  Competition[] @relation("CompetitionTeams")
+
+  @@index([userId])
+  @@map("clubs")
+}
+
+model Player {
+  id            String  @id @default(uuid())
+  name          String
+  lastName      String  @map("last_name")
+  birthdate     DateTime
+  actualClubId  String  @map("actual_club_id") @default("null")
+  ownerClubId   String  @map("owner_club_id") @default("null")
+  actualClub    Club    @relation("ActualClub", fields: [actualClubId], references: [id])
+  ownerClub     Club    @relation("OwnerClub", fields: [ownerClubId], references: [id])
+  overall       Int?  @default(0)
+  salary        Float   @default(100.000)
+  sofifaId      String?  @map("sofifa_id") @default("null")
+  transfermarktId String?  @map("transfermarkt_id")  @default("null")
+  isKempesita   Boolean @map("is_kempesita")  @default(false)
+  isActive      Boolean @map("is_active") @default(true)
+  events        Event[]
+
+  @@map("players")
+}
+
+model Season {
+  id            String  @id @default(uuid())
+  number        Int @unique
+  isActive      Boolean @default(false)
+  competitions  Competition[]
+}
+
+model Competition {
+  id            String  @id @default(uuid())
+  name          String  // Nombre constuido, ej: "Liga A Mayores - T7", "Copa de Oro - T10"
+  system        CompetitionStage // Sitema de juego de ESTA instancia/fase
+  seasonId      String
+  isActive      Boolean @default(true)
+  competitionTypeId String
+  // Para conectar fases (ej. Copa de Oro es hija de Copa Kempes)
+  parentCompetitionId String? @unique
+  parentCompetition Competition?  @relation("CompetitionPhases", fields: [parentCompetitionId], references: [id])
+  childCompetition  Competition?  @relation("CompetitionPhases")
+  // El cerebro de la flexibilidad: Aquí guardamos las reglas específicas.
+  rules         Json
+
+  season        Season  @relation(fields: [seasonId], references: [id])
+  competitionType CompetitionType @relation(fields: [competitionTypeId], references:[id])
+  teams         Club[]  @relation("CompetitionTeams")
+  matches       Match[]
+}
+
+model CompetitionType {
+  id            String  @id @default(uuid())
+  category      CompetitionCategory // "SENIOR" o "KEMPESITA"
+  hierarchy      Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
+  name          CompetitionName @unique // "Liga A", "Copa Kempes"          
+  format        CompetitionFormat // Es una LIGA o una COPA
+  competitions  Competition[]
+}
+
+model Match {
+  id            String  @id @default(uuid())
+  matchdayOrder Int // Fecha 1, 2... o Fase (16 = 16vos, 8 = 8vos)
+  status        MatchStatus @default(PENDIENTE)
+  stage         CompetitionStage // "ROUND_ROBIN" o "KNOCKOUT"
+
+  homeClubId    String?
+  awayClubId    String?
+  homePlaceholder String?
+  awayPlaceholder String?
+  homeClubGoals Int @default(0)
+  awayClubGoals Int @default(0)
+  competitionId String
+  events       Event[]
+
+  homeSourceMatchId String? @map("home_source_match_id")
+  awaySourceMatchId String? @map("away_source_match_id")
+  homeSourcePosition String? @map("home_source_position") // "WINNER" or "LOSER"
+  awaySourcePosition String? @map("away_source_position") // "WINNER" or "LOSER"
+
+  competition   Competition @relation(fields: [competitionId], references: [id])
+  homeClub      Club? @relation("HomeMatches", fields: [homeClubId], references: [id])
+  awayClub      Club? @relation("AwayMatches", fields: [awayClubId], references: [id])
+
+  homeSourceMatch Match? @relation("HomeSourceMatch", fields: [homeSourceMatchId], references: [id])
+  homeNextMatches Match[] @relation("HomeSourceMatch")
+
+  awaySourceMatch Match? @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id])
+  dependentMatches Match[] @relation("AwaySourceMatch")
+
+  @@index([competitionId])
+  @@index([homeSourceMatchId])
+  @@index([awaySourceMatchId])
+}
+
+model EventType {
+  id   String @id @default(uuid())
+  name EventTypeName @unique
+  events Event[]
+}
+model Event {
+  id        String   @id @default(uuid())
+  typeId    String
+  playerId  String
+  matchId   String
+
+  player    Player @relation(fields: [playerId], references: [id])
+  match     Match  @relation(fields: [matchId], references: [id])
+  type      EventType @relation(fields: [typeId], references: [id])
+
+  @@index([playerId])
+  @@index([matchId])
+}
+
+// ENUMS AND TYPES
+
+enum RoleType {
+  ADMIN
+  USER
+}
+
+enum MatchStatus {
+  PENDIENTE
+  FINALIZADO
+  CANCELADO
+}
+
+enum CompetitionFormat {
+  LEAGUE
+  CUP
+}
+
+enum CompetitionStage {
+  ROUND_ROBIN // Todos contra todos (Ligas, Fase de Grupos)
+  KNOCKOUT // Eliminación directa
+}
+
+enum CompetitionCategory {
+  SENIOR    // For "Mayores" competitions
+  KEMPESITA // For "Kempesitas" competitions
+}
+
+enum CompetitionName {
+  LEAGUE_A
+  LEAGUE_B
+  LEAGUE_C
+  LEAGUE_D
+  LEAGUE_E
+  KEMPES_CUP
+  GOLD_CUP
+  SILVER_CUP
+  CINDOR_CUP
+  SUPER_CUP
+}
+
+enum EventTypeName {
+  GOAL
+  YELLOW_CARD
+  RED_CARD
+  SUBSTITUTION_IN
+  SUBSTITUTION_OUT
+}

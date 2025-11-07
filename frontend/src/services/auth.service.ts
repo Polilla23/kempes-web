@@ -11,7 +11,7 @@ class AuthService {
   // Login de usuario
   static async login(credentials: LoginFormData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/user/login', credentials)
+      const response = await api.post<AuthResponse>('/users/login', credentials)
       return response.data || { message: response.message || 'Login successful' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error during login')
@@ -21,7 +21,7 @@ class AuthService {
   // Registro de usuario
   static async register(userData: RegisterUserFormData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/user/register', userData)
+      const response = await api.post<AuthResponse>('/users/register', userData)
       return response.data || { message: response.message || 'Registration successful' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error during registration')
@@ -31,7 +31,7 @@ class AuthService {
   // Logout de usuario
   static async logout(): Promise<AuthResponse> {
     try {
-      const response = await api.get<AuthResponse>('/user/logout')
+      const response = await api.get<AuthResponse>('/users/logout')
       return response.data || { message: response.message || 'Logout successful' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error during logout')
@@ -41,7 +41,7 @@ class AuthService {
   // Verificar email con token
   static async verifyEmail(token: string): Promise<AuthResponse> {
     try {
-      const response = await api.get<AuthResponse>(`/user/verify-email/${token}`)
+      const response = await api.get<AuthResponse>(`/users/verify-email/${token}`)
       return response.data || { message: response.message || 'Email verified successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error during email verification')
@@ -51,7 +51,7 @@ class AuthService {
   // Reenviar email de verificación
   static async resendVerificationEmail(email: string): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/user/resend-verification-email', { email })
+      const response = await api.post<AuthResponse>('/users/resend-verification-email', { email })
       return response.data || { message: response.message || 'Verification email sent' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error resending verification email')
@@ -61,7 +61,7 @@ class AuthService {
   // Solicitar reset de contraseña
   static async requestPasswordReset(data: ResetPasswordFormData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>('/user/request-reset-password', data)
+      const response = await api.post<AuthResponse>('/users/request-reset-password', data)
       return response.data || { message: response.message || 'Password reset email sent' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error requesting password reset')
@@ -71,7 +71,7 @@ class AuthService {
   // Verificar si el token es válido
   static async verifyResetPasswordToken(token: string): Promise<AuthResponse> {
     try {
-      const response = await api.get<AuthResponse>(`/user/verify-reset-password-token/${token}`)
+      const response = await api.get<AuthResponse>(`/users/verify-reset-password-token/${token}`)
       return response.data || { message: response.message || 'Reset password token verified' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error verifying reset password token')
@@ -81,7 +81,7 @@ class AuthService {
   // Reset de contraseña con token
   static async resetPassword(token: string, data: NewPasswordFormData): Promise<AuthResponse> {
     try {
-      const response = await api.post<AuthResponse>(`/user/reset-password/${token}`, data)
+      const response = await api.post<AuthResponse>(`/users/reset-password/${token}`, data)
       return response.data || { message: response.message || 'Password reset successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error resetting password')
@@ -91,7 +91,7 @@ class AuthService {
   // Obtener perfil del usuario autenticado
   static async getProfile(): Promise<{ id: string; role: 'ADMIN' | 'USER' } | null> {
     try {
-      const response = await api.get<{ data: { id: string; role: 'ADMIN' | 'USER' } }>('/myaccount/me')
+      const response = await api.get<{ data: { id: string; role: 'ADMIN' | 'USER' } }>('/me/me')
       return response.data?.data || null
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error al obtener el perfil del usuario')
