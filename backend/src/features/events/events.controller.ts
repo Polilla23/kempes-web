@@ -1,6 +1,7 @@
 import { EventService } from '@/features/events/events.service'
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { Event } from '@prisma/client'
+import { validateUUID } from '@/features/utils/validation'
 
 export class EventController {
   private eventService: EventService
@@ -15,7 +16,12 @@ export class EventController {
       matchId: string
     }
     try {
-      const newEvent = await this.eventService.createEvent({ typeId, playerId, matchId })
+      const validatedData = {
+        typeId: validateUUID(typeId),
+        playerId: validateUUID(playerId),
+        matchId: validateUUID(matchId)
+      }
+      const newEvent = await this.eventService.createEvent(validatedData)
 
       return reply.status(201).send({ data: newEvent })
     } catch (error) {
@@ -42,7 +48,8 @@ export class EventController {
   async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
     try {
-      const event = await this.eventService.findEventById(id)
+      const validatedId = validateUUID(id)
+      const event = await this.eventService.findEventById(validatedId)
 
       return reply.status(200).send({ data: event })
     } catch (error) {
@@ -56,7 +63,8 @@ export class EventController {
   async findByMatchId(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
     try {
-      const events = await this.eventService.findEventsByMatchId(id)
+      const validatedId = validateUUID(id)
+      const events = await this.eventService.findEventsByMatchId(validatedId)
 
       return reply.status(200).send({ data: events })
     } catch (error) {
@@ -70,7 +78,8 @@ export class EventController {
   async findByPlayerId(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
     try {
-      const events = await this.eventService.findEventsByPlayerId(id)
+      const validatedId = validateUUID(id)
+      const events = await this.eventService.findEventsByPlayerId(validatedId)
 
       return reply.status(200).send({ data: events })
     } catch (error) {
@@ -85,7 +94,14 @@ export class EventController {
     const data = req.body
     const { id } = req.params
     try {
-      const updated = await this.eventService.updateEvent(id, data)
+      const validatedId = validateUUID(id)
+      const validatedData = {
+        ...data,
+        ...(data.typeId && { typeId: validateUUID(data.typeId) }),
+        ...(data.playerId && { playerId: validateUUID(data.playerId) }),
+        ...(data.matchId && { matchId: validateUUID(data.matchId) })
+      }
+      const updated = await this.eventService.updateEvent(validatedId, validatedData)
 
       return reply.status(200).send({ data: updated })
     } catch (error) {
@@ -104,7 +120,8 @@ export class EventController {
   async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
     try {
-      await this.eventService.deleteEvent(id)
+      const validatedId = validateUUID(id)
+      await this.eventService.deleteEvent(validatedId)
 
       return reply.status(204).send()
     } catch (error) {
