@@ -1,5 +1,6 @@
 import { UserRepository } from '@/features/users/users.repository'
 import { UserNotFoundError } from '@/features/users/users.errors'
+import { User } from '@prisma/client'
 
 export class MyAccountService {
   private userRepository: UserRepository
@@ -8,19 +9,13 @@ export class MyAccountService {
     this.userRepository = userRepository
   }
 
-  async getUserData(
-    id: string
-  ): Promise<{ email: string; isVerified: boolean; verificationTokenExpires: Date | any }> {
+  async getUserData(id: string): Promise<User> {
     const userFound = await this.userRepository.findOneById(id)
 
     if (!userFound) {
       throw new UserNotFoundError()
     }
 
-    return {
-      email: userFound.email,
-      isVerified: userFound.isVerified,
-      verificationTokenExpires: userFound.verificationTokenExpires,
-    }
+    return userFound
   }
 }

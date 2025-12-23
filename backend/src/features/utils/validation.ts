@@ -22,3 +22,39 @@ export function validateString(value: any, minLength: number = 0, maxLength?: nu
   if (maxLength && str.length > maxLength) throw new Error(`String must be at most ${maxLength} characters`)
   return str
 }
+
+export function validateEmail(value: any): string {
+  const str = validateString(value)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(str)) throw new Error(`Invalid email address: ${value}`)
+  return str
+}
+
+export function validateUUID(value: any): string {
+  const str = String(value).trim()
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(str)) throw new Error(`Invalid UUID: ${value}`)
+  return str
+}
+
+export function validateUrl(value: any, options?: { require_protocol?: boolean }): string {
+  const str = String(value).trim()
+  try {
+    const url = new URL(str)
+    if (options?.require_protocol && !['http:', 'https:'].includes(url.protocol)) {
+      throw new Error(`URL must start with http:// or https://: ${value}`)
+    }
+    return str
+  } catch {
+    throw new Error(`Invalid URL: ${value}`)
+  }
+}
+
+export const Validator = {
+  number: validateNumber,
+  boolean: validateBoolean,
+  string: validateString,
+  email: validateEmail,
+  uuid: validateUUID,
+  url: validateUrl,
+}

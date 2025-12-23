@@ -11,7 +11,7 @@ import {
   GroupStageFixtureResponse,
   FinishMatchInput,
   FinishMatchResponse,
-} from '@/features/utils/types'
+} from '@/types'
 import { sortBracketsByRound, buildKnockoutMatchData } from '@/features/utils/generateKnockoutFixture'
 import { generateLeagueFixture, generateGroupStageFixture } from '@/features/utils/generateFixture'
 import { CompetitionNotFoundError } from '@/features/competitions/competitions.errors'

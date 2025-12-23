@@ -1,134 +1,136 @@
-import { Club } from "@prisma/client";
-import { FastifyRequest, FastifyReply } from "fastify";
-import { ClubService } from "@/features/clubs/clubs.service";
-import {
-	validateUUID,
-	validateString,
-	validateBoolean,
-	validateUrl,
-} from "@/features/utils/validation";
+import { Club } from '@prisma/client'
+import { FastifyRequest, FastifyReply } from 'fastify'
+import { ClubService } from '@/features/clubs/clubs.service'
+import { ClubMapper, Response } from '@/features/core'
+import { Validator } from '@/features/utils/validation'
+import { ClubDTO } from '@/types'
 
 export class ClubController {
-	private clubService: ClubService;
+  private clubService: ClubService
 
-	constructor({ clubService }: { clubService: ClubService }) {
-		this.clubService = clubService;
-	}
+  constructor({ clubService }: { clubService: ClubService }) {
+    this.clubService = clubService
+  }
 
-	async create(req: FastifyRequest, reply: FastifyReply) {
-		const { name, logo, userId, isActive } = req.body as {
-			name: string;
-			logo: string;
-			userId?: string | null;
-			isActive?: boolean;
-		};
-		try {
-			const validatedData = {
-				name: validateString(name, 1, 100),
-				logo: validateUrl(logo, { require_protocol: false }),
-				...(userId && { userId: validateUUID(userId) }),
-				...(isActive !== undefined && { isActive: validateBoolean(isActive) }),
-			};
-			const newClub = await this.clubService.createClub(validatedData);
+  async create(req: FastifyRequest, reply: FastifyReply) {
+    const { name, logo, userId, isActive } = req.body as {
+      name: string
+      logo: string
+      userId?: string | null
+      isActive?: boolean
+    }
 
-			// Return 201 Created with the created resource
-			return reply.status(201).send({ data: newClub });
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while creating new club.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    try {
+      const validatedData = {
+        name: Validator.string(name, 1, 100),
+        ...(logo && { logo: Validator.url(logo) }),
+        ...(userId && { userId }),
+        ...(isActive !== undefined && { isActive: Validator.boolean(isActive) }),
+      }
 
-	async findAll(_req: FastifyRequest, reply: FastifyReply) {
-		try {
-			const clubs = await this.clubService.findAllClubs();
+      const newClub = await this.clubService.createClub(validatedData)
+      const clubDTO = ClubMapper.toDTO(newClub)
 
-			return reply.status(200).send({ data: clubs });
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while fetching the clubs.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
-	async findOne(
-		req: FastifyRequest<{ Params: { id: string } }>,
-		reply: FastifyReply
-	) {
-		const { id } = req.params;
-		try {
-			const validatedId = validateUUID(id);
-			const club = await this.clubService.findClub(validatedId);
+      return Response.created(reply, clubDTO, 'Club created successfully')
+    } catch (error: any) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Validation failed',
+        'Error while creating new club'
+      )
+    }
+  }
 
-			return reply.status(200).send({ data: club });
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while fetching the club.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
-	async delete(
-		req: FastifyRequest<{ Params: { id: string } }>,
-		reply: FastifyReply
-	) {
-		const { id } = req.params;
+  async findAll(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const clubs = await this.clubService.findAllClubs()
+      const clubDTOs = ClubMapper.toDTOArray(clubs ?? [])
 
-		try {
-			const validatedId = validateUUID(id);
-			await this.clubService.deleteClub(validatedId);
-			// 204 No Content on successful deletion
-			return reply.status(204).send();
-		} catch (error) {
-			if (error instanceof Error && error.message === "Club not found") {
-				return reply.status(404).send({
-					message: error.message,
-				});
-			}
-			return reply.status(400).send({
-				message: "Error while deleting the club.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
-	async update(
-		req: FastifyRequest<{ Params: { id: string }; Body: Partial<Club> }>,
-		reply: FastifyReply
-	) {
-		const data = req.body;
-		const { id } = req.params;
+      if (clubDTOs.length === 0) {
+        return Response.success(reply, [], 'No clubs found')
+      }
 
-		try {
-			const validatedId = validateUUID(id);
-			const validatedData = {
-				...data,
-				...(data.name && { name: validateString(data.name, 1, 100) }),
-				...(data.logo && {
-					logo: validateUrl(data.logo, { require_protocol: false }),
-				}),
-				...(data.userId && { userId: validateUUID(data.userId) }),
-				...(data.isActive !== undefined && {
-					isActive: validateBoolean(data.isActive),
-				}),
-			};
-			const updated = await this.clubService.updateClub(
-				validatedId,
-				validatedData
-			);
+      return Response.success(reply, clubDTOs, 'Clubs fetched successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching the clubs',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+  async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
 
-			return reply.status(200).send({ data: updated });
-		} catch (error) {
-			if (error instanceof Error && error.message === "Club not found") {
-				return reply.status(404).send({
-					message: error.message,
-				});
-			}
-			return reply.status(400).send({
-				message: "Error while updating the club.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    try {
+      const validId = Validator.uuid(id)
+      const club = await this.clubService.findClub(validId)
+      const clubDTO = ClubMapper.toDTO(club)
+
+      return Response.success(reply, clubDTO, 'Club fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching the club',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+  async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      await this.clubService.deleteClub(validId)
+      return Response.noContent(reply)
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(
+        reply,
+        'DELETE_ERROR',
+        'Error while deleting the club',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+  async update(req: FastifyRequest<{ Params: { id: string }; Body: Partial<Club> }>, reply: FastifyReply) {
+    const data = req.body
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      const validatedData = {
+        ...data,
+        ...(data.name && { name: Validator.string(data.name, 1, 100) }),
+        ...(data.logo && { logo: Validator.url(data.logo) }),
+        ...(data.isActive !== undefined && { isActive: Validator.boolean(data.isActive) }),
+      }
+
+      const updated = await this.clubService.updateClub(validId, validatedData)
+      const updatedDTO = ClubMapper.toDTO(updated)
+
+      return Response.success(reply, updatedDTO, 'Club updated successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while updating the club',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { IClubRepository } from '@/features/clubs/interfaces/IClubRepository'
-import { CreateClubInput } from '@/features/utils/types'
+import { CreateClubInput } from '@/types'
 import { ClubNotFoundError, ClubAlreadyExistsError } from '@/features/clubs/clubs.errors'
 
 export class ClubService {

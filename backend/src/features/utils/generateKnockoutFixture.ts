@@ -1,5 +1,5 @@
 import { Prisma, CompetitionStage, MatchStatus } from '@prisma/client'
-import { BracketMatch } from '@/features/utils/types'
+import { BracketMatch } from '@/types'
 
 /**
  * Sort brackets by round order to ensure proper creation sequence.

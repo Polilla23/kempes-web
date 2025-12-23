@@ -1,34 +1,48 @@
 {
-  "name": "kempes-web",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "Kempes Web created with NodeJs and React.",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "install": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "start": "cd backend && npm start",
-    "migrate": "cd backend && npm run migrate",
-    "generate": "cd backend && npm run generate"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Polilla23/kempes-web.git"
+    "dev": "ts-node -r tsconfig-paths/register src/server.ts",
+    "start": "node -r tsconfig-paths/register dist/server.js",
+    "migrate": "prisma migrate dev",
+    "generate": "prisma generate"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Polilla23/kempes-web/issues"
-  },
-  "homepage": "https://github.com/Polilla23/kempes-web#readme",
-  "devDependencies": {
-    "concurrently": "^9.2.0"
-  },
   "dependencies": {
-    "@fastify/multipart": "^9.0.3"
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.0.1",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/multipart": "^9.0.3",
+    "@fastify/rate-limit": "^10.3.0",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.8.2",
+    "@types/bcrypt": "^5.0.2",
+    "@types/nodemailer": "^6.4.17",
+    "awilix": "^12.0.5",
+    "bcrypt": "^6.0.0",
+    "cookie": "^1.0.2",
+    "csv-parse": "^5.6.0",
+    "fastify": "^5.3.3",
+    "module-alias": "^2.2.3",
+    "nodemailer": "^7.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "validator": "^13.15.23"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/validator": "^13.15.10",
+    "dotenv": "^16.5.0",
+    "prisma": "^6.8.2",
+    "tsconfig-paths": "^4.2.0"
+  },
+  "_moduleAliases": {
+    "@": "dist"
   }
 }
