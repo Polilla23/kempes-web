@@ -1,272 +1,280 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import { UserService } from "@/features/users/users.service";
-import { RoleType, User } from "@prisma/client";
-import {
-	validateEmail,
-	validateString,
-	sanitizeEmail,
-	validateUUID,
-} from "@/features/utils/validation";
+import { RoleType, User } from '@prisma/client'
+import { FastifyRequest, FastifyReply } from 'fastify'
+import { UserService } from '@/features/users/users.service'
+import { UserMapper, Response } from '@/features/core'
+import { Validator } from '@/features/utils/validation'
+import { UserPublicDTO } from '@/types'
 
 export class UserController {
-	private userService: UserService;
+  private userService: UserService
 
-	constructor({ userService }: { userService: UserService }) {
-		this.userService = userService;
-	}
+  constructor({ userService }: { userService: UserService }) {
+    this.userService = userService
+  }
 
-	async register(req: FastifyRequest, reply: FastifyReply) {
-		const { email, password, role } = req.body as {
-			email: string;
-			password: string;
-			role?: "admin" | "user";
-		};
+  async register(req: FastifyRequest, reply: FastifyReply) {
+    const { email, password, role } = req.body as {
+      email: string
+      password: string
+      role?: 'admin' | 'user'
+    }
 
-		try {
-			const validatedEmail = validateEmail(email);
-			const validatedPassword = validateString(password, 8, 100);
-			const sanitizedEmail = sanitizeEmail(validatedEmail);
+    try {
+      const validatedData = {
+        email: Validator.email(email),
+        password: Validator.string(password, 8, 100),
+        ...(role && { role: role as RoleType }),
+      }
 
-			await this.userService.registerUser({
-				email: sanitizedEmail,
-				password: validatedPassword,
-				role: role as RoleType,
-			});
+      await this.userService.registerUser(validatedData)
 
-			return reply.status(201).send({ message: "User registered successfully." });
-		} catch (error) {
-			const statusCode =
-				error instanceof Error && error.message.includes("Invalid") ? 400 : 400;
-			return reply.status(statusCode).send({
-				message:
-					error instanceof Error
-						? error.message
-						: "Error while registering new user.",
-			});
-		}
-	}
+      return Response.created(
+        reply,
+        { message: 'User registered successfully' },
+        'User registered successfully'
+      )
+    } catch (error: any) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Validation failed',
+        'Error while registering new user'
+      )
+    }
+  }
 
-	async logIn(req: FastifyRequest, reply: FastifyReply) {
-		const { email, password } = req.body as { email: string; password: string };
+  async logIn(req: FastifyRequest, reply: FastifyReply) {
+    const { email, password } = req.body as { email: string; password: string }
 
-		try {
-			const validatedEmail = validateEmail(email);
-			const validatedPassword = validateString(password, 1, 100);
-			const sanitizedEmail = sanitizeEmail(validatedEmail);
+    try {
+      const validatedEmail = Validator.email(email)
+      const validatedPassword = Validator.string(password, 1, 100)
 
-			const token = await this.userService.loginUser(
-				sanitizedEmail,
-				validatedPassword
-			);
+      const token = await this.userService.loginUser(validatedEmail, validatedPassword)
 
-			reply.setCookie("token", token, {
-				httpOnly: false,
-				secure: true,
-				sameSite: "none",
-				path: "/",
-				domain: "", // Dominio del backend
-				maxAge: 24 * 60 * 60,
-			});
+      reply.setCookie('token', token, {
+        httpOnly: false,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+        domain: '',
+        maxAge: 24 * 60 * 60,
+      })
 
-			return reply.status(200).send({ message: "Login successful" });
-		} catch (error) {
-			return reply.status(400).send({
-				message: error instanceof Error ? error.message : "Error while login",
-			});
-		}
-	}
+      return Response.success(reply, { message: 'Login successful' }, 'Login successful')
+    } catch (error) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Login failed',
+        'Error while logging in'
+      )
+    }
+  }
 
-	async logOut(req: FastifyRequest, reply: FastifyReply) {
-		const userId = (req.user as { id: string }).id;
+  async logOut(req: FastifyRequest, reply: FastifyReply) {
+    const userId = (req.user as { id: string }).id
 
-		try {
-			await this.userService.logOutUser(userId);
+    try {
+      await this.userService.logOutUser(userId)
 
-			reply.clearCookie("token", {
-				path: "/",
-				httpOnly: false,
-				secure: false,
-				sameSite: "lax",
-			});
+      reply.clearCookie('token', {
+        path: '/',
+        httpOnly: false,
+        secure: false,
+        sameSite: 'lax',
+      })
 
-			return reply.status(200).send({ message: "LogOut successful" });
-		} catch (error) {
-			return reply.status(500).send({
-				message: error instanceof Error ? error.message : "Failed to logout",
-			});
-		}
-	}
+      return Response.success(reply, { message: 'LogOut successful' }, 'LogOut successful')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'LOGOUT_ERROR',
+        'Failed to logout',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 
-	async findAll(_req: FastifyRequest, reply: FastifyReply) {
-		try {
-			const users = await this.userService.findAllUsers();
-			return reply.status(200).send({ data: users });
-		} catch (error) {
-			return reply.status(400).send({
-				message:
-					error instanceof Error ? error.message : "Error while fetching users.",
-			});
-		}
-	}
+  async findAll(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const users = await this.userService.findAllUsers()
+      const userDTOs = UserMapper.toPublicDTOArray(users ?? [])
 
-	async verifyEmail(
-		req: FastifyRequest<{ Params: { token: string } }>,
-		reply: FastifyReply
-	) {
-		const { token } = req.params;
+      if (userDTOs.length === 0) {
+        return Response.success(reply, [], 'No users found')
+      }
 
-		try {
-			const validatedToken = validateString(token, 1, 500);
+      return Response.success(reply, userDTOs, 'Users fetched successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching the users',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 
-			await this.userService.handleEmailVerification(validatedToken);
-			return reply.status(200).send({ message: "User verified successfully." });
-		} catch (error) {
-			return reply.status(400).send({
-				message: error instanceof Error ? error.message : "Verification failed.",
-			});
-		}
-	}
+  async verifyEmail(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
+    const { token } = req.params
 
-	async resendVerifyEmail(req: FastifyRequest, reply: FastifyReply) {
-		const { email } = req.body as { email: string };
+    try {
+      const validatedToken = Validator.string(token, 1, 500)
 
-		try {
-			const validatedEmail = validateEmail(email);
-			const sanitizedEmail = sanitizeEmail(validatedEmail);
+      await this.userService.handleEmailVerification(validatedToken)
+      return Response.success(reply, { message: 'User verified successfully' }, 'User verified successfully')
+    } catch (error) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Verification failed',
+        'Error while verifying email'
+      )
+    }
+  }
 
-			await this.userService.handleResendEmailVerification(sanitizedEmail);
+  async resendVerifyEmail(req: FastifyRequest, reply: FastifyReply) {
+    const { email } = req.body as { email: string }
 
-			return reply
-				.status(200)
-				.send({ message: "Verification email resent successfully" });
-		} catch (error) {
-			return reply.status(400).send({
-				message: error instanceof Error ? error.message : "Verification failed.",
-			});
-		}
-	}
+    try {
+      const validatedEmail = Validator.email(email)
 
-	async requestPasswordReset(req: FastifyRequest, reply: FastifyReply) {
-		const { email } = req.body as { email: string };
+      await this.userService.handleResendEmailVerification(validatedEmail)
 
-		try {
-			// Validación y sanitización del email
-			const validatedEmail = validateEmail(email);
-			const sanitizedEmail = sanitizeEmail(validatedEmail);
+      return Response.success(
+        reply,
+        { message: 'Verification email resent successfully' },
+        'Verification email resent successfully'
+      )
+    } catch (error) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Verification failed',
+        'Error while resending verification email'
+      )
+    }
+  }
 
-			await this.userService.handleRequestPasswordReset(sanitizedEmail);
-			return reply
-				.status(200)
-				.send({ message: "Reset password email sent successfully." });
-		} catch (error) {
-			return reply.status(400).send({
-				message: error instanceof Error ? error.message : "Reset password failed",
-			});
-		}
-	}
+  async requestPasswordReset(req: FastifyRequest, reply: FastifyReply) {
+    const { email } = req.body as { email: string }
 
-	async findOneByResetPasswordToken(
-		req: FastifyRequest<{ Params: { token: string } }>,
-		reply: FastifyReply
-	) {
-		const { token } = req.params as { token: string };
+    try {
+      const validatedEmail = Validator.email(email)
 
-		try {
-			const validatedToken = validateString(token, 1, 500);
+      await this.userService.handleRequestPasswordReset(validatedEmail)
+      return Response.success(
+        reply,
+        { message: 'Reset password email sent successfully' },
+        'Reset password email sent successfully'
+      )
+    } catch (error) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Reset password failed',
+        'Error while requesting password reset'
+      )
+    }
+  }
 
-			const user = await this.userService.findOneByResetPasswordToken(
-				validatedToken
-			);
-			return reply.status(200).send({ data: user });
-		} catch (error) {
-			return reply.status(400).send({
-				message:
-					error instanceof Error
-						? error.message
-						: "Error while fetching user by reset password token.",
-			});
-		}
-	}
+  async findOneByResetPasswordToken(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
+    const { token } = req.params as { token: string }
 
-	async resetPassword(
-		req: FastifyRequest<{ Params: { token: string } }>,
-		reply: FastifyReply
-	) {
-		const { token } = req.params as { token: string };
-		const { password } = req.body as { password: string };
+    try {
+      const validatedToken = Validator.string(token, 1, 500)
 
-		try {
-			const validatedToken = validateString(token, 1, 500);
-			const validatedPassword = validateString(password, 8, 100);
+      const user = await this.userService.findOneByResetPasswordToken(validatedToken)
+      
+      if (!user) {
+        return Response.notFound(reply, 'User with reset token', token)
+      }
+      
+      const userDTO = UserMapper.toPublicDTO(user)
 
-			await this.userService.handleResetPassword(
-				validatedToken,
-				validatedPassword
-			);
-			return reply
-				.status(200)
-				.send({ message: "Password has been reset successfully." });
-		} catch (error) {
-			return reply.status(400).send({
-				message:
-					error instanceof Error ? error.message : "Failed to reset password",
-			});
-		}
-	}
+      return Response.success(reply, userDTO, 'User fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'User with reset token', token)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching user by reset password token',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 
-	async update(
-		req: FastifyRequest<{ Params: { id: string }; Body: Partial<User> }>,
-		reply: FastifyReply
-	) {
-		const data = req.body;
-		const { id } = req.params;
+  async resetPassword(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
+    const { token } = req.params as { token: string }
+    const { password } = req.body as { password: string }
 
-		try {
-			const validatedId = validateUUID(id);
+    try {
+      const validatedToken = Validator.string(token, 1, 500)
+      const validatedPassword = Validator.string(password, 8, 100)
 
-			if (data.email) {
-				data.email = sanitizeEmail(validateEmail(data.email));
-			}
+      await this.userService.handleResetPassword(validatedToken, validatedPassword)
+      return Response.success(
+        reply,
+        { message: 'Password has been reset successfully' },
+        'Password has been reset successfully'
+      )
+    } catch (error) {
+      return Response.validation(
+        reply,
+        error instanceof Error ? error.message : 'Failed to reset password',
+        'Error while resetting password'
+      )
+    }
+  }
 
-			const updated = await this.userService.updateUser(validatedId, data);
+  async update(req: FastifyRequest<{ Params: { id: string }; Body: Partial<User> }>, reply: FastifyReply) {
+    const data = req.body
+    const { id } = req.params
 
-			return reply.status(200).send({ data: updated });
-		} catch (error) {
-			if (error instanceof Error && error.message === "User not found") {
-				return reply.status(404).send({
-					message: error.message,
-				});
-			}
-			return reply.status(400).send({
-				message:
-					error instanceof Error ? error.message : "Error while updating the user.",
-			});
-		}
-	}
+    try {
+      const validId = Validator.uuid(id)
+      const validatedData = {
+        ...data,
+        ...(data.email && { email: Validator.email(data.email) }),
+      }
 
-	async delete(
-		req: FastifyRequest<{ Params: { id: string } }>,
-		reply: FastifyReply
-	) {
-		const { id } = req.params;
+      const updated = await this.userService.updateUser(validId, validatedData)
+      const updatedDTO = UserMapper.toPublicDTO(updated)
 
-		try {
-			// Validar que el ID sea un UUID válido
-			const validatedId = validateUUID(id);
+      return Response.success(reply, updatedDTO, 'User updated successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'User', id)
+      }
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while updating the user',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 
-			await this.userService.deleteUser(validatedId);
+  async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
 
-			return reply.status(204).send();
-		} catch (error) {
-			if (error instanceof Error && error.message === "User not found") {
-				return reply.status(404).send({
-					message: error.message,
-				});
-			}
-			return reply.status(400).send({
-				message:
-					error instanceof Error ? error.message : "Error while deleting the user.",
-			});
-		}
-	}
+    try {
+      const validId = Validator.uuid(id)
+      await this.userService.deleteUser(validId)
+      return Response.noContent(reply)
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'User', id)
+      }
+      return Response.error(
+        reply,
+        'DELETE_ERROR',
+        'Error while deleting the user',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 }

@@ -11,7 +11,7 @@ import {
 } from '@/features/core/email/email.errors'
 import { IUserRepository } from '@/features/users/interface/IUserRepository'
 import { UserAlreadyExistsError, UserNotFoundError } from '@/features/users/users.errors'
-import { CreateUserInput } from '@/features/utils/types'
+import { CreateUserInput } from '@/types'
 import {
   AuthenticationError,
   GenerateTokenError,

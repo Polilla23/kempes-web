@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { ICompetitionTypeRepository } from '@/features/competition-types/interface/ICompetitionTypeRepository'
-import { CreateCompetitionTypeInput } from '@/features/utils/types'
+import { CreateCompetitionTypeInput } from '@/types'
 
 // Errors
 import {

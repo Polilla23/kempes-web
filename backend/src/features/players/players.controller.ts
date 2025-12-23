@@ -1,164 +1,106 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import { PlayerService } from "@/features/players/players.service";
-import { Player } from "@prisma/client";
-import {
-	validateUUID,
-	validateString,
-	validateNumber,
-	validateDate,
-} from "@/features/utils/validation";
+import { Player } from '@prisma/client'
+import { FastifyRequest, FastifyReply } from 'fastify'
+import { PlayerService } from '@/features/players/players.service'
+import { PlayerMapper, Response, ValidationError } from '@/features/core'
+import { Validator } from '@/features/utils/validation'
+import { PlayerDTO, CreateBasicPlayerInput } from '@/types'
 
 export class PlayerController {
-	private playerService: PlayerService;
+  private playerService: PlayerService
 
-	constructor({ playerService }: { playerService: PlayerService }) {
-		this.playerService = playerService;
-	}
+  constructor({ playerService }: { playerService: PlayerService }) {
+    this.playerService = playerService
+  }
 
-	async create(req: FastifyRequest, reply: FastifyReply) {
-		const body = req.body as any;
+  async create(req: FastifyRequest, reply: FastifyReply) {
+    const { name, lastName, birthdate, actualClubId, overall, salary, sofifaId, transfermarktId } =
+      req.body as CreateBasicPlayerInput
 
-		try {
-			const validatedData = {
-				...body,
-				...(body.name && { name: validateString(body.name, 1, 100) }),
-				...(body.birthDate && { birthDate: validateDate(body.birthDate) }),
-				...(body.userId && { userId: validateUUID(body.userId) }),
-			};
+    // Validación - si falla, lanza error y el errorHandler lo maneja
+    const validatedData: CreateBasicPlayerInput = {
+      name: Validator.string(name, 1, 100),
+      lastName: Validator.string(lastName, 1, 100),
+      birthdate: new Date(birthdate),
+      ...(actualClubId && { actualClubId: Validator.uuid(actualClubId) }),
+      ...(overall !== undefined && { overall: Validator.number(overall, 0, 100) }),
+      ...(salary !== undefined && { salary: Validator.number(salary, 0) }),
+      ...(sofifaId && { sofifaId: Validator.string(sofifaId, 1, 50) }),
+      ...(transfermarktId && { transfermarktId: Validator.string(transfermarktId, 1, 50) }),
+    }
 
-			const newPlayer = await this.playerService.createPlayer(validatedData);
+    const newPlayer = await this.playerService.createPlayer(validatedData)
+    const playerDTO = PlayerMapper.toDTO(newPlayer)
 
-			return reply.status(201).send({ data: newPlayer });
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while creating new player.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    return Response.created(reply, playerDTO, 'Player created successfully')
+  }
 
-	async findAll(req: FastifyRequest, reply: FastifyReply) {
-		try {
-			const players = await this.playerService.findAllPlayers();
+  async findAll(_req: FastifyRequest, reply: FastifyReply) {
+    const players = await this.playerService.findAllPlayers()
+    const playerDTOs = PlayerMapper.toDTOArray(players ?? [])
 
-			return reply.status(200).send({ data: players });
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while fetching players.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    if (playerDTOs.length === 0) {
+      return Response.success(reply, [], 'No players found')
+    }
 
-	async update(
-		req: FastifyRequest<{ Params: { id: string }; Body: Partial<Player> }>,
-		reply: FastifyReply
-	) {
-		const data = req.body;
-		const { id } = req.params;
+    return Response.success(reply, playerDTOs, 'Players fetched successfully')
+  }
 
-		try {
-			const validatedId = validateUUID(id);
+  async update(req: FastifyRequest<{ Params: { id: string }; Body: Partial<Player> }>, reply: FastifyReply) {
+    const data = req.body
+    const { id } = req.params
 
-			const validatedData = {
-				...data,
-				...(data.name && { name: validateString(data.name, 1, 100) }),
-				...(data.birthdate && { birthDate: validateDate(data.birthdate as any) }),
-			};
+    // Validaciones - si fallan, errorHandler maneja automáticamente
+    const validId = Validator.uuid(id)
+    const validatedData = {
+      ...data,
+      ...(data.name && { name: Validator.string(data.name, 1, 100) }),
+      ...(data.lastName && { lastName: Validator.string(data.lastName, 1, 100) }),
+      ...(data.birthdate && { birthdate: new Date(data.birthdate as any) }),
+      ...(data.actualClubId && { actualClubId: Validator.uuid(data.actualClubId) }),
+      ...(data.overall !== undefined && { overall: Validator.number(data.overall, 0, 100) }),
+    }
 
-			const updated = await this.playerService.updatePlayer(
-				validatedId,
-				validatedData
-			);
+    // Si el player no existe, service lanza PlayerNotFoundError
+    // errorHandler lo detecta y llama Response.notFound() automáticamente
+    const updated = await this.playerService.updatePlayer(validId, validatedData)
+    const updatedDTO = PlayerMapper.toDTO(updated)
 
-			return reply.status(200).send({ data: updated });
-		} catch (error) {
-			if (error instanceof Error && error.message === "Player not found") {
-				return reply.status(404).send({
-					message: error.message,
-				});
-			}
-			return reply.status(400).send({
-				message: "Error while updating the player.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    return Response.success(reply, updatedDTO, 'Player updated successfully')
+  }
 
-	async delete(
-		req: FastifyRequest<{ Params: { id: string } }>,
-		reply: FastifyReply
-	) {
-		const { id } = req.params;
+  async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
 
-		try {
-			const validatedId = validateUUID(id);
+    const validId = Validator.uuid(id)
+    await this.playerService.deletePlayer(validId)
 
-			await this.playerService.deletePlayer(validatedId);
+    return Response.noContent(reply)
+  }
 
-			return reply.status(204).send();
-		} catch (error) {
-			if (error instanceof Error && error.message === "Player not found") {
-				return reply.status(404).send({
-					message: error.message,
-				});
-			}
-			return reply.status(400).send({
-				message: "Error while deleting the player.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+  async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
 
-	async findOne(
-		req: FastifyRequest<{ Params: { id: string } }>,
-		reply: FastifyReply
-	) {
-		const { id } = req.params;
+    const validId = Validator.uuid(id)
+    const player = await this.playerService.findPlayerById(validId)
+    const playerDTO = PlayerMapper.toDTO(player)
 
-		try {
-			const validatedId = validateUUID(id);
+    return Response.success(reply, playerDTO, 'Player fetched successfully')
+  }
 
-			const player = await this.playerService.findPlayerById(validatedId);
+  async uploadCSVFile(req: FastifyRequest, reply: FastifyReply) {
+    const data = await (req as any).file()
 
-			return reply.status(200).send({ data: player });
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while fetching player.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    if (!data) {
+      throw new ValidationError('File is required', { field: 'file' })
+    }
 
-	async uploadCSVFile(req: FastifyRequest, reply: FastifyReply) {
-		const data = await (req as any).file();
-		if (!data) {
-			return reply.status(400).send({ message: "No file uploaded." });
-		}
-		const csvContent = await data.toBuffer();
-		try {
-			const result = await this.playerService.processCSVFile(
-				csvContent.toString("utf-8")
-			);
+    const csvContent = await data.toBuffer()
+    await this.playerService.processCSVFile(csvContent.toString('utf-8'))
 
-			if (result.success) {
-				return reply.status(200).send({
-					data: {
-						message: result.message || "Players processed and saved successfully.",
-					},
-				});
-			} else {
-				return reply.status(400).send({
-					message: "Error while processing players.",
-					errors: result.errors,
-					error: result.message || "Unknown error",
-				});
-			}
-		} catch (error) {
-			return reply.status(400).send({
-				message: "Error while processing players.",
-				error: error instanceof Error ? error.message : error,
-			});
-		}
-	}
+    return Response.success(
+      reply,
+      { message: 'Players processed and saved successfully' },
+      'CSV processed successfully'
+    )
+  }
 }
