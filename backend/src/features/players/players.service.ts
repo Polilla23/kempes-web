@@ -2,9 +2,9 @@ import { parse } from 'csv-parse/sync'
 import { Player } from '@prisma/client'
 import { IPlayerRespository } from '@/features/players/interface/IPlayerRepository'
 import { parseDateFromDDMMYYYY } from '@/features/utils/date'
-import { CreatePlayerInput } from '@/features/utils/types'
+import { CreatePlayerInput, CreateBasicPlayerInput } from '@/types'
 import { validateNumber, validateBoolean, validateString } from '@/features/utils/validation'
-import { PlayerNotFoundError } from '@/features/players/players.errors'
+import { PlayerErrors } from '@/features/players/players.errors'
 
 export class PlayerService {
   private playerRepository: IPlayerRespository
@@ -13,36 +13,50 @@ export class PlayerService {
     this.playerRepository = playerRepository
   }
 
-  async createPlayer({
-    name,
-    lastName,
-    birthdate,
-    overall,
-    salary,
-    sofifaId,
-    transfermarktId,
-    isKempesita,
-    isActive,
-    actualClubId,
-    ownerClubId,
-  }: CreatePlayerInput) {
-    const birthdateAsDate = typeof birthdate === 'string' ? parseDateFromDDMMYYYY(birthdate) : birthdate
+  async createPlayer(input: CreateBasicPlayerInput) {
+    // Validación de birthdate
+    const birthdateAsDate =
+      typeof input.birthdate === 'string' ? parseDateFromDDMMYYYY(input.birthdate) : input.birthdate
 
-    const newPlayer = await this.playerRepository.save({
-      name,
-      lastName,
+    // Validar que la fecha sea válida
+    if (isNaN(birthdateAsDate.getTime())) {
+      throw new PlayerErrors.Validation('Invalid birthdate format', {
+        field: 'birthdate',
+        value: input.birthdate,
+      })
+    }
+
+    // Crear objeto completo con valores por defecto solo si no vienen
+    const playerData: any = {
+      name: input.name,
+      lastName: input.lastName,
       birthdate: birthdateAsDate,
-      overall,
-      salary,
-      sofifaId,
-      transfermarktId,
-      isKempesita,
-      isActive,
-      actualClub: { connect: { id: actualClubId } },
-      ownerClub: { connect: { id: ownerClubId } },
-    })
+      overall: input.overall ?? 50,
+      salary: input.salary ?? 100000,
+      sofifaId: input.sofifaId ?? null,
+      transfermarktId: input.transfermarktId ?? null,
+      isKempesita: false,
+      isActive: true,
+    }
 
-    return newPlayer
+    // Solo agregar clubs si se proporcionan
+    if (input.actualClubId) {
+      playerData.actualClub = { connect: { id: input.actualClubId } }
+    }
+
+    try {
+      const newPlayer = await this.playerRepository.save(playerData)
+      return newPlayer
+    } catch (error) {
+      // Si Prisma lanza error de foreign key (club no existe), lanzar error descriptivo
+      if (error instanceof Error && error.message.includes('Foreign key constraint')) {
+        throw new PlayerErrors.Validation('Invalid club reference', {
+          field: 'actualClubId',
+          value: input.actualClubId,
+        })
+      }
+      throw error
+    }
   }
 
   async findAllPlayers() {
@@ -53,16 +67,33 @@ export class PlayerService {
     const playerFound = await this.playerRepository.findOneById(id)
 
     if (!playerFound) {
-      throw new PlayerNotFoundError()
+      throw new PlayerErrors.NotFound(`Player with id ${id} not found`)
     }
 
+    // Validar actualClubId si viene en el update
     if (data.actualClubId) {
     }
 
-    return await this.playerRepository.updateOneById(id, data)
+    try {
+      return await this.playerRepository.updateOneById(id, data)
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Foreign key constraint')) {
+        throw new PlayerErrors.Validation('Invalid club reference', {
+          field: 'actualClubId',
+          value: data.actualClubId,
+        })
+      }
+      throw error
+    }
   }
 
   async deletePlayer(id: string) {
+    const playerFound = await this.playerRepository.findOneById(id)
+
+    if (!playerFound) {
+      throw new PlayerErrors.NotFound(`Player with id ${id} not found`)
+    }
+
     return await this.playerRepository.deleteOneById(id)
   }
 
@@ -70,7 +101,7 @@ export class PlayerService {
     const playerFound = await this.playerRepository.findOneById(id)
 
     if (!playerFound) {
-      throw new PlayerNotFoundError()
+      throw new PlayerErrors.NotFound(`Player with id ${id} not found`)
     }
 
     return playerFound
@@ -79,12 +110,27 @@ export class PlayerService {
   async processCSVFile(csvContent: string) {
     const cleanCsvContent = csvContent.replace(/^\uFEFF/, '')
 
-    const records = parse(cleanCsvContent, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true,
-      delimiter: ';',
-    })
+    // Parsear CSV
+    let records: any[]
+    try {
+      records = parse(cleanCsvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        delimiter: ';',
+      })
+    } catch (error) {
+      throw new PlayerErrors.CSV('Invalid CSV format', [
+        {
+          row: 0,
+          error: error instanceof Error ? error.message : 'Failed to parse CSV',
+        },
+      ])
+    }
+
+    if (records.length === 0) {
+      throw new PlayerErrors.CSV('CSV file is empty')
+    }
 
     const validPlayers: CreatePlayerInput[] = []
     const errors: Array<{ row: number; error: string }> = []
@@ -95,33 +141,29 @@ export class PlayerService {
         validPlayers.push(playerData)
       } catch (error) {
         errors.push({
-          row: index + 2, // +2 para evitar el encabezado
+          row: index + 2, // +2 para incluir header y empezar desde 1
           error: error instanceof Error ? error.message : 'Invalid data',
         })
       }
     })
 
-    // si hay errores no se guardan los jugadores
+    // Si hay errores de validación, lanzar excepción con detalles
     if (errors.length > 0) {
-      return {
-        success: false,
-        errors,
-        validPlayers: [],
-      }
+      throw new PlayerErrors.CSV(`Found ${errors.length} validation error(s) in CSV`, errors)
     }
 
+    // Guardar todos los jugadores válidos
     try {
       const result = await this.playerRepository.saveMany(validPlayers)
       return {
         success: true,
-        message: `Successfully created ${result.count} players`,
+        message: `Successfully created ${result.count} player(s)`,
+        count: result.count,
       }
     } catch (error) {
-      return {
-        success: false,
-        message: 'Failed to save players to database',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      }
+      throw new PlayerErrors.Database(
+        error instanceof Error ? error.message : 'Failed to save players to database'
+      )
     }
   }
 
@@ -130,11 +172,25 @@ export class PlayerService {
     const missingFields = requiredFields.filter((field) => !record[field])
 
     if (missingFields.length > 0) {
-      console.log('Missing fields:', missingFields)
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`)
+      throw new PlayerErrors.Validation(`Missing required fields: ${missingFields.join(', ')}`, {
+        missingFields,
+        record,
+      })
     }
 
-    const birthdateAsDate = parseDateFromDDMMYYYY(record.birthdate)
+    let birthdateAsDate: Date
+    try {
+      birthdateAsDate = parseDateFromDDMMYYYY(record.birthdate)
+
+      if (isNaN(birthdateAsDate.getTime())) {
+        throw new Error('Invalid date')
+      }
+    } catch (error) {
+      throw new PlayerErrors.Validation(`Invalid birthdate format: ${record.birthdate}`, {
+        field: 'birthdate',
+        value: record.birthdate,
+      })
+    }
 
     return {
       name: validateString(record.name, 1),

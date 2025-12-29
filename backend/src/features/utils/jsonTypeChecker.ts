@@ -1,4 +1,4 @@
-import { CompetitionRules, KempesCupRules, LeaguesRules } from '@/features/utils/types'
+import { CompetitionRules, KempesCupRules, LeaguesRules } from '@/types'
 
 /**
  * Type guard for LeaguesRules

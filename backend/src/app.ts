@@ -1,6 +1,8 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import dotenv from "dotenv";
 import { createDepencyContainer } from "@/features/core/container";
+import { env } from "@/features/core/config/env";
+import { errorHandler } from "@/features/core/middleware/errorHandler";
 import { routes } from "@/features/api/routes";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
@@ -51,7 +53,7 @@ app.register(swaggerUi, {
 
 // FastifyCookie para manejar las cookies
 app.register(fastifyCookie, {
-	secret: process.env.FASTIFY_COOKIE_SECRET || "blaabla", // La clave de firma para las cookies
+	secret: env.FASTIFY_COOKIE_SECRET, // Variable validada y tipada
 	hook: "preHandler",
 	parseOptions: {
 		httpOnly: false, // La cookie no es accesible mediante JavaScript
@@ -63,7 +65,7 @@ app.register(fastifyCookie, {
 
 // FastifyJwt para manejar token -> cookie
 app.register(fastifyJwt, {
-	secret: process.env.JWT_SECRET || "queondaperro",
+	secret: env.JWT_SECRET,
 	cookie: {
 		cookieName: "token",
 		signed: false,
@@ -73,8 +75,8 @@ app.register(fastifyJwt, {
 // CORS
 app.register(fastifyCors, {
 	origin:
-		process.env.FRONT_URL && process.env.BACK_URL
-			? [process.env.FRONT_URL, process.env.BACK_URL]
+		env.FRONT_URL && env.BACK_URL
+			? [env.FRONT_URL, env.BACK_URL]
 			: ["http://localhost:5173", "http://localhost:3000"],
 	credentials: true,
 	methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -144,5 +146,8 @@ app.register(async function (fastify) {
 
 // Registro de rutas
 app.register(routes);
+
+// ⚡ Error Handler Unificado (debe ir AL FINAL)
+app.setErrorHandler(errorHandler);
 
 export default app;
