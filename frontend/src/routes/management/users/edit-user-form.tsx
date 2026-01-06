@@ -42,7 +42,6 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
     try {
       setVerificationStatus('loading')
       const transformedValues = { ...values, role: values.role as UserRole }
-      console.log('Transformed values:', transformedValues)
       await UserService.updateUser(user.id, transformedValues)
 
       toast.success('User updated successfully!')

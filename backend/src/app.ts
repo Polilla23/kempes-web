@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { createDepencyContainer } from "@/features/core/container";
 import { env } from "@/features/core/config/env";
 import { errorHandler } from "@/features/core/middleware/errorHandler";
-import { routes } from "@/features/api/routes";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import fastifyJwt from "@fastify/jwt";
@@ -56,7 +55,7 @@ app.register(fastifyCookie, {
 	secret: env.FASTIFY_COOKIE_SECRET, // Variable validada y tipada
 	hook: "preHandler",
 	parseOptions: {
-		httpOnly: false, // La cookie no es accesible mediante JavaScript
+		httpOnly: true, // La cookie no es accesible mediante JavaScript (más seguro)
 		secure: false, // Solo en HTTPS si está en producción
 		sameSite: "lax", // Puede ser 'strict' o 'lax', según la necesidad
 		path: "/", // Ruta válida para la cookie
@@ -80,7 +79,8 @@ app.register(fastifyCors, {
 			: ["http://localhost:5173", "http://localhost:3000"],
 	credentials: true,
 	methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-	allowedHeaders: ["Content-Type", "Authorization"],
+	allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+	exposedHeaders: ["Set-Cookie"],
 });
 
 // FastifyMultipart para manejo de archivos
@@ -144,8 +144,9 @@ app.register(async function (fastify) {
 	app.decorate("container", container);
 });
 
-// Registro de rutas
-app.register(routes);
+// Registro de rutas con prefijo /api/v1
+import routesPlugin from '@/features/api/routes'
+app.register(routesPlugin);
 
 // ⚡ Error Handler Unificado (debe ir AL FINAL)
 app.setErrorHandler(errorHandler);

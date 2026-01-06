@@ -7,18 +7,13 @@ import { competitionRoutes } from '@/features/competitions/competitions.routes'
 import { competitionTypeRoutes } from '@/features/competition-types/competition-types.routes'
 import { fixtureRoutes } from '@/features/fixtures/fixtures.routes'
 import { eventRoutes } from '@/features/events/events.routes'
+import { eventTypeRoutes } from '@/features/event-types/event-types.routes'
+import { seasonRoutes } from '@/features/seasons/seasons.routes'
 
-export const routes = async (fastify: FastifyInstance) => {
-  fastify.register(userRoutes, { prefix: '/users' })
-  fastify.register(myAccountRoutes, { prefix: '/me' })
-  fastify.register(playerRoutes, { prefix: '/players' })
-  fastify.register(clubRoutes, { prefix: '/clubs' })
-  fastify.register(competitionRoutes, { prefix: '/competitions' })
-  fastify.register(competitionTypeRoutes, { prefix: '/competition-types' })
-  fastify.register(fixtureRoutes, { prefix: '/fixtures' })
-  fastify.register(eventRoutes, { prefix: '/events' })
-}
-
+/**
+ * Plugin principal de rutas con prefijo /api/v1
+ * Registra todas las rutas de la aplicación bajo el prefijo /api/v1
+ */
 export default async function (app: FastifyInstance) {
   app.register(
     (instance, opts, done) => {
@@ -30,6 +25,8 @@ export default async function (app: FastifyInstance) {
       instance.register(competitionTypeRoutes, { prefix: '/competition-types' })
       instance.register(fixtureRoutes, { prefix: '/fixtures' })
       instance.register(eventRoutes, { prefix: '/events' })
+      instance.register(eventTypeRoutes, { prefix: '/event-types' })
+      instance.register(seasonRoutes, { prefix: '/seasons' })
 
       instance.get('/health', async () => ({ status: 'ok', timestamp: new Date() }))
 

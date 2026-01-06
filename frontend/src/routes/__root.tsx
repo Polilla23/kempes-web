@@ -25,10 +25,6 @@ function AppContent() {
   const { loading } = useUser()
   const location = useLocation()
 
-  // Debug logging
-  console.log('Current pathname:', location.pathname)
-  console.log('Loading state:', loading)
-
   // Show loading screen while checking authentication
   if (loading) {
     return (
@@ -45,11 +41,8 @@ function AppContent() {
     location.pathname.startsWith('/reset-password') ||
     location.pathname.startsWith('/verify-email')
 
-  console.log('Is auth route:', isAuthRoute)
-
   // Render without sidebar for auth routes
   if (isAuthRoute) {
-    console.log('Rendering without sidebar')
     return (
       <main className="w-full h-screen flex items-center justify-center">
         <Outlet />
@@ -59,7 +52,6 @@ function AppContent() {
   }
 
   // Render with sidebar for all other routes
-  console.log('Rendering with sidebar')
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full">

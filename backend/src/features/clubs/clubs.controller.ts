@@ -61,6 +61,7 @@ export class ClubController {
       )
     }
   }
+
   async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
 
@@ -83,40 +84,22 @@ export class ClubController {
       )
     }
   }
-  async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-    const { id } = req.params
-
-    try {
-      const validId = Validator.uuid(id)
-      await this.clubService.deleteClub(validId)
-      return Response.noContent(reply)
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
-        return Response.notFound(reply, 'Club', id)
-      }
-      return Response.error(
-        reply,
-        'DELETE_ERROR',
-        'Error while deleting the club',
-        500,
-        error instanceof Error ? error.message : error
-      )
-    }
-  }
+  
   async update(req: FastifyRequest<{ Params: { id: string }; Body: Partial<Club> }>, reply: FastifyReply) {
     const data = req.body
     const { id } = req.params
 
     try {
       const validId = Validator.uuid(id)
-      const validatedData = {
-        ...data,
-        ...(data.name && { name: Validator.string(data.name, 1, 100) }),
-        ...(data.logo && { logo: Validator.url(data.logo) }),
-        ...(data.isActive !== undefined && { isActive: Validator.boolean(data.isActive) }),
-      }
+      const validatedData: Partial<Club> = {}
+      
+      if (data.name) validatedData.name = Validator.string(data.name, 1, 100)
+      if (data.logo !== undefined) validatedData.logo = data.logo ? Validator.url(data.logo) : data.logo
+      if (data.userId !== undefined) validatedData.userId = data.userId
+      if (data.isActive !== undefined) validatedData.isActive = Validator.boolean(data.isActive)
 
       const updated = await this.clubService.updateClub(validId, validatedData)
+      
       const updatedDTO = ClubMapper.toDTO(updated)
 
       return Response.success(reply, updatedDTO, 'Club updated successfully')
@@ -128,6 +111,28 @@ export class ClubController {
         reply,
         'UPDATE_ERROR',
         'Error while updating the club',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      const deleted = await this.clubService.deleteClub(validId)
+      const deletedDTO = ClubMapper.toDTO(deleted)
+      return Response.success(reply, deletedDTO, 'Club deleted successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(
+        reply,
+        'DELETE_ERROR',
+        'Error while deleting the club',
         500,
         error instanceof Error ? error.message : error
       )

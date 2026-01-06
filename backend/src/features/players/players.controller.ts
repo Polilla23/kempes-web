@@ -13,7 +13,7 @@ export class PlayerController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const { name, lastName, birthdate, actualClubId, overall, salary, sofifaId, transfermarktId } =
+    const { name, lastName, birthdate, actualClubId, ownerClubId, overall, salary, sofifaId, transfermarktId } =
       req.body as CreateBasicPlayerInput
 
     // Validación - si falla, lanza error y el errorHandler lo maneja
@@ -22,6 +22,7 @@ export class PlayerController {
       lastName: Validator.string(lastName, 1, 100),
       birthdate: new Date(birthdate),
       ...(actualClubId && { actualClubId: Validator.uuid(actualClubId) }),
+      ...(ownerClubId && { ownerClubId: Validator.uuid(ownerClubId) }),
       ...(overall !== undefined && { overall: Validator.number(overall, 0, 100) }),
       ...(salary !== undefined && { salary: Validator.number(salary, 0) }),
       ...(sofifaId && { sofifaId: Validator.string(sofifaId, 1, 50) }),
@@ -72,9 +73,10 @@ export class PlayerController {
     const { id } = req.params
 
     const validId = Validator.uuid(id)
-    await this.playerService.deletePlayer(validId)
+    const deleted = await this.playerService.deletePlayer(validId)
 
-    return Response.noContent(reply)
+    const deletedDTO = PlayerMapper.toDTO(deleted)
+    return Response.success(reply, deletedDTO, 'Player deleted successfully')
   }
 
   async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {

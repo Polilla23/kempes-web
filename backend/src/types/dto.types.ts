@@ -5,6 +5,11 @@ export type UserPublicDTO = {
   email: string
   name?: string
   role: string
+  isVerified: boolean
+  club: {
+    id: string
+    name: string
+  } | null
 }
 
 export type UserProfileDTO = {
@@ -26,6 +31,11 @@ export type ClubDTO = {
   name: string
   logo: string | null
   isActive: boolean
+  userId?: string
+  user?: {
+    id: string
+    email: string
+  }
 }
 
 export type CompetitionDTO = {
@@ -90,8 +100,22 @@ export type PlayerDTO = {
   name: string
   lastName: string
   birthdate: string
-  actualClubId: string
+  actualClubId: string | null
+  ownerClubId: string | null
+  actualClub: {
+    id: string
+    name: string
+  } | null
+  ownerClub: {
+    id: string
+    name: string
+  } | null
   overall: number
+  salary: number | null
+  sofifaId: string | null
+  transfermarktId: string | null
+  isKempesita: boolean
+  isActive: boolean
 }
 
 export type PlayerStatsDTO = PlayerDTO & {
@@ -101,6 +125,7 @@ export type PlayerStatsDTO = PlayerDTO & {
     assists: number
     yellowCards: number
     redCards: number
+    mvps: number
   }
 }
 
@@ -118,4 +143,26 @@ export type EventDTO = {
   }
   description: string | null
   minute: number
+}
+
+export type SeasonDTO = {
+  id: string
+  number: number
+  isActive: boolean
+}
+
+export type EventTypeDTO = {
+  id: string
+  name: string
+  displayName: string
+  icon: string | null
+  isActive: boolean
+}
+
+export type CompetitionTypeDTO = {
+  id: string
+  name: string
+  category: string
+  format: string
+  hierarchy: number
 }

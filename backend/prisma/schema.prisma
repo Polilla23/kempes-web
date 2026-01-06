@@ -133,9 +133,14 @@ model Match {
 }
 
 model EventType {
-  id   String @id @default(uuid())
-  name EventTypeName @unique
-  events Event[]
+  id          String        @id @default(uuid())
+  name        EventTypeName @unique        // Enum: GOAL, YELLOW_CARD, RED_CARD, INJURY, MVP
+  displayName String        @map("display_name") // Nombre para mostrar: "Gol", "Tarjeta Amarilla", etc.
+  icon        String?       @default("⚽") // Emoji o clase de icono
+  isActive    Boolean       @default(true) @map("is_active")
+  events      Event[]
+  
+  @@map("event_types")
 }
 model Event {
   id        String   @id @default(uuid())
@@ -193,9 +198,9 @@ enum CompetitionName {
 }
 
 enum EventTypeName {
-  GOAL
-  YELLOW_CARD
-  RED_CARD
-  SUBSTITUTION_IN
-  SUBSTITUTION_OUT
+  GOAL              // Gol ⚽
+  YELLOW_CARD       // Tarjeta Amarilla 🟨
+  RED_CARD          // Tarjeta Roja 🟥
+  INJURY            // Lesión 🤕
+  MVP               // MVP 🌟
 }

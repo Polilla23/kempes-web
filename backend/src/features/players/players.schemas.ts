@@ -127,13 +127,13 @@ export const playersSchemas = {
       properties: {
         name: { type: 'string' },
         lastName: { type: 'string' },
-        birthdate: { type: 'string', format: 'date-time' },
-        actualClubId: { type: 'string', format: 'uuid' },
-        ownerClubId: { type: 'string', format: 'uuid' },
+        birthdate: { type: 'string', pattern: '^\\d{2}/\\d{2}/\\d{4}$' },
+        actualClubId: { type: 'string' },
+        ownerClubId: { type: 'string' },
         overall: { type: 'number' },
         salary: { type: 'number' },
         sofifaId: { type: 'string' },
-        tranfermarktId: { type: 'string' },
+        transfermarktId: { type: 'string' },
         isKempesita: { type: 'boolean' },
         isActive: { type: 'boolean' },
       },
@@ -170,7 +170,7 @@ export const playersSchemas = {
   },
 
   delete: {
-    description: 'Delete a player by ID.',
+    description: 'Soft delete a player by ID (sets isActive to false).',
     tags: ['Players'],
     params: {
       type: 'object',
@@ -184,9 +184,13 @@ export const playersSchemas = {
       required: ['id'],
     },
     response: {
-      204: {
+      200: {
         description: 'Player deleted successfully',
-        type: 'null',
+        type: 'object',
+        properties: {
+          data: { type: 'object' },
+          message: { type: 'string' },
+        },
       },
       404: {
         description: 'Player not found',

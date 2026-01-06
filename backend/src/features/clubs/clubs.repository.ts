@@ -44,6 +44,17 @@ export class ClubRepository implements IClubRepository {
   }
 
   async updateOneById(id: Prisma.ClubWhereUniqueInput['id'], data: Prisma.ClubUpdateInput) {
-    return await this.prisma.club.update({ where: { id }, data })
+    return await this.prisma.club.update({
+      where: { id },
+      data,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    })
   }
 }

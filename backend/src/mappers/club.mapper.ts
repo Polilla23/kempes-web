@@ -4,12 +4,17 @@ import { Club } from '@prisma/client'
 import { ClubDTO, PaginatedResponse } from '@/types'
 
 export class ClubMapper {
-  static toDTO(club: Club): ClubDTO {
+  static toDTO(club: Club & { user?: { id: string; email: string } | null}): ClubDTO {
     return {
       id: club.id,
       name: club.name,
       logo: club.logo,
       isActive: club.isActive,
+      userId: club.userId || undefined,
+      user: club.user ? {
+        id: club.user.id,
+        email: club.user.email,
+      } : undefined,
     }
   }
 
@@ -18,7 +23,7 @@ export class ClubMapper {
   }
 
   static toPaginatedDTO(
-    clubs: Club[],
+    clubs: (Club & { user?: { id: string; email: string } | null })[],
     total: number,
     page: number,
     limit: number

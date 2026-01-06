@@ -53,7 +53,9 @@ export class ClubService {
       throw new ClubNotFoundError()
     }
 
-    return await this.clubRepository.updateOneById(id, data)
+    const result = await this.clubRepository.updateOneById(id, data)
+    
+    return result
   }
 
   async deleteClub(id: string) {
@@ -63,6 +65,6 @@ export class ClubService {
       throw new ClubNotFoundError()
     }
 
-    return await this.clubRepository.deleteOneById(id)
+    return await this.clubRepository.updateOneById(id, { isActive: false })
   }
 }

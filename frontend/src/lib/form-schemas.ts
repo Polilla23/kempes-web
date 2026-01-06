@@ -45,6 +45,45 @@ class FormSchemas {
     userId: z.string().optional(),
     isActive: z.boolean(),
   })
+
+  static EventTypeSchema = z.object({
+    name: z.enum(['GOAL', 'YELLOW_CARD', 'RED_CARD', 'INJURY', 'MVP'], {
+      errorMap: () => ({ message: 'Please select a valid event type' }),
+    }),
+    displayName: z.string().min(1, 'Display name is required'),
+    icon: z.string().min(1, 'Icon is required'),
+    isActive: z.boolean(),
+  })
+
+  static CompetitionTypeSchema = z.object({
+    name: z.enum(
+      [
+        'LEAGUE_A',
+        'LEAGUE_B',
+        'LEAGUE_C',
+        'LEAGUE_D',
+        'LEAGUE_E',
+        'KEMPES_CUP',
+        'GOLD_CUP',
+        'SILVER_CUP',
+        'CINDOR_CUP',
+        'SUPER_CUP',
+      ],
+      { required_error: 'Please select a competition name.' }
+    ),
+    category: z.enum(['SENIOR', 'KEMPESITA'], {
+      required_error: 'Please select a category.',
+    }),
+    format: z.enum(['LEAGUE', 'CUP'], {
+      required_error: 'Please select a format.',
+    }),
+    hierarchy: z.coerce.number().min(1, 'Hierarchy must be at least 1'),
+  })
+
+  static SeasonSchema = z.object({
+    number: z.coerce.number().min(1, 'Season number must be at least 1'),
+    isActive: z.boolean(),
+  })
 }
 
 export default FormSchemas

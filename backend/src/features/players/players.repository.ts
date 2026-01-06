@@ -37,6 +37,10 @@ export class PlayerRepository implements IPlayerRespository {
     return await this.prisma.player.update({
       where: { id: id },
       data,
+      include: {
+        ownerClub: { select: { id: true, name: true } },
+        actualClub: { select: { id: true, name: true } },
+      }
     })
   }
 

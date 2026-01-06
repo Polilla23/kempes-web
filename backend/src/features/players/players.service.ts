@@ -39,9 +39,13 @@ export class PlayerService {
       isActive: true,
     }
 
-    // Solo agregar clubs si se proporcionan
-    if (input.actualClubId) {
+    // Solo agregar clubs si se proporcionan (y no son strings vacíos)
+    if (input.actualClubId && input.actualClubId.trim() !== '') {
       playerData.actualClub = { connect: { id: input.actualClubId } }
+    }
+
+    if (input.ownerClubId && input.ownerClubId.trim() !== '') {
+      playerData.ownerClub = { connect: { id: input.ownerClubId } }
     }
 
     try {
@@ -51,8 +55,8 @@ export class PlayerService {
       // Si Prisma lanza error de foreign key (club no existe), lanzar error descriptivo
       if (error instanceof Error && error.message.includes('Foreign key constraint')) {
         throw new PlayerErrors.Validation('Invalid club reference', {
-          field: 'actualClubId',
-          value: input.actualClubId,
+          field: input.actualClubId ? 'actualClubId' : 'ownerClubId',
+          value: input.actualClubId || input.ownerClubId,
         })
       }
       throw error
@@ -94,7 +98,7 @@ export class PlayerService {
       throw new PlayerErrors.NotFound(`Player with id ${id} not found`)
     }
 
-    return await this.playerRepository.deleteOneById(id)
+    return await this.playerRepository.updateOneById(id, { isActive: false })
   }
 
   async findPlayerById(id: string) {

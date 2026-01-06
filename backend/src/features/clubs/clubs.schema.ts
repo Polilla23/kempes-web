@@ -115,6 +115,7 @@ export const clubsSchemas = {
         name: { type: 'string' },
         logo: { type: 'string' },
         userId: { type: 'string' },
+        isActive: { type: 'boolean' },
       },
       additionalProperties: false,
     },
@@ -155,7 +156,7 @@ export const clubsSchemas = {
     },
   },
   delete: {
-    description: 'Delete a club by ID.',
+    description: 'Soft delete a club by ID (sets isActive to false).',
     tags: ['Clubs'],
     params: {
       type: 'object',
@@ -169,8 +170,13 @@ export const clubsSchemas = {
       required: ['id'],
     },
     responses: {
-      204: {
-        description: 'Club deleted successfully. No content.',
+      200: {
+        description: 'Club deleted successfully.',
+        type: 'object',
+        properties: {
+          data: { type: 'object' },
+          message: { type: 'string' },
+        },
       },
       404: {
         description: 'Club not found.',

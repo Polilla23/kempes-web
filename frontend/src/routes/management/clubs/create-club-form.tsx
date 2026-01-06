@@ -66,7 +66,6 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
           )
         }) || []
       setAvailableUsers(availableUsersFiltered)
-      console.log('Available users for clubs:', availableUsersFiltered)
     } catch (error) {
       console.error('Error fetching users:', error)
       setAvailableUsers([])

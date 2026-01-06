@@ -6,8 +6,8 @@ export class CompetitionTypeRepository implements ICompetitionTypeRepository {
   constructor({ prisma }: { prisma: PrismaClient }) {
     this.prisma = prisma
   }
-  async save(data: Prisma.CompetitionTypeCreateInput): Promise<void> {
-    await this.prisma.competitionType.create({ data })
+  async save(data: Prisma.CompetitionTypeCreateInput): Promise<CompetitionType> {
+    return await this.prisma.competitionType.create({ data })
   }
   async findAll(): Promise<CompetitionType[]> {
     return await this.prisma.competitionType.findMany()
@@ -22,10 +22,10 @@ export class CompetitionTypeRepository implements ICompetitionTypeRepository {
   async updateOneById(
     id: Prisma.CompetitionTypeWhereUniqueInput['id'],
     data: Prisma.CompetitionTypeUpdateInput
-  ): Promise<void> {
-    await this.prisma.competitionType.update({ where: { id }, data })
+  ): Promise<CompetitionType> {
+    return await this.prisma.competitionType.update({ where: { id }, data })
   }
-  async deleteOneById(id: Prisma.CompetitionTypeWhereUniqueInput['id']): Promise<void> {
-    await this.prisma.competitionType.delete({ where: { id } })
+  async deleteOneById(id: Prisma.CompetitionTypeWhereUniqueInput['id']): Promise<CompetitionType> {
+    return await this.prisma.competitionType.delete({ where: { id } })
   }
 }

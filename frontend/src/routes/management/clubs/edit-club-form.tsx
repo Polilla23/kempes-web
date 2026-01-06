@@ -37,7 +37,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
     defaultValues: {
       name: club.name || '',
       logo: club.logo || '',
-      userId: club.userId || 'none',
+      userId: club.user?.id || club.userId || 'none',
       isActive: club.isActive ?? true,
     },
   })

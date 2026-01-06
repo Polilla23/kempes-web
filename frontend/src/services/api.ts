@@ -8,6 +8,13 @@ export interface ApiResponse<T = any> {
   error?: string
 }
 
+// Callback para manejar errores de autenticación (será configurado por UserContext)
+let onUnauthorized: (() => void) | null = null
+
+export const setUnauthorizedCallback = (callback: () => void) => {
+  onUnauthorized = callback
+}
+
 // Configuración base para las peticiones
 const defaultConfig: RequestInit = {
   credentials: 'include', // Importante para enviar cookies
@@ -18,9 +25,22 @@ const defaultConfig: RequestInit = {
 
 // Función helper para manejar las respuestas
 async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+  // Detectar 401 Unauthorized
+  if (response.status === 401) {
+    if (onUnauthorized) {
+      onUnauthorized()
+    }
+    throw new Error('Unauthorized: Session expired. Please log in again.')
+  }
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+  }
+
+  // Handle 204 No Content - no body to parse
+  if (response.status === 204) {
+    return { data: undefined as T }
   }
 
   const data = await response.json()
@@ -49,20 +69,8 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
           },
         }
 
-  try {
-    const response = await fetch(url, config)
-    return await handleResponse<T>(response)
-  } catch (error) {
-    // Manejo centralizado de errores
-    if (error instanceof Error) {
-      if (error.message.includes('401')) {
-        // Token expirado o inválido
-        console.log('Unauthorized - redirecting to login')
-        // Aquí puedes redirigir al login
-      }
-    }
-    throw error
-  }
+  const response = await fetch(url, config)
+  return await handleResponse<T>(response)
 }
 
 // Métodos HTTP helpers

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter, useLocation } from '@tanstack/react-router'
 import AuthService from '@/services/auth.service'
+import { setUnauthorizedCallback } from '@/services/api'
 
 export type UserRole = 'ADMIN' | 'USER' | null
 export type UserId = string | null
@@ -29,6 +30,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [id, setId] = useState<UserId>(null)
   const [role, setRole] = useState<UserRole>(null)
   const [loading, setLoading] = useState(true)
+  const [isInitialized, setIsInitialized] = useState(false)
   const router = useRouter()
   const location = useLocation()
 
@@ -41,18 +43,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setId(user?.id ?? null)
       setRole(user?.role ?? null)
     } catch (error) {
-      console.log('UserContext - Authentication failed, clearing session', error)
+      console.error('[UserContext] Authentication failed:', error)
       setId(null)
       setRole(null)
 
-      // Only redirect if not already on auth route
+      // Only redirect if not already on auth route AND not in the middle of navigation
       const currentPath = location.pathname
-      if (
-        !currentPath.startsWith('/login') &&
-        !currentPath.startsWith('/forgot-password') &&
-        !currentPath.startsWith('/reset-password')
-      ) {
-        router.navigate({ to: '/login' }) // Use /login instead of /_auth/login
+      
+      const isAuthRoute = 
+        currentPath.startsWith('/login') ||
+        currentPath.startsWith('/forgot-password') ||
+        currentPath.startsWith('/reset-password') ||
+        currentPath.startsWith('/verify-email')
+      
+      if (!isAuthRoute) {
+        // Small delay to avoid race condition with login redirect
+        setTimeout(() => {
+          router.navigate({ to: '/login' })
+        }, 100)
       }
     } finally {
       setLoading(false)
@@ -60,12 +68,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   useEffect(() => {
-    fetchUser()
+    fetchUser().then(() => setIsInitialized(true))
   }, [])
+
+  // Configurar callback para manejar 401 Unauthorized
+  useEffect(() => {
+    setUnauthorizedCallback(() => {
+      setId(null)
+      setRole(null)
+      router.navigate({ to: '/login' })
+    })
+  }, [router])
 
   // Simplified navigation guard - only check on location change
   useEffect(() => {
-    if (loading) return
+    // Don't run guard until initial fetch is complete
+    if (loading || !isInitialized) return
 
     const currentPath = location.pathname
 
@@ -81,7 +99,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     // If not authenticated and not on auth route, redirect to login
     if (!isAuthenticated) {
-      router.navigate({ to: '/login' }) // Use /login instead of /_auth/login
+      router.navigate({ to: '/login' })
       return
     }
 
@@ -90,7 +108,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       router.navigate({ to: '/' })
       return
     }
-  }, [location.pathname, isAuthenticated, loading, role, router])
+  }, [location.pathname, isAuthenticated, loading, isInitialized, role, router])
 
   const refreshUser = fetchUser
 

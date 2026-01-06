@@ -1,12 +1,13 @@
 import api from './api'
-import type { PlayerResponse, PlayersResponse, RegisterPlayerFormData } from '@/types'
+import type { PlayerResponse, PlayersResponse, RegisterPlayerFormData, Player } from '@/types'
 
 export class PlayerService {
   // Crear un nuevo jugador
   static async createPlayer(playerData: RegisterPlayerFormData): Promise<PlayerResponse> {
     try {
-      const response = await api.post<PlayerResponse>('/player/create', playerData)
-      return response.data || { message: response.message || 'Player created successfully' }
+      const response = await api.post<{ data: Player; message: string }>('/api/v1/players', playerData)
+      // Backend devuelve { data: Player, message, timestamp }
+      return { player: response.data?.data, message: response.data?.message || 'Player created successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error creating player')
     }
@@ -15,8 +16,9 @@ export class PlayerService {
   // Obtener todos los jugadores
   static async getPlayers(): Promise<PlayersResponse> {
     try {
-      const response = await api.get<PlayersResponse>('/player/findAll')
-      return response.data || { players: [] }
+      const response = await api.get<{ data: Player[] }>('/api/v1/players')
+      // Backend devuelve { data: Player[], message, timestamp }
+      return { players: response.data?.data || [] }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error fetching players')
     }
@@ -25,8 +27,9 @@ export class PlayerService {
   // Obtener un player por su ID
   static async getPlayerById(id: string): Promise<PlayerResponse> {
     try {
-      const response = await api.get<PlayerResponse>(`/player/find/${id}`)
-      return response.data || { message: response.message || 'Player fetched successfully' }
+      const response = await api.get<{ data: Player; message: string }>(`/api/v1/players/${id}`)
+      // Backend devuelve { data: Player, message, timestamp }
+      return { player: response.data?.data, message: response.data?.message || 'Player fetched successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error fetching player')
     }
@@ -35,8 +38,9 @@ export class PlayerService {
   // Actualizar un player
   static async updatePlayer(id: string, playerData: RegisterPlayerFormData): Promise<PlayerResponse> {
     try {
-      const response = await api.patch<PlayerResponse>(`/player/update/${id}`, playerData)
-      return response.data || { message: response.message || 'Player updated successfully' }
+      const response = await api.patch<{ data: Player; message: string }>(`/api/v1/players/${id}`, playerData)
+      // Backend devuelve { data: Player, message, timestamp }
+      return { player: response.data?.data, message: response.data?.message || 'Player updated successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error updating player')
     }
@@ -48,8 +52,9 @@ export class PlayerService {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await api.post<PlayerResponse>('/player/bulkCreate', formData)
-      return response.data || { message: response.message || 'Players created successfully' }
+      const response = await api.post<{ data: any; message: string }>('/api/v1/players/bulk', formData)
+      // Backend devuelve { data: {...}, message, timestamp }
+      return { message: response.data?.message || 'Players created successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error creating players from CSV')
     }
@@ -57,8 +62,8 @@ export class PlayerService {
 
   static async deletePlayer(id: string): Promise<PlayerResponse> {
     try {
-      const response = await api.delete<PlayerResponse>(`/player/delete/${id}`)
-      return response.data || { message: response.message || 'Player deleted successfully' }
+      const response = await api.delete<{ data: Player; message: string }>(`/api/v1/players/${id}`)
+      return { player: response.data?.data, message: response.data?.message || 'Player deleted successfully' }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error deleting player')
     }

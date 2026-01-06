@@ -10,6 +10,8 @@ import {
   UserCog,
   Users,
   ListOrdered,
+  CalendarDays,
+  Zap,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -39,6 +41,11 @@ const adminItems = [
   { label: 'Players', icon: Users, to: '/management/players' },
   { label: 'Salary Rates', icon: CircleDollarSign, to: '/management/salary-rates' },
   { label: 'Competitions', icon: Trophy, to: '/management/competitions' },
+]
+const configurationItems = [
+  { label: 'Event Types', icon: Zap, to: '/configuration/event-types' },
+  { label: 'Competition Types', icon: Trophy, to: '/configuration/competition-types' },
+  { label: 'Seasons', icon: CalendarDays, to: '/configuration/seasons' },
 ]
 
 const NavbarContent = () => {
@@ -78,6 +85,27 @@ const NavbarContent = () => {
             <SidebarMenu>
               <SidebarGroupLabel className="select-none"> Management & Administration</SidebarGroupLabel>
               {adminItems.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton asChild>
+                    <Link className="select-none" to={item.to}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
+      {role === 'ADMIN' && (
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarGroupLabel className="select-none">
+                Configuration
+              </SidebarGroupLabel>
+              {configurationItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton asChild>
                     <Link className="select-none" to={item.to}>
