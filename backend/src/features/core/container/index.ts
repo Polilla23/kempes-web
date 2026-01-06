@@ -28,6 +28,12 @@ import { FixtureController } from '@/features/fixtures/fixtures.controller'
 import { EventRepository } from '@/features/events/events.repository'
 import { EventController } from '@/features/events/events.controller'
 import { EventService } from '@/features/events/events.service'
+import { EventTypeRepository } from '@/features/event-types/event-types.repository'
+import { EventTypeController } from '@/features/event-types/event-types.controller'
+import { EventTypeService } from '@/features/event-types/event-types.service'
+import { SeasonRepository } from '@/features/seasons/seasons.repository'
+import { SeasonController } from '@/features/seasons/seasons.controller'
+import { SeasonService } from '@/features/seasons/seasons.service'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -43,6 +49,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     competitionRepository: asClass(CompetitionRepository).singleton(),
     fixtureRepository: asClass(FixtureRepository).singleton(),
     eventRepository: asClass(EventRepository).singleton(),
+    eventTypeRepository: asClass(EventTypeRepository).singleton(),
+    seasonRepository: asClass(SeasonRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(MyAccountController).singleton(),
@@ -52,6 +60,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     competitionController: asClass(CompetitionController).singleton(),
     fixtureController: asClass(FixtureController).singleton(),
     eventController: asClass(EventController).singleton(),
+    eventTypeController: asClass(EventTypeController).singleton(),
+    seasonController: asClass(SeasonController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -61,6 +71,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     competitionService: asClass(CompetitionService).singleton(),
     fixtureService: asClass(FixtureService).singleton(),
     eventService: asClass(EventService).singleton(),
+    eventTypeService: asClass(EventTypeService).singleton(),
+    seasonService: asClass(SeasonService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
 

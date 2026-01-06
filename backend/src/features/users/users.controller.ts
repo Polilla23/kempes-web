@@ -51,13 +51,15 @@ export class UserController {
 
       const token = await this.userService.loginUser(validatedEmail, validatedPassword)
 
+      // Cookie configuration based on environment
+      const isProduction = process.env.NODE_ENV === 'production'
+      
       reply.setCookie('token', token, {
-        httpOnly: false,
-        secure: true,
-        sameSite: 'none',
+        httpOnly: true,
+        secure: isProduction, // Only secure in production (requires HTTPS)
+        sameSite: isProduction ? 'none' : 'lax', // 'none' requires secure=true
         path: '/',
-        domain: '',
-        maxAge: 24 * 60 * 60,
+        maxAge: 24 * 60 * 60, // 24 hours in seconds
       })
 
       return Response.success(reply, { message: 'Login successful' }, 'Login successful')
@@ -78,7 +80,7 @@ export class UserController {
 
       reply.clearCookie('token', {
         path: '/',
-        httpOnly: false,
+        httpOnly: true,
         secure: false,
         sameSite: 'lax',
       })

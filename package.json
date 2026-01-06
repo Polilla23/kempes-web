@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node -r tsconfig-paths/register src/server.ts",
-    "start": "node -r tsconfig-paths/register dist/server.js",
-    "migrate": "prisma migrate dev",
-    "generate": "prisma generate"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "migrate": "cd backend && npm run migrate",
+    "generate": "cd backend && npm run generate"
   },
   "author": "",
   "license": "ISC",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@types/node": "^22.15.21",
     "@types/validator": "^13.15.10",
+    "concurrently": "^9.2.1",
     "dotenv": "^16.5.0",
     "prisma": "^6.8.2",
     "tsconfig-paths": "^4.2.0"

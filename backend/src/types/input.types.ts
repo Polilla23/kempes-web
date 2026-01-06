@@ -34,6 +34,7 @@ export type CreateBasicPlayerInput = {
   lastName: string
   birthdate: Date
   actualClubId?: string
+  ownerClubId?: string
   overall?: number
   salary?: number
   sofifaId?: string

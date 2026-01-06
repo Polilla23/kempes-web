@@ -22,6 +22,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { DefaultHeader } from '@/components/table/table-header'
 import EditPlayerForm from './edit-player-form'
 import { ClubService } from '@/services/club.service'
+import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/management/players/')({
   component: PlayerManagement,
@@ -41,7 +42,6 @@ function PlayerManagement() {
     try {
       setIsLoadingPlayers(true)
       const response = await PlayerService.getPlayers()
-      console.log('PLAYERS DATA: ', response.players)
       setPlayers(response.players || [])
     } catch (error) {
       console.error('Error fetching players: ', error)
@@ -180,13 +180,26 @@ function PlayerManagement() {
       }),
       columnHelper.accessor('salary', {
         header: (info) => <DefaultHeader info={info} name="Salary" type="number" />,
-        cell: (info) =>
-          info.getValue().toLocaleString('en-US', {
+        cell: (info) => {
+          const salary = info.getValue()
+          if (salary === null || salary === undefined) return 'N/A'
+          return salary.toLocaleString('en-US', {
             style: 'currency',
             currency: 'USD',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
-          }),
+          })
+        },
+      }),
+      columnHelper.accessor('isActive', {
+        header: (info) => <DefaultHeader info={info} name="Active" type="boolean" />,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center">
+            <Badge variant={row.original.isActive ? "default" : "destructive"}>
+              {row.original.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </div>
+        )
       }),
       columnHelper.accessor('ownerClub', {
         header: (info) => <DefaultHeader info={info} name="Owner Club" type="string" />,

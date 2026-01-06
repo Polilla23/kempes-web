@@ -38,6 +38,37 @@ export interface Player {
   isActive: boolean
 }
 
+// Tipos de configuración
+export enum EventTypeName {
+  GOAL = 'GOAL',
+  YELLOW_CARD = 'YELLOW_CARD',
+  RED_CARD = 'RED_CARD',
+  INJURY = 'INJURY',
+  MVP = 'MVP',
+}
+
+export interface EventType {
+  id: string
+  name: EventTypeName
+  displayName: string
+  icon: string | null
+  isActive: boolean
+}
+
+export interface CompetitionType {
+  id: string
+  name: string
+  category: string
+  format: string
+  hierarchy: number
+}
+
+export interface Season {
+  id: string
+  number: number
+  isActive: boolean
+}
+
 // Tipos para formularios
 export interface LoginFormData {
   email: string

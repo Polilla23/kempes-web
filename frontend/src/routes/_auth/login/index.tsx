@@ -30,10 +30,14 @@ function LoginPage() {
 
     try {
       await AuthService.login(values)
-      refreshUser().catch(console.error)
       setVerificationStatus('success')
+      
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      await refreshUser()
       await navigate({ to: '/', replace: true })
     } catch (error: any) {
+      console.error('[Login] Error occurred:', error)
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')
       setVerificationStatus('error')
     }

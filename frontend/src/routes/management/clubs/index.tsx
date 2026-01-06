@@ -18,9 +18,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import CreateClubForm from './create-club-form'
 import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
-import { Checkbox } from '@/components/ui/checkbox'
 import EditClubForm from './edit-club-form'
 import UserService from '@/services/user.service'
+import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/management/clubs/')({
   component: ClubManagement,
@@ -51,7 +51,6 @@ function ClubManagement() {
           )
         }) || []
       setAvailableUsers(availableUsersFiltered)
-      console.log('Available users for clubs:', availableUsersFiltered)
     } catch (error) {
       console.error('Error fetching users:', error)
       setAvailableUsers([])
@@ -70,7 +69,6 @@ function ClubManagement() {
       setIsLoadingClubs(true)
       const response = await ClubService.getClubs()
       setClubs(response.clubs || [])
-      console.log('Fetched clubs:', response.clubs)
     } catch (error) {
       console.error('Error fetching clubs:', error)
       toast.error('Failed to fetch clubs')
@@ -154,8 +152,10 @@ function ClubManagement() {
       columnHelper.accessor('isActive', {
         header: (info) => <DefaultHeader info={info} name="Active?" type="boolean" />,
         cell: ({ row }) => (
-          <div className="pl-5">
-            <Checkbox checked={row.original.isActive} disabled />
+          <div className="flex items-center justify-center">
+            <Badge variant={row.original.isActive ? "default" : "destructive"}>
+              {row.original.isActive ? "Active" : "Inactive"}
+            </Badge>
           </div>
         ),
       }),
