@@ -23,12 +23,14 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import type { RegisterClubFormData, User } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface CreateClubFormProps {
   onSuccess?: () => void
 }
 
 const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
+  const { t } = useTranslation('clubs')
   const [open, setOpen] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
@@ -87,7 +89,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
       }
 
       await ClubService.createClub(clubData)
-      toast.success('Club created successfully!')
+      toast.success(t('create.success'))
 
       // Reset form and close dialog
       form.reset()
@@ -95,7 +97,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
       onSuccess?.()
     } catch (error: any) {
       console.error('Error creating club:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while creating the club.')
+      toast.error(t('create.error'))
       setVerificationStatus('error')
     }
   }
@@ -115,13 +117,13 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
           <Plus className="size-4" />
-          New Club
+          {t('create.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Club</DialogTitle>
-          <DialogDescription>Add a new club to the system</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -132,7 +134,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Club Name</FormLabel>
+                  <FormLabel className="select-none">{t('labels.clubName')}</FormLabel>
                   <FormControl>
                     <div className="relative select-none">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
@@ -140,7 +142,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                       </div>
                       <Input
                         type="text"
-                        placeholder="Enter club name"
+                        placeholder={t('placeholders.clubName')}
                         className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                         {...field}
                       />
@@ -157,7 +159,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               name="logo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Logo URL</FormLabel>
+                  <FormLabel className="select-none">{t('labels.logoUrl')}</FormLabel>
                   <FormControl>
                     <div className="relative select-none">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
@@ -165,7 +167,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                       </div>
                       <Input
                         type="url"
-                        placeholder="Enter logo URL (optional)"
+                        placeholder={t('placeholders.logoUrl')}
                         className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                         {...field}
                       />
@@ -182,7 +184,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Club Owner</FormLabel>
+                  <FormLabel className="select-none">{t('labels.clubOwner')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || 'none'}
@@ -192,7 +194,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
                         <div className="flex items-center gap-3">
                           <UserIcon className="size-4 text-gray-400" />
-                          <SelectValue placeholder="Select club owner" />
+                          <SelectValue placeholder={t('placeholders.selectOwner')} />
                         </div>
                       </SelectTrigger>
                     </FormControl>
@@ -206,7 +208,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                         </SelectItem>
                       ) : (
                         <>
-                          <SelectItem value="none">No owner assigned</SelectItem>
+                          <SelectItem value="none">{t('placeholders.noOwner')}</SelectItem>
                           {availableUsers.map((user) => (
                             <SelectItem key={user.id} value={user.id}>
                               <div className="flex items-center gap-2">{user.email}</div>
@@ -232,10 +234,10 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel className="select-none text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Active Club
+                      {t('labels.activeStatus')}
                     </FormLabel>
                     <p className="text-xs text-muted-foreground">
-                      Allow this club to participate in competitions and transfers
+                      {t('labels.activeDescription')}
                     </p>
                   </div>
                 </FormItem>
@@ -245,7 +247,7 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={verificationStatus === 'loading'}>
-                  Cancel
+                  {t('buttons.cancel')}
                 </Button>
               </DialogClose>
               <Button
@@ -256,12 +258,12 @@ const CreateClubForm = ({ onSuccess }: CreateClubFormProps) => {
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Creating club...
+                    {t('buttons.create')}...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Building2 className="size-4" />
-                    Create Club
+                    {t('buttons.create')}
                   </div>
                 )}
               </Button>

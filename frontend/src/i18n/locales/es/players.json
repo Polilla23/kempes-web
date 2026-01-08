@@ -1,0 +1,118 @@
+{
+  "title": "Gestión de Jugadores",
+  "create": {
+    "title": "Crear Nuevo Jugador",
+    "description": "Agregar un nuevo jugador al sistema",
+    "button": "Nuevo Jugador",
+    "action": "Crear",
+    "success": "¡Jugador creado exitosamente!",
+    "error": "Error al crear jugador"
+  },
+  "edit": {
+    "title": "Editar Jugador",
+    "description": "Realizar cambios al jugador",
+    "button": "Actualizar Jugador",
+    "action": "Editar",
+    "success": "¡Jugador actualizado exitosamente!",
+    "error": "Error al actualizar jugador"
+  },
+  "delete": {
+    "confirm": "¿Estás seguro de que deseas eliminar este jugador?",
+    "action": "Eliminar",
+    "success": "¡Jugador eliminado exitosamente!",
+    "error": "Error al eliminar jugador"
+  },
+  "fields": {
+    "name": "Nombre",
+    "position": "Posición",
+    "club": "Club",
+    "number": "Número",
+    "active": "Activo?",
+    "isActive": "Activo",
+    "firstname": "Nombre",
+    "lastname": "Apellido",
+    "birthdate": "Fecha de Nacimiento",
+    "overall": "Media",
+    "salary": "Salario",
+    "ownerClub": "Club Dueño",
+    "actualClub": "Club Actual",
+    "sofifaId": "Id Sofifa",
+    "transfermarktId": "Id Transfermarkt",
+    "shirtNumber": "Número de Camiseta",
+    "isKempesita": "Kempesita?",
+    "activeStatus": "Activo?"
+  },
+  "labels": {
+    "playerName": "Nombre del Jugador",
+    "position": "Posición",
+    "clubAssignment": "Asignación de Club",
+    "shirtNumber": "Número de Camiseta",
+    "activeStatus": "Estado Activo",
+    "activeDescription": "Permitir que este jugador participe en partidos",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "dateOfBirth": "Fecha de nacimiento",
+    "overall": "Overall (0-99)",
+    "salary": "Salario",
+    "ownerClub": "Club Dueño",
+    "actualClub": "Club Actual",
+    "sofifaId": "ID Sofifa (opcional)",
+    "transfermarktId": "ID Transfermarkt (opcional)",
+    "isKempesita": "Es Kempesita",
+    "isActive": "Está Activo"
+  },
+  "placeholders": {
+    "playerName": "Ingrese nombre del jugador",
+    "selectPosition": "Seleccionar posición",
+    "selectClub": "Seleccionar club",
+    "shirtNumber": "Ingrese número de camiseta (opcional)",
+    "noClub": "Sin club asignado",
+    "enterPlayerName": "Ingrese nombre del jugador",
+    "enterLastName": "Ingrese apellido",
+    "pickDate": "Seleccione una fecha",
+    "selectOwnerClub": "Seleccione club dueño",
+    "selectActualClub": "Seleccione club actual",
+    "loadingClubs": "Cargando clubes...",
+    "loading": "Cargando...",
+    "none": "Ninguno",
+    "sofifaId": "ID Sofifa",
+    "transfermarktId": "ID Transfermarkt"
+  },
+  "descriptions": {
+    "dateOfBirth": "Tu fecha de nacimiento se usa para calcular tu edad.",
+    "isKempesita": "Marcar si el jugador es Kempesita (jugador de cantera).",
+    "isActive": "Marcar si el jugador está actualmente activo."
+  },
+  "positions": {
+    "GOALKEEPER": "Arquero",
+    "DEFENDER": "Defensor",
+    "MIDFIELDER": "Mediocampista",
+    "FORWARD": "Delantero"
+  },
+  "buttons": {
+    "create": "Crear Jugador",
+    "update": "Guardar Cambios",
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "preparing": "Preparando..."
+  },
+  "tabs": {
+    "single": "Un Jugador",
+    "multiple": "Múltiples Jugadores"
+  },
+  "csv": {
+    "title": "Crear Múltiples Jugadores",
+    "formatTitle": "Requisitos del Formato CSV",
+    "formatDescription": "Tu archivo CSV debe contener las siguientes columnas:",
+    "selectedFile": "Archivo seleccionado:",
+    "size": "Tamaño:"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "noPlayers": "No se encontraron jugadores",
+    "noClub": "Sin Club",
+    "active": "Activo",
+    "inactive": "Inactivo"
+  }
+}

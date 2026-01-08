@@ -20,6 +20,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import type { Season } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface EditSeasonFormProps {
   onSuccess?: () => void
@@ -28,6 +29,7 @@ interface EditSeasonFormProps {
 }
 
 function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
+  const { t } = useTranslation('seasons')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.SeasonSchema>>({
@@ -57,12 +59,12 @@ function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
         isActive: values.isActive,
       })
       setVerificationStatus('success')
-      toast.success('Season updated successfully!')
+      toast.success(t('edit.success'))
       onSuccess?.()
     } catch (error) {
       console.error('Error updating season:', error)
       setVerificationStatus('error')
-      toast.error(error instanceof Error ? error.message : 'Failed to update season')
+      toast.error(error instanceof Error ? error.message : t('edit.error'))
     }
   }
 
@@ -70,8 +72,8 @@ function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
     <Dialog open={!!season} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit Season</DialogTitle>
-          <DialogDescription>Make changes to the season here. Click save when you're done.</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('edit.title')}</DialogTitle>
+          <DialogDescription>{t('edit.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -81,12 +83,12 @@ function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
               name="number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Season Number</FormLabel>
+                  <FormLabel className="select-none">{t('labels.seasonNumber')}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min={1}
-                      placeholder="e.g., 1, 2, 3"
+                      placeholder={t('placeholders.seasonNumber')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
@@ -106,9 +108,9 @@ function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel className="select-none">Set as Active Season</FormLabel>
+                    <FormLabel className="select-none">{t('labels.isActive')}</FormLabel>
                     <p className="text-sm text-muted-foreground">
-                      Mark this season as the currently active season
+                      {t('edit.activeDescription')}
                     </p>
                   </div>
                 </FormItem>
@@ -118,7 +120,7 @@ function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancel
+                  {t('buttons.cancel')}
                 </Button>
               </DialogClose>
               <Button
@@ -129,12 +131,12 @@ function EditSeasonForm({ onSuccess, onClose, season }: EditSeasonFormProps) {
                 {verificationStatus === 'loading' ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating season...
+                    {t('status.updating')}
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Update Season
+                    {t('buttons.update')}
                   </>
                 )}
               </Button>

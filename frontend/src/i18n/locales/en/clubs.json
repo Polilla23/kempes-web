@@ -1,0 +1,56 @@
+{
+  "title": "Clubs Management",
+  "create": {
+    "title": "Create New Club",
+    "description": "Add a new club to the system",
+    "button": "New Club",
+    "action": "Create",
+    "success": "Club created successfully!",
+    "error": "Failed to create club"
+  },
+  "edit": {
+    "title": "Edit Club",
+    "description": "Make changes to the club",
+    "button": "Update Club",
+    "action": "Edit",
+    "success": "Club updated successfully!",
+    "error": "Failed to update club"
+  },
+  "delete": {
+    "confirm": "Are you sure you want to delete this club?",
+    "action": "Delete",
+    "success": "Club deleted successfully!",
+    "error": "Failed to delete club"
+  },
+  "fields": {
+    "name": "Name",
+    "logo": "Logo",
+    "user": "User",
+    "active": "Active?",
+    "isActive": "Active"
+  },
+  "labels": {
+    "clubName": "Club Name",
+    "logoUrl": "Logo URL",
+    "clubOwner": "Club Owner",
+    "activeStatus": "Active Status",
+    "activeDescription": "Allow this club to participate in competitions and transfers"
+  },
+  "placeholders": {
+    "clubName": "Enter club name",
+    "logoUrl": "Enter logo URL (optional)",
+    "selectOwner": "Select club owner",
+    "noOwner": "No owner"
+  },
+  "buttons": {
+    "create": "Create Club",
+    "update": "Save Changes",
+    "cancel": "Cancel"
+  },
+  "table": {
+    "search": "Search",
+    "actions": "Actions",
+    "noClubs": "No clubs found",
+    "noUser": "No User"
+  }
+}

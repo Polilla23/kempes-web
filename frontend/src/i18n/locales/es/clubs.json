@@ -1,0 +1,56 @@
+{
+  "title": "Gestión de Clubes",
+  "create": {
+    "title": "Crear Nuevo Club",
+    "description": "Agregar un nuevo club al sistema",
+    "button": "Nuevo Club",
+    "action": "Crear",
+    "success": "¡Club creado exitosamente!",
+    "error": "Error al crear club"
+  },
+  "edit": {
+    "title": "Editar Club",
+    "description": "Realizar cambios al club",
+    "button": "Actualizar Club",
+    "action": "Editar",
+    "success": "¡Club actualizado exitosamente!",
+    "error": "Error al actualizar club"
+  },
+  "delete": {
+    "confirm": "¿Estás seguro de que deseas eliminar este club?",
+    "action": "Eliminar",
+    "success": "¡Club eliminado exitosamente!",
+    "error": "Error al eliminar club"
+  },
+  "fields": {
+    "name": "Nombre",
+    "logo": "Logo",
+    "user": "Usuario",
+    "active": "¿Activo?",
+    "isActive": "Activo"
+  },
+  "labels": {
+    "clubName": "Nombre del Club",
+    "logoUrl": "URL del Logo",
+    "clubOwner": "Propietario del Club",
+    "activeStatus": "Estado Activo",
+    "activeDescription": "Permitir que este club participe en competencias y transferencias"
+  },
+  "placeholders": {
+    "clubName": "Ingresa el nombre del club",
+    "logoUrl": "Ingresa la URL del logo (opcional)",
+    "selectOwner": "Selecciona el propietario del club",
+    "noOwner": "Sin propietario"
+  },
+  "buttons": {
+    "create": "Crear Club",
+    "update": "Guardar Cambios",
+    "cancel": "Cancelar"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "noClubs": "No se encontraron clubes",
+    "noUser": "Sin Usuario"
+  }
+}

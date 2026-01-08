@@ -22,6 +22,7 @@ import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import type { EventType } from '@/types'
 import { EventTypeName } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface EditEventTypeFormProps {
   onSuccess?: () => void
@@ -38,6 +39,7 @@ const eventTypeOptions = [
 ]
 
 function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormProps) {
+  const { t } = useTranslation('eventTypes')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.EventTypeSchema>>({
@@ -73,12 +75,12 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
         isActive: values.isActive,
       })
       setVerificationStatus('success')
-      toast.success('Event type updated successfully!')
+      toast.success(t('edit.success'))
       onSuccess?.()
     } catch (error) {
       console.error('Error updating event type:', error)
       setVerificationStatus('error')
-      toast.error(error instanceof Error ? error.message : 'Failed to update event type')
+      toast.error(error instanceof Error ? error.message : t('edit.error'))
     }
   }
 
@@ -94,8 +96,8 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
     <Dialog open={!!eventType} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit Event Type</DialogTitle>
-          <DialogDescription>Make changes to the event type here. Click save when you're done.</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('edit.title')}</DialogTitle>
+          <DialogDescription>{t('edit.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -105,11 +107,11 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Event Type</FormLabel>
+                  <FormLabel>{t('labels.eventType')}</FormLabel>
                   <Select onValueChange={handleEventTypeChange} defaultValue={field.value} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select event type" />
+                        <SelectValue placeholder={t('placeholders.selectEventType')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -130,11 +132,11 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Display Name</FormLabel>
+                  <FormLabel className="select-none">{t('labels.displayName')}</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g., Goal, Yellow Card"
+                      placeholder={t('placeholders.displayName')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                     />
@@ -149,11 +151,11 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
               name="icon"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Icon</FormLabel>
+                  <FormLabel className="select-none">{t('labels.icon')}</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g., ⚽, 🟨"
+                      placeholder={t('placeholders.icon')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                     />
@@ -171,7 +173,7 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
                   <FormControl>
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
-                  <FormLabel className="select-none">Is Active</FormLabel>
+                  <FormLabel className="select-none">{t('labels.isActive')}</FormLabel>
                   <FormMessage />
                 </FormItem>
               )}
@@ -180,7 +182,7 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancel
+                  {t('buttons.cancel')}
                 </Button>
               </DialogClose>
               <Button
@@ -191,12 +193,12 @@ function EditEventTypeForm({ onSuccess, onClose, eventType }: EditEventTypeFormP
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Updating...
+                    {t('edit.updating')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Save className="size-4" />
-                    Update Event Type
+                    {t('edit.button')}
                   </div>
                 )}
               </Button>

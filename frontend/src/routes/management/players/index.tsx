@@ -23,12 +23,14 @@ import { DefaultHeader } from '@/components/table/table-header'
 import EditPlayerForm from './edit-player-form'
 import { ClubService } from '@/services/club.service'
 import { Badge } from '@/components/ui/badge'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/management/players/')({
   component: PlayerManagement,
 })
 
 function PlayerManagement() {
+  const { t } = useTranslation('players')
   const [players, setPlayers] = useState<Player[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(true)
@@ -45,7 +47,7 @@ function PlayerManagement() {
       setPlayers(response.players || [])
     } catch (error) {
       console.error('Error fetching players: ', error)
-      toast.error('Failed to fetch players')
+      toast.error(t('create.error'))
       setPlayers([])
     } finally {
       setIsLoadingPlayers(false)
@@ -58,7 +60,7 @@ function PlayerManagement() {
       setClubs(response.clubs || [])
     } catch (error) {
       console.error('Error fetching clubs: ', error)
-      toast.error('Failed to fetch clubs')
+      toast.error(t('create.error'))
       setClubs([])
     }
   }
@@ -150,11 +152,11 @@ function PlayerManagement() {
   const handleDeletePlayer = async (playerId: string) => {
     try {
       await PlayerService.deletePlayer(playerId)
-      toast.success('Player deleted successfully')
+      toast.success(t('delete.success'))
       fetchPlayers() // Refresh the player list
     } catch (error) {
       console.error('Error deleting player:', error)
-      toast.error('Failed to delete player')
+      toast.error(t('delete.error'))
     }
   }
 
@@ -163,23 +165,23 @@ function PlayerManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name="Firstname" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.firstname')} type="string" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('lastName', {
-        header: (info) => <DefaultHeader info={info} name="Lastname" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.lastname')} type="string" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('birthdate', {
-        header: (info) => <DefaultHeader info={info} name="Birthdate" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.birthdate')} type="string" />,
         cell: (info) => new Date(info.getValue()).toLocaleDateString('en-GB'),
       }),
       columnHelper.accessor('overall', {
-        header: (info) => <DefaultHeader info={info} name="Overall" type="number" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.overall')} type="number" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('salary', {
-        header: (info) => <DefaultHeader info={info} name="Salary" type="number" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.salary')} type="number" />,
         cell: (info) => {
           const salary = info.getValue()
           if (salary === null || salary === undefined) return 'N/A'
@@ -192,45 +194,45 @@ function PlayerManagement() {
         },
       }),
       columnHelper.accessor('isActive', {
-        header: (info) => <DefaultHeader info={info} name="Active" type="boolean" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.activeStatus')} type="boolean" />,
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <Badge variant={row.original.isActive ? "default" : "destructive"}>
-              {row.original.isActive ? "Active" : "Inactive"}
+              {row.original.isActive ? t('table.active') : t('table.inactive')}
             </Badge>
           </div>
         )
       }),
       columnHelper.accessor('ownerClub', {
-        header: (info) => <DefaultHeader info={info} name="Owner Club" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.ownerClub')} type="string" />,
         // cell: (info) => info.getValue(),
         cell: ({ row }) => {
           const club: Club | null | undefined = row.getValue('ownerClub')
-          const name = club?.name || 'No club'
+          const name = club?.name || t('table.noClub')
           return <span>{name}</span>
         },
       }),
       columnHelper.accessor('actualClub', {
-        header: (info) => <DefaultHeader info={info} name="Actual Club" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.actualClub')} type="string" />,
         // cell: (info) => info.getValue(),
         cell: ({ row }) => {
           const club: Club | null | undefined = row.getValue('actualClub')
-          const name = club?.name || 'No club'
+          const name = club?.name || t('table.noClub')
           return <span>{name}</span>
         },
       }),
       columnHelper.accessor('sofifaId', {
-        header: (info) => <DefaultHeader info={info} name="Sofifa Id" type="number" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.sofifaId')} type="number" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('transfermarktId', {
-        header: (info) => <DefaultHeader info={info} name="Transfermarkt Id" type="number" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.transfermarktId')} type="number" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">Actions</span>,
+        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const player = row.original
 
@@ -250,10 +252,10 @@ function PlayerManagement() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditPlayer(player)}>
-                    <Pencil className="size-4" /> Edit
+                    <Pencil className="size-4" /> {t('edit.action')}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleDeletePlayer(player.id)}>
-                    <Trash2 className="size-4 text-destructive" /> Delete
+                    <Trash2 className="size-4 text-destructive" /> {t('delete.action')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -262,21 +264,21 @@ function PlayerManagement() {
         },
       }),
     ],
-    [players, selectedPlayer, isEditingModalOpen]
+    [t, players, selectedPlayer, isEditingModalOpen]
   )
   return isLoadingPlayers ? (
     <PlayerTableSkeleton rows={8} />
   ) : (
     <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
-      <h1 className="text-2xl font-bold mb-10 mt-8">Players Management</h1>
+      <h1 className="text-2xl font-bold mb-10 mt-8">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
-          Search
+          {t('table.search')}
         </Label>
         <Input
           id="search"
           type="text"
-          placeholder="Search..."
+          placeholder={`${t('table.search')}...`}
           className="pl-8"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

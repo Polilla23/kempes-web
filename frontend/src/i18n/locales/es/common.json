@@ -1,0 +1,42 @@
+{
+  "actions": {
+    "create": "Crear",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "confirm": "Confirmar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "loading": "Cargando..."
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
+  },
+  "validation": {
+    "required": "Este campo es requerido",
+    "email": "Dirección de email inválida",
+    "minLength": "Mínimo {{count}} caracteres",
+    "maxLength": "Máximo {{count}} caracteres",
+    "invalidFormat": "Formato inválido"
+  },
+  "messages": {
+    "success": "Operación completada exitosamente",
+    "error": "Ocurrió un error",
+    "noData": "No hay datos disponibles",
+    "noResults": "Sin resultados.",
+    "loading": "Cargando datos..."
+  }
+}

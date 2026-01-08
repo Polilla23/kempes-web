@@ -7,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input'
 import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon } from 'lucide-react'
 import FormSchemas from '@/lib/form-schemas'
+import { useTranslation } from 'react-i18next'
 
 // OnSubmit function type
 type OnSubmitFn = (values: z.infer<typeof FormSchemas.loginSchema>) => Promise<void> | void
@@ -20,6 +21,7 @@ interface LoginFormProps {
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, errorMessage }) => {
+  const { t } = useTranslation('auth')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const form = useForm<z.infer<typeof FormSchemas.loginSchema>>({
     resolver: zodResolver(FormSchemas.loginSchema),
@@ -42,7 +44,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="select-none">Email</FormLabel>
+              <FormLabel className="select-none">{t('login.email')}</FormLabel>
               <FormControl>
                 <div className="relative select-none">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
@@ -50,7 +52,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
                   </div>
                   <Input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('login.emailPlaceholder')}
                     className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                     {...field}
                   />
@@ -66,12 +68,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
           render={({ field }) => (
             <FormItem>
               <div className="flex justify-between items-end">
-                <FormLabel className="select-none">Password</FormLabel>
+                <FormLabel className="select-none">{t('login.password')}</FormLabel>
                 <a
                   href="/forgot-password"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 select-none"
                 >
-                  Forgot your password?
+                  {t('login.forgotPassword')}
                 </a>
               </div>
               <FormControl>
@@ -81,7 +83,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
                   </div>
                   <Input
                     type={passwordVisible ? 'text' : 'password'}
-                    placeholder="Enter your password"
+                    placeholder={t('login.passwordPlaceholder')}
                     className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                     {...field}
                   />
@@ -108,10 +110,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
           {verificationStatus === 'loading' ? (
             <div className="flex items-center gap-2 select-none">
               <Loader2 className="w-4 h-4 animate-spin select-none" />
-              Signing in...
+              {t('login.signingIn')}
             </div>
           ) : (
-            'Sign In'
+            t('login.button')
           )}
         </Button>
       </form>

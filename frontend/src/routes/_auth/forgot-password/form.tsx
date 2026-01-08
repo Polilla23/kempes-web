@@ -7,6 +7,7 @@ import { Loader2, MailIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import FormSchemas from '@/lib/form-schemas'
+import { useTranslation } from 'react-i18next'
 
 type OnSubmitFn = (values: z.infer<typeof FormSchemas.forgotPasswordSchema>) => Promise<void> | void
 
@@ -18,6 +19,7 @@ interface ForgotPasswordFormProps {
 }
 
 function ForgotPasswordForm({ onSubmit, verificationStatus }: ForgotPasswordFormProps) {
+  const { t } = useTranslation('auth')
   const form = useForm<z.infer<typeof FormSchemas.forgotPasswordSchema>>({
     resolver: zodResolver(FormSchemas.forgotPasswordSchema),
     defaultValues: {
@@ -32,7 +34,7 @@ function ForgotPasswordForm({ onSubmit, verificationStatus }: ForgotPasswordForm
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('forgotPassword.email')}</FormLabel>
               <FormControl>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10">
@@ -40,7 +42,7 @@ function ForgotPasswordForm({ onSubmit, verificationStatus }: ForgotPasswordForm
                   </div>
                   <Input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t('forgotPassword.emailPlaceholder')}
                     className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                     {...field}
                   />
@@ -58,17 +60,16 @@ function ForgotPasswordForm({ onSubmit, verificationStatus }: ForgotPasswordForm
           {verificationStatus === 'loading' ? (
             <div className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Please wait...
+              {t('forgotPassword.sending')}
             </div>
           ) : (
-            'Continue'
+            t('forgotPassword.button')
           )}
         </Button>
         <Separator />
         <div className="flex justify-center items-center gap-1">
-          <p className="text-sm text-muted-foreground">Already have an account? </p>
           <a className="text-sm font-semibold text-cyan-600 hover:text-cyan-700 hover:underline" href="login">
-            Sign in
+            {t('forgotPassword.backToLogin')}
           </a>
         </div>
       </form>

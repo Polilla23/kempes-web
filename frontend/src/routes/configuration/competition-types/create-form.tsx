@@ -19,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface CreateCompetitionTypeFormProps {
   onSuccess?: () => void
@@ -48,8 +49,14 @@ const FORMAT_OPTIONS = [
 ]
 
 const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps) => {
+  const { t } = useTranslation('competitionTypes')
   const [open, setOpen] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
+
+  const formatOptions = [
+    { value: 'LEAGUE', label: t('formats.LEAGUE') },
+    { value: 'CUP', label: t('formats.CUP') },
+  ]
 
   const form = useForm<z.infer<typeof FormSchemas.CompetitionTypeSchema>>({
     resolver: zodResolver(FormSchemas.CompetitionTypeSchema),
@@ -95,7 +102,7 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
         format: values.format,
         hierarchy: values.hierarchy,
       })
-      toast.success('Competition type created successfully!')
+      toast.success(t('create.success'))
 
       // Reset form and close dialog
       form.reset()
@@ -103,7 +110,7 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
       onSuccess?.()
     } catch (error: any) {
       console.error('Error creating competition type:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while creating the competition type.')
+      toast.error(error instanceof Error ? error.message : t('create.error'))
       setVerificationStatus('error')
     }
   }
@@ -122,13 +129,13 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
           <Plus className="size-4" />
-          New Competition Type
+          {t('create.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Competition Type</DialogTitle>
-          <DialogDescription>Add a new competition type to the system</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -138,11 +145,11 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Competition Name</FormLabel>
+                  <FormLabel className="select-none">{t('labels.name')}</FormLabel>
                   <Select onValueChange={handleNameChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select competition name" />
+                        <SelectValue placeholder={t('placeholders.name')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -163,11 +170,11 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Category</FormLabel>
+                  <FormLabel className="select-none">{t('labels.category')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={t('placeholders.category')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -188,7 +195,7 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="format"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Format</FormLabel>
+                  <FormLabel className="select-none">{t('labels.format')}</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value}
@@ -196,11 +203,11 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
                   >
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select format" />
+                        <SelectValue placeholder={t('placeholders.format')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {FORMAT_OPTIONS.map((option) => (
+                      {formatOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -217,12 +224,12 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="hierarchy"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Hierarchy</FormLabel>
+                  <FormLabel className="select-none">{t('labels.hierarchy')}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min={1}
-                      placeholder="Enter hierarchy (e.g., 1, 2, 3)"
+                      placeholder={t('placeholders.hierarchy')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       disabled={form.watch('name')?.startsWith('LEAGUE_')}
                       {...field}
@@ -243,12 +250,12 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Creating...
+                    {t('status.creating')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Plus className="size-4" />
-                    Create Competition Type
+                    {t('buttons.create')}
                   </div>
                 )}
               </Button>

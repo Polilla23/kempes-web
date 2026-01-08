@@ -20,6 +20,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState, useEffect } from 'react'
 import type { CompetitionType } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface EditCompetitionTypeFormProps {
   onSuccess?: () => void
@@ -51,7 +52,13 @@ const FORMAT_OPTIONS = [
 ]
 
 function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCompetitionTypeFormProps) {
+  const { t } = useTranslation('competitionTypes')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
+
+  const formatOptions = [
+    { value: 'LEAGUE', label: t('formats.LEAGUE') },
+    { value: 'CUP', label: t('formats.CUP') },
+  ]
 
   const form = useForm<z.infer<typeof FormSchemas.CompetitionTypeSchema>>({
     resolver: zodResolver(FormSchemas.CompetitionTypeSchema),
@@ -86,12 +93,12 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
         hierarchy: values.hierarchy,
       })
       setVerificationStatus('success')
-      toast.success('Competition type updated successfully!')
+      toast.success(t('edit.success'))
       onSuccess?.()
     } catch (error) {
       console.error('Error updating competition type:', error)
       setVerificationStatus('error')
-      toast.error(error instanceof Error ? error.message : 'Failed to update competition type')
+      toast.error(error instanceof Error ? error.message : t('edit.error'))
     }
   }
 
@@ -99,9 +106,9 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
     <Dialog open={!!competitionType} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit Competition Type</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">{t('edit.title')}</DialogTitle>
           <DialogDescription>
-            Make changes to the competition type here. Click save when you're done.
+            {t('edit.description')}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,11 +119,11 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Competition Name</FormLabel>
+                  <FormLabel className="select-none">{t('labels.name')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select competition name" />
+                        <SelectValue placeholder={t('placeholders.name')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -137,11 +144,11 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Category</FormLabel>
+                  <FormLabel className="select-none">{t('labels.category')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={t('placeholders.category')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -162,15 +169,15 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="format"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Format</FormLabel>
+                  <FormLabel className="select-none">{t('labels.format')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select format" />
+                        <SelectValue placeholder={t('placeholders.format')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {FORMAT_OPTIONS.map((option) => (
+                      {formatOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.label}
                         </SelectItem>
@@ -187,12 +194,12 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="hierarchy"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Hierarchy</FormLabel>
+                  <FormLabel className="select-none">{t('labels.hierarchy')}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min={1}
-                      placeholder="Enter hierarchy (e.g., 1, 2, 3)"
+                      placeholder={t('placeholders.hierarchy')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
@@ -206,7 +213,7 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">
-                  Cancel
+                  {t('buttons.cancel')}
                 </Button>
               </DialogClose>
               <Button
@@ -217,12 +224,12 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Updating...
+                    {t('status.updating')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Save className="size-4" />
-                    Update Competition Type
+                    {t('buttons.update')}
                   </div>
                 )}
               </Button>

@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label'
 import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import CreateUserForm from './create-user-form'
 import EditUserForm from './edit-user-form'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/management/users/')({
   component: UserManagement,
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/management/users/')({
 const columnHelper = createColumnHelper<User>()
 
 function UserManagement() {
+  const { t } = useTranslation('users')
   const [users, setUsers] = useState<User[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState<boolean>(true)
   const [search, setSearch] = useState<string>('')
@@ -79,11 +81,11 @@ function UserManagement() {
   const handleDeleteUser = async (userId: string) => {
     try {
       await UserService.deleteUser(userId)
-      toast.success('User deleted successfully')
+      toast.success(t('delete.success'))
       fetchUsers() // Refresh the user list
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error('Failed to delete user')
+      toast.error(t('delete.error'))
     }
   }
 
@@ -100,15 +102,15 @@ function UserManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('email', {
-        header: (info) => <DefaultHeader info={info} name="Email" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.email')} type="string" />,
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.accessor('role', {
-        header: (info) => <DefaultHeader info={info} name="Role" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.role')} type="string" />,
         cell: (info) => <span className="capitalize">{info.getValue().toLowerCase()}</span>,
       }),
       columnHelper.accessor('isVerified', {
-        header: (info) => <DefaultHeader info={info} name="Verified?" type="boolean" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.verified')} type="boolean" />,
         cell: ({ row }) => (
           <div className="pl-5">
             <Checkbox checked={row.original.isVerified} disabled />
@@ -116,18 +118,18 @@ function UserManagement() {
         ),
       }),
       columnHelper.accessor('club', {
-        header: (info) => <DefaultHeader info={info} name="Club" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.club')} type="string" />,
         cell: ({ row }) => {
           // const club: Club | null | undefined = row.original.club
           const club: Club | null | undefined = row.getValue('club')
-          const name = club?.name || 'No Club'
+          const name = club?.name || t('table.noClub')
           return <span>{name}</span>
         },
       }),
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="flex justify-center cursor-default select-none">Actions</span>,
+        header: () => <span className="flex justify-center cursor-default select-none">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const user = row.original
           return (
@@ -146,10 +148,10 @@ function UserManagement() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(user)}>
-                    <Pencil className="size-4" /> Edit
+                    <Pencil className="size-4" /> {t('edit.action')}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleDeleteUser(user.id)}>
-                    <Trash2 className="size-4 text-destructive" /> Delete
+                    <Trash2 className="size-4 text-destructive" /> {t('delete.action')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -158,22 +160,22 @@ function UserManagement() {
         },
       }),
     ],
-    [users, selectedUser, isEditModalOpen]
+    [users, selectedUser, isEditModalOpen, t]
   )
 
   return isLoadingUsers ? (
     <ClubAndUserTableSkeleton rows={8} />
   ) : (
     <div className="flex flex-col items-center gap-2 h-full w-full max-w-3/4">
-      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">Users Management</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
-          Search
+          {t('table.search')}
         </Label>
         <Input
           id="search"
           type="text"
-          placeholder="Search..."
+          placeholder={`${t('table.search')}...`}
           className="pl-8 max-w-md w-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

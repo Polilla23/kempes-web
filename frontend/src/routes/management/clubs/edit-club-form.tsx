@@ -21,6 +21,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 
 interface EditClubFormProps {
   onSuccess?: () => void
@@ -30,6 +31,7 @@ interface EditClubFormProps {
 }
 
 function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubFormProps) {
+  const { t } = useTranslation('clubs')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.ClubSchema>>({
@@ -55,12 +57,12 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
 
       await ClubService.updateClub(club.id, updateData)
       setVerificationStatus('success')
-      toast.success('Club updated successfully!')
+      toast.success(t('edit.success'))
       onSuccess?.()
     } catch (error) {
       console.error('Error updating club:', error)
       setVerificationStatus('error')
-      toast.error(error instanceof Error ? error.message : 'Failed to update club')
+      toast.error(t('edit.error'))
     }
   }
 
@@ -68,8 +70,8 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
     <Dialog open={!!club} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit Club</DialogTitle>
-          <DialogDescription>Make changes to the club here. Click save when you're done.</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('edit.title')}</DialogTitle>
+          <DialogDescription>{t('edit.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -79,7 +81,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Club Name</FormLabel>
+                  <FormLabel className="select-none">{t('labels.clubName')}</FormLabel>
                   <FormControl>
                     <div className="relative select-none">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
@@ -87,7 +89,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
                       </div>
                       <Input
                         type="text"
-                        placeholder="Enter club name"
+                        placeholder={t('placeholders.clubName')}
                         className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                         {...field}
                       />
@@ -103,7 +105,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
               name="logo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Logo URL</FormLabel>
+                  <FormLabel className="select-none">{t('labels.logoUrl')}</FormLabel>
                   <FormControl>
                     <div className="relative select-none">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
@@ -111,7 +113,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
                       </div>
                       <Input
                         type="url"
-                        placeholder="Enter logo URL (optional)"
+                        placeholder={t('placeholders.logoUrl')}
                         className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                         {...field}
                       />
@@ -127,18 +129,18 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
               name="userId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Club Owner</FormLabel>
+                  <FormLabel className="select-none">{t('labels.clubOwner')}</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || 'none'}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
                         <div className="flex items-center gap-3">
                           <UserIcon className="size-4 text-gray-400" />
-                          <SelectValue placeholder="Select club owner" />
+                          <SelectValue placeholder={t('placeholders.selectOwner')} />
                         </div>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">No owner assigned</SelectItem>
+                      <SelectItem value="none">{t('placeholders.noOwner')}</SelectItem>
                       {availableUsers.map((user) => (
                         <SelectItem key={user.id} value={user.id}>
                           <div className="flex items-center gap-2">{user.email}</div>
@@ -167,10 +169,10 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel className="select-none text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Active Club
+                      {t('labels.activeStatus')}
                     </FormLabel>
                     <p className="text-xs text-muted-foreground">
-                      Allow this club to participate in competitions and transfers
+                      {t('labels.activeDescription')}
                     </p>
                   </div>
                 </FormItem>
@@ -180,7 +182,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={verificationStatus === 'loading'}>
-                  Cancel
+                  {t('buttons.cancel')}
                 </Button>
               </DialogClose>
               <Button
@@ -191,12 +193,12 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Updating club...
+                    {t('buttons.update')}...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Building2 className="size-4" />
-                    Update Club
+                    {t('buttons.update')}
                   </div>
                 )}
               </Button>

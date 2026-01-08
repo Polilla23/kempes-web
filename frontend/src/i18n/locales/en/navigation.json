@@ -1,0 +1,27 @@
+{
+  "search": "Search",
+  "preferences": "Preferences",
+  "logout": "Logout",
+  "menu": {
+    "title": "Navigation",
+    "home": "Home",
+    "standings": "Standings",
+    "fixture": "Fixture",
+    "statistics": "Statistics",
+    "transfers": "Transfers"
+  },
+  "management": {
+    "title": "Management & Administration",
+    "users": "Users",
+    "clubs": "Clubs",
+    "players": "Players",
+    "salaryRates": "Salary Rates",
+    "competitions": "Competitions"
+  },
+  "configuration": {
+    "title": "Configuration",
+    "eventTypes": "Event Types",
+    "competitionTypes": "Competition Types",
+    "seasons": "Seasons"
+  }
+}

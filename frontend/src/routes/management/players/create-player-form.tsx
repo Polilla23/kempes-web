@@ -32,6 +32,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { PlayerFormSkeleton } from '@/components/ui/form-skeletons'
 import FormSchemas from '@/lib/form-schemas'
+import { useTranslation } from 'react-i18next'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { format } from 'date-fns'
@@ -42,6 +43,7 @@ interface CreatePlayerFormProps {
 }
 
 const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
+  const { t } = useTranslation('players')
   const [clubs, setClubs] = useState<Club[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isLoadingClubs, setIsLoadingClubs] = useState(true)
@@ -73,7 +75,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
       setClubs(response.clubs || [])
     } catch (error) {
       console.error('Error fetching clubs:', error)
-      toast.error('Failed to fetch clubs')
+      toast.error(t('create.error'))
       setClubs([])
     } finally {
       setIsLoadingClubs(false)
@@ -109,12 +111,12 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
       }
 
       await PlayerService.createPlayer(newPlayer)
-      toast.success('Player created successfully')
+      toast.success(t('create.success'))
       form.reset()
       fetchPlayers() // Refresh the list
     } catch (error: any) {
       console.error('Error creating player:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while creating the player.')
+      toast.error(error instanceof Error ? error.message : t('create.error'))
     }
   }
 
@@ -123,13 +125,13 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
           <Plus className="size-4" />
-          Create Player
+          {t('create.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create a new player</DialogTitle>
-          <DialogDescription>Fill in the details to create a new player.</DialogDescription>
+          <DialogTitle>{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         {isLoadingDialog ? (
@@ -138,13 +140,13 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
           <div className="space-y-4">
             <Tabs defaultValue="single" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="single">One Player</TabsTrigger>
-                <TabsTrigger value="multiple">Multiple Players</TabsTrigger>
+                <TabsTrigger value="single">{t('tabs.single')}</TabsTrigger>
+                <TabsTrigger value="multiple">{t('tabs.multiple')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="single">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-lg font-semibold">Create New Player</h4>
+                  <h4 className="text-lg font-semibold">{t('create.title')}</h4>
                 </div>
 
                 <Form {...form}>
@@ -155,12 +157,12 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">First Name</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.firstName')}</FormLabel>
                             <FormControl>
                               <Input
                                 required
                                 type="text"
-                                placeholder="Enter player name"
+                                placeholder={t('placeholders.enterPlayerName')}
                                 className="h-11"
                                 {...field}
                               />
@@ -175,9 +177,9 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Last Name</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.lastName')}</FormLabel>
                             <FormControl>
-                              <Input type="text" placeholder="Enter last name" className="h-11" {...field} />
+                              <Input type="text" placeholder={t('placeholders.enterLastName')} className="h-11" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -190,7 +192,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                       name="birthdate"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>Date of birth</FormLabel>
+                          <FormLabel>{t('labels.dateOfBirth')}</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -201,7 +203,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                                     !field.value && 'text-muted-foreground'
                                   )}
                                 >
-                                  {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                  {field.value ? format(field.value, 'PPP') : <span>{t('placeholders.pickDate')}</span>}
                                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                 </Button>
                               </FormControl>
@@ -218,7 +220,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                               />
                             </PopoverContent>
                           </Popover>
-                          <FormDescription>Your date of birth is used to calculate your age.</FormDescription>
+                          <FormDescription>{t('descriptions.dateOfBirth')}</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -229,7 +231,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="overall"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Overall (0-99)</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.overall')}</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="0" className="h-11" {...field} />
                             </FormControl>
@@ -243,7 +245,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="salary"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Salary</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.salary')}</FormLabel>
                             <FormControl>
                               <Input type="number" placeholder="0" className="h-11" {...field} />
                             </FormControl>
@@ -259,7 +261,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="ownerClubId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Owner Club</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.ownerClub')}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               value={field.value || 'none'}
@@ -268,18 +270,18 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                               <FormControl>
                                 <SelectTrigger className="h-11 w-full" disabled={isLoadingClubs}>
                                   <SelectValue
-                                    placeholder={isLoadingClubs ? 'Loading clubs...' : 'Select owner club'}
+                                    placeholder={isLoadingClubs ? t('placeholders.loadingClubs') : t('placeholders.selectOwnerClub')}
                                   />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
                                 {isLoadingClubs ? (
                                   <SelectItem value="loading" disabled>
-                                    Loading...
+                                    {t('placeholders.loading')}
                                   </SelectItem>
                                 ) : (
                                   <>
-                                    <SelectItem value="none">None</SelectItem>
+                                    <SelectItem value="none">{t('placeholders.none')}</SelectItem>
                                     {clubs.map((club) => (
                                       <SelectItem key={club.id} value={club.id}>
                                         {club.name}
@@ -299,7 +301,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="actualClubId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Actual Club</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.actualClub')}</FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               value={field.value || 'none'}
@@ -308,18 +310,18 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                               <FormControl>
                                 <SelectTrigger className="h-11 w-full" disabled={isLoadingClubs}>
                                   <SelectValue
-                                    placeholder={isLoadingClubs ? 'Loading clubs...' : 'Select actual club'}
+                                    placeholder={isLoadingClubs ? t('placeholders.loadingClubs') : t('placeholders.selectActualClub')}
                                   />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
                                 {isLoadingClubs ? (
                                   <SelectItem value="loading" disabled>
-                                    Loading...
+                                    {t('placeholders.loading')}
                                   </SelectItem>
                                 ) : (
                                   <>
-                                    <SelectItem value="none">None</SelectItem>
+                                    <SelectItem value="none">{t('placeholders.none')}</SelectItem>
                                     {clubs.map((club) => (
                                       <SelectItem key={club.id} value={club.id}>
                                         {club.name}
@@ -341,9 +343,9 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="sofifaId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Sofifa ID (optional)</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.sofifaId')}</FormLabel>
                             <FormControl>
-                              <Input type="text" placeholder="Sofifa ID" className="h-11" {...field} />
+                              <Input type="text" placeholder={t('placeholders.sofifaId')} className="h-11" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -355,9 +357,9 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         name="transfermarktId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="font-medium">Transfermarkt ID (optional)</FormLabel>
+                            <FormLabel className="font-medium">{t('labels.transfermarktId')}</FormLabel>
                             <FormControl>
-                              <Input type="text" placeholder="Transfermarkt ID" className="h-11" {...field} />
+                              <Input type="text" placeholder={t('placeholders.transfermarktId')} className="h-11" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -375,9 +377,9 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel>Is Kempesita</FormLabel>
+                              <FormLabel>{t('labels.isKempesita')}</FormLabel>
                               <FormDescription>
-                                Mark if the player is a Kempesita (youth academy player).
+                                {t('descriptions.isKempesita')}
                               </FormDescription>
                               <FormMessage />
                             </div>
@@ -396,8 +398,8 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                               <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                              <FormLabel>Is Active</FormLabel>
-                              <FormDescription>Mark if the player is currently active.</FormDescription>
+                              <FormLabel>{t('labels.isActive')}</FormLabel>
+                              <FormDescription>{t('descriptions.isActive')}</FormDescription>
                               <FormMessage />
                             </div>
                           </FormItem>
@@ -407,7 +409,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
 
                     <div className="flex justify-end gap-2">
                       <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                        Back
+                        {t('buttons.back')}
                       </Button>
                       <Button
                         type="submit"
@@ -417,10 +419,10 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         {isLoadingClubs ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Preparing...
+                            {t('buttons.preparing')}
                           </>
                         ) : (
-                          'Create Player'
+                          t('buttons.create')
                         )}
                       </Button>
                     </div>
@@ -431,14 +433,14 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
               <TabsContent value="multiple">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold">Create Multiple Players</h4>
+                    <h4 className="text-lg font-semibold">{t('csv.title')}</h4>
                   </div>
 
                   <div className="space-y-4">
                     <div className="border border-blue-200 rounded-lg p-4">
-                      <h5 className="font-medium text-blue-900 mb-2">CSV Format Requirements</h5>
+                      <h5 className="font-medium text-blue-900 mb-2">{t('csv.formatTitle')}</h5>
                       <p className="text-sm text-blue-700 mb-2">
-                        Your CSV file should contain the following columns:
+                        {t('csv.formatDescription')}
                       </p>
                       <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
                         <li>name (required)</li>
@@ -460,10 +462,10 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                     {selectedFile && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                         <p className="text-sm text-green-700">
-                          Selected file: <span className="font-medium">{selectedFile.name}</span>
+                          {t('csv.selectedFile')} <span className="font-medium">{selectedFile.name}</span>
                         </p>
                         <p className="text-xs text-green-600 mt-1">
-                          Size: {(selectedFile.size / 1024).toFixed(2)} KB
+                          {t('csv.size')} {(selectedFile.size / 1024).toFixed(2)} KB
                         </p>
                       </div>
                     )}
@@ -471,7 +473,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
 
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                      Back
+                      {t('buttons.back')}
                     </Button>
                     {/* <Button 
                             onClick={handleBulkCreate}

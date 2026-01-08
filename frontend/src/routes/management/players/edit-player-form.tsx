@@ -33,6 +33,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 
 interface EditPlayerFormProps {
   player: Player
@@ -42,6 +43,7 @@ interface EditPlayerFormProps {
 }
 
 function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormProps) {
+  const { t } = useTranslation('players')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.PlayerSchema>>({
@@ -101,13 +103,13 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
 
       await PlayerService.updatePlayer(player.id, updateData)
       setVerificationStatus('success')
-      toast.success('Player updated successfully!')
+      toast.success(t('edit.success'))
       onSuccess?.()
       onClose?.()
     } catch (error) {
       console.error('Error updating player:', error)
       setVerificationStatus('error')
-      toast.error(error instanceof Error ? error.message : 'Failed to update player. Please try again.')
+      toast.error(error instanceof Error ? error.message : t('edit.error'))
     }
   }
 
@@ -121,8 +123,8 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
     <Dialog open={!!player} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit Player</DialogTitle>
-          <DialogDescription>Make changes to the player here. Click save when you're done.</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('edit.title')}</DialogTitle>
+          <DialogDescription>{t('edit.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -133,7 +135,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">First Name</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.firstName')}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-11">
@@ -141,7 +143,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                         </div>
                         <Input
                           type="text"
-                          placeholder="Enter player name"
+                          placeholder={t('placeholders.enterPlayerName')}
                           className="h-11 pl-12"
                           {...field}
                         />
@@ -157,13 +159,13 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Last Name</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.lastName')}</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-11">
                           <User className="size-4 text-gray-400" />
                         </div>
-                        <Input type="text" placeholder="Enter last name" className="h-11 pl-12" {...field} />
+                        <Input type="text" placeholder={t('placeholders.enterLastName')} className="h-11 pl-12" {...field} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -177,7 +179,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
               name="birthdate"
               render={({ field }) => (
                 <FormItem className="flex flex-col select-auto">
-                  <FormLabel>Date of birth</FormLabel>
+                  <FormLabel>{t('labels.dateOfBirth')}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -188,7 +190,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                             !field.value && 'text-muted-foreground'
                           )}
                         >
-                          {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                          {field.value ? format(field.value, 'PPP') : <span>{t('placeholders.pickDate')}</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
@@ -204,7 +206,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormDescription>Your date of birth is used to calculate your age.</FormDescription>
+                  <FormDescription>{t('descriptions.dateOfBirth')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -216,7 +218,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="overall"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Overall (0-99)</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.overall')}</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="0" className="h-11" min={0} max={99} {...field} />
                     </FormControl>
@@ -230,7 +232,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="salary"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Salary</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.salary')}</FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="0" className="h-11" min={0} {...field} />
                     </FormControl>
@@ -246,18 +248,18 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="ownerClubId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Owner Club</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.ownerClub')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger className="h-11 w-full">
                           <div className="flex items-center gap-3">
                             <Building2 className="size-4 text-gray-400" />
-                            <SelectValue placeholder="Select owner club" />
+                            <SelectValue placeholder={t('placeholders.selectOwnerClub')} />
                           </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="none">{t('placeholders.none')}</SelectItem>
                         {clubs.map((club) => (
                           <SelectItem key={club.id} value={club.id}>
                             {club.name}
@@ -275,18 +277,18 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="actualClubId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Actual Club</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.actualClub')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger className="h-11 w-full">
                           <div className="flex items-center gap-3">
                             <Building2 className="size-4 text-gray-400" />
-                            <SelectValue placeholder="Select actual club" />
+                            <SelectValue placeholder={t('placeholders.selectActualClub')} />
                           </div>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="none">{t('placeholders.none')}</SelectItem>
                         {clubs.map((club) => (
                           <SelectItem key={club.id} value={club.id}>
                             {club.name}
@@ -306,9 +308,9 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="sofifaId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Sofifa ID (optional)</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.sofifaId')}</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="Sofifa ID" className="h-11" {...field} />
+                      <Input type="text" placeholder={t('placeholders.sofifaId')} className="h-11" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -320,9 +322,9 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 name="transfermarktId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium">Transfermarkt ID (optional)</FormLabel>
+                    <FormLabel className="font-medium">{t('labels.transfermarktId')}</FormLabel>
                     <FormControl>
-                      <Input type="text" placeholder="Transfermarkt ID" className="h-11" {...field} />
+                      <Input type="text" placeholder={t('placeholders.transfermarktId')} className="h-11" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -339,9 +341,9 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Is Kempesita</FormLabel>
+                    <FormLabel>{t('labels.isKempesita')}</FormLabel>
                     <FormDescription>
-                      Mark if the player is a Kempesita (youth academy player).
+                      {t('descriptions.isKempesita')}
                     </FormDescription>
                   </div>
                 </FormItem>
@@ -357,8 +359,8 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Is Active</FormLabel>
-                    <FormDescription>Mark if the player is currently active.</FormDescription>
+                    <FormLabel>{t('labels.isActive')}</FormLabel>
+                    <FormDescription>{t('descriptions.isActive')}</FormDescription>
                   </div>
                 </FormItem>
               )}
@@ -367,7 +369,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={verificationStatus === 'loading'}>
-                  Cancel
+                  {t('buttons.cancel')}
                 </Button>
               </DialogClose>
               <Button
@@ -378,12 +380,12 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Updating player...
+                    {t('edit.button')}...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <User className="size-4" />
-                    Update Player
+                    {t('edit.button')}
                   </div>
                 )}
               </Button>

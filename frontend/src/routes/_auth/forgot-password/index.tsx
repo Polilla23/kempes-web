@@ -6,12 +6,14 @@ import { CheckCircle, XCircle } from 'lucide-react'
 import AuthLayout from '../auth-layout'
 import ForgotPasswordForm from './form'
 import FormSchemas from '@/lib/form-schemas'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/_auth/forgot-password/')({
   component: ForgotPasswordPage,
 })
 
 function ForgotPasswordPage() {
+  const { t } = useTranslation('auth')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -22,14 +24,14 @@ function ForgotPasswordPage() {
       setVerificationStatus('success')
     } catch (error: any) {
       setVerificationStatus('error')
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')
+      setErrorMessage(error instanceof Error ? error.message : t('forgotPassword.errorDescription'))
       console.error(errorMessage)
     }
   }
 
   if (verificationStatus === 'success') {
     return (
-      <AuthLayout title="Success!" description="Please check your email for further instructions.">
+      <AuthLayout title={t('forgotPassword.successTitle')} description={t('forgotPassword.successDescription')}>
         <div className="flex flex-col items-center space-y-4 pt-6">
           <div className="rounded-full bg-green-100 p-3">
             <CheckCircle className="h-8 w-8 text-green-600" />
@@ -41,7 +43,7 @@ function ForgotPasswordPage() {
 
   if (verificationStatus === 'error') {
     return (
-      <AuthLayout title="Oops! Something went wrong" description="Please try again later.">
+      <AuthLayout title={t('forgotPassword.errorTitle')} description={t('forgotPassword.errorDescription')}>
         <div className="flex flex-col items-center space-y-4 pt-6">
           <div className="rounded-full bg-red-100 p-3">
             <XCircle className="h-8 w-8 text-red-600" />
@@ -52,7 +54,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout title="Forgot Password" description="Enter your email to reset your password.">
+    <AuthLayout title={t('forgotPassword.title')} description={t('forgotPassword.description')}>
       <ForgotPasswordForm
         onSubmit={onSubmit}
         verificationStatus={verificationStatus}
