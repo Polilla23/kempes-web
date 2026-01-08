@@ -2,10 +2,12 @@ import { Moon, Sun, LaptopMinimal } from 'lucide-react'
 import { useTheme } from '@/context/theme-provider'
 import { SidebarMenuButton, useSidebar } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export function ModeToggle() {
   const { setTheme, theme } = useTheme()
   const { state: sidebarState } = useSidebar()
+  const { t } = useTranslation('common')
 
   const toggleTheme = () => {
     switch (theme) {
@@ -39,13 +41,13 @@ export function ModeToggle() {
   const getThemeText = () => {
     switch (theme) {
       case 'light':
-        return 'Light'
+        return t('theme.light')
       case 'dark':
-        return 'Dark'
+        return t('theme.dark')
       case 'system':
-        return 'System'
+        return t('theme.system')
       default:
-        return 'Light'
+        return t('theme.light')
     }
   }
 

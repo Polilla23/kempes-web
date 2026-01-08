@@ -1,0 +1,64 @@
+{
+  "title": "Gestión de Temporadas",
+  "list": {
+    "error": "Error al cargar temporadas"
+  },
+  "create": {
+    "title": "Crear Nueva Temporada",
+    "description": "Agregar una nueva temporada al sistema",
+    "button": "Nueva Temporada",
+    "action": "Crear",
+    "success": "¡Temporada creada exitosamente!",
+    "error": "Error al crear temporada",
+    "activeDescription": "Marcar esta temporada como la temporada activa actual"
+  },
+  "edit": {
+    "title": "Editar Temporada",
+    "description": "Realizar cambios a la temporada",
+    "button": "Actualizar Temporada",
+    "action": "Editar",
+    "success": "¡Temporada actualizada exitosamente!",
+    "error": "Error al actualizar temporada",
+    "activeDescription": "Marcar esta temporada como la temporada activa actual"
+  },
+  "delete": {
+    "confirm": "¿Estás seguro de que deseas eliminar esta temporada?",
+    "action": "Eliminar",
+    "success": "¡Temporada eliminada exitosamente!",
+    "error": "Error al eliminar temporada"
+  },
+  "fields": {
+    "name": "Nombre",
+    "number": "Número de Temporada",
+    "seasonLabel": "Temporada {{number}}",
+    "status": "Estado",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "active": "¿Activa?",
+    "isActive": "Activa",
+    "seasonNumber": "Número de Temporada"
+  },
+  "labels": {
+    "seasonNumber": "Número de Temporada",
+    "isActive": "Establecer como Temporada Activa"
+  },
+  "placeholders": {
+    "seasonNumber": "ej., 1, 2, 3"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "noSeasons": "No se encontraron temporadas"
+  },
+  "buttons": {
+    "cancel": "Cancelar",
+    "create": "Crear Temporada",
+    "update": "Actualizar Temporada"
+  },
+  "status": {
+    "active": "Activa",
+    "inactive": "Inactiva",
+    "creating": "Creando temporada...",
+    "updating": "Actualizando temporada..."
+  }
+}

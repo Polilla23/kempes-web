@@ -21,12 +21,14 @@ import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import EditClubForm from './edit-club-form'
 import UserService from '@/services/user.service'
 import { Badge } from '@/components/ui/badge'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/management/clubs/')({
   component: ClubManagement,
 })
 
 function ClubManagement() {
+  const { t } = useTranslation('clubs')
   const [clubs, setClubs] = useState<Club[]>([])
   const [isLoadingClubs, setIsLoadingClubs] = useState(true)
   const [isLoadingUsers, setIsLoadingUsers] = useState(true) // Add loading state for users
@@ -54,7 +56,7 @@ function ClubManagement() {
     } catch (error) {
       console.error('Error fetching users:', error)
       setAvailableUsers([])
-      toast.error('Failed to fetch users')
+      toast.error(t('create.error'))
     } finally {
       setIsLoadingUsers(false) // Set loading to false
     }
@@ -71,7 +73,7 @@ function ClubManagement() {
       setClubs(response.clubs || [])
     } catch (error) {
       console.error('Error fetching clubs:', error)
-      toast.error('Failed to fetch clubs')
+      toast.error(t('create.error'))
       setClubs([])
     } finally {
       setIsLoadingClubs(false)
@@ -104,11 +106,11 @@ function ClubManagement() {
   const handleDeleteClub = async (clubId: string) => {
     try {
       await ClubService.deleteClub(clubId)
-      toast.success('Club deleted successfully')
+      toast.success(t('delete.success'))
       await Promise.all([fetchClubs(), fetchUsers()]) // Refresh both clubs and users
     } catch (error) {
       console.error('Error deleting club:', error)
-      toast.error('Failed to delete club')
+      toast.error(t('delete.error'))
     }
   }
 
@@ -127,11 +129,11 @@ function ClubManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name="Name" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.name')} type="string" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('logo', {
-        header: (info) => <DefaultHeader info={info} name="Logo" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.logo')} type="string" />,
         cell: (info) => {
           const logo = info.getValue()
           return logo ? (
@@ -142,19 +144,19 @@ function ClubManagement() {
         },
       }),
       columnHelper.accessor('user', {
-        header: (info) => <DefaultHeader info={info} name="User" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.user')} type="string" />,
         cell: ({ row }) => {
           const user: User | null | undefined = row.getValue('user')
-          const name = user?.email || 'No owner'
+          const name = user?.email || t('table.noUser')
           return <span>{name}</span>
         },
       }),
       columnHelper.accessor('isActive', {
-        header: (info) => <DefaultHeader info={info} name="Active?" type="boolean" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.active')} type="boolean" />,
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <Badge variant={row.original.isActive ? "default" : "destructive"}>
-              {row.original.isActive ? "Active" : "Inactive"}
+              {row.original.isActive ? t('fields.isActive') : t('table.noClubs')}
             </Badge>
           </div>
         ),
@@ -162,7 +164,7 @@ function ClubManagement() {
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">Actions</span>,
+        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const club = row.original
           return (
@@ -175,10 +177,10 @@ function ClubManagement() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(club)}>
-                    <Pencil className="size-4" /> Edit
+                    <Pencil className="size-4" /> {t('edit.action')}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleDeleteClub(club.id)}>
-                    <Trash2 className="size-4 text-destructive" /> Delete
+                    <Trash2 className="size-4 text-destructive" /> {t('delete.action')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -187,7 +189,7 @@ function ClubManagement() {
         },
       }),
     ],
-    [isEditModalOpen]
+    [isEditModalOpen, t]
   )
 
   // Show loading if either clubs or users are loading
@@ -197,15 +199,15 @@ function ClubManagement() {
 
   return (
     <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-      <h1 className="text-2xl font-bold mb-10 mt-8 select-none">Clubs Management</h1>
+      <h1 className="text-2xl font-bold mb-10 mt-8 select-none">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
-          Search
+          {t('table.search')}
         </Label>
         <Input
           id="search"
           type="text"
-          placeholder="Search..."
+          placeholder={`${t('table.search')}...`}
           className="pl-8 max-w-md w-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

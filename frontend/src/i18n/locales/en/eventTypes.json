@@ -1,0 +1,61 @@
+{
+  "title": "Event Types",
+  "create": {
+    "title": "Create New Event Type",
+    "description": "Add a new event type to the system",
+    "button": "New Event Type",
+    "action": "Create Event Type",
+    "success": "Event type created successfully!",
+    "error": "An error occurred while creating the event type.",
+    "creating": "Creating..."
+  },
+  "edit": {
+    "title": "Edit Event Type",
+    "description": "Make changes to the event type here. Click save when you're done.",
+    "button": "Update Event Type",
+    "action": "Edit",
+    "success": "Event type updated successfully!",
+    "error": "Failed to update event type",
+    "updating": "Updating..."
+  },
+  "delete": {
+    "action": "Delete",
+    "success": "Event type deleted successfully",
+    "error": "Failed to delete event type"
+  },
+  "fields": {
+    "displayName": "Display Name",
+    "name": "Name (Slug)",
+    "icon": "Icon",
+    "eventType": "Event Type",
+    "isActive": "Is Active",
+    "active": "Active"
+  },
+  "labels": {
+    "displayName": "Display Name",
+    "icon": "Icon",
+    "eventType": "Event Type",
+    "isActive": "Is Active"
+  },
+  "placeholders": {
+    "selectEventType": "Select event type",
+    "displayName": "e.g., Goal, Yellow Card",
+    "icon": "e.g., ⚽, 🟨"
+  },
+  "types": {
+    "GOAL": "Goal ⚽",
+    "YELLOW_CARD": "Yellow Card 🟨",
+    "RED_CARD": "Red Card 🟥",
+    "INJURY": "Injury 🤕",
+    "MVP": "MVP 🌟"
+  },
+  "table": {
+    "search": "Search",
+    "actions": "Actions",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "buttons": {
+    "cancel": "Cancel"
+  }
+}

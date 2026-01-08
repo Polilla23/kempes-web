@@ -1,0 +1,64 @@
+{
+  "title": "Seasons Management",
+  "list": {
+    "error": "Failed to fetch seasons"
+  },
+  "create": {
+    "title": "Create New Season",
+    "description": "Add a new season to the system",
+    "button": "New Season",
+    "action": "Create",
+    "success": "Season created successfully!",
+    "error": "Failed to create season",
+    "activeDescription": "Mark this season as the currently active season"
+  },
+  "edit": {
+    "title": "Edit Season",
+    "description": "Make changes to the season",
+    "button": "Update Season",
+    "action": "Edit",
+    "success": "Season updated successfully!",
+    "error": "Failed to update season",
+    "activeDescription": "Mark this season as the currently active season"
+  },
+  "delete": {
+    "confirm": "Are you sure you want to delete this season?",
+    "action": "Delete",
+    "success": "Season deleted successfully!",
+    "error": "Failed to delete season"
+  },
+  "fields": {
+    "name": "Name",
+    "number": "Season Number",
+    "seasonLabel": "Season {{number}}",
+    "status": "Status",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "active": "Active?",
+    "isActive": "Active",
+    "seasonNumber": "Season Number"
+  },
+  "labels": {
+    "seasonNumber": "Season Number",
+    "isActive": "Set as Active Season"
+  },
+  "placeholders": {
+    "seasonNumber": "e.g., 1, 2, 3"
+  },
+  "table": {
+    "search": "Search",
+    "actions": "Actions",
+    "noSeasons": "No seasons found"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "create": "Create Season",
+    "update": "Update Season"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "creating": "Creating season...",
+    "updating": "Updating season..."
+  }
+}

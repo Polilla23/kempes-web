@@ -27,51 +27,53 @@ import {
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useUser } from '@/context/UserContext'
+import { useTranslation } from 'react-i18next'
 
 const navItems = [
-  { label: 'Home', icon: House, to: '/' },
-  { label: 'Standings', icon: ListOrdered, to: '/standings' },
-  { label: 'Fixture', icon: CalendarRange, to: '/fixture' },
-  { label: 'Statistics', icon: ChartColumn, to: '/stats' },
-  { label: 'Transfers', icon: ArrowLeftRight, to: '/transfers' },
+  { key: 'home', icon: House, to: '/' },
+  { key: 'standings', icon: ListOrdered, to: '/standings' },
+  { key: 'fixture', icon: CalendarRange, to: '/fixture' },
+  { key: 'statistics', icon: ChartColumn, to: '/stats' },
+  { key: 'transfers', icon: ArrowLeftRight, to: '/transfers' },
 ]
 const adminItems = [
-  { label: 'Users', icon: UserCog, to: '/management/users' },
-  { label: 'Clubs', icon: Shield, to: '/management/clubs' },
-  { label: 'Players', icon: Users, to: '/management/players' },
-  { label: 'Salary Rates', icon: CircleDollarSign, to: '/management/salary-rates' },
-  { label: 'Competitions', icon: Trophy, to: '/management/competitions' },
+  { key: 'users', icon: UserCog, to: '/management/users' },
+  { key: 'clubs', icon: Shield, to: '/management/clubs' },
+  { key: 'players', icon: Users, to: '/management/players' },
+  { key: 'salaryRates', icon: CircleDollarSign, to: '/management/salary-rates' },
+  { key: 'competitions', icon: Trophy, to: '/management/competitions' },
 ]
 const configurationItems = [
-  { label: 'Event Types', icon: Zap, to: '/configuration/event-types' },
-  { label: 'Competition Types', icon: Trophy, to: '/configuration/competition-types' },
-  { label: 'Seasons', icon: CalendarDays, to: '/configuration/seasons' },
+  { key: 'eventTypes', icon: Zap, to: '/configuration/event-types' },
+  { key: 'competitionTypes', icon: Trophy, to: '/configuration/competition-types' },
+  { key: 'seasons', icon: CalendarDays, to: '/configuration/seasons' },
 ]
 
 const NavbarContent = () => {
   const { role } = useUser()
   const { state: sidebarState } = useSidebar()
+  const { t } = useTranslation('navigation')
   return (
     <>
       <SidebarGroup className={cn('pt-3', sidebarState === 'collapsed' && 'hidden')}>
         <SidebarGroupContent className="relative select-none">
           <Label htmlFor="search" className="sr-only select-none">
-            Search
+            {t('search')}
           </Label>
-          <SidebarInput id="search" type="text" placeholder="Search..." className="pl-8" />
+          <SidebarInput id="search" type="text" placeholder={`${t('search')}...`} className="pl-8" />
           <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
         </SidebarGroupContent>
       </SidebarGroup>
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            <SidebarGroupLabel className="select-none">Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel className="select-none">{t('menu.title')}</SidebarGroupLabel>
             {navItems.map((item) => (
-              <SidebarMenuItem key={item.label}>
+              <SidebarMenuItem key={item.key}>
                 <SidebarMenuButton asChild>
                   <Link className="select-none" to={item.to}>
                     <item.icon />
-                    <span>{item.label}</span>
+                    <span>{t(`menu.${item.key}`)}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -83,13 +85,13 @@ const NavbarContent = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarGroupLabel className="select-none"> Management & Administration</SidebarGroupLabel>
+              <SidebarGroupLabel className="select-none">{t('management.title')}</SidebarGroupLabel>
               {adminItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
+                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                     <Link className="select-none" to={item.to}>
                       <item.icon />
-                      <span>{item.label}</span>
+                      <span>{t(`management.${item.key}`)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -103,14 +105,14 @@ const NavbarContent = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarGroupLabel className="select-none">
-                Configuration
+                {t('configuration.title')}
               </SidebarGroupLabel>
               {configurationItems.map((item) => (
-                <SidebarMenuItem key={item.label}>
+                <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>
                     <Link className="select-none" to={item.to}>
                       <item.icon />
-                      <span>{item.label}</span>
+                      <span>{t(`configuration.${item.key}`)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

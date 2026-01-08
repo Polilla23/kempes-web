@@ -6,12 +6,14 @@ import LoginForm from './form'
 import AuthLayout from '../auth-layout'
 import type { z } from 'zod'
 import type FormSchemas from '@/lib/form-schemas'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/_auth/login/')({
   component: LoginPage,
 })
 
 function LoginPage() {
+  const { t } = useTranslation('auth')
   const { isAuthenticated, loading, refreshUser } = useUser()
   const navigate = useNavigate()
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
@@ -38,13 +40,13 @@ function LoginPage() {
       await navigate({ to: '/', replace: true })
     } catch (error: any) {
       console.error('[Login] Error occurred:', error)
-      setErrorMessage(error instanceof Error ? error.message : 'An error occurred while logging in.')
+      setErrorMessage(error instanceof Error ? error.message : t('login.error'))
       setVerificationStatus('error')
     }
   }
 
   if (loading) {
-    return <div>Loading...</div>
+    return <div>{t('login.loading')}</div>
   }
 
   if (isAuthenticated) {
@@ -52,7 +54,7 @@ function LoginPage() {
   }
 
   return (
-    <AuthLayout title="Login to your account" description="Enter your email below to login to your account">
+    <AuthLayout title={t('login.title')} description={t('login.description')}>
       <LoginForm
         onSubmit={onSubmit}
         verificationStatus={verificationStatus}

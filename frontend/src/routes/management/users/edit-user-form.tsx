@@ -20,6 +20,7 @@ import FormSchemas from '@/lib/form-schemas'
 import UserService from '@/services/user.service'
 import { Loader2, MailIcon, UserPlus } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTranslation } from 'react-i18next'
 
 interface EditUserFormProps {
   user: User
@@ -28,6 +29,7 @@ interface EditUserFormProps {
 }
 
 function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
+  const { t } = useTranslation('users')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.editUserSchema>>({
@@ -44,11 +46,11 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
       const transformedValues = { ...values, role: values.role as UserRole }
       await UserService.updateUser(user.id, transformedValues)
 
-      toast.success('User updated successfully!')
+      toast.success(t('edit.success'))
       onSuccess?.()
     } catch (error) {
       console.error('Error updating user:', error)
-      toast.error('The operation has failed.')
+      toast.error(t('edit.error'))
     } finally {
       onClose?.()
     }
@@ -58,8 +60,8 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
     <Dialog open={!!user} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit User</DialogTitle>
-          <DialogDescription>Make changes to the user here. Click save when you're done.</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('edit.title')}</DialogTitle>
+          <DialogDescription>{t('edit.description')}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -68,7 +70,7 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Email</FormLabel>
+                  <FormLabel className="select-none">{t('fields.email')}</FormLabel>
                   <FormControl>
                     <div className="relative select-none">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
@@ -76,7 +78,7 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
                       </div>
                       <Input
                         type="email"
-                        placeholder="Enter your email"
+                        placeholder={t('placeholders.email')}
                         className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                         {...field}
                       />
@@ -91,16 +93,16 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>{t('fields.role')}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select user role" />
+                        <SelectValue placeholder={t('placeholders.selectRole')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="USER">User</SelectItem>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="USER">{t('roles.USER')}</SelectItem>
+                      <SelectItem value="ADMIN">{t('roles.ADMIN')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -116,12 +118,12 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Updating user...
+                    {t('buttons.update')}...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <UserPlus className="size-4" />
-                    Update User
+                    {t('buttons.update')}
                   </div>
                 )}
               </Button>

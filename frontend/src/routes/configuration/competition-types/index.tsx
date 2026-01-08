@@ -19,12 +19,14 @@ import { Label } from '@/components/ui/label'
 import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import CreateCompetitionTypeForm from './create-form'
 import EditCompetitionTypeForm from './edit-form'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/configuration/competition-types/')({
   component: CompetitionTypeManagement,
 })
 
 function CompetitionTypeManagement() {
+  const { t } = useTranslation('competitionTypes')
   const [competitionTypes, setCompetitionTypes] = useState<CompetitionType[]>([])
   const [isLoadingCompetitionTypes, setIsLoadingCompetitionTypes] = useState(true)
   const [search, setSearch] = useState('')
@@ -39,7 +41,7 @@ function CompetitionTypeManagement() {
       setCompetitionTypes(response.competitionTypes || [])
     } catch (error) {
       console.error('Error fetching competition types:', error)
-      toast.error('Failed to fetch competition types')
+      toast.error(t('create.error'))
       setCompetitionTypes([])
     } finally {
       setIsLoadingCompetitionTypes(false)
@@ -73,11 +75,11 @@ function CompetitionTypeManagement() {
   const handleDeleteCompetitionType = async (competitionTypeId: string) => {
     try {
       await CompetitionTypeService.deleteCompetitionType(competitionTypeId)
-      toast.success('Competition type deleted successfully')
+      toast.success(t('delete.success'))
       fetchCompetitionTypes() // Refresh the list
     } catch (error) {
       console.error('Error deleting competition type:', error)
-      toast.error('Failed to delete competition type')
+      toast.error(t('delete.error'))
     }
   }
 
@@ -96,25 +98,25 @@ function CompetitionTypeManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name="Name" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.name')} type="string" />,
         cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       }),
       columnHelper.accessor('category', {
-        header: (info) => <DefaultHeader info={info} name="Category" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.category')} type="string" />,
         cell: (info) => <span className="capitalize">{info.getValue().toLowerCase()}</span>,
       }),
       columnHelper.accessor('format', {
-        header: (info) => <DefaultHeader info={info} name="Format" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.format')} type="string" />,
         cell: (info) => <span className="capitalize">{info.getValue().toLowerCase()}</span>,
       }),
       columnHelper.accessor('hierarchy', {
-        header: (info) => <DefaultHeader info={info} name="Hierarchy" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.hierarchy')} type="string" />,
         cell: (info) => <span>{info.getValue()}</span>,
       }),
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">Actions</span>,
+        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const competitionType = row.original
           return (
@@ -126,13 +128,13 @@ function CompetitionTypeManagement() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(competitionType)}>
-                  <Pencil className="size-4" /> Edit
+                  <Pencil className="size-4" /> {t('edit.action')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
                   onClick={() => handleDeleteCompetitionType(competitionType.id)}
                 >
-                  <Trash2 className="size-4 text-destructive" /> Delete
+                  <Trash2 className="size-4 text-destructive" /> {t('delete.action')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -140,8 +142,7 @@ function CompetitionTypeManagement() {
         },
       }),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isEditModalOpen]
+    [t, isEditModalOpen]
   )
 
   if (isLoadingCompetitionTypes) {
@@ -150,15 +151,15 @@ function CompetitionTypeManagement() {
 
   return (
     <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">Competition Types</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
-          Search
+          {t('table.search')}
         </Label>
         <Input
           id="search"
           type="text"
-          placeholder="Search..."
+          placeholder={`${t('table.search')}...`}
           className="pl-8 max-w-md w-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

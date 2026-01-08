@@ -1,0 +1,65 @@
+{
+  "title": "Competition Types Management",
+  "create": {
+    "title": "Create New Competition Type",
+    "description": "Add a new competition type to the system",
+    "button": "New Competition Type",
+    "action": "Create",
+    "success": "Competition type created successfully!",
+    "error": "Failed to create competition type"
+  },
+  "edit": {
+    "title": "Edit Competition Type",
+    "description": "Make changes to the competition type",
+    "button": "Update Competition Type",
+    "action": "Edit",
+    "success": "Competition type updated successfully!",
+    "error": "Failed to update competition type"
+  },
+  "delete": {
+    "confirm": "Are you sure you want to delete this competition type?",
+    "action": "Delete",
+    "success": "Competition type deleted successfully!",
+    "error": "Failed to delete competition type"
+  },
+  "fields": {
+    "name": "Name",
+    "category": "Category",
+    "format": "Format",
+    "hierarchy": "Hierarchy",
+    "description": "Description",
+    "isActive": "Is Active"
+  },
+  "labels": {
+    "name": "Competition Name",
+    "category": "Category",
+    "format": "Format",
+    "hierarchy": "Hierarchy",
+    "isActive": "Set as Active"
+  },
+  "placeholders": {
+    "name": "Select competition name",
+    "category": "Select category",
+    "format": "Select format",
+    "hierarchy": "Enter hierarchy (e.g., 1, 2, 3)"
+  },
+  "formats": {
+    "LEAGUE": "League",
+    "CUP": "Cup",
+    "TOURNAMENT": "Tournament"
+  },
+  "table": {
+    "search": "Search",
+    "actions": "Actions",
+    "noCompetitionTypes": "No competition types found"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "create": "Create Competition Type",
+    "update": "Update Competition Type"
+  },
+  "status": {
+    "creating": "Creating...",
+    "updating": "Updating..."
+  }
+}

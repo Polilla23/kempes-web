@@ -19,12 +19,14 @@ import { Label } from '@/components/ui/label'
 import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import CreateEventTypeForm from './create-form'
 import EditEventTypeForm from './edit-form'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/configuration/event-types/')({
   component: EventTypeManagement,
 })
 
 function EventTypeManagement() {
+  const { t } = useTranslation('eventTypes')
   const [eventTypes, setEventTypes] = useState<EventType[]>([])
   const [isLoadingEventTypes, setIsLoadingEventTypes] = useState(true)
   const [search, setSearch] = useState('')
@@ -40,7 +42,7 @@ function EventTypeManagement() {
       setEventTypes(response.eventTypes || [])
     } catch (error) {
       console.error('Error fetching event types:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to fetch event types')
+      toast.error(error instanceof Error ? error.message : t('create.error'))
       setEventTypes([])
     } finally {
       setIsLoadingEventTypes(false)
@@ -74,11 +76,11 @@ function EventTypeManagement() {
   const handleDeleteEventType = async (eventTypeId: string) => {
     try {
       await EventTypeService.deleteEventType(eventTypeId)
-      toast.success('Event type deleted successfully')
+      toast.success(t('delete.success'))
       fetchEventTypes() // Refresh the list
     } catch (error) {
       console.error('Error deleting event type:', error)
-      toast.error('Failed to delete event type')
+      toast.error(t('delete.error'))
     }
   }
 
@@ -97,29 +99,29 @@ function EventTypeManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('displayName', {
-        header: (info) => <DefaultHeader info={info} name="Display Name" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.displayName')} type="string" />,
         cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       }),
       columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name="Name (Slug)" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.name')} type="string" />,
         cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
       }),
       columnHelper.accessor('icon', {
-        header: (info) => <DefaultHeader info={info} name="Icon" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.icon')} type="string" />,
         cell: (info) => <span className="text-2xl">{info.getValue()}</span>,
       }),
       columnHelper.accessor('isActive', {
-        header: (info) => <DefaultHeader info={info} name="Active" type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.active')} type="string" />,
         cell: (info) => (
           <span className={info.getValue() ? 'text-green-600' : 'text-red-600'}>
-            {info.getValue() ? 'Yes' : 'No'}
+            {info.getValue() ? t('table.yes') : t('table.no')}
           </span>
         ),
       }),
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">Actions</span>,
+        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const eventType = row.original
           return (
@@ -131,10 +133,10 @@ function EventTypeManagement() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(eventType)}>
-                  <Pencil className="size-4" /> Edit
+                  <Pencil className="size-4" /> {t('edit.action')}
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer" onClick={() => handleDeleteEventType(eventType.id)}>
-                  <Trash2 className="size-4 text-destructive" /> Delete
+                  <Trash2 className="size-4 text-destructive" /> {t('delete.action')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -142,7 +144,7 @@ function EventTypeManagement() {
         },
       }),
     ],
-    [isEditModalOpen]
+    [t, isEditModalOpen]
   )
 
   if (isLoadingEventTypes) {
@@ -151,15 +153,15 @@ function EventTypeManagement() {
 
   return (
     <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">Event Types</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-8 select-none">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
-          Search
+          {t('table.search')}
         </Label>
         <Input
           id="search"
           type="text"
-          placeholder="Search..."
+          placeholder={`${t('table.search')}...`}
           className="pl-8 max-w-md w-full"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

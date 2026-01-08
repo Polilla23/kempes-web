@@ -1,0 +1,61 @@
+{
+  "title": "Tipos de Eventos",
+  "create": {
+    "title": "Crear Nuevo Tipo de Evento",
+    "description": "Agregar un nuevo tipo de evento al sistema",
+    "button": "Nuevo Tipo de Evento",
+    "action": "Crear Tipo de Evento",
+    "success": "¡Tipo de evento creado exitosamente!",
+    "error": "Ocurrió un error al crear el tipo de evento.",
+    "creating": "Creando..."
+  },
+  "edit": {
+    "title": "Editar Tipo de Evento",
+    "description": "Realiza cambios al tipo de evento aquí. Haz clic en guardar cuando termines.",
+    "button": "Actualizar Tipo de Evento",
+    "action": "Editar",
+    "success": "¡Tipo de evento actualizado exitosamente!",
+    "error": "Error al actualizar el tipo de evento",
+    "updating": "Actualizando..."
+  },
+  "delete": {
+    "action": "Eliminar",
+    "success": "Tipo de evento eliminado exitosamente",
+    "error": "Error al eliminar el tipo de evento"
+  },
+  "fields": {
+    "displayName": "Nombre a Mostrar",
+    "name": "Nombre (Slug)",
+    "icon": "Icono",
+    "eventType": "Tipo de Evento",
+    "isActive": "Está Activo",
+    "active": "Activo"
+  },
+  "labels": {
+    "displayName": "Nombre a Mostrar",
+    "icon": "Icono",
+    "eventType": "Tipo de Evento",
+    "isActive": "Está Activo"
+  },
+  "placeholders": {
+    "selectEventType": "Seleccionar tipo de evento",
+    "displayName": "ej., Gol, Tarjeta Amarilla",
+    "icon": "ej., ⚽, 🟨"
+  },
+  "types": {
+    "GOAL": "Gol ⚽",
+    "YELLOW_CARD": "Tarjeta Amarilla 🟨",
+    "RED_CARD": "Tarjeta Roja 🟥",
+    "INJURY": "Lesión 🤕",
+    "MVP": "MVP 🌟"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "buttons": {
+    "cancel": "Cancelar"
+  }
+}

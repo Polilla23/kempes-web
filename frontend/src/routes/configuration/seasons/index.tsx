@@ -20,12 +20,14 @@ import { Label } from '@/components/ui/label'
 import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import CreateSeasonForm from './create-form'
 import EditSeasonForm from './edit-form'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/configuration/seasons/')({
   component: SeasonManagement,
 })
 
 function SeasonManagement() {
+  const { t } = useTranslation('seasons')
   const [seasons, setSeasons] = useState<Season[]>([])
   const [isLoadingSeasons, setIsLoadingSeasons] = useState(true)
   const [search, setSearch] = useState('')
@@ -40,7 +42,7 @@ function SeasonManagement() {
       setSeasons(response.seasons || [])
     } catch (error) {
       console.error('Error fetching seasons:', error)
-      toast.error('Failed to fetch seasons')
+      toast.error(t('list.error'))
       setSeasons([])
     } finally {
       setIsLoadingSeasons(false)
@@ -73,11 +75,11 @@ function SeasonManagement() {
   const handleDeleteSeason = async (seasonId: string) => {
     try {
       await SeasonService.deleteSeason(seasonId)
-      toast.success('Season deleted successfully')
+      toast.success(t('delete.success'))
       fetchSeasons() // Refresh the list
     } catch (error) {
       console.error('Error deleting season:', error)
-      toast.error('Failed to delete season')
+      toast.error(t('delete.error'))
     }
   }
 
@@ -96,15 +98,15 @@ function SeasonManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('number', {
-        header: (info) => <DefaultHeader info={info} name="Season Number" type="string" />,
-        cell: (info) => <span className="font-medium">Season {info.getValue()}</span>,
+        header: (info) => <DefaultHeader info={info} name={t('fields.number')} type="string" />,
+        cell: (info) => <span className="font-medium">{t('fields.seasonLabel', { number: info.getValue() })}</span>,
       }),
       columnHelper.accessor('isActive', {
-        header: (info) => <DefaultHeader info={info} name="Status" type="boolean" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.status')} type="boolean" />,
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <Badge variant={row.original.isActive ? "default" : "destructive"}>
-              {row.original.isActive ? "Active" : "Inactive"}
+              {row.original.isActive ? t('status.active') : t('status.inactive')}
             </Badge>
           </div>
         ),
@@ -112,7 +114,7 @@ function SeasonManagement() {
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">Actions</span>,
+        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const season = row.original
           return (
@@ -126,11 +128,11 @@ function SeasonManagement() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleEditClick(season)}>
                   <Pencil className="mr-2 h-4 w-4" />
-                  Edit
+                  {t('edit.action')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDeleteSeason(season.id)}>
                   <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-                  Delete
+                  {t('delete.action')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -138,7 +140,7 @@ function SeasonManagement() {
         },
       }),
     ],
-    [isEditModalOpen]
+    [t, isEditModalOpen]
   )
 
   if (isLoadingSeasons) {
@@ -147,16 +149,16 @@ function SeasonManagement() {
 
   return (
     <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-      <h1 className="text-3xl font-bold mb-10 mt-8">Seasons Management</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-8">{t('title')}</h1>
       <div className="flex w-full justify-between gap-4">
         <div className="relative w-full max-w-sm">
           <Label htmlFor="search" className="sr-only">
-            Search
+            {t('table.search')}
           </Label>
           <Input
             id="search"
             type="text"
-            placeholder="Search seasons..."
+            placeholder={`${t('table.search')}...`}
             className="pl-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

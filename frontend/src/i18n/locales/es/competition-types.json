@@ -1,0 +1,65 @@
+{
+  "title": "Gestión de Tipos de Competencia",
+  "create": {
+    "title": "Crear Nuevo Tipo de Competencia",
+    "description": "Agregar un nuevo tipo de competencia al sistema",
+    "button": "Nuevo Tipo de Competencia",
+    "action": "Crear",
+    "success": "¡Tipo de competencia creado exitosamente!",
+    "error": "Error al crear tipo de competencia"
+  },
+  "edit": {
+    "title": "Editar Tipo de Competencia",
+    "description": "Realizar cambios al tipo de competencia",
+    "button": "Actualizar Tipo de Competencia",
+    "action": "Editar",
+    "success": "¡Tipo de competencia actualizado exitosamente!",
+    "error": "Error al actualizar tipo de competencia"
+  },
+  "delete": {
+    "confirm": "¿Estás seguro de que deseas eliminar este tipo de competencia?",
+    "action": "Eliminar",
+    "success": "¡Tipo de competencia eliminado exitosamente!",
+    "error": "Error al eliminar tipo de competencia"
+  },
+  "fields": {
+    "name": "Nombre",
+    "category": "Categoría",
+    "format": "Formato",
+    "hierarchy": "Jerarquía",
+    "description": "Descripción",
+    "isActive": "Está Activo"
+  },
+  "labels": {
+    "name": "Nombre de Competencia",
+    "category": "Categoría",
+    "format": "Formato",
+    "hierarchy": "Jerarquía",
+    "isActive": "Establecer como Activo"
+  },
+  "placeholders": {
+    "name": "Seleccionar nombre de competencia",
+    "category": "Seleccionar categoría",
+    "format": "Seleccionar formato",
+    "hierarchy": "Ingresar jerarquía (ej., 1, 2, 3)"
+  },
+  "formats": {
+    "LEAGUE": "Liga",
+    "CUP": "Copa",
+    "TOURNAMENT": "Torneo"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "noCompetitionTypes": "No se encontraron tipos de competencia"
+  },
+  "buttons": {
+    "cancel": "Cancelar",
+    "create": "Crear Tipo de Competencia",
+    "update": "Actualizar Tipo de Competencia"
+  },
+  "status": {
+    "creating": "Creando...",
+    "updating": "Actualizando..."
+  }
+}

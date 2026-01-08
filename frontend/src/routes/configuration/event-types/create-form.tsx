@@ -21,6 +21,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState } from 'react'
 import { EventTypeName } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface CreateEventTypeFormProps {
   onSuccess?: () => void
@@ -35,6 +36,7 @@ const eventTypeOptions = [
 ]
 
 const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
+  const { t } = useTranslation('eventTypes')
   const [open, setOpen] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
@@ -58,7 +60,7 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
         icon: values.icon,
         isActive: values.isActive,
       })
-      toast.success('Event type created successfully!')
+      toast.success(t('create.success'))
 
       // Reset form and close dialog
       form.reset()
@@ -66,7 +68,7 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
       onSuccess?.()
     } catch (error: any) {
       console.error('Error creating event type:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while creating the event type.')
+      toast.error(error instanceof Error ? error.message : t('create.error'))
       setVerificationStatus('error')
     }
   }
@@ -93,13 +95,13 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
           <Plus className="size-4" />
-          New Event Type
+          {t('create.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Event Type</DialogTitle>
-          <DialogDescription>Add a new event type to the system</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -109,11 +111,11 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Event Type</FormLabel>
+                  <FormLabel>{t('labels.eventType')}</FormLabel>
                   <Select onValueChange={handleEventTypeChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500">
-                        <SelectValue placeholder="Select event type" />
+                        <SelectValue placeholder={t('placeholders.selectEventType')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -134,11 +136,11 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
               name="displayName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Display Name</FormLabel>
+                  <FormLabel className="select-none">{t('labels.displayName')}</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g., Goal, Yellow Card"
+                      placeholder={t('placeholders.displayName')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                     />
@@ -153,11 +155,11 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
               name="icon"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Icon</FormLabel>
+                  <FormLabel className="select-none">{t('labels.icon')}</FormLabel>
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder="e.g., ⚽, 🟨"
+                      placeholder={t('placeholders.icon')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                     />
@@ -175,7 +177,7 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
                   <FormControl>
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
-                  <FormLabel className="select-none">Is Active</FormLabel>
+                  <FormLabel className="select-none">{t('labels.isActive')}</FormLabel>
                   <FormMessage />
                 </FormItem>
               )}
@@ -190,12 +192,12 @@ const CreateEventTypeForm = ({ onSuccess }: CreateEventTypeFormProps) => {
                 {verificationStatus === 'loading' ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Creating...
+                    {t('create.creating')}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Plus className="size-4" />
-                    Create Event Type
+                    {t('create.action')}
                   </div>
                 )}
               </Button>

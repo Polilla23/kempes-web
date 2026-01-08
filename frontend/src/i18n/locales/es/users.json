@@ -1,0 +1,60 @@
+{
+  "title": "Gestión de Usuarios",
+  "create": {
+    "title": "Crear Nuevo Usuario",
+    "description": "Agregar un nuevo usuario al sistema",
+    "button": "Nuevo Usuario",
+    "action": "Crear",
+    "success": "¡Usuario creado exitosamente!",
+    "error": "Error al crear usuario"
+  },
+  "edit": {
+    "title": "Editar Usuario",
+    "description": "Realizar cambios al usuario",
+    "button": "Actualizar Usuario",
+    "action": "Editar",
+    "success": "¡Usuario actualizado exitosamente!",
+    "error": "Error al actualizar usuario"
+  },
+  "delete": {
+    "confirm": "¿Estás seguro de que deseas eliminar este usuario?",
+    "action": "Eliminar",
+    "success": "¡Usuario eliminado exitosamente!",
+    "error": "Error al eliminar usuario"
+  },
+  "fields": {
+    "email": "Email",
+    "password": "Contraseña",
+    "role": "Rol",
+    "club": "Club",
+    "verified": "¿Verificado?",
+    "isVerified": "Verificado",
+    "createdAt": "Creado El"
+  },
+  "labels": {
+    "activeDescription": "Permitir que este usuario acceda al sistema"
+  },
+  "placeholders": {
+    "email": "Ingresa tu email",
+    "password": "Ingresa tu contraseña",
+    "selectRole": "Selecciona el rol del usuario",
+    "selectClub": "Selecciona un club"
+  },
+  "roles": {
+    "ADMIN": "Administrador",
+    "USER": "Usuario"
+  },
+  "buttons": {
+    "create": "Crear Usuario",
+    "update": "Actualizar Usuario",
+    "cancel": "Cancelar",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "noUsers": "No se encontraron usuarios",
+    "noClub": "Sin Club"
+  }
+}

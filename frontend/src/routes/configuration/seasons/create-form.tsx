@@ -19,12 +19,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface CreateSeasonFormProps {
   onSuccess?: () => void
 }
 
 const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
+  const { t } = useTranslation('seasons')
   const [open, setOpen] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
 
@@ -44,7 +46,7 @@ const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
         number: values.number,
         isActive: values.isActive,
       })
-      toast.success('Season created successfully!')
+      toast.success(t('create.success'))
 
       // Reset form and close dialog
       form.reset()
@@ -52,7 +54,7 @@ const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
       onSuccess?.()
     } catch (error: any) {
       console.error('Error creating season:', error)
-      toast.error(error instanceof Error ? error.message : 'An error occurred while creating the season.')
+      toast.error(error instanceof Error ? error.message : t('create.error'))
       setVerificationStatus('error')
     }
   }
@@ -71,13 +73,13 @@ const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
           <Plus className="size-4" />
-          New Season
+          {t('create.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create New Season</DialogTitle>
-          <DialogDescription>Add a new season to the system</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">{t('create.title')}</DialogTitle>
+          <DialogDescription>{t('create.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -87,12 +89,12 @@ const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
               name="number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Season Number</FormLabel>
+                  <FormLabel className="select-none">{t('labels.seasonNumber')}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       min={1}
-                      placeholder="e.g., 1, 2, 3"
+                      placeholder={t('placeholders.seasonNumber')}
                       className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                       {...field}
                       onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
@@ -112,9 +114,9 @@ const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
                     <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel className="select-none">Set as Active Season</FormLabel>
+                    <FormLabel className="select-none">{t('labels.isActive')}</FormLabel>
                     <p className="text-sm text-muted-foreground">
-                      Mark this season as the currently active season
+                      {t('create.activeDescription')}
                     </p>
                   </div>
                 </FormItem>
@@ -130,12 +132,12 @@ const CreateSeasonForm = ({ onSuccess }: CreateSeasonFormProps) => {
                 {verificationStatus === 'loading' ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating season...
+                    {t('status.creating')}
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Season
+                    {t('buttons.create')}
                   </>
                 )}
               </Button>
