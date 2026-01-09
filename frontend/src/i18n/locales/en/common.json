@@ -38,5 +38,14 @@
     "noData": "No data available",
     "noResults": "No results.",
     "loading": "Loading data..."
+  },
+  "table": {
+    "rowsPerPage": "Rows per page",
+    "pageInfo": "Page {{current}} of {{total}}",
+    "showingResults": "Showing {{from}} to {{to}} of {{total}} results",
+    "goToFirstPage": "Go to first page",
+    "goToPreviousPage": "Go to previous page",
+    "goToNextPage": "Go to next page",
+    "goToLastPage": "Go to last page"
   }
 }

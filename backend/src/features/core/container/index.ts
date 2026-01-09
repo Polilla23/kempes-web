@@ -34,6 +34,9 @@ import { EventTypeService } from '@/features/event-types/event-types.service'
 import { SeasonRepository } from '@/features/seasons/seasons.repository'
 import { SeasonController } from '@/features/seasons/seasons.controller'
 import { SeasonService } from '@/features/seasons/seasons.service'
+import { SalaryRateRepository } from '@/features/salary-rates/salary-rates.repository'
+import { SalaryRateController } from '@/features/salary-rates/salary-rates.controller'
+import { SalaryRateService } from '@/features/salary-rates/salary-rates.service'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -51,6 +54,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventRepository: asClass(EventRepository).singleton(),
     eventTypeRepository: asClass(EventTypeRepository).singleton(),
     seasonRepository: asClass(SeasonRepository).singleton(),
+    salaryRateRepository: asClass(SalaryRateRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(MyAccountController).singleton(),
@@ -62,6 +66,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventController: asClass(EventController).singleton(),
     eventTypeController: asClass(EventTypeController).singleton(),
     seasonController: asClass(SeasonController).singleton(),
+    salaryRateController: asClass(SalaryRateController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -73,6 +78,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventService: asClass(EventService).singleton(),
     eventTypeService: asClass(EventTypeService).singleton(),
     seasonService: asClass(SeasonService).singleton(),
+    salaryRateService: asClass(SalaryRateService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
 

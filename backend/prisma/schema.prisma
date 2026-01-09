@@ -61,6 +61,16 @@ model Player {
   @@map("players")
 }
 
+model SalaryRate {
+  id         String  @id @default(uuid())
+  minOverall Int     @map("min_overall")  // Media mínima
+  maxOverall Int     @map("max_overall")  // Media máxima
+  salary     Float   // Salario correspondiente
+  isActive   Boolean @default(true) @map("is_active")
+
+  @@map("salary_rates")
+}
+
 model Season {
   id            String  @id @default(uuid())
   number        Int @unique

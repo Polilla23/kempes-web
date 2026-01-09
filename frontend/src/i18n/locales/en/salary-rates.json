@@ -1,0 +1,52 @@
+{
+  "title": "Salary Rate Management",
+  "create": {
+    "title": "Create New Rate",
+    "description": "Add a new salary rate to the system",
+    "button": "New Rate",
+    "action": "Create",
+    "success": "Rate created successfully!",
+    "error": "Failed to create rate"
+  },
+  "edit": {
+    "title": "Edit Rate",
+    "description": "Make changes to the salary rate",
+    "button": "Update Rate",
+    "action": "Edit",
+    "success": "Rate updated successfully!",
+    "error": "Failed to update rate"
+  },
+  "delete": {
+    "confirm": "Are you sure you want to delete this rate?",
+    "action": "Delete",
+    "success": "Rate deleted successfully!",
+    "error": "Failed to delete rate"
+  },
+  "fields": {
+    "minOverall": "Min Overall",
+    "maxOverall": "Max Overall",
+    "salary": "Salary"
+  },
+  "labels": {
+    "minOverall": "Minimum Overall",
+    "maxOverall": "Maximum Overall",
+    "salary": "Salary"
+  },
+  "placeholders": {
+    "minOverall": "e.g: 70",
+    "maxOverall": "e.g: 79",
+    "salary": "e.g: 150000"
+  },
+  "buttons": {
+    "create": "Create Rate",
+    "creating": "Creating...",
+    "update": "Save Changes",
+    "updating": "Updating...",
+    "cancel": "Cancel"
+  },
+  "table": {
+    "search": "Search",
+    "actions": "Actions",
+    "noRates": "No rates found"
+  }
+}

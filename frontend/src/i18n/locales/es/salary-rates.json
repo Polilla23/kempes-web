@@ -1,0 +1,52 @@
+{
+  "title": "Gestión de Tarifas Salariales",
+  "create": {
+    "title": "Crear Nueva Tarifa",
+    "description": "Agregar una nueva tarifa salarial al sistema",
+    "button": "Nueva Tarifa",
+    "action": "Crear",
+    "success": "¡Tarifa creada exitosamente!",
+    "error": "Error al crear tarifa"
+  },
+  "edit": {
+    "title": "Editar Tarifa",
+    "description": "Realizar cambios a la tarifa salarial",
+    "button": "Actualizar Tarifa",
+    "action": "Editar",
+    "success": "¡Tarifa actualizada exitosamente!",
+    "error": "Error al actualizar tarifa"
+  },
+  "delete": {
+    "confirm": "¿Estás seguro de que deseas eliminar esta tarifa?",
+    "action": "Eliminar",
+    "success": "¡Tarifa eliminada exitosamente!",
+    "error": "Error al eliminar tarifa"
+  },
+  "fields": {
+    "minOverall": "Media Mínima",
+    "maxOverall": "Media Máxima",
+    "salary": "Salario"
+  },
+  "labels": {
+    "minOverall": "Media Mínima",
+    "maxOverall": "Media Máxima",
+    "salary": "Salario"
+  },
+  "placeholders": {
+    "minOverall": "Ej: 70",
+    "maxOverall": "Ej: 79",
+    "salary": "Ej: 150000"
+  },
+  "buttons": {
+    "create": "Crear Tarifa",
+    "creating": "Creando...",
+    "update": "Guardar Cambios",
+    "updating": "Actualizando...",
+    "cancel": "Cancelar"
+  },
+  "table": {
+    "search": "Buscar",
+    "actions": "Acciones",
+    "noRates": "No se encontraron tarifas"
+  }
+}

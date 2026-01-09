@@ -9,6 +9,7 @@ import { fixtureRoutes } from '@/features/fixtures/fixtures.routes'
 import { eventRoutes } from '@/features/events/events.routes'
 import { eventTypeRoutes } from '@/features/event-types/event-types.routes'
 import { seasonRoutes } from '@/features/seasons/seasons.routes'
+import { salaryRateRoutes } from '@/features/salary-rates/salary-rates.routes'
 
 /**
  * Plugin principal de rutas con prefijo /api/v1
@@ -27,6 +28,7 @@ export default async function (app: FastifyInstance) {
       instance.register(eventRoutes, { prefix: '/events' })
       instance.register(eventTypeRoutes, { prefix: '/event-types' })
       instance.register(seasonRoutes, { prefix: '/seasons' })
+      instance.register(salaryRateRoutes, { prefix: '/salary-rates' })
 
       instance.get('/health', async () => ({ status: 'ok', timestamp: new Date() }))
 

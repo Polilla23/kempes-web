@@ -166,3 +166,11 @@ export type CompetitionTypeDTO = {
   format: string
   hierarchy: number
 }
+
+export type SalaryRateDTO = {
+  id: string
+  minOverall: number
+  maxOverall: number
+  salary: number
+  isActive: boolean
+}
