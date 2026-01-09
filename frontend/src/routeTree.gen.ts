@@ -17,6 +17,7 @@ import { Route as PlayerCreateRouteImport } from './routes/player/create'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
+import { Route as ManagementSalaryRatesIndexRouteImport } from './routes/management/salary-rates/index'
 import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
 import { Route as ManagementCompetitionsIndexRouteImport } from './routes/management/competitions/index'
 import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
@@ -74,6 +75,12 @@ const ManagementUsersIndexRoute = ManagementUsersIndexRouteImport.update({
   path: '/management/users/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementSalaryRatesIndexRoute =
+  ManagementSalaryRatesIndexRouteImport.update({
+    id: '/management/salary-rates/',
+    path: '/management/salary-rates/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ManagementPlayersIndexRoute = ManagementPlayersIndexRouteImport.update({
   id: '/management/players/',
   path: '/management/players/',
@@ -183,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
+  '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
+  '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/management/clubs/': typeof ManagementClubsIndexRoute
   '/management/competitions/': typeof ManagementCompetitionsIndexRoute
   '/management/players/': typeof ManagementPlayersIndexRoute
+  '/management/salary-rates/': typeof ManagementSalaryRatesIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
   '/_auth/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/_auth/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/management/clubs'
     | '/management/competitions'
     | '/management/players'
+    | '/management/salary-rates'
     | '/management/users'
     | '/reset-password/index/$token'
     | '/verify-email/index/$token'
@@ -290,6 +301,7 @@ export interface FileRouteTypes {
     | '/management/clubs'
     | '/management/competitions'
     | '/management/players'
+    | '/management/salary-rates'
     | '/management/users'
     | '/reset-password/index/$token'
     | '/verify-email/index/$token'
@@ -316,6 +328,7 @@ export interface FileRouteTypes {
     | '/management/clubs/'
     | '/management/competitions/'
     | '/management/players/'
+    | '/management/salary-rates/'
     | '/management/users/'
     | '/_auth/reset-password/index/$token'
     | '/_auth/verify-email/index/$token'
@@ -343,6 +356,7 @@ export interface RootRouteChildren {
   ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
   ManagementCompetitionsIndexRoute: typeof ManagementCompetitionsIndexRoute
   ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
+  ManagementSalaryRatesIndexRoute: typeof ManagementSalaryRatesIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
   AuthResetPasswordIndexTokenRoute: typeof AuthResetPasswordIndexTokenRoute
   AuthVerifyEmailIndexTokenRoute: typeof AuthVerifyEmailIndexTokenRoute
@@ -404,6 +418,13 @@ declare module '@tanstack/react-router' {
       path: '/management/users'
       fullPath: '/management/users'
       preLoaderRoute: typeof ManagementUsersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/salary-rates/': {
+      id: '/management/salary-rates/'
+      path: '/management/salary-rates'
+      fullPath: '/management/salary-rates'
+      preLoaderRoute: typeof ManagementSalaryRatesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/management/players/': {
@@ -544,6 +565,7 @@ const rootRouteChildren: RootRouteChildren = {
   ManagementClubsIndexRoute: ManagementClubsIndexRoute,
   ManagementCompetitionsIndexRoute: ManagementCompetitionsIndexRoute,
   ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,
+  ManagementSalaryRatesIndexRoute: ManagementSalaryRatesIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,
   AuthResetPasswordIndexTokenRoute: AuthResetPasswordIndexTokenRoute,
   AuthVerifyEmailIndexTokenRoute: AuthVerifyEmailIndexTokenRoute,

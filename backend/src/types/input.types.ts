@@ -94,3 +94,9 @@ export type BracketClub = {
   sourceClubPosition?: 'WINNER' | 'LOSER'
   groupReference?: string
 }
+
+export type CreateSalaryRateInput = {
+  minOverall: number
+  maxOverall: number
+  salary: number
+}

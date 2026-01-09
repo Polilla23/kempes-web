@@ -38,5 +38,14 @@
     "noData": "No hay datos disponibles",
     "noResults": "Sin resultados.",
     "loading": "Cargando datos..."
+  },
+  "table": {
+    "rowsPerPage": "Filas por página",
+    "pageInfo": "Página {{current}} de {{total}}",
+    "showingResults": "Mostrando {{from}} a {{to}} de {{total}} resultados",
+    "goToFirstPage": "Ir a la primera página",
+    "goToPreviousPage": "Ir a la página anterior",
+    "goToNextPage": "Ir a la página siguiente",
+    "goToLastPage": "Ir a la última página"
   }
 }

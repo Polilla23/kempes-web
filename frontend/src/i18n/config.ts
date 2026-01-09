@@ -12,6 +12,7 @@ import enPlayers from './locales/en/players.json'
 import enEventTypes from './locales/en/event-types.json'
 import enCompetitionTypes from './locales/en/competition-types.json'
 import enSeasons from './locales/en/seasons.json'
+import enSalaryRates from './locales/en/salary-rates.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -23,6 +24,7 @@ import esPlayers from './locales/es/players.json'
 import esEventTypes from './locales/es/event-types.json'
 import esCompetitionTypes from './locales/es/competition-types.json'
 import esSeasons from './locales/es/seasons.json'
+import esSalaryRates from './locales/es/salary-rates.json'
 
 // Configure i18next
 i18n
@@ -44,6 +46,7 @@ i18n
         eventTypes: enEventTypes,
         competitionTypes: enCompetitionTypes,
         seasons: enSeasons,
+        salaryRates: enSalaryRates,
       },
       es: {
         common: esCommon,
@@ -55,6 +58,7 @@ i18n
         eventTypes: esEventTypes,
         competitionTypes: esCompetitionTypes,
         seasons: esSeasons,
+        salaryRates: esSalaryRates,
       },
     },
 
@@ -68,7 +72,7 @@ i18n
     defaultNS: 'common',
 
     // Namespaces to load
-    ns: ['common', 'navigation', 'auth', 'users', 'clubs', 'players', 'eventTypes', 'competitionTypes', 'seasons'],
+    ns: ['common', 'navigation', 'auth', 'users', 'clubs', 'players', 'eventTypes', 'competitionTypes', 'seasons', 'salaryRates'],
 
     // Interpolation options
     interpolation: {

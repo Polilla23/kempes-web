@@ -69,6 +69,14 @@ export interface Season {
   isActive: boolean
 }
 
+export interface SalaryRate {
+  id: string
+  minOverall: number
+  maxOverall: number
+  salary: number
+  isActive: boolean
+}
+
 // Tipos para formularios
 export interface LoginFormData {
   email: string
@@ -153,6 +161,21 @@ export interface PlayerResponse {
 
 export interface PlayersResponse {
   players: Player[]
+}
+
+export interface RegisterSalaryRateFormData {
+  minOverall: number
+  maxOverall: number
+  salary: number
+}
+
+export interface SalaryRateResponse {
+  message: string
+  salaryRate?: SalaryRate
+}
+
+export interface SalaryRatesResponse {
+  salaryRates: SalaryRate[]
 }
 
 export type UserRole = 'ADMIN' | 'USER'
