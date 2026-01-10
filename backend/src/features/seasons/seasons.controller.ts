@@ -102,14 +102,11 @@ export class SeasonController {
     }
   }
 
-  async update(
-    req: FastifyRequest<{ Params: { id: string }; Body: any }>,
-    reply: FastifyReply
-  ) {
+  async update(req: FastifyRequest<{ Params: { id: string }; Body: any }>, reply: FastifyReply) {
     const { id } = req.params
     const { number, isActive } = req.body as {
-        number?: number
-        isActive?: boolean
+      number?: number
+      isActive?: boolean
     }
 
     try {

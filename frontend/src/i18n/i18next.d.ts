@@ -10,6 +10,7 @@ import eventTypes from './locales/en/event-types.json'
 import competitionTypes from './locales/en/competition-types.json'
 import seasons from './locales/en/seasons.json'
 import salaryRates from './locales/en/salary-rates.json'
+import fixtures from './locales/en/fixtures.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -25,6 +26,7 @@ declare module 'i18next' {
       competitionTypes: typeof competitionTypes
       seasons: typeof seasons
       salaryRates: typeof salaryRates
+      fixtures: typeof fixtures
     }
   }
 }

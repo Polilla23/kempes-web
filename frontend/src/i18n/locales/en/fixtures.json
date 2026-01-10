@@ -1,0 +1,153 @@
+{
+  "wizard": {
+    "titleLeague": "Fixture Generator - Leagues",
+    "subtitleLeague": "Create leagues, assign teams and generate fixtures automatically",
+    "titleCup": "Fixture Generator - Cup",
+    "subtitleCup": "Create cup, define groups and assign teams automatically",
+    "steps": {
+      "categoryAndLeagues": {
+        "label": "Category & Leagues",
+        "description": "Select category and leagues to create"
+      },
+      "createLeagues": {
+        "label": "Create Leagues",
+        "description": "Define leagues with all their rules"
+      },
+      "assignTeams": {
+        "label": "Assign Teams",
+        "description": "Assign teams to each league"
+      },
+      "preview": {
+        "label": "Preview",
+        "description": "Review and create fixtures"
+      }
+    },
+    "buttons": {
+      "back": "Back",
+      "next": "Next",
+      "cancel": "Cancel",
+      "create": "Create",
+      "loading": "Loading...",
+      "addLeague": "Add League",
+      "createAndContinue": "Create Leagues & Continue",
+      "retry": "Retry"
+    }
+  },
+  "step0": {
+    "title": "Category & Leagues",
+    "description": "Select the category and leagues you want to create",
+    "category": {
+      "label": "Competition Category",
+      "senior": "SENIOR (Adults)",
+      "kempesita": "KEMPESITA"
+    },
+    "leagues": {
+      "label": "Leagues to Create",
+      "description": "Select the leagues you want to configure. You can choose from League A to League E.",
+      "selected": "Selected"
+    },
+    "summary": {
+      "willCreate": "{{count}} competition type(s) will be used:",
+      "inCategory": "in category",
+      "selectLeagues": "Select at least one league to continue"
+    },
+    "errors": {
+      "noLeagues": "You must select at least one league",
+      "fetchExisting": "Error fetching existing competition types"
+    },
+    "buttons": {
+      "next": "Next",
+      "creating": "Fetching Competition Types..."
+    }
+  },
+  "step1": {
+    "title": "Create Leagues",
+    "description": "Define the leagues and their complete rules. Fixtures will be generated in the next step.",
+    "maxLeagues": "Maximum {{max}} leagues allowed",
+    "noMoreLetters": "No more letters available",
+    "atLeastOne": "There must be at least one league",
+    "leagueCreated": "{{count}} league(s) created successfully",
+    "errorCreating": "Error creating leagues",
+    "noActiveSeason": "There is no active season to create the leagues",
+    "alert": {
+      "title": "Cannot continue:",
+      "noSeason": "No active season configured",
+      "errorLoading": "Error loading active season"
+    },
+    "position": {
+      "top": "1st Division",
+      "middle": "Intermediate",
+      "bottom": "Last"
+    },
+    "roundType": {
+      "label": "Round Type",
+      "singleRound": "Single Round",
+      "doubleRound": "Double Round"
+    },
+    "champion": {
+      "label": "Is first place direct champion?",
+      "description": "Without playoffs"
+    },
+    "promotions": {
+      "title": "Promotions",
+      "direct": "Direct",
+      "playoff": "Playoff"
+    },
+    "relegations": {
+      "title": "Relegations",
+      "direct": "Direct",
+      "playoff": "Playoff"
+    },
+    "info": {
+      "noPromotions": "Top division - No promotions available",
+      "noRelegations": "Bottom division - No relegations"
+    },
+    "footer": {
+      "configured": "{{count}} league(s) configured"
+    }
+  },
+  "step2": {
+    "title": "Assign Teams",
+    "description": "Drag and drop teams into corresponding leagues",
+    "availableTeams": "Available Teams",
+    "loading": "Loading teams...",
+    "errorLoading": "Error loading teams. Please try again.",
+    "dragHint": "Drag teams here",
+    "assignedTeams": "{{count}} teams assigned",
+    "warnings": {
+      "minTeams": "Each league must have at least {{min}} teams",
+      "evenTeams": "Each league must have an even number of teams"
+    }
+  },
+  "step3": {
+    "title": "Preview",
+    "description": "Review the configuration before generating fixtures",
+    "summary": {
+      "leagues": "Created Leagues",
+      "totalTeams": "Total Teams",
+      "totalMatches": "Estimated Matches"
+    },
+    "generating": "Generating fixtures...",
+    "success": "Fixtures generated successfully",
+    "error": "Error generating fixtures"
+  },
+  "cup": {
+    "title": "Create Cup",
+    "description": "Define cup configuration and groups",
+    "numGroups": "Number of Groups",
+    "teamsPerGroup": "Teams per Group",
+    "qualifyToGold": "Qualify to Gold",
+    "qualifyToSilver": "Qualify to Silver",
+    "createAndContinue": "Create Cup & Continue",
+    "cupCreated": "Cup created successfully",
+    "errorCreating": "Error creating cup",
+    "groupLabel": "Group {{letter}}",
+    "teamsAssigned": "{{count}}/{{total}} teams",
+    "validation": {
+      "minGroups": "Must have at least 2 groups",
+      "minTeamsPerGroup": "Must have at least 2 teams per group",
+      "minQualify": "At least 1 team must qualify",
+      "allGroupsFull": "All groups must have {{count}} teams"
+    }
+  }
+}

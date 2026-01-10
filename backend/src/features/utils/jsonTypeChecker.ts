@@ -28,15 +28,15 @@ export function validateCompetitionRules(json: unknown): CompetitionRules {
     throw new Error('Invalid competition rules: missing "type" field')
   }
 
-  if (config.type === 'leagues') {
+  if (config.type === 'LEAGUES') {
     // Validate leagues-specific fields
-    if (!config.competitionCategory || !config.howManyLeagues || !Array.isArray(config.leagues)) {
+    if (!config.competitionCategory || !Array.isArray(config.leagues)) {
       throw new Error('Invalid leagues rules: missing required fields')
     }
     return config as LeaguesRules
   }
 
-  if (config.type === 'kempesCup') {
+  if (config.type === 'CUP') {
     // Validate kempesCup-specific fields
     if (
       typeof config.numGroups !== 'number' ||

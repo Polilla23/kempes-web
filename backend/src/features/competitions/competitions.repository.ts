@@ -9,10 +9,10 @@ export class CompetitionRepository implements ICompetitionRepository {
     this.prisma = prisma
   }
 
-  async save(config: LeaguesRules | KempesCupRules): Promise<Competition> {
+  async save(config: LeaguesRules | KempesCupRules): Promise<Competition[]> {
     if (isLeaguesRules(config)) {
-      // Para leagues, creamos múltiples competencias pero retornamos la primera
-      let firstCompetition: Competition | null = null
+      // Para leagues, creamos múltiples competencias y retornamos todas
+      const createdCompetitions: Competition[] = []
       await this.prisma.$transaction(async (tx) => {
         for (const league of (config as LeaguesRules).leagues) {
           const competition = await tx.competition.create({
@@ -25,15 +25,13 @@ export class CompetitionRepository implements ICompetitionRepository {
               rules: league,
             },
           })
-          if (!firstCompetition) {
-            firstCompetition = competition
-          }
+          createdCompetitions.push(competition)
         }
       })
-      return firstCompetition!
+      return createdCompetitions
     } else if (isKempesCupRules(config)) {
       const kempesCupConfig = config as KempesCupRules
-      return await this.prisma.competition.create({
+      const competition = await this.prisma.competition.create({
         data: {
           name: `${kempesCupConfig.competitionType.name} ${kempesCupConfig.competitionCategory} - T${kempesCupConfig.activeSeason.number}`,
           system: CompetitionStage.ROUND_ROBIN,
@@ -43,6 +41,7 @@ export class CompetitionRepository implements ICompetitionRepository {
           rules: kempesCupConfig,
         },
       })
+      return [competition]
     } else {
       throw new Error('Invalid competition configuration')
     }

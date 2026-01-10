@@ -11,10 +11,7 @@ export interface SeasonsResponse {
 }
 
 export class SeasonService {
-  static async createSeason(data: {
-    number: number
-    isActive: boolean
-  }): Promise<SeasonResponse> {
+  static async createSeason(data: { number: number; isActive: boolean }): Promise<SeasonResponse> {
     try {
       const response = await api.post<{ data: Season; message: string }>('/api/v1/seasons', data)
       return { season: response.data?.data, message: response.data?.message || 'Season created successfully' }
@@ -35,7 +32,10 @@ export class SeasonService {
   static async getActiveSeason(): Promise<SeasonResponse> {
     try {
       const response = await api.get<{ data: Season; message: string }>('/api/v1/seasons/active')
-      return { season: response.data?.data, message: response.data?.message || 'Active season fetched successfully' }
+      return {
+        season: response.data?.data,
+        message: response.data?.message || 'Active season fetched successfully',
+      }
     } catch (error) {
       return { season: undefined, message: 'No active season found' }
     }

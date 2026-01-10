@@ -1,0 +1,153 @@
+{
+  "wizard": {
+    "titleLeague": "Generador de Fixtures - Ligas",
+    "subtitleLeague": "Crea las ligas, asigna equipos y genera los fixtures automáticamente",
+    "titleCup": "Generador de Fixtures - Copa",
+    "subtitleCup": "Crea la copa, define los grupos y asigna equipos automáticamente",
+    "steps": {
+      "categoryAndLeagues": {
+        "label": "Categoría y Ligas",
+        "description": "Selecciona la categoría y las ligas a crear"
+      },
+      "createLeagues": {
+        "label": "Crear Ligas",
+        "description": "Definir ligas con todas sus reglas"
+      },
+      "assignTeams": {
+        "label": "Asignar Equipos",
+        "description": "Asignar equipos a cada liga"
+      },
+      "preview": {
+        "label": "Preview",
+        "description": "Revisar y crear fixtures"
+      }
+    },
+    "buttons": {
+      "back": "Atrás",
+      "next": "Siguiente",
+      "cancel": "Cancelar",
+      "create": "Crear",
+      "loading": "Cargando...",
+      "addLeague": "Agregar Liga",
+      "createAndContinue": "Crear Ligas y Continuar",
+      "retry": "Reintentar"
+    }
+  },
+  "step0": {
+    "title": "Categoría y Ligas",
+    "description": "Selecciona la categoría y las ligas que deseas crear",
+    "category": {
+      "label": "Categoría de Competición",
+      "senior": "SENIOR (Mayores)",
+      "kempesita": "KEMPESITA"
+    },
+    "leagues": {
+      "label": "Ligas a Crear",
+      "description": "Selecciona las ligas que deseas configurar. Puedes elegir desde la Liga A hasta la Liga E.",
+      "selected": "Seleccionada"
+    },
+    "summary": {
+      "willCreate": "Se usarán {{count}} tipo(s) de competición:",
+      "inCategory": "en la categoría",
+      "selectLeagues": "Selecciona al menos una liga para continuar"
+    },
+    "errors": {
+      "noLeagues": "Debes seleccionar al menos una liga",
+      "fetchExisting": "Error al buscar tipos de competición existentes"
+    },
+    "buttons": {
+      "next": "Siguiente",
+      "creating": "Buscando Tipos de Competición..."
+    }
+  },
+  "step1": {
+    "title": "Crear Ligas",
+    "description": "Define las ligas y sus reglas completas. Los fixtures se generarán en el siguiente paso.",
+    "maxLeagues": "Máximo {{max}} ligas permitidas",
+    "noMoreLetters": "No hay más letras disponibles",
+    "atLeastOne": "Debe haber al menos una liga",
+    "leagueCreated": "{{count}} liga(s) creadas correctamente",
+    "errorCreating": "Error al crear las ligas",
+    "noActiveSeason": "No hay una temporada activa para crear las ligas",
+    "alert": {
+      "title": "No se puede continuar:",
+      "noSeason": "No hay una temporada activa configurada",
+      "errorLoading": "Error al cargar la temporada activa"
+    },
+    "position": {
+      "top": "1ra División",
+      "middle": "Intermedia",
+      "bottom": "Última"
+    },
+    "roundType": {
+      "label": "Tipo de Ronda",
+      "singleRound": "Solo Ida",
+      "doubleRound": "Ida y Vuelta"
+    },
+    "champion": {
+      "label": "¿El primero es campeón directo?",
+      "description": "Sin necesidad de playoffs"
+    },
+    "promotions": {
+      "title": "Promociones",
+      "direct": "Directas",
+      "playoff": "Playoff"
+    },
+    "relegations": {
+      "title": "Descensos",
+      "direct": "Directos",
+      "playoff": "Playoff"
+    },
+    "info": {
+      "noPromotions": "Primera división - No hay ascensos",
+      "noRelegations": "Última división - No hay descensos"
+    },
+    "footer": {
+      "configured": "{{count}} liga(s) configurada(s)"
+    }
+  },
+  "step2": {
+    "title": "Asignar Equipos",
+    "description": "Arrastra y suelta los equipos en las ligas correspondientes",
+    "availableTeams": "Equipos Disponibles",
+    "loading": "Cargando equipos...",
+    "errorLoading": "Error al cargar los equipos. Por favor, intenta nuevamente.",
+    "dragHint": "Arrastra equipos aquí",
+    "assignedTeams": "{{count}} equipos asignados",
+    "warnings": {
+      "minTeams": "Cada liga debe tener al menos {{min}} equipos",
+      "evenTeams": "Cada liga debe tener un número par de equipos"
+    }
+  },
+  "step3": {
+    "title": "Vista Previa",
+    "description": "Revisa la configuración antes de generar los fixtures",
+    "summary": {
+      "leagues": "Ligas Creadas",
+      "totalTeams": "Total de Equipos",
+      "totalMatches": "Partidos Estimados"
+    },
+    "generating": "Generando fixtures...",
+    "success": "Fixtures generados exitosamente",
+    "error": "Error al generar los fixtures"
+  },
+  "cup": {
+    "title": "Crear Copa",
+    "description": "Define la configuración de la copa y sus grupos",
+    "numGroups": "Cantidad de Grupos",
+    "teamsPerGroup": "Equipos por Grupo",
+    "qualifyToGold": "Clasifican a Oro",
+    "qualifyToSilver": "Clasifican a Plata",
+    "createAndContinue": "Crear Copa y Continuar",
+    "cupCreated": "Copa creada correctamente",
+    "errorCreating": "Error al crear la copa",
+    "groupLabel": "Grupo {{letter}}",
+    "teamsAssigned": "{{count}}/{{total}} equipos",
+    "validation": {
+      "minGroups": "Debe haber al menos 2 grupos",
+      "minTeamsPerGroup": "Debe haber al menos 2 equipos por grupo",
+      "minQualify": "Al menos 1 equipo debe clasificar",
+      "allGroupsFull": "Todos los grupos deben tener {{count}} equipos"
+    }
+  }
+}

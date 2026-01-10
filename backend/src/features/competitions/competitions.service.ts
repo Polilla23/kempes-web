@@ -4,23 +4,29 @@ import {
 } from '@/features/competitions/competitions.errors'
 import { ICompetitionRepository } from '@/features/competitions/interface/ICompetitionRepository'
 import { ICompetitionTypeRepository } from '@/features/competition-types/interface/ICompetitionTypeRepository'
-import { validateCompetitionRules } from '@/features/utils/jsonTypeChecker'
+import { FixtureRepository } from '@/features/fixtures/fixtures.repository'
+import { validateCompetitionRules, isLeaguesRules } from '@/features/utils/jsonTypeChecker'
+import { generateLeagueFixture } from '@/features/utils/generateFixture'
 import { KempesCupRules, LeaguesRules } from '@/types'
-import { Competition } from '@prisma/client'
+import { Competition, Match } from '@prisma/client'
 
 export class CompetitionService {
   private competitionRepository: ICompetitionRepository
   private competitionTypeRepository: ICompetitionTypeRepository
+  private fixtureRepository: FixtureRepository
 
-  constructor({ 
+  constructor({
     competitionRepository,
-    competitionTypeRepository 
-  }: { 
+    competitionTypeRepository,
+    fixtureRepository,
+  }: {
     competitionRepository: ICompetitionRepository
     competitionTypeRepository: ICompetitionTypeRepository
+    fixtureRepository: FixtureRepository
   }) {
     this.competitionRepository = competitionRepository
     this.competitionTypeRepository = competitionTypeRepository
+    this.fixtureRepository = fixtureRepository
   }
 
   // Helper method para enriquecer competitions con competitionType data
@@ -28,21 +34,23 @@ export class CompetitionService {
     const competitionType = await this.competitionTypeRepository.findOneById(competition.competitionTypeId)
     return {
       competition,
-      competitionTypeData: competitionType ? {
-        id: competitionType.id,
-        name: competitionType.name.toString(),
-        category: competitionType.category.toString(),
-        format: competitionType.format.toString(),
-      } : null
+      competitionTypeData: competitionType
+        ? {
+            id: competitionType.id,
+            name: competitionType.name.toString(),
+            category: competitionType.category.toString(),
+            format: competitionType.format.toString(),
+          }
+        : null,
     }
   }
 
   async findAllCompetitions() {
     const competitions = await this.competitionRepository.findAll()
     if (!competitions) return null
-    
+
     // Enriquecer cada competition con su competitionType
-    const enrichedPromises = competitions.map(comp => this.enrichCompetitionWithType(comp))
+    const enrichedPromises = competitions.map((comp) => this.enrichCompetitionWithType(comp))
     return await Promise.all(enrichedPromises)
   }
 
@@ -59,11 +67,55 @@ export class CompetitionService {
     const competitionFound = await this.competitionRepository.findOneBySeasonId(
       validatedConfig.activeSeason.id
     )
-    if (competitionFound) {
+    if (competitionFound && competitionFound.length > 0) {
       throw new CompetitionAlreadyExistsError()
     }
-    const competitionCreated = await this.competitionRepository.save(validatedConfig)
-    return competitionCreated
+
+    // Crear las competiciones
+    const createdCompetitions = await this.competitionRepository.save(validatedConfig)
+
+    // Si son ligas, crear los fixtures automáticamente
+    if (isLeaguesRules(validatedConfig)) {
+      const leaguesConfig = validatedConfig as LeaguesRules
+      const fixturesResults: { competition: Competition; matchesCreated: number; matches: Match[] }[] = []
+
+      for (let i = 0; i < leaguesConfig.leagues.length; i++) {
+        const league = leaguesConfig.leagues[i]
+        const competition = createdCompetitions[i]
+
+        // Generar fixtures para esta liga
+        const matchesData = generateLeagueFixture(
+          league.clubIds,
+          competition.id,
+          league.roundType === 'match_and_rematch'
+        )
+
+        // Crear los matches en la base de datos
+        const matchesCreated = await this.fixtureRepository.createManyMatches(matchesData)
+
+        // Obtener los matches creados
+        const matches = await this.fixtureRepository.getMatchesByCompetition(competition.id)
+
+        fixturesResults.push({
+          competition,
+          matchesCreated,
+          matches: matches || [],
+        })
+      }
+
+      return {
+        success: true,
+        competitions: createdCompetitions,
+        fixtures: fixturesResults,
+      }
+    }
+
+    // Para copas, retornar solo las competiciones (fixtures se crean después manualmente)
+    return {
+      success: true,
+      competitions: createdCompetitions,
+      fixtures: [],
+    }
   }
 
   async updateCompetition(id: string, config: Partial<LeaguesRules | KempesCupRules>) {

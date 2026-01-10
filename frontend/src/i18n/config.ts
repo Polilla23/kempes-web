@@ -13,6 +13,7 @@ import enEventTypes from './locales/en/event-types.json'
 import enCompetitionTypes from './locales/en/competition-types.json'
 import enSeasons from './locales/en/seasons.json'
 import enSalaryRates from './locales/en/salary-rates.json'
+import enFixtures from './locales/en/fixtures.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -25,6 +26,7 @@ import esEventTypes from './locales/es/event-types.json'
 import esCompetitionTypes from './locales/es/competition-types.json'
 import esSeasons from './locales/es/seasons.json'
 import esSalaryRates from './locales/es/salary-rates.json'
+import esFixtures from './locales/es/fixtures.json'
 
 // Configure i18next
 i18n
@@ -47,6 +49,7 @@ i18n
         competitionTypes: enCompetitionTypes,
         seasons: enSeasons,
         salaryRates: enSalaryRates,
+        fixtures: enFixtures,
       },
       es: {
         common: esCommon,
@@ -59,6 +62,7 @@ i18n
         competitionTypes: esCompetitionTypes,
         seasons: esSeasons,
         salaryRates: esSalaryRates,
+        fixtures: esFixtures,
       },
     },
 
@@ -72,7 +76,19 @@ i18n
     defaultNS: 'common',
 
     // Namespaces to load
-    ns: ['common', 'navigation', 'auth', 'users', 'clubs', 'players', 'eventTypes', 'competitionTypes', 'seasons', 'salaryRates'],
+    ns: [
+      'common',
+      'navigation',
+      'auth',
+      'users',
+      'clubs',
+      'players',
+      'eventTypes',
+      'competitionTypes',
+      'seasons',
+      'salaryRates',
+      'fixtures',
+    ],
 
     // Interpolation options
     interpolation: {
@@ -83,10 +99,10 @@ i18n
     detection: {
       // Order of detection methods
       order: ['localStorage', 'navigator', 'htmlTag'],
-      
+
       // Cache user language preference
       caches: ['localStorage'],
-      
+
       // localStorage key name
       lookupLocalStorage: 'i18nextLng',
     },
