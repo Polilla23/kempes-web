@@ -13,44 +13,52 @@ export class CompetitionController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const config = req.body as LeaguesRules | KempesCupRules
+    const body = req.body as any
+    const config = body.rules || body
+    console.log('📥 Received competition config:', JSON.stringify(config, null, 2))
     try {
-      const newCompetition = await this.competitionService.createCompetition(config)
+      const result = await this.competitionService.createCompetition(config)
 
-      if (!newCompetition) {
+      if (!result || !result.success) {
         return Response.error(reply, 'CREATION_ERROR', 'Error while creating the competition', 500)
       }
 
-      // Extraer información de competitionType del config
-      let competitionTypeData
-      if ('leagues' in config) {
-        // LeaguesRules case
-        const league = config.leagues[0]?.active_league
-        if (league) {
-          competitionTypeData = {
-            id: league.id,
-            name: league.name,
-            category: config.competitionCategory,
-            format: league.format
+      // Enriquecer competitions con competitionType data
+      const enrichedCompetitions = await Promise.all(
+        result.competitions.map(async (comp) => {
+          const competitionType = await this.competitionService['competitionTypeRepository'].findOneById(
+            comp.competitionTypeId
+          )
+          return {
+            competition: comp,
+            competitionTypeData: competitionType
+              ? {
+                  id: competitionType.id,
+                  name: competitionType.name.toString(),
+                  category: competitionType.category.toString(),
+                  format: competitionType.format.toString(),
+                }
+              : null,
           }
-        }
-      } else if ('competitionType' in config) {
-        // KempesCupRules case
-        competitionTypeData = {
-          id: config.competitionType.id,
-          name: config.competitionType.name,
-          category: config.competitionCategory,
-          format: config.competitionType.format
-        }
+        })
+      )
+
+      const competitionDTOs = enrichedCompetitions.map((enriched) =>
+        CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData!)
+      )
+
+      // Preparar respuesta completa
+      const responseData = {
+        competitions: competitionDTOs,
+        fixtures: result.fixtures.map((f) => ({
+          competitionId: f.competition.id,
+          competitionName: f.competition.name,
+          matchesCreated: f.matchesCreated,
+          totalMatches: f.matches.length,
+        })),
       }
 
-      if (!competitionTypeData) {
-        return Response.error(reply, 'MISSING_DATA', 'Competition type data not available', 500)
-      }
-
-      const competitionDTO = CompetitionMapper.toDTO(newCompetition, competitionTypeData)
-
-      return Response.created(reply, competitionDTO, 'Competition created successfully')
+      return Response.created(reply, responseData, 'Competitions and fixtures created successfully')
     } catch (error: any) {
       return Response.validation(
         reply,
@@ -63,12 +71,12 @@ export class CompetitionController {
   async findAll(_req: FastifyRequest, reply: FastifyReply) {
     try {
       const enrichedCompetitions = await this.competitionService.findAllCompetitions()
-      
+
       if (!enrichedCompetitions || enrichedCompetitions.length === 0) {
         return Response.success(reply, [], 'No competitions found')
       }
 
-      const competitionDTOs = enrichedCompetitions.map(enriched => 
+      const competitionDTOs = enrichedCompetitions.map((enriched) =>
         CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData!)
       )
 
@@ -95,7 +103,7 @@ export class CompetitionController {
       }
 
       const competitionDTO = CompetitionMapper.toDTO(
-        enrichedCompetition.competition, 
+        enrichedCompetition.competition,
         enrichedCompetition.competitionTypeData!
       )
       return Response.success(reply, competitionDTO, 'Competition fetched successfully')
@@ -146,7 +154,7 @@ export class CompetitionController {
       const validId = Validator.uuid(id)
       const enrichedUpdated = await this.competitionService.updateCompetition(validId, data)
       const updatedDTO = CompetitionMapper.toDTO(
-        enrichedUpdated.competition, 
+        enrichedUpdated.competition,
         enrichedUpdated.competitionTypeData!
       )
 

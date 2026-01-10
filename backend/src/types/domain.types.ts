@@ -16,6 +16,7 @@ export type TopLeagueRules = {
   league_position: LeaguePosition
   firstIsChampion: boolean
   roundType: 'match' | 'match_and_rematch'
+  clubIds: string[] // IDs de los clubes participantes
   topPlayoffs?: { type: LeaguePlayoffType; teams_index: number[] }
   playouts?: { type: LeaguePlayoutType; teams_index: number[] }
   relegations: {
@@ -28,6 +29,7 @@ export type MiddleLeagueRules = {
   active_league: CompetitionType
   league_position: LeaguePosition
   roundType: 'match' | 'match_and_rematch'
+  clubIds: string[] // IDs de los clubes participantes
   playouts?: { type: LeaguePlayoutType; teams_index: number[] }
   promotions: {
     direct: { quantity: number; teams_index: number[] }
@@ -43,6 +45,7 @@ export type BottomLeagueRules = {
   active_league: CompetitionType
   league_position: LeaguePosition
   roundType: 'match' | 'match_and_rematch'
+  clubIds: string[] // IDs de los clubes participantes
   promotions: {
     direct: { quantity: number; teams_index: number[] }
     playoffs?: { quantity: number; matches: matchIndexes[] }

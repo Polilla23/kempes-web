@@ -75,7 +75,14 @@ export const seasonsSchemas = {
         description: 'Active season details',
         type: 'object',
         properties: {
-          data: { type: 'object' },
+          data: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              number: { type: 'integer' },
+              isActive: { type: 'boolean' },
+            },
+          },
           message: { type: 'string' },
           timestamp: { type: 'string' },
         },

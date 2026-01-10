@@ -12,6 +12,8 @@ import {
   ListOrdered,
   CalendarDays,
   Zap,
+  ListTree,
+  Award,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -42,6 +44,10 @@ const adminItems = [
   { key: 'players', icon: Users, to: '/management/players' },
   { key: 'salaryRates', icon: CircleDollarSign, to: '/management/salary-rates' },
   { key: 'competitions', icon: Trophy, to: '/management/competitions' },
+]
+const fixtureItems = [
+  { key: 'createLeague', icon: ListTree, to: '/management/fixtures/league/' },
+  { key: 'createCup', icon: Award, to: '/management/fixtures/cup/' },
 ]
 const configurationItems = [
   { key: 'eventTypes', icon: Zap, to: '/configuration/event-types' },
@@ -96,6 +102,17 @@ const NavbarContent = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarGroupLabel className="select-none mt-4">{t('fixtures.title')}</SidebarGroupLabel>
+              {fixtureItems.map((item) => (
+                <SidebarMenuItem key={item.key}>
+                  <SidebarMenuButton asChild>
+                    <Link className="select-none" to={item.to}>
+                      <item.icon />
+                      <span>{t(`fixtures.${item.key}`)}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -104,9 +121,7 @@ const NavbarContent = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarGroupLabel className="select-none">
-                {t('configuration.title')}
-              </SidebarGroupLabel>
+              <SidebarGroupLabel className="select-none">{t('configuration.title')}</SidebarGroupLabel>
               {configurationItems.map((item) => (
                 <SidebarMenuItem key={item.key}>
                   <SidebarMenuButton asChild>

@@ -20,7 +20,7 @@ function AuthLayout({
         </div>
         <div className="w-full h-3/5 flex items-center justify-center mt-4">
           <div className="w-4/5">
-            <div className="flex flex-col items-center gap-2 text-center">
+            <div className="flex flex-col items-center gap-2 text-center mb-8">
               <h1 className="text-2xl font-bold select-none">{title}</h1>
               <p className="text-muted-foreground text-sm text-balance select-none">{description}</p>
             </div>

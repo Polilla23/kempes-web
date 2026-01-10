@@ -23,5 +23,10 @@
     "eventTypes": "Event Types",
     "competitionTypes": "Competition Types",
     "seasons": "Seasons"
+  },
+  "fixtures": {
+    "title": "Create Fixtures",
+    "createLeague": "Create League",
+    "createCup": "Create Cup"
   }
 }

@@ -1,0 +1,2 @@
+-- This migration reflects the current database state
+-- All tables already exist in the database
