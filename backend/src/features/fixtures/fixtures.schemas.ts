@@ -284,7 +284,7 @@ export const fixturesSchemas = {
         properties: {
           data: {
             type: 'array',
-            items: { type: 'object' }
+            items: { type: 'object', additionalProperties: true }
           }
         }
       },
@@ -319,8 +319,13 @@ export const fixturesSchemas = {
         properties: {
           data: {
             type: 'array',
-            items: { type: 'object' }
-          }
+            items: {
+              type: 'object',
+              additionalProperties: true
+            }
+          },
+          message: { type: 'string' },
+          timestamp: { type: 'string' }
         }
       },
       404: {

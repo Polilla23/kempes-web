@@ -10,10 +10,8 @@ import {
 } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import CompetitionTypeService, {
-  type CompetitionType,
-  type CompetitionTypeFormData,
-} from '@/services/competition-type.service'
+import type { CompetitionType } from '@/types'
+import { CompetitionTypeService, type CompetitionTypeFormData } from '@/services/competition-type.service'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Tag } from 'lucide-react'
 import { useState } from 'react'

@@ -38,8 +38,12 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
+                    const isActionsColumn = header.column.id === 'actions'
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead 
+                        key={header.id} 
+                        className={`text-center ${isActionsColumn ? 'w-[100px]' : ''}`}
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(header.column.columnDef.header, header.getContext())}
@@ -54,7 +58,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="text-center">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}

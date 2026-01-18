@@ -10,6 +10,8 @@ export default defineConfig({
     tanstackRouter({
       target: 'react',
       autoCodeSplitting: true,
+      routeFileIgnorePattern:
+          '(^|/)(?:\\_components(/|$)|(?:create|edit)(?:-[^/]+)?-form\\.tsx$|[^/]+-layout\\.tsx$)',
     }),
     react(),
     tailwindcss(),

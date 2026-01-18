@@ -27,13 +27,13 @@ const formSchema = z.object({
   lastName: z.string().min(1, { message: 'Last name is required.' }),
   birthdate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, { message: 'Format must be DD/MM/YYYY.' }),
   actualClubId: z.string().min(1, { message: 'Actual club is required.' }),
-  ownerClubId: z.string().optional(),
+  ownerClubId: z.string().min(1, { message: 'Owner club is required.' }),
   overall: z.coerce.number().min(0).max(99),
   salary: z.coerce.number().min(0),
   sofifaId: z.string().optional(),
   transfermarktId: z.string().optional(),
-  isKempesita: z.boolean().default(false),
-  isActive: z.boolean().default(true),
+  isKempesita: z.boolean(),
+  isActive: z.boolean(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -83,7 +83,7 @@ function CreatePlayerPage() {
         lastName: values.lastName,
         birthdate: values.birthdate,
         actualClubId: values.actualClubId,
-        ownerClubId: values.ownerClubId || values.actualClubId,
+        ownerClubId: values.ownerClubId,
         overall: values.overall,
         salary: values.salary,
         sofifaId: values.sofifaId || '',

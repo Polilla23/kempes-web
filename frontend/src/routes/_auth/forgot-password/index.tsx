@@ -4,7 +4,7 @@ import { useState } from 'react'
 import AuthService from '@/services/auth.service'
 import { CheckCircle, XCircle } from 'lucide-react'
 import AuthLayout from '../auth-layout'
-import ForgotPasswordForm from './form'
+import ForgotPasswordForm from './_components/form'
 import FormSchemas from '@/lib/form-schemas'
 import { useTranslation } from 'react-i18next'
 

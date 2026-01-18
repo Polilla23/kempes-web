@@ -1,6 +1,15 @@
 import api from './api'
 import type { CompetitionType } from '@/types'
 
+export type { CompetitionType }
+
+export type CompetitionTypeFormData = {
+  name: string
+  category?: string
+  format?: string
+  hierarchy?: number
+}
+
 export interface CompetitionTypeResponse {
   competitionType?: CompetitionType
   message?: string
@@ -11,12 +20,7 @@ export interface CompetitionTypesResponse {
 }
 
 export class CompetitionTypeService {
-  static async createCompetitionType(data: {
-    name: string
-    category: string
-    format: string
-    hierarchy: number
-  }): Promise<CompetitionTypeResponse> {
+  static async createCompetitionType(data: CompetitionTypeFormData): Promise<CompetitionTypeResponse> {
     try {
       const response = await api.post<{ data: CompetitionType; message: string }>('/api/v1/competition-types', data)
       return { competitionType: response.data?.data, message: response.data?.message || 'Competition type created successfully' }
@@ -45,12 +49,7 @@ export class CompetitionTypeService {
 
   static async updateCompetitionType(
     id: string,
-    data: {
-      name?: string
-      category?: string
-      format?: string
-      hierarchy?: number
-    }
+    data: CompetitionTypeFormData
   ): Promise<CompetitionTypeResponse> {
     try {
       const response = await api.patch<{ data: CompetitionType; message: string }>(`/api/v1/competition-types/${id}`, data)

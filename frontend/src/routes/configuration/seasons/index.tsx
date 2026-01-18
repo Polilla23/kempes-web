@@ -114,7 +114,7 @@ function SeasonManagement() {
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
+        header: () => <span className="text-center cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const season = row.original
           return (
@@ -148,23 +148,22 @@ function SeasonManagement() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-      <h1 className="text-3xl font-bold mb-10 mt-8">{t('title')}</h1>
-      <div className="flex w-full justify-between gap-4">
-        <div className="relative w-full max-w-sm">
-          <Label htmlFor="search" className="sr-only">
-            {t('table.search')}
-          </Label>
-          <Input
-            id="search"
-            type="text"
-            placeholder={`${t('table.search')}...`}
-            className="pl-10"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-        </div>
+    <div className="flex items-center justify-center w-full">
+      <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
+        <h1 className="text-3xl font-bold mb-10 mt-8">{t('title')}</h1>
+      <div className="flex justify-between gap-3 mb-4 w-full relative">
+        <Label htmlFor="search" className="sr-only">
+          {t('table.search')}
+        </Label>
+        <Input
+          id="search"
+          type="text"
+          placeholder={`${t('table.search')}...`}
+          className="pl-8"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
         <CreateSeasonForm onSuccess={fetchSeasons} />
       </div>
       <DataTable<Season, any> columns={columns} data={filteredSeasons} />
@@ -178,6 +177,7 @@ function SeasonManagement() {
           onClose={handleEditClose}
         />
       )}
+      </div>
     </div>
   )
 }

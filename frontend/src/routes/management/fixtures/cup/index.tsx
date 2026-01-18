@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { InteractiveStepper, type StepItem } from '@/components/ui/interactive-stepper'
@@ -68,12 +68,14 @@ function CupFixtureWizard() {
     }
   }
 
-  const handleStateChange = (updates: Partial<CupWizardState>) => {
+  // useCallback para evitar que se recree la función en cada render
+  // Esto previene re-renders innecesarios de los componentes hijos
+  const handleStateChange = useCallback((updates: Partial<CupWizardState>) => {
     setWizardState((prev) => ({
       ...prev,
       ...updates,
     }))
-  }
+  }, [])
 
   const validateCurrentStep = (): boolean => {
     switch (wizardState.currentStep) {
@@ -102,6 +104,7 @@ function CupFixtureWizard() {
       case 1:
         return (
           <Step1CreateCup
+            key="step1"
             wizardState={wizardState}
             onStateChange={handleStateChange}
             onNext={handleNext}
@@ -110,6 +113,7 @@ function CupFixtureWizard() {
       case 2:
         return (
           <Step2TeamAssignmentCup
+            key="step2"
             wizardState={wizardState}
             onStateChange={handleStateChange}
             onNext={handleNext}
@@ -117,7 +121,7 @@ function CupFixtureWizard() {
           />
         )
       case 3:
-        return <Step3PreviewCup wizardState={wizardState} onBack={handleBack} />
+        return <Step3PreviewCup key="step3" wizardState={wizardState} onBack={handleBack} />
       default:
         return null
     }

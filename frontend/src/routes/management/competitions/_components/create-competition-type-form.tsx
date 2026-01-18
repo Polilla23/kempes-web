@@ -11,7 +11,7 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog'
-import CompetitionTypeService, { type CompetitionTypeFormData } from '@/services/competition-type.service'
+import { CompetitionTypeService, type CompetitionTypeFormData } from '@/services/competition-type.service'
 import { toast } from 'sonner'
 import { Loader2, Plus, Tag } from 'lucide-react'
 import { zodResolver } from '@hookform/resolvers/zod'

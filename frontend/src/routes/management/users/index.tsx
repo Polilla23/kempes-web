@@ -129,7 +129,7 @@ function UserManagement() {
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="flex justify-center cursor-default select-none">{t('table.actions')}</span>,
+        header: () => <span className="text-center cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const user = row.original
           return (
@@ -166,7 +166,8 @@ function UserManagement() {
   return isLoadingUsers ? (
     <ClubAndUserTableSkeleton rows={8} />
   ) : (
-    <div className="flex flex-col items-center gap-2 h-full w-full max-w-3/4">
+    <div className="flex items-center justify-center w-full">
+      <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
       <h1 className="text-3xl font-bold mb-10 mt-8 select-none">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
@@ -176,7 +177,7 @@ function UserManagement() {
           id="search"
           type="text"
           placeholder={`${t('table.search')}...`}
-          className="pl-8 max-w-md w-full"
+          className="pl-8"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -185,6 +186,7 @@ function UserManagement() {
       </div>
       <DataTable<User, any> columns={columns} data={filteredUsers} />
       {selectedUser && <EditUserForm user={selectedUser} onSuccess={fetchUsers} onClose={handleEditClose} />}
+      </div>
     </div>
   )
 }

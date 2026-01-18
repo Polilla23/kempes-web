@@ -6,7 +6,9 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ChevronLeft, Trophy, Users, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from '@tanstack/react-router'
 import type { CupWizardState } from '@/types/fixture'
+import CompetitionService, { type CupGroup, type CreateCupPayload } from '@/services/competition.service'
 
 interface Step3PreviewCupProps {
   wizardState: CupWizardState
@@ -15,6 +17,7 @@ interface Step3PreviewCupProps {
 
 export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
   const { t } = useTranslation('fixtures')
+  const navigate = useNavigate()
   const [isGenerating, setIsGenerating] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,23 +27,53 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
       setIsGenerating(true)
       setError(null)
 
-      // TODO: Implementar llamada al backend para crear la copa
-      // const payload = {
-      //   numGroups: wizardState.numGroups,
-      //   teamsPerGroup: wizardState.teamsPerGroup,
-      //   qualifyToGold: wizardState.qualifyToGold,
-      //   qualifyToSilver: wizardState.qualifyToSilver,
-      //   groupAssignments: wizardState.groupAssignments,
-      // }
-      // await CupService.createCup(payload)
+      // Validar que tenemos los datos necesarios
+      if (!wizardState.activeSeason || !wizardState.competitionType) {
+        throw new Error('Falta información de temporada o tipo de competición')
+      }
 
-      // Simulación de llamada al backend
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      // Convertir groupAssignments al formato del backend
+      const groups: CupGroup[] = Object.entries(wizardState.groupAssignments).map(
+        ([groupName, teams]) => ({
+          groupName,
+          clubIds: teams.map((team) => team.id),
+        })
+      )
 
+      // Construir el payload para el backend
+      const payload: CreateCupPayload = {
+        type: 'CUP',
+        activeSeason: {
+          id: wizardState.activeSeason.id,
+          number: wizardState.activeSeason.number,
+          isActive: true,
+        },
+        competitionCategory: wizardState.competitionCategory || 'SENIOR',
+        competitionType: {
+          id: wizardState.competitionType.id,
+          name: wizardState.competitionType.name,
+        },
+        numGroups: wizardState.numGroups,
+        teamsPerGroup: wizardState.teamsPerGroup,
+        qualifyToGold: wizardState.qualifyToGold,
+        qualifyToSilver: wizardState.qualifyToSilver,
+        groups,
+      }
+
+      console.log('📤 Creating cup with payload:', payload)
+      
+      await CompetitionService.createCupCompetition(payload)
+      
+      console.log('✅ Cup created successfully')
       setSuccess(true)
-    } catch (err) {
+
+      // Redirigir después de 2 segundos
+      setTimeout(() => {
+        navigate({ to: '/management/competitions' })
+      }, 2000)
+    } catch (err: any) {
       console.error('Error generating cup:', err)
-      setError(t('cup.errorCreating'))
+      setError(err?.message || t('cup.errorCreating'))
     } finally {
       setIsGenerating(false)
     }
@@ -60,8 +93,10 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
             <p className="text-muted-foreground">
               La copa se ha generado exitosamente con todos los grupos y equipos asignados.
             </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Redirigiendo a competiciones...
+            </p>
           </div>
-          <Button onClick={() => window.location.reload()}>Crear otra copa</Button>
         </CardContent>
       </Card>
     )

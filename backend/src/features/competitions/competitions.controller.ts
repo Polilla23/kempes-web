@@ -15,7 +15,7 @@ export class CompetitionController {
   async create(req: FastifyRequest, reply: FastifyReply) {
     const body = req.body as any
     const config = body.rules || body
-    console.log('📥 Received competition config:', JSON.stringify(config, null, 2))
+
     try {
       const result = await this.competitionService.createCompetition(config)
 
@@ -37,6 +37,7 @@ export class CompetitionController {
                   name: competitionType.name.toString(),
                   category: competitionType.category.toString(),
                   format: competitionType.format.toString(),
+                  hierarchy: competitionType.hierarchy,
                 }
               : null,
           }

@@ -1,16 +1,15 @@
-import type { Club, User } from '@/types'
 import type { HeaderContext } from '@tanstack/react-table'
 import { ArrowDownAZ, ArrowUpZA, ArrowDown01, ArrowUp10 } from 'lucide-react'
 import { ContextMenu, ContextMenuCheckboxItem, ContextMenuContent } from '../ui/context-menu'
 import { ContextMenuTrigger } from '@radix-ui/react-context-menu'
 
-interface DefaultHeaderProps<T> {
-  info: HeaderContext<T, User | Club | undefined>
+interface DefaultHeaderProps<T, TValue = unknown> {
+  info: HeaderContext<T, TValue>
   name: string
   type?: 'string' | 'number' | 'boolean'
 }
 
-export function DefaultHeader<T>({ info, name, type }: DefaultHeaderProps<T>) {
+export function DefaultHeader<T, TValue = unknown>({ info, name, type }: DefaultHeaderProps<T, TValue>) {
   const sorted = info.column.getIsSorted()
   const isSorted = sorted !== false // Check if the column is sorted
   const { table } = info
@@ -25,7 +24,7 @@ export function DefaultHeader<T>({ info, name, type }: DefaultHeaderProps<T>) {
             info.column.toggleSorting(sorted === 'asc')
           }
         }}
-        className="flex w-full h-full items-center justify-start cursor-pointer select-none"
+        className="flex w-full h-full items-center justify-center cursor-pointer select-none"
       >
         {name}
         {isSorted &&

@@ -39,6 +39,9 @@ export class MatchMapper {
       status: match.status.toString(),
       matchdayOrder: match.matchdayOrder,
       stage: match.stage.toString(),
+      knockoutRound: (match as any).knockoutRound?.toString() || null,
+      homePlaceholder: match.homePlaceholder || null,
+      awayPlaceholder: match.awayPlaceholder || null,
       ...(match.homeSourcePosition && {
         homeSource: {
           type: 'FROM_MATCH',
@@ -79,7 +82,7 @@ export class MatchMapper {
       awayClub: Club | null
     })[]
   ): MatchDTO[] {
-    return matches.map(this.toDTO)
+    return matches.map((match) => MatchMapper.toDTO(match))
   }
 
   static toListDTOArray(

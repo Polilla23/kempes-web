@@ -2,7 +2,11 @@ import { PrismaClient, Match, CompetitionStage, Prisma } from '@prisma/client'
 import { IFixtureRepository } from '@/features/fixtures/interface/IFixtureRepository'
 
 export class FixtureRepository implements IFixtureRepository {
-  constructor(private prisma: PrismaClient) {}
+  private prisma: PrismaClient
+  
+  constructor({ prisma }: { prisma: PrismaClient }) {
+    this.prisma = prisma
+  }
 
   async createMatch(data: Prisma.MatchCreateInput): Promise<Match> {
     return this.prisma.match.create({
@@ -101,6 +105,37 @@ export class FixtureRepository implements IFixtureRepository {
     })
   }
 
+  async getMatchesWithFilters(seasonId?: string, competitionId?: string): Promise<Match[]> {
+    const where: any = {}
+
+    if (competitionId) {
+      where.competitionId = competitionId
+    } else if (seasonId) {
+      where.competition = {
+        seasonId: seasonId
+      }
+    }
+
+    return await this.prisma.match.findMany({
+      where,
+      include: {
+        homeClub: true,
+        awayClub: true,
+        competition: {
+          include: {
+            competitionType: true,
+            season: true
+          }
+        },
+      },
+      orderBy: [
+        { competition: { competitionType: { hierarchy: 'asc' } } },
+        { matchdayOrder: 'asc' },
+        { id: 'asc' }
+      ],
+    })
+  }
+
   async getKnockoutBracket(id: string): Promise<Match[]> {
     return await this.prisma.match.findMany({
       where: {
@@ -151,6 +186,34 @@ export class FixtureRepository implements IFixtureRepository {
         awayClub: true,
         competition: true,
       },
+    })
+  }
+
+  // ===================== COVID METHODS =====================
+
+  async getActivePlayers(clubId: string) {
+    return await this.prisma.player.findMany({
+      where: {
+        actualClubId: clubId,
+        isActive: true
+      }
+    })
+  }
+
+  async createCovidRecords(records: { matchId: string; playerId: string; clubId: string }[]) {
+    return await this.prisma.matchCovid.createMany({
+      data: records,
+      skipDuplicates: true
+    })
+  }
+
+  async getMatchCovids(matchId: string) {
+    return await this.prisma.matchCovid.findMany({
+      where: { matchId },
+      include: {
+        player: true,
+        club: true
+      }
     })
   }
 }

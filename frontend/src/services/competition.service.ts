@@ -1,15 +1,21 @@
 import api from './api'
 
+export interface CompetitionTypeInfo {
+  id: string
+  name: string
+  format?: string
+  category?: string
+  hierarchy?: number
+}
+
 export interface Competition {
   id: string
   name: string
   seasonId: string
-  type: {
-    id: string
-    name: string
-    format?: string
-    category?: string
-  }
+  competitionTypeId?: string
+  type?: CompetitionTypeInfo
+  // Backend returns competitionType, but we also support type for compatibility
+  competitionType?: CompetitionTypeInfo
   startDate?: string
   endDate?: string
   isActive: boolean
@@ -104,6 +110,40 @@ class CompetitionService {
       return { data: [] }
     }
   }
+
+  static async createCupCompetition(data: CreateCupPayload): Promise<CompetitionsResponse> {
+    try {
+      const response = await api.post<CompetitionsResponse>('/api/v1/competitions', data)
+      return response.data || { data: [] }
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error creating cup')
+    }
+  }
+}
+
+// Tipos para crear copa
+export interface CupGroup {
+  groupName: string      // 'A', 'B', 'C', etc.
+  clubIds: string[]      // IDs de los clubes en este grupo
+}
+
+export interface CreateCupPayload {
+  type: 'CUP'
+  activeSeason: {
+    id: string
+    number: number
+    isActive: boolean
+  }
+  competitionCategory: 'SENIOR' | 'KEMPESITA'
+  competitionType: {
+    id: string
+    name: string
+  }
+  numGroups: number
+  teamsPerGroup: number
+  qualifyToGold: number
+  qualifyToSilver: number
+  groups: CupGroup[]
 }
 
 export default CompetitionService

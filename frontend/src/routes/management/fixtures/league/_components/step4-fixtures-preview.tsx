@@ -21,6 +21,9 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
   const [success, setSuccess] = useState(false)
 
   const handleCreateFixtures = async () => {
+    // Prevenir doble click
+    if (isSubmitting) return
+    
     try {
       setIsSubmitting(true)
       setError(null)
@@ -34,35 +37,114 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
 
       console.log('📝 Using CompetitionTypes from wizard state...')
 
+      // Verificar que tengamos la información de la temporada
+      const season = wizardState.activeSeason
+      if (!season || !season.id) {
+        throw new Error('Error: No se encontró información de la temporada activa.')
+      }
+
       // Construir el payload LeaguesRules usando los CompetitionTypes que ya tenemos
       const leaguesRules: LeaguesRules = {
+        type: 'LEAGUES',
         leagues: leagues.map((league) => {
           const clubIds = wizardState.teamAssignments[league.id] || []
 
-          return {
-            active_league: league.competitionType!, // Ya tenemos el CompetitionType completo
-            position: league.position,
+          const baseLeague = {
+            active_league: league.competitionType!,
             roundType: league.roundType,
-            clubIds, // IDs de los clubes asignados
-            teams_index: [], // Ya no se usa pero mantenemos compatibilidad
-            ...(league.position !== 'TOP' && {
-              promotions: {
-                direct: league.directPromotions,
-                playoff: league.playoffPromotions,
-              },
-            }),
-            ...(league.position !== 'BOTTOM' && {
+            clubIds,
+          }
+
+          if (league.position === 'TOP') {
+            return {
+              ...baseLeague,
+              league_position: 'TOP' as const,
+              firstIsChampion: league.firstIsChampion ?? false,
               relegations: {
-                direct: league.directRelegations,
-                playoff: league.playoffRelegations,
+                direct: {
+                  quantity: league.directRelegations,
+                  teams_index: [], // Se calculará en el backend basado en quantity
+                },
+                ...(league.playoffRelegations > 0
+                  ? {
+                      playoffs: {
+                        quantity: league.playoffRelegations,
+                        matches: [], // Se calculará en el backend
+                      },
+                    }
+                  : {}),
               },
-            }),
-            firstIsChampion: league.firstIsChampion,
+            }
+          } else if (league.position === 'MIDDLE') {
+            return {
+              ...baseLeague,
+              league_position: 'MIDDLE' as const,
+              promotions: {
+                direct: {
+                  quantity: league.directPromotions,
+                  teams_index: [],
+                },
+                ...(league.playoffPromotions > 0
+                  ? {
+                      playoffs: {
+                        quantity: league.playoffPromotions,
+                        matches: [],
+                      },
+                    }
+                  : {}),
+              },
+              relegations: {
+                direct: {
+                  quantity: league.directRelegations,
+                  teams_index: [],
+                },
+                ...(league.playoffRelegations > 0
+                  ? {
+                      playoffs: {
+                        quantity: league.playoffRelegations,
+                        matches: [],
+                      },
+                    }
+                  : {}),
+              },
+            }
+          } else {
+            // BOTTOM
+            return {
+              ...baseLeague,
+              league_position: 'BOTTOM' as const,
+              promotions: {
+                direct: {
+                  quantity: league.directPromotions,
+                  teams_index: [],
+                },
+                ...(league.playoffPromotions > 0
+                  ? {
+                      playoffs: {
+                        quantity: league.playoffPromotions,
+                        matches: [],
+                      },
+                    }
+                  : {}),
+              },
+              playons: {
+                direct_to_final_team_index: 0,
+                direct_to_semifinal_team_index: 0,
+                quarterfinal_teams_index: [],
+              },
+              relegations: {
+                direct: {
+                  quantity: 0,
+                  teams_index: [],
+                },
+              },
+            }
           }
         }),
         activeSeason: {
-          id: wizardState.season!.id,
-          number: wizardState.season!.number,
+          id: season.id,
+          number: season.number,
+          isActive: true,
         },
         competitionCategory: wizardState.competitionCategory || 'SENIOR',
       }
@@ -82,10 +164,19 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
       }, 2000)
     } catch (err: any) {
       console.error('Error creating competitions and fixtures:', err)
-      setError(
-        err.response?.data?.message ||
-          'Error al crear las competiciones y fixtures. Por favor, intenta nuevamente.'
-      )
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        statusText: err.response?.statusText
+      })
+      
+      const errorMessage = err.response?.data?.message 
+        || err.response?.data?.error
+        || err.message
+        || 'Error al crear las competiciones y fixtures. Por favor, intenta nuevamente.'
+      
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }

@@ -73,4 +73,28 @@ export class SeasonService {
       throw new Error(error instanceof Error ? error.message : 'Error deleting season')
     }
   }
+
+  /**
+   * Obtiene los movimientos de equipos de una temporada específica
+   */
+  static async getSeasonMovements(seasonNumber: number) {
+    try {
+      const response = await api.get<{ data: any[] }>(`/api/v1/seasons/${seasonNumber}/movements`)
+      return response.data?.data || []
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error fetching season movements')
+    }
+  }
+
+  /**
+   * Avanza a la siguiente temporada (finaliza la actual y crea una nueva)
+   */
+  static async advanceSeason() {
+    try {
+      const response = await api.post<{ data: any }>('/api/v1/seasons/advance')
+      return response.data?.data
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error advancing season')
+    }
+  }
 }

@@ -46,6 +46,24 @@ export const fixtureRoutes = async (fastify: FastifyInstance) => {
     handler: fixtureController.getKnockoutBracket.bind(fixtureController),
   })
 
+  // GET /fixtures (with filters)
+  fastify.get('/', {
+    preHandler: [fastify.authenticate],
+    handler: fixtureController.getMatchesWithFilters.bind(fixtureController),
+  })
+
+  // POST /fixtures/:matchId/generate-covids
+  fastify.post('/:matchId/generate-covids', {
+    preHandler: [fastify.authenticate],
+    handler: fixtureController.generateMatchCovids.bind(fixtureController),
+  })
+
+  // GET /fixtures/:matchId/covids
+  fastify.get('/:matchId/covids', {
+    preHandler: [fastify.authenticate],
+    handler: fixtureController.getMatchCovids.bind(fixtureController),
+  })
+
   // GET /fixtures/:matchId
   fastify.get('/:matchId', {
     preHandler: [fastify.authenticate],

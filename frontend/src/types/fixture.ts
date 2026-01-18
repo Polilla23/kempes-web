@@ -45,42 +45,51 @@ export interface CompetitionType {
 // Configuraciones de liga según posición (del backend)
 export interface TopLeagueRules {
   active_league: CompetitionType
-  position: 'TOP'
+  league_position: 'TOP'
   firstIsChampion: boolean
   roundType: RoundType
   clubIds: string[] // IDs de clubes asignados a esta liga
-  teams_index: number[] // Deprecated but kept for compatibility
-  relegations?: {
-    direct: number
-    playoff: number
+  topPlayoffs?: { type: 'TOP_3_FINALS' | 'TOP_4_CROSS'; teams_index: number[] }
+  playouts?: { type: '5_VS_6' | '4_VS_5'; teams_index: number[] }
+  relegations: {
+    direct: { quantity: number; teams_index: number[] }
+    playoffs?: { quantity: number; matches: { a_team_rank_index: number; b_team_rank_index: number }[] }
   }
 }
 
 export interface MiddleLeagueRules {
   active_league: CompetitionType
-  position: 'MIDDLE'
+  league_position: 'MIDDLE'
   roundType: RoundType
   clubIds: string[] // IDs de clubes asignados a esta liga
-  teams_index: number[] // Deprecated but kept for compatibility
+  playouts?: { type: '5_VS_6' | '4_VS_5'; teams_index: number[] }
   promotions: {
-    direct: number
-    playoff: number
+    direct: { quantity: number; teams_index: number[] }
+    playoffs?: { quantity: number; matches: { a_team_rank_index: number; b_team_rank_index: number }[] }
   }
-  relegations?: {
-    direct: number
-    playoff: number
+  relegations: {
+    direct: { quantity: number; teams_index: number[] }
+    playoffs?: { quantity: number; matches: { a_team_rank_index: number; b_team_rank_index: number }[] }
   }
 }
 
 export interface BottomLeagueRules {
   active_league: CompetitionType
-  position: 'BOTTOM'
+  league_position: 'BOTTOM'
   roundType: RoundType
   clubIds: string[] // IDs de clubes asignados a esta liga
-  teams_index: number[] // Deprecated but kept for compatibility
   promotions: {
-    direct: number
-    playoff: number
+    direct: { quantity: number; teams_index: number[] }
+    playoffs?: { quantity: number; matches: { a_team_rank_index: number; b_team_rank_index: number }[] }
+  }
+  playons: {
+    direct_to_final_team_index: number
+    direct_to_semifinal_team_index: number
+    quarterfinal_teams_index: number[]
+  }
+  relegations: {
+    direct: { quantity: number; teams_index: number[] }
+    playoffs?: { quantity: number; matches: { a_team_rank_index: number; b_team_rank_index: number }[] }
   }
 }
 
@@ -89,7 +98,8 @@ export type LeagueRules = TopLeagueRules | MiddleLeagueRules | BottomLeagueRules
 
 // Estructura completa que espera el backend para crear ligas
 export interface LeaguesRules {
-  activeSeason: { id: string; number: number }
+  type: 'LEAGUES'
+  activeSeason: Season
   competitionCategory: CompetitionCategory
   leagues: LeagueRules[]
 }
@@ -203,6 +213,10 @@ export interface CupWizardState {
   groupAssignments: GroupAssignment
   availableTeams: AvailableTeam[]
   isValid: boolean
+  // Información necesaria para crear la copa
+  activeSeason?: Season
+  competitionCategory?: CompetitionCategory
+  competitionType?: CompetitionType  // Tipo de competición (COPA_KEMPES, etc.)
 }
 
 export interface StepConfig {
@@ -241,4 +255,27 @@ export interface LeagueFixtureInput {
   competitionId: string
   clubIds: string[] // List of club IDs participating in the league
   roundType: RoundType // 'match' | 'match_and_rematch'
+}
+
+// Tipos para movimientos de equipos entre temporadas
+export type MovementType =
+  | 'CHAMPION'
+  | 'DIRECT_PROMOTION'
+  | 'PLAYOFF_PROMOTION'
+  | 'DIRECT_RELEGATION'
+  | 'PLAYOFF_RELEGATION'
+  | 'STAYED'
+
+export interface TeamMovement {
+  clubId: string
+  clubName: string
+  fromLeague: string // hierarchy o nombre
+  toLeague?: string // hierarchy o nombre (undefined si no cambia)
+  movementType: MovementType
+  reason?: string
+}
+
+export interface AvailableTeamWithMovement extends AvailableTeam {
+  movement?: TeamMovement
+  previousLeague?: string // Nombre de la liga anterior
 }

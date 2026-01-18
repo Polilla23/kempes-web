@@ -34,6 +34,8 @@ import { EventTypeService } from '@/features/event-types/event-types.service'
 import { SeasonRepository } from '@/features/seasons/seasons.repository'
 import { SeasonController } from '@/features/seasons/seasons.controller'
 import { SeasonService } from '@/features/seasons/seasons.service'
+import { StandingsService } from '@/features/seasons/standings.service'
+import { StandingsController } from '@/features/seasons/standings.controller'
 import { SalaryRateRepository } from '@/features/salary-rates/salary-rates.repository'
 import { SalaryRateController } from '@/features/salary-rates/salary-rates.controller'
 import { SalaryRateService } from '@/features/salary-rates/salary-rates.service'
@@ -66,6 +68,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventController: asClass(EventController).singleton(),
     eventTypeController: asClass(EventTypeController).singleton(),
     seasonController: asClass(SeasonController).singleton(),
+    standingsController: asClass(StandingsController).singleton(),
     salaryRateController: asClass(SalaryRateController).singleton(),
 
     userService: asClass(UserService).singleton(),
@@ -78,6 +81,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventService: asClass(EventService).singleton(),
     eventTypeService: asClass(EventTypeService).singleton(),
     seasonService: asClass(SeasonService).singleton(),
+    standingsService: asClass(StandingsService).singleton(),
     salaryRateService: asClass(SalaryRateService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
