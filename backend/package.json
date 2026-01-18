@@ -10,7 +10,11 @@
     "dev": "cross-env PRISMA_HIDE_UPDATE_MESSAGE=true ts-node -r tsconfig-paths/register src/server.ts",
     "start": "node -r tsconfig-paths/register dist/server.js",
     "migrate": "cross-env PRISMA_HIDE_UPDATE_MESSAGE=true prisma migrate dev",
-    "generate": "cross-env PRISMA_HIDE_UPDATE_MESSAGE=true prisma generate"
+    "generate": "cross-env PRISMA_HIDE_UPDATE_MESSAGE=true prisma generate",
+    "seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "ts-node ./prisma/seed.ts"
   },
   "author": "",
   "license": "ISC",

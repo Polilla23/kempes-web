@@ -232,7 +232,7 @@ function PlayerManagement() {
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
+        header: () => <span className="text-center cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const player = row.original
 
@@ -269,7 +269,8 @@ function PlayerManagement() {
   return isLoadingPlayers ? (
     <PlayerTableSkeleton rows={8} />
   ) : (
-    <div className="flex flex-col items-center gap-2 h-full max-w-3/4">
+    <div className="flex items-center justify-center w-full">
+      <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
       <h1 className="text-2xl font-bold mb-10 mt-8">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
@@ -295,6 +296,7 @@ function PlayerManagement() {
           onClose={handleEditClose}
         />
       )}
+      </div>
     </div>
   )
 }

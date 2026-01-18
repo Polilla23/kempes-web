@@ -1,9 +1,16 @@
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useTranslation } from 'react-i18next'
-import type { CupWizardState } from '@/types/fixture'
+import { Loader2, AlertCircle } from 'lucide-react'
+import type { CupWizardState, CompetitionCategory } from '@/types/fixture'
+import { SeasonService } from '@/services/season.service'
+import { CompetitionTypeService } from '@/services/competition-type.service'
+import type { Season } from '@/types'
+import type { CompetitionType as ServiceCompetitionType } from '@/services/competition-type.service'
 
 interface Step1CreateCupProps {
   wizardState: CupWizardState
@@ -13,6 +20,67 @@ interface Step1CreateCupProps {
 
 export function Step1CreateCup({ wizardState, onStateChange, onNext }: Step1CreateCupProps) {
   const { t } = useTranslation('fixtures')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Cargar temporada activa y tipo de competición al montar
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Obtener temporada activa
+        const seasonsResponse = await SeasonService.getSeasons()
+        const activeSeason = seasonsResponse.seasons.find((s: Season) => s.isActive)
+
+        if (!activeSeason) {
+          setError('No hay temporada activa configurada')
+          setLoading(false)
+          return
+        }
+
+        // Buscar tipo de competición de Copa (KEMPES_CUP)
+        const typesResponse = await CompetitionTypeService.getCompetitionTypes()
+        const cupType = typesResponse.competitionTypes.find(
+          (ct: ServiceCompetitionType) => ct.format === 'CUP'
+        )
+
+        if (!cupType) {
+          setError('No hay tipo de competición de copa activo')
+          setLoading(false)
+          return
+        }
+
+        // Actualizar estado del wizard
+        onStateChange({
+          activeSeason: {
+            id: activeSeason.id,
+            number: activeSeason.number,
+            isActive: activeSeason.isActive,
+          },
+          competitionCategory: 'SENIOR' as CompetitionCategory, // Por defecto, se puede hacer configurable
+          competitionType: {
+            id: cupType.id,
+            name: cupType.name,
+            format: cupType.format,
+            category: cupType.category as CompetitionCategory,
+          },
+        })
+      } catch (err) {
+        console.error('Error loading data:', err)
+        setError('Error al cargar los datos necesarios')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (!wizardState.activeSeason) {
+      loadData()
+    } else {
+      setLoading(false)
+    }
+  }, []) // Solo ejecutar al montar
 
   const handleNumGroupsChange = (value: string) => {
     const numGroups = parseInt(value) || 2
@@ -35,9 +103,10 @@ export function Step1CreateCup({ wizardState, onStateChange, onNext }: Step1Crea
   }
 
   const isValid = () => {
-    const { numGroups, teamsPerGroup, qualifyToGold, qualifyToSilver } = wizardState
+    const { numGroups, teamsPerGroup, qualifyToGold, qualifyToSilver, activeSeason, competitionType } = wizardState
     
     // Validaciones
+    if (!activeSeason || !competitionType) return false
     if (numGroups < 2 || numGroups > 6) return false
     if (teamsPerGroup < 2 || teamsPerGroup > 8) return false
     if (qualifyToGold < 1 || qualifyToGold > teamsPerGroup) return false
@@ -51,6 +120,27 @@ export function Step1CreateCup({ wizardState, onStateChange, onNext }: Step1Crea
     if (isValid()) {
       onNext()
     }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Cargando configuración...</span>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
   }
 
   return (

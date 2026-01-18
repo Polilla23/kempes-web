@@ -34,7 +34,7 @@ import { useTranslation } from 'react-i18next'
 const navItems = [
   { key: 'home', icon: House, to: '/' },
   { key: 'standings', icon: ListOrdered, to: '/standings' },
-  { key: 'fixture', icon: CalendarRange, to: '/fixture' },
+  { key: 'fixture', icon: CalendarRange, to: '/fixtures' },
   { key: 'statistics', icon: ChartColumn, to: '/stats' },
   { key: 'transfers', icon: ArrowLeftRight, to: '/transfers' },
 ]
@@ -79,7 +79,7 @@ const NavbarContent = () => {
                 <SidebarMenuButton asChild>
                   <Link className="select-none" to={item.to}>
                     <item.icon />
-                    <span>{t(`menu.${item.key}`)}</span>
+                    <span>{t(`menu.${item.key}` as any)}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -97,7 +97,7 @@ const NavbarContent = () => {
                   <SidebarMenuButton asChild>
                     <Link className="select-none" to={item.to}>
                       <item.icon />
-                      <span>{t(`management.${item.key}`)}</span>
+                      <span>{t(`management.${item.key}` as any)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -108,7 +108,7 @@ const NavbarContent = () => {
                   <SidebarMenuButton asChild>
                     <Link className="select-none" to={item.to}>
                       <item.icon />
-                      <span>{t(`fixtures.${item.key}`)}</span>
+                      <span>{t(`fixtures.${item.key}` as any)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -127,7 +127,7 @@ const NavbarContent = () => {
                   <SidebarMenuButton asChild>
                     <Link className="select-none" to={item.to}>
                       <item.icon />
-                      <span>{t(`configuration.${item.key}`)}</span>
+                      <span>{t(`configuration.${item.key}` as any)}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

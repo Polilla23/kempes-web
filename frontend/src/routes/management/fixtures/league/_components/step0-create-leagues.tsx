@@ -31,6 +31,10 @@ interface LeagueFormData {
   playoutOpponent?: string
 }
 
+function toLeaguePosition(type: LeagueType) {
+  return type === 'MAYORES' ? 'TOP' : 'BOTTOM'
+}
+
 export function Step0CreateLeagues({ wizardState, onUpdate, onNext }: Step0CreateLeaguesProps) {
   const [leagues, setLeagues] = useState<LeagueFormData[]>([
     {
@@ -97,17 +101,37 @@ export function Step0CreateLeagues({ wizardState, onUpdate, onNext }: Step0Creat
     }
 
     // Convertir a formato del wizard
-    const leagueConfigs: LeagueCreationConfig[] = leagues.map((league) => ({
-      id: league.id,
-      name: league.name,
-      type: league.type,
-      isChampionFirstPlace: league.isChampionFirstPlace,
-      playoffMode: league.playoffMode,
-      directRelegations: league.directRelegations,
-      promotions: league.promotions,
-      hasPlayoutForLastPromotion: league.hasPlayoutForLastPromotion,
-      playoutOpponent: league.playoutOpponent,
-    }))
+    let leagueConfigs: LeagueCreationConfig[]
+    try {
+      leagueConfigs = leagues.map((league, index) => {
+        const position = toLeaguePosition(league.type)
+        const letter = String.fromCharCode(65 + index)
+
+        const competitionType = wizardState.createdCompetitionTypes?.[index]
+        if (!competitionType) {
+          throw new Error('Faltan CompetitionTypes creados para las ligas')
+        }
+
+        return {
+          id: league.id,
+          name: league.name,
+          letter,
+          position,
+          competitionType,
+          roundType: 'match_and_rematch',
+          firstIsChampion: position === 'TOP' ? league.isChampionFirstPlace : undefined,
+          directPromotions: league.promotions,
+          playoffPromotions: 0,
+          directRelegations: league.directRelegations,
+          playoffRelegations: 0,
+          hasPlayoutForLastPromotion: league.hasPlayoutForLastPromotion,
+        }
+      })
+    } catch (error) {
+      console.error(error)
+      toast.error('Primero creá los Competition Types para las ligas')
+      return
+    }
 
     onUpdate({
       ...wizardState,

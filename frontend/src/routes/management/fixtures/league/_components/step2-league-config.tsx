@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useEffect, useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,10 +22,10 @@ export function Step2LeagueConfig({ wizardState, onUpdate, onNext, onBack }: Ste
   const progress = ((currentLeagueIndex + 1) / totalLeagues) * 100
 
   // Simular carga inicial
-  useState(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 300)
     return () => clearTimeout(timer)
-  })
+  }, [])
 
   const handleSaveConfig = (config: LeagueConfig) => {
     const updatedConfigs = [...wizardState.leagueConfigs]

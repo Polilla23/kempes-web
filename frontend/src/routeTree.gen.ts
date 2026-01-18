@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StandingsIndexRouteImport } from './routes/standings/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
+import { Route as FixturesIndexRouteImport } from './routes/fixtures/index'
 import { Route as ConfigurationIndexRouteImport } from './routes/configuration/index'
 import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
@@ -19,6 +21,7 @@ import { Route as ClubCreateRouteImport } from './routes/club/create'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
 import { Route as ManagementSalaryRatesIndexRouteImport } from './routes/management/salary-rates/index'
 import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
+import { Route as ManagementFixturesIndexRouteImport } from './routes/management/fixtures/index'
 import { Route as ManagementCompetitionsIndexRouteImport } from './routes/management/competitions/index'
 import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
 import { Route as ConfigurationSeasonsIndexRouteImport } from './routes/configuration/seasons/index'
@@ -42,9 +45,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StandingsIndexRoute = StandingsIndexRouteImport.update({
+  id: '/standings/',
+  path: '/standings/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyaccountIndexRoute = MyaccountIndexRouteImport.update({
   id: '/myaccount/',
   path: '/myaccount/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FixturesIndexRoute = FixturesIndexRouteImport.update({
+  id: '/fixtures/',
+  path: '/fixtures/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfigurationIndexRoute = ConfigurationIndexRouteImport.update({
@@ -86,6 +99,11 @@ const ManagementSalaryRatesIndexRoute =
 const ManagementPlayersIndexRoute = ManagementPlayersIndexRouteImport.update({
   id: '/management/players/',
   path: '/management/players/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementFixturesIndexRoute = ManagementFixturesIndexRouteImport.update({
+  id: '/management/fixtures/',
+  path: '/management/fixtures/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManagementCompetitionsIndexRoute =
@@ -189,7 +207,9 @@ export interface FileRoutesByFullPath {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration': typeof ConfigurationIndexRoute
+  '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
+  '/standings': typeof StandingsIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
@@ -203,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
+  '/management/fixtures': typeof ManagementFixturesIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
@@ -218,7 +239,9 @@ export interface FileRoutesByTo {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration': typeof ConfigurationIndexRoute
+  '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
+  '/standings': typeof StandingsIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
@@ -232,6 +255,7 @@ export interface FileRoutesByTo {
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
+  '/management/fixtures': typeof ManagementFixturesIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
@@ -248,7 +272,9 @@ export interface FileRoutesById {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration/': typeof ConfigurationIndexRoute
+  '/fixtures/': typeof FixturesIndexRoute
   '/myaccount/': typeof MyaccountIndexRoute
+  '/standings/': typeof StandingsIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
@@ -262,6 +288,7 @@ export interface FileRoutesById {
   '/configuration/seasons/': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs/': typeof ManagementClubsIndexRoute
   '/management/competitions/': typeof ManagementCompetitionsIndexRoute
+  '/management/fixtures/': typeof ManagementFixturesIndexRoute
   '/management/players/': typeof ManagementPlayersIndexRoute
   '/management/salary-rates/': typeof ManagementSalaryRatesIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
@@ -279,7 +306,9 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/configuration'
+    | '/fixtures'
     | '/myaccount'
+    | '/standings'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
@@ -293,6 +322,7 @@ export interface FileRouteTypes {
     | '/configuration/seasons'
     | '/management/clubs'
     | '/management/competitions'
+    | '/management/fixtures'
     | '/management/players'
     | '/management/salary-rates'
     | '/management/users'
@@ -308,7 +338,9 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/configuration'
+    | '/fixtures'
     | '/myaccount'
+    | '/standings'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
@@ -322,6 +354,7 @@ export interface FileRouteTypes {
     | '/configuration/seasons'
     | '/management/clubs'
     | '/management/competitions'
+    | '/management/fixtures'
     | '/management/players'
     | '/management/salary-rates'
     | '/management/users'
@@ -337,7 +370,9 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/configuration/'
+    | '/fixtures/'
     | '/myaccount/'
+    | '/standings/'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
@@ -351,6 +386,7 @@ export interface FileRouteTypes {
     | '/configuration/seasons/'
     | '/management/clubs/'
     | '/management/competitions/'
+    | '/management/fixtures/'
     | '/management/players/'
     | '/management/salary-rates/'
     | '/management/users/'
@@ -367,7 +403,9 @@ export interface RootRouteChildren {
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
   ConfigurationIndexRoute: typeof ConfigurationIndexRoute
+  FixturesIndexRoute: typeof FixturesIndexRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
+  StandingsIndexRoute: typeof StandingsIndexRoute
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
   ClubUpdateIdRoute: typeof ClubUpdateIdRoute
@@ -381,6 +419,7 @@ export interface RootRouteChildren {
   ConfigurationSeasonsIndexRoute: typeof ConfigurationSeasonsIndexRoute
   ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
   ManagementCompetitionsIndexRoute: typeof ManagementCompetitionsIndexRoute
+  ManagementFixturesIndexRoute: typeof ManagementFixturesIndexRoute
   ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
   ManagementSalaryRatesIndexRoute: typeof ManagementSalaryRatesIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
@@ -399,11 +438,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/standings/': {
+      id: '/standings/'
+      path: '/standings'
+      fullPath: '/standings'
+      preLoaderRoute: typeof StandingsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/myaccount/': {
       id: '/myaccount/'
       path: '/myaccount'
       fullPath: '/myaccount'
       preLoaderRoute: typeof MyaccountIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fixtures/': {
+      id: '/fixtures/'
+      path: '/fixtures'
+      fullPath: '/fixtures'
+      preLoaderRoute: typeof FixturesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuration/': {
@@ -460,6 +513,13 @@ declare module '@tanstack/react-router' {
       path: '/management/players'
       fullPath: '/management/players'
       preLoaderRoute: typeof ManagementPlayersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/fixtures/': {
+      id: '/management/fixtures/'
+      path: '/management/fixtures'
+      fullPath: '/management/fixtures'
+      preLoaderRoute: typeof ManagementFixturesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/management/competitions/': {
@@ -591,7 +651,9 @@ const rootRouteChildren: RootRouteChildren = {
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
   ConfigurationIndexRoute: ConfigurationIndexRoute,
+  FixturesIndexRoute: FixturesIndexRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
+  StandingsIndexRoute: StandingsIndexRoute,
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,
   ClubUpdateIdRoute: ClubUpdateIdRoute,
@@ -606,6 +668,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfigurationSeasonsIndexRoute: ConfigurationSeasonsIndexRoute,
   ManagementClubsIndexRoute: ManagementClubsIndexRoute,
   ManagementCompetitionsIndexRoute: ManagementCompetitionsIndexRoute,
+  ManagementFixturesIndexRoute: ManagementFixturesIndexRoute,
   ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,
   ManagementSalaryRatesIndexRoute: ManagementSalaryRatesIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,

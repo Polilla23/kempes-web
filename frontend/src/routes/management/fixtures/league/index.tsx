@@ -7,7 +7,6 @@ import { Step1CreateLeaguesUnified } from './_components/step1-create-leagues-un
 import { Step3TeamAssignment } from './_components/step3-team-assignment'
 import { Step4FixturesPreview } from './_components/step4-fixtures-preview'
 import type { LeagueWizardState } from '@/types/fixture'
-import { Card } from '@/components/ui/card'
 
 export const Route = createFileRoute('/management/fixtures/league/')({
   component: LeagueFixtureWizard,

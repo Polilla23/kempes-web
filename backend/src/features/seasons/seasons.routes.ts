@@ -39,4 +39,14 @@ export const seasonRoutes = async (fastify: FastifyInstance) => {
     schema: seasonsSchemas.delete,
     handler: seasonController.delete.bind(seasonController),
   })
+
+  fastify.get('/:seasonNumber/movements', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.getMovements.bind(seasonController),
+  })
+
+  fastify.post('/advance', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.advanceSeason.bind(seasonController),
+  })
 }

@@ -11,6 +11,7 @@ export class CompetitionMapper {
       name: string
       category: string
       format: string
+      hierarchy: number
     }
   ): CompetitionDTO {
     return {
@@ -24,6 +25,7 @@ export class CompetitionMapper {
         name: competitionTypeData.name,
         category: competitionTypeData.category,
         format: competitionTypeData.format,
+        hierarchy: competitionTypeData.hierarchy,
       },
       _count: { matches: 0, clubs: 0 },
     }
@@ -38,6 +40,7 @@ export class CompetitionMapper {
         name: string
         category: string
         format: string
+        hierarchy: number
       }
     >
   ): CompetitionDTO[] {

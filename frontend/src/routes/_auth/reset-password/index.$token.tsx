@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle, Loader2, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import ResetPasswordForm from './form'
+import ResetPasswordForm from './_components/form'
 import type { NewPasswordFormData } from '@/types'
 import AuthLayout from '../auth-layout'
 

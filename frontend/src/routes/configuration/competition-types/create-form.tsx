@@ -43,11 +43,6 @@ const CATEGORY_OPTIONS = [
   { value: 'KEMPESITA', label: 'Kempesita' },
 ]
 
-const FORMAT_OPTIONS = [
-  { value: 'LEAGUE', label: 'League (Round Robin)' },
-  { value: 'CUP', label: 'Cup (Knockout)' },
-]
-
 const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps) => {
   const { t } = useTranslation('competitionTypes')
   const [open, setOpen] = useState(false)

@@ -36,6 +36,10 @@ model Club {
   homeMatches Match[] @relation("HomeMatches")
   awayMatches Match[] @relation("AwayMatches")
   competitions  Competition[] @relation("CompetitionTeams")
+  seasonTransitions SeasonTransition[]
+  clubHistory   ClubHistory[]
+  coefKempes    CoefKempes[]
+  matchCovids   MatchCovid[]
 
   @@index([userId])
   @@map("clubs")
@@ -57,6 +61,8 @@ model Player {
   isKempesita   Boolean @map("is_kempesita")  @default(false)
   isActive      Boolean @map("is_active") @default(true)
   events        Event[]
+  playerSeasonStats PlayerSeasonStats[]
+  matchCovids   MatchCovid[]
 
   @@map("players")
 }
@@ -76,6 +82,10 @@ model Season {
   number        Int @unique
   isActive      Boolean @default(false)
   competitions  Competition[]
+  seasonTransitions SeasonTransition[]
+  clubHistory   ClubHistory[]
+  playerSeasonStats PlayerSeasonStats[]
+  coefKempes    CoefKempes[]
 }
 
 model Competition {
@@ -96,6 +106,11 @@ model Competition {
   competitionType CompetitionType @relation(fields: [competitionTypeId], references:[id])
   teams         Club[]  @relation("CompetitionTeams")
   matches       Match[]
+  
+  seasonTransitionsFrom SeasonTransition[] @relation("FromCompetition")
+  seasonTransitionsTo SeasonTransition[] @relation("ToCompetition")
+  clubHistory   ClubHistory[]
+  playerSeasonStats PlayerSeasonStats[]
 }
 
 model CompetitionType {
@@ -109,9 +124,12 @@ model CompetitionType {
 
 model Match {
   id            String  @id @default(uuid())
-  matchdayOrder Int // Fecha 1, 2... o Fase (16 = 16vos, 8 = 8vos)
+  matchdayOrder Int // Fecha 1, 2... o número de orden
   status        MatchStatus @default(PENDIENTE)
   stage         CompetitionStage // "ROUND_ROBIN" o "KNOCKOUT"
+
+  // Ronda explícita para eliminatorias. NULL para ligas/grupos.
+  knockoutRound KnockoutRound? @map("knockout_round")
 
   homeClubId    String?
   awayClubId    String?
@@ -136,10 +154,29 @@ model Match {
 
   awaySourceMatch Match? @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id])
   dependentMatches Match[] @relation("AwaySourceMatch")
+  
+  covidPlayers  MatchCovid[]
 
   @@index([competitionId])
   @@index([homeSourceMatchId])
   @@index([awaySourceMatchId])
+  @@index([knockoutRound])
+}
+
+model MatchCovid {
+  id        String  @id @default(uuid())
+  matchId   String
+  playerId  String
+  clubId    String  // Equipo del jugador en este partido (home o away)
+  
+  match     Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player    Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  club      Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  
+  @@unique([matchId, playerId])
+  @@index([matchId])
+  @@index([playerId])
+  @@map("match_covids")
 }
 
 model EventType {
@@ -189,6 +226,29 @@ enum CompetitionStage {
   KNOCKOUT // Eliminación directa
 }
 
+enum KnockoutRound {
+  // Copa - Fases estándar
+  ROUND_OF_64
+  ROUND_OF_32
+  ROUND_OF_16
+  QUARTERFINAL
+  SEMIFINAL
+  FINAL
+  THIRD_PLACE
+  // Liga - Playoffs para definir campeón
+  LIGUILLA              // Partidos de liguilla (mini liga entre X primeros)
+  TRIANGULAR_SEMI       // Semi del triangular: 3° vs 2°
+  TRIANGULAR_FINAL      // Final del triangular: Ganador vs 1°
+  // Liga - Playout (pelea por no ir a promoción)
+  PLAYOUT               // Partido de playout (ej: 5to vs 6to)
+  // Liga - Promoción (entre divisiones)
+  PROMOTION             // Partido de promoción inter-división
+  // Liga - Reducido (última división, para ir a promoción)
+  REDUCIDO_QUARTER      // Cuartos de reducido: 5° vs 6°
+  REDUCIDO_SEMI         // Semi de reducido: Ganador cuartos vs 4°
+  REDUCIDO_FINAL        // Final de reducido: Ganador semi vs 3°
+}
+
 enum CompetitionCategory {
   SENIOR    // For "Mayores" competitions
   KEMPESITA // For "Kempesitas" competitions
@@ -213,4 +273,112 @@ enum EventTypeName {
   RED_CARD          // Tarjeta Roja 🟥
   INJURY            // Lesión 🤕
   MVP               // MVP 🌟
+}
+
+enum MovementType {
+  CHAMPION
+  DIRECT_PROMOTION
+  PLAYOFF_PROMOTION
+  REDUCIDO_PROMOTION
+  DIRECT_RELEGATION
+  PLAYOFF_RELEGATION
+  STAYED
+}
+
+enum CupPhase {
+  GROUPS
+  ROUND_OF_16
+  QUARTERFINALS
+  SEMIFINALS
+  FINAL
+  CHAMPION
+}
+
+// ============================================
+// HISTORICAL AND MOVEMENT TRACKING MODELS
+// ============================================
+
+model SeasonTransition {
+  id                String       @id @default(uuid())
+  seasonId          String
+  clubId            String
+  fromCompetitionId String
+  toCompetitionId   String?
+  movementType      MovementType
+  reason            String?      // "Campeón", "Posición 1", "Reducido", etc.
+  finalPosition     Int?         // Posición final en la competición anterior
+  
+  season            Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  club              Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  fromCompetition   Competition  @relation("FromCompetition", fields: [fromCompetitionId], references: [id], onDelete: Cascade)
+  toCompetition     Competition? @relation("ToCompetition", fields: [toCompetitionId], references: [id], onDelete: Cascade)
+  
+  @@unique([seasonId, clubId])
+  @@index([clubId])
+  @@index([seasonId])
+  @@map("season_transitions")
+}
+
+model ClubHistory {
+  id              String      @id @default(uuid())
+  clubId          String
+  seasonId        String
+  competitionId   String
+  finalPosition   Int
+  points          Int
+  played          Int
+  won             Int
+  drawn           Int
+  lost            Int
+  goalsFor        Int         @map("goals_for")
+  goalsAgainst    Int         @map("goals_against")
+  movement        MovementType?
+  
+  club            Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season          Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  competition     Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  @@unique([clubId, seasonId, competitionId])
+  @@index([clubId])
+  @@index([seasonId])
+  @@map("club_history")
+}
+
+model PlayerSeasonStats {
+  id              String      @id @default(uuid())
+  playerId        String
+  seasonId        String
+  competitionId   String
+  appearances     Int         @default(0)
+  goals           Int         @default(0)
+  assists         Int         @default(0)
+  yellowCards     Int         @default(0) @map("yellow_cards")
+  redCards        Int         @default(0) @map("red_cards")
+  mvps            Int         @default(0)
+  
+  player          Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season          Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  competition     Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  
+  @@unique([playerId, seasonId, competitionId])
+  @@index([playerId])
+  @@index([seasonId])
+  @@map("player_season_stats")
+}
+
+model CoefKempes {
+  id            String  @id @default(uuid())
+  clubId        String
+  seasonId      String
+  points        Float
+  cupPhase      CupPhase // Fase máxima alcanzada
+  cupName       CompetitionName // KEMPES_CUP, GOLD_CUP, SILVER_CUP
+  
+  club          Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  
+  @@unique([clubId, seasonId, cupName])
+  @@index([clubId])
+  @@index([seasonId])
+  @@map("coef_kempes")
 }

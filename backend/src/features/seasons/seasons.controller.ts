@@ -158,4 +158,69 @@ export class SeasonController {
       )
     }
   }
+
+  async getMovements(
+    req: FastifyRequest<{ Params: { seasonNumber: string } }>,
+    reply: FastifyReply
+  ) {
+    const { seasonNumber } = req.params
+
+    try {
+      const validNumber = Validator.number(parseInt(seasonNumber), 1)
+      const movements = await this.seasonService.getSeasonMovements(validNumber)
+
+      return Response.success(
+        reply,
+        movements,
+        `Movements for season ${validNumber} fetched successfully`
+      )
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Season', seasonNumber)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching season movements',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async advanceSeason(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const result = await this.seasonService.advanceSeason()
+
+      return Response.success(
+        reply,
+        {
+          previousSeasonNumber: result.previousSeason.number,
+          newSeasonNumber: result.newSeason.number,
+          totalMovements: result.movements.length,
+          movements: result.movements,
+        },
+        'Season advanced successfully'
+      )
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.error(reply, 'NOT_FOUND', 'No active season found', 404)
+      }
+      if (error instanceof Error && error.message.includes('pending')) {
+        return Response.error(
+          reply,
+          'VALIDATION_ERROR',
+          error.message,
+          400
+        )
+      }
+      return Response.error(
+        reply,
+        'ADVANCE_ERROR',
+        'Error while advancing season',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 }

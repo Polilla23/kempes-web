@@ -46,11 +46,6 @@ const CATEGORY_OPTIONS = [
   { value: 'KEMPESITA', label: 'Kempesita' },
 ]
 
-const FORMAT_OPTIONS = [
-  { value: 'LEAGUE', label: 'League (Round Robin)' },
-  { value: 'CUP', label: 'Cup (Knockout)' },
-]
-
 function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCompetitionTypeFormProps) {
   const { t } = useTranslation('competitionTypes')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)

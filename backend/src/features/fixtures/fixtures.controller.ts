@@ -3,9 +3,14 @@ import { FixtureService } from '@/features/fixtures/fixtures.service'
 import { Response } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
 import { KnockoutFixtureInput, LeagueFixtureInput, GroupStageFixtureInput, FinishMatchInput } from '@/types'
+import { MatchMapper } from '@/mappers'
 
 export class FixtureController {
-  constructor(private fixtureService: FixtureService) {}
+  private fixtureService: FixtureService
+
+  constructor({ fixtureService }: { fixtureService: FixtureService }) {
+    this.fixtureService = fixtureService
+  }
 
   async createKnockoutFixture(req: FastifyRequest<{ Body: KnockoutFixtureInput }>, reply: FastifyReply) {
     try {
@@ -98,8 +103,10 @@ export class FixtureController {
 
     try {
       const validatedCompetitionId = Validator.uuid(competitionId)
-      const result = await this.fixtureService.getCompetitionMatches(validatedCompetitionId)
-      return Response.success(reply, result, 'Competition matches fetched successfully')
+      const matches = await this.fixtureService.getCompetitionMatches(validatedCompetitionId)
+      const mappedMatches = MatchMapper.toDTOArray(matches as any)
+
+      return Response.success(reply, mappedMatches, 'Competition matches fetched successfully')
     } catch (error: any) {
       return Response.error(
         reply,
@@ -116,8 +123,9 @@ export class FixtureController {
 
     try {
       const validatedCompetitionId = Validator.uuid(competitionId)
-      const result = await this.fixtureService.getKnockoutBracket(validatedCompetitionId)
-      return Response.success(reply, result, 'Knockout bracket fetched successfully')
+      const matches = await this.fixtureService.getKnockoutBracket(validatedCompetitionId)
+      const mappedMatches = MatchMapper.toDTOArray(matches as any)
+      return Response.success(reply, mappedMatches, 'Knockout bracket fetched successfully')
     } catch (error: any) {
       return Response.error(
         reply,
@@ -149,6 +157,80 @@ export class FixtureController {
         reply,
         'FETCH_ERROR',
         'Failed to retrieve match',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async getMatchesWithFilters(
+    req: FastifyRequest<{ Querystring: { seasonId?: string; competitionId?: string } }>,
+    reply: FastifyReply
+  ) {
+    const { seasonId, competitionId } = req.query
+
+    try {
+      const validatedSeasonId = seasonId ? Validator.uuid(seasonId) : undefined
+      const validatedCompetitionId = competitionId ? Validator.uuid(competitionId) : undefined
+      
+      const result = await this.fixtureService.getMatchesWithFilters(validatedSeasonId, validatedCompetitionId)
+      return Response.success(reply, result, 'Matches fetched successfully')
+    } catch (error: any) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Failed to retrieve matches',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async generateMatchCovids(req: FastifyRequest<{ Params: { matchId: string } }>, reply: FastifyReply) {
+    const { matchId } = req.params
+
+    try {
+      const validatedMatchId = Validator.uuid(matchId)
+      
+      // Obtener el match para sacar los clubIds
+      const match = await this.fixtureService.getMatchById(validatedMatchId)
+      
+      if (!match.homeClubId || !match.awayClubId) {
+        return Response.error(reply, 'INVALID_MATCH', 'Match must have both home and away clubs assigned', 400)
+      }
+      
+      const result = await this.fixtureService.generateMatchCovids(
+        validatedMatchId,
+        match.homeClubId,
+        match.awayClubId
+      )
+      return Response.success(reply, result, 'Match COVIDs generated successfully')
+    } catch (error: any) {
+      return Response.error(
+        reply,
+        'COVID_GENERATION_ERROR',
+        'Failed to generate match COVIDs',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async getMatchCovids(req: FastifyRequest<{ Params: { matchId: string } }>, reply: FastifyReply) {
+    const { matchId } = req.params
+
+    try {
+      const validatedMatchId = Validator.uuid(matchId)
+      const result = await this.fixtureService.getMatchCovids(validatedMatchId)
+      return Response.success(reply, result, 'Match COVIDs fetched successfully')
+    } catch (error: any) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Match', matchId)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Failed to retrieve match COVIDs',
         500,
         error instanceof Error ? error.message : error
       )

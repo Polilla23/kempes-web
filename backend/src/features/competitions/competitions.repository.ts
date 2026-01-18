@@ -1,4 +1,4 @@
-import { Competition, CompetitionStage, PrismaClient } from '@prisma/client'
+import { Competition, CompetitionStage, PrismaClient, Prisma } from '@prisma/client'
 import { ICompetitionRepository } from '@/features/competitions/interface/ICompetitionRepository'
 import { isKempesCupRules, isLeaguesRules } from '@/features/utils/jsonTypeChecker'
 import type { KempesCupRules, LeaguesRules } from '@/types'
@@ -22,7 +22,7 @@ export class CompetitionRepository implements ICompetitionRepository {
               competitionTypeId: league.active_league.id,
               seasonId: config.activeSeason.id,
               isActive: true,
-              rules: league,
+              rules: league as unknown as Prisma.InputJsonValue,
             },
           })
           createdCompetitions.push(competition)
@@ -34,11 +34,12 @@ export class CompetitionRepository implements ICompetitionRepository {
       const competition = await this.prisma.competition.create({
         data: {
           name: `${kempesCupConfig.competitionType.name} ${kempesCupConfig.competitionCategory} - T${kempesCupConfig.activeSeason.number}`,
+          // Copa Kempes should start as group stage (ROUND_ROBIN). Knockout phases are separate competitions.
           system: CompetitionStage.ROUND_ROBIN,
           competitionTypeId: kempesCupConfig.competitionType.id,
           seasonId: kempesCupConfig.activeSeason.id,
           isActive: true,
-          rules: kempesCupConfig,
+          rules: kempesCupConfig as unknown as Prisma.InputJsonValue,
         },
       })
       return [competition]
@@ -49,7 +50,7 @@ export class CompetitionRepository implements ICompetitionRepository {
   async updateOneById(id: string, config: LeaguesRules | KempesCupRules): Promise<Competition> {
     const updatedCompetition = await this.prisma.competition.update({
       where: { id },
-      data: { rules: config },
+      data: { rules: config as unknown as Prisma.InputJsonValue },
     })
     return updatedCompetition
   }
@@ -58,17 +59,28 @@ export class CompetitionRepository implements ICompetitionRepository {
       where: { id },
     })
   }
-  async findAll(): Promise<Competition[] | null> {
-    return await this.prisma.competition.findMany()
+  async findAll() {
+    return await this.prisma.competition.findMany({
+      include: { competitionType: true }
+    })
   }
   async findOneById(id: string): Promise<Competition | null> {
     return await this.prisma.competition.findUnique({
       where: { id },
     })
   }
-  async findOneBySeasonId(seasonId: string): Promise<Competition[] | null> {
+  
+  async findOneByIdWithType(id: string) {
+    return await this.prisma.competition.findUnique({
+      where: { id },
+      include: { competitionType: true }
+    })
+  }
+  
+  async findOneBySeasonId(seasonId: string) {
     return await this.prisma.competition.findMany({
       where: { seasonId },
+      include: { competitionType: true }
     })
   }
 }

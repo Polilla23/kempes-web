@@ -116,7 +116,7 @@ function SalaryRateManagement() {
       columnHelper.display({
         id: 'actions',
         enableHiding: false,
-        header: () => <span className="text-start cursor-default">{t('table.actions')}</span>,
+        header: () => <span className="text-center cursor-default">{t('table.actions')}</span>,
         cell: ({ row }) => {
           const salaryRate = row.original
           return (
@@ -149,8 +149,9 @@ function SalaryRateManagement() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-      <h1 className="text-2xl font-bold mb-10 mt-8 select-none">{t('title')}</h1>
+    <div className="flex items-center justify-center w-full">
+      <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
+        <h1 className="text-2xl font-bold mb-10 mt-8">{t('title')}</h1>
       <div className="flex justify-between gap-3 mb-4 w-full relative">
         <Label htmlFor="search" className="sr-only">
           {t('table.search')}
@@ -159,7 +160,7 @@ function SalaryRateManagement() {
           id="search"
           type="text"
           placeholder={`${t('table.search')}...`}
-          className="pl-8 max-w-md w-full"
+          className="pl-8"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -181,6 +182,7 @@ function SalaryRateManagement() {
           onClose={handleEditClose}
         />
       )}
+      </div>
     </div>
   )
 }

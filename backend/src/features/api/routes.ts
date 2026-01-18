@@ -9,6 +9,7 @@ import { fixtureRoutes } from '@/features/fixtures/fixtures.routes'
 import { eventRoutes } from '@/features/events/events.routes'
 import { eventTypeRoutes } from '@/features/event-types/event-types.routes'
 import { seasonRoutes } from '@/features/seasons/seasons.routes'
+import { standingsRoutes } from '@/features/seasons/standings.routes'
 import { salaryRateRoutes } from '@/features/salary-rates/salary-rates.routes'
 
 /**
@@ -28,6 +29,7 @@ export default async function (app: FastifyInstance) {
       instance.register(eventRoutes, { prefix: '/events' })
       instance.register(eventTypeRoutes, { prefix: '/event-types' })
       instance.register(seasonRoutes, { prefix: '/seasons' })
+      instance.register(standingsRoutes, { prefix: '/standings' })
       instance.register(salaryRateRoutes, { prefix: '/salary-rates' })
 
       instance.get('/health', async () => ({ status: 'ok', timestamp: new Date() }))
@@ -37,3 +39,4 @@ export default async function (app: FastifyInstance) {
     { prefix: '/api/v1' }
   )
 }
+

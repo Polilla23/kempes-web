@@ -23,8 +23,10 @@ export const competitionsSchemas = {
                   type: 'object',
                   properties: {
                     id: { type: 'string', format: 'uuid' },
-                    name: { type: 'string' },
+                    number: { type: 'number' },
+                    isActive: { type: 'boolean' },
                   },
+                  required: ['id', 'number'],
                 },
                 competitionCategory: { type: 'string', enum: ['SENIOR', 'KEMPESITA'] },
                 leagues: {
@@ -41,11 +43,15 @@ export const competitionsSchemas = {
                             properties: {
                               id: { type: 'string' },
                               name: { type: 'string' },
+                              format: { type: 'string' },
+                              hierarchy: { type: 'number' },
+                              category: { type: 'string' },
                             },
                           },
                           league_position: { type: 'string', enum: ['TOP'] },
                           firstIsChampion: { type: 'boolean' },
                           roundType: { type: 'string', enum: ['match', 'match_and_rematch'] },
+                          clubIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
                           topPlayoffs: {
                             type: 'object',
                             properties: {
@@ -111,10 +117,14 @@ export const competitionsSchemas = {
                             properties: {
                               id: { type: 'string' },
                               name: { type: 'string' },
+                              format: { type: 'string' },
+                              hierarchy: { type: 'number' },
+                              category: { type: 'string' },
                             },
                           },
                           league_position: { type: 'string', enum: ['MIDDLE'] },
                           roundType: { type: 'string', enum: ['match', 'match_and_rematch'] },
+                          clubIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
                           playouts: {
                             type: 'object',
                             properties: {
@@ -205,10 +215,14 @@ export const competitionsSchemas = {
                             properties: {
                               id: { type: 'string' },
                               name: { type: 'string' },
+                              format: { type: 'string' },
+                              hierarchy: { type: 'number' },
+                              category: { type: 'string' },
                             },
                           },
                           league_position: { type: 'string', enum: ['BOTTOM'] },
                           roundType: { type: 'string', enum: ['match', 'match_and_rematch'] },
+                          clubIds: { type: 'array', items: { type: 'string', format: 'uuid' } },
                           promotions: {
                             type: 'object',
                             properties: {

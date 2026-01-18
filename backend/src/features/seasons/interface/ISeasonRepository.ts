@@ -8,4 +8,7 @@ export interface ISeasonRepository {
   save(data: Prisma.SeasonCreateInput): Promise<Season>
   updateOneById(id: string, data: Prisma.SeasonUpdateInput): Promise<Season>
   deleteOneById(id: string): Promise<Season>
+  countPendingMatches(seasonId: string): Promise<number>
+  findTransitionsBySeason(seasonId: string): Promise<any>
+  saveTransitions(transitions: Prisma.SeasonTransitionCreateManyInput[]): Promise<any>
 }

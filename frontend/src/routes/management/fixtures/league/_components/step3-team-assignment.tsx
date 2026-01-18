@@ -16,9 +16,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ChevronLeft, ChevronRight, Users, AlertCircle, Trophy } from 'lucide-react'
-import type { LeagueWizardState, AvailableTeam } from '@/types/fixture'
+import { ChevronLeft, ChevronRight, Users, AlertCircle, Trophy, ArrowUp, ArrowDown } from 'lucide-react'
+import type { LeagueWizardState, AvailableTeam, TeamMovement } from '@/types/fixture'
 import { ClubService } from '@/services/club.service'
+import { SeasonService } from '@/services/season.service'
 import { DroppableLeagueZone } from './droppable-league-zone'
 
 interface Step3TeamAssignmentProps {
@@ -32,6 +33,7 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
   const [isLoading, setIsLoading] = useState(true)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [teamMovements, setTeamMovements] = useState<Map<string, TeamMovement>>(new Map())
 
   // Sensores para drag & drop
   const sensors = useSensors(
@@ -43,13 +45,23 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
     useSensor(KeyboardSensor)
   )
 
+  // Esta función se usará en el futuro para mapear nombres de liga a jerarquías
+  // const getHierarchyFromName = (leagueName: string): number => {
+  //   const hierarchyMap: Record<string, number> = {
+  //     'LEAGUE_A': 1,
+  //     'LEAGUE_B': 2,
+  //     'LEAGUE_C': 3,
+  //     'LEAGUE_D': 4,
+  //     'LEAGUE_E': 5,
+  //   }
+  //   return hierarchyMap[leagueName] || 999
+  // }
+
   const loadAvailableTeams = async () => {
     try {
       setIsLoading(true)
       setError(null)
       const response = await ClubService.getClubs()
-
-      // Convertir clubs a AvailableTeam
       const teams: AvailableTeam[] = response.clubs
         .filter((club) => club.isActive)
         .map((club) => ({
@@ -59,14 +71,51 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
           isAssigned: false,
         }))
 
-      // Inicializar teamAssignments vacío para cada liga si no existe
+      // 2. Obtener movimientos de la temporada anterior (si existe)
+      let movements = new Map<string, TeamMovement>()
+      const previousSeasonNumber = (wizardState.seasonNumber || 1) - 1
+      
+      if (previousSeasonNumber > 0) {
+        try {
+          const movementsData = await SeasonService.getSeasonMovements(previousSeasonNumber)
+          movements = new Map(
+            movementsData.map((m: any) => [m.clubId, m])
+          )
+        } catch (error) {
+          console.warn('No se pudieron cargar movimientos de temporada anterior:', error)
+          // Si no hay temporada anterior, no es un error crítico
+        }
+      }
+      
+      setTeamMovements(movements)
+
+      // 3. Pre-asignar equipos según movimientos
       const initialAssignments = { ...wizardState.teamAssignments }
       const leagues = wizardState.leagueCreationConfigs || []
+      
+      // Inicializar arrays vacíos para cada liga
       leagues.forEach((league) => {
         if (!initialAssignments[league.id]) {
           initialAssignments[league.id] = []
         }
       })
+
+      // 4. Pre-asignar equipos según movimientos de la temporada anterior
+      if (previousSeasonNumber > 0 && movements.size > 0) {
+        teams.forEach(team => {
+          const movement = movements.get(team.id)
+          if (movement && movement.toLeague) {
+            // Buscar la liga correspondiente por hierarchy
+            const targetLeague = leagues.find(l => 
+              l.competitionType?.name === movement.toLeague
+            )
+            
+            if (targetLeague && !initialAssignments[targetLeague.id].includes(team.id)) {
+              initialAssignments[targetLeague.id].push(team.id)
+            }
+          }
+        })
+      }
 
       onUpdate({
         ...wizardState,
@@ -177,7 +226,84 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
       .filter(Boolean) as AvailableTeam[]
   }
 
-  // Obtener el equipo que se está arrastrando
+  // Calcular estadísticas de movimientos para una liga
+  const getLeagueMovementStats = (leagueId: string) => {
+    const teams = getLeagueTeams(leagueId)
+    const stats = {
+      promotions: 0,
+      relegations: 0,
+      stayed: 0
+    }
+
+    teams.forEach(team => {
+      const movement = teamMovements.get(team.id)
+      if (movement) {
+        if (movement.movementType.includes('PROMOTION')) {
+          stats.promotions++
+        } else if (movement.movementType.includes('RELEGATION')) {
+          stats.relegations++
+        } else if (movement.movementType === 'STAYED') {
+          stats.stayed++
+        }
+      }
+    })
+
+    return stats
+  }
+
+  // Componente para mostrar el badge de movimiento
+  const MovementBadge = ({ movement }: { movement: TeamMovement }) => {
+    const getMovementConfig = () => {
+      switch (movement.movementType) {
+        case 'CHAMPION':
+          return { 
+            icon: '🏆', 
+            className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30', 
+            label: 'Campeón' 
+          }
+        case 'DIRECT_PROMOTION':
+          return { 
+            icon: '⬆️', 
+            className: 'bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30', 
+            label: 'Ascenso' 
+          }
+        case 'PLAYOFF_PROMOTION':
+          return { 
+            icon: '⬆️', 
+            className: 'bg-lime-500/10 text-lime-700 border-lime-500/20 dark:bg-lime-500/20 dark:text-lime-300 dark:border-lime-500/30', 
+            label: 'Ascenso (Playoff)' 
+          }
+        case 'DIRECT_RELEGATION':
+          return { 
+            icon: '⬇️', 
+            className: 'bg-red-500/10 text-red-700 border-red-500/20 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30', 
+            label: 'Descenso' 
+          }
+        case 'PLAYOFF_RELEGATION':
+          return { 
+            icon: '⬇️', 
+            className: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30', 
+            label: 'Descenso (Playoff)' 
+          }
+        case 'STAYED':
+          return { 
+            icon: '➖', 
+            className: 'bg-muted text-muted-foreground border-border', 
+            label: 'Se mantiene' 
+          }
+        default:
+          return { icon: '', className: '', label: '' }
+      }
+    }
+
+    const config = getMovementConfig()
+
+    return (
+      <Badge variant="outline" className={`text-xs ${config.className}`}>
+        {config.icon} {config.label}
+      </Badge>
+    )
+  }  // Obtener el equipo que se está arrastrando
   const activeTeam = activeId ? wizardState.availableTeams.find((t) => t.id === activeId) : null
 
   if (isLoading) {
@@ -303,6 +429,7 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
             {(wizardState.leagueCreationConfigs || []).map((league) => {
               const leagueTeams = getLeagueTeams(league.id)
               const isValid = leagueTeams.length >= 4
+              const movementStats = getLeagueMovementStats(league.id)
 
               return (
                 <Card key={league.id} className={!isValid ? 'border-destructive' : ''}>
@@ -312,24 +439,65 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
                         <Trophy className="h-5 w-5 text-primary" />
                         <CardTitle className="text-lg">{league.name}</CardTitle>
                       </div>
-                      <Badge variant={isValid ? 'default' : 'destructive'}>
-                        {leagueTeams.length} {leagueTeams.length === 1 ? 'equipo' : 'equipos'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={isValid ? 'default' : 'destructive'}>
+                          {leagueTeams.length} {leagueTeams.length === 1 ? 'equipo' : 'equipos'}
+                        </Badge>
+                      </div>
                     </div>
+                    
+                    {/* Mostrar estadísticas de movimientos */}
+                    {(movementStats.promotions > 0 || movementStats.relegations > 0) && (
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {movementStats.promotions > 0 && (
+                          <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-300">
+                            <ArrowUp className="h-3 w-3 mr-1" />
+                            {movementStats.promotions} ascenso{movementStats.promotions > 1 ? 's' : ''}
+                          </Badge>
+                        )}
+                        {movementStats.relegations > 0 && (
+                          <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-500/20 dark:bg-red-500/20 dark:text-red-300">
+                            <ArrowDown className="h-3 w-3 mr-1" />
+                            {movementStats.relegations} descenso{movementStats.relegations > 1 ? 's' : ''}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    
                     {!isValid && (
-                      <CardDescription className="text-destructive">
+                      <CardDescription className="text-destructive mt-2">
                         Se necesitan al menos {4 - leagueTeams.length} equipos más
                       </CardDescription>
                     )}
                   </CardHeader>
                   <CardContent>
-                    <DroppableLeagueZone
-                      id={league.id}
-                      teams={leagueTeams}
-                      isEmpty={leagueTeams.length === 0}
-                      emptyMessage="Arrastra equipos aquí"
-                      minTeams={4}
-                    />
+                    <div className="space-y-3">
+                      <DroppableLeagueZone
+                        id={league.id}
+                        teams={leagueTeams}
+                        isEmpty={leagueTeams.length === 0}
+                        emptyMessage="Arrastra equipos aquí"
+                        minTeams={4}
+                      />
+                      
+                      {/* Mostrar equipos con badges de movimiento */}
+                      {leagueTeams.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {leagueTeams.map((team) => {
+                            const movement = teamMovements.get(team.id)
+                            if (movement) {
+                              return (
+                                <div key={team.id} className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
+                                  <span className="font-medium">{team.name}</span>
+                                  <MovementBadge movement={movement} />
+                                </div>
+                              )
+                            }
+                            return null
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )

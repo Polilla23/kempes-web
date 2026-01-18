@@ -5,7 +5,11 @@ export const competitionRoutes = async (fastify: FastifyInstance) => {
   const competitionController = (fastify as any).container.resolve('competitionController')
   fastify.post('/', {
     preHandler: [fastify.authenticate],
-    schema: competitionsSchemas.create,
+    // Schema deshabilitado intencionalmente:
+    // - El schema es muy complejo (800+ líneas con oneOf estrictos)
+    // - La validación real se hace en validateCompetitionRules() del service
+    // - Fastify oneOf es muy restrictivo y rechaza payloads válidos
+    // schema: competitionsSchemas.create,
     handler: competitionController.create.bind(competitionController),
   })
   fastify.get('/', {

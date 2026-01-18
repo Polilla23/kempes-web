@@ -21,18 +21,36 @@ export function Step0CategoryAndLeagues({ wizardState, onUpdate, onNext }: Step0
   const [selectedCategory, setSelectedCategory] = useState<CompetitionCategory>(
     wizardState.selectedCategory || 'SENIOR'
   )
-  const [selectedLeagues, setSelectedLeagues] = useState<string[]>(wizardState.selectedLeagues || [])
+  const [selectedLeagues, setSelectedLeagues] = useState<string[]>(
+    wizardState.selectedLeagues && wizardState.selectedLeagues.length > 0 
+      ? wizardState.selectedLeagues 
+      : ['A']
+  )
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const toggleLeague = (letter: string) => {
+    if (letter === 'A') {
+      return
+    }
     setSelectedLeagues((prev) => {
       if (prev.includes(letter)) {
-        return prev.filter((l) => l !== letter)
+        const index = AVAILABLE_LEAGUES.indexOf(letter as any)
+        return prev.filter((l) => AVAILABLE_LEAGUES.indexOf(l as any) < index)
       } else {
+        // Solo agregar si la liga anterior está seleccionada
         return [...prev, letter].sort()
       }
     })
+  }
+  const isLeagueEnabled = (letter: string): boolean => {
+    if (letter === 'A') return true
+    
+    const index = AVAILABLE_LEAGUES.indexOf(letter as any)
+    if (index === -1) return false
+    
+    const previousLetter = AVAILABLE_LEAGUES[index - 1]
+    return selectedLeagues.includes(previousLetter)
   }
 
   const handleNext = async () => {
@@ -45,12 +63,9 @@ export function Step0CategoryAndLeagues({ wizardState, onUpdate, onNext }: Step0
       setIsCreating(true)
       setError(null)
 
-      console.log('📋 Ligas seleccionadas:', selectedLeagues)
-      console.log('📋 Categoría seleccionada:', selectedCategory)
-
       // Paso 1: Buscar los CompetitionTypes existentes
       const response = await api.get<{ data: CompetitionType[] }>('/api/v1/competition-types')
-      const allTypes = response.data.data || []
+      const allTypes = response.data?.data || []
       console.log('📦 Todos los CompetitionTypes:', allTypes)
 
       // Paso 2: Identificar cuáles existen y cuáles faltan
@@ -90,9 +105,10 @@ export function Step0CategoryAndLeagues({ wizardState, onUpdate, onNext }: Step0
             }
           )
 
-          const createdType = createResponse.data.data
-          existingTypesMap.set(letter, createdType)
-          console.log('✅ CompetitionType creado:', createdType)
+          const createdType = createResponse.data?.data
+          if (createdType) {
+            existingTypesMap.set(letter, createdType)
+          }
         }
       }
 
@@ -104,8 +120,6 @@ export function Step0CategoryAndLeagues({ wizardState, onUpdate, onNext }: Step0
           orderedTypes.push(type)
         }
       }
-
-      console.log('🎯 CompetitionTypes finales (cantidad: ' + orderedTypes.length + '):', orderedTypes)
 
       // Validar que tengamos todos los tipos necesarios
       if (orderedTypes.length !== selectedLeagues.length) {
@@ -123,15 +137,12 @@ export function Step0CategoryAndLeagues({ wizardState, onUpdate, onNext }: Step0
         competitionCategory: selectedCategory,
       })
 
-      // Mostrar mensaje de éxito
-      console.log('✅ CompetitionTypes gestionados correctamente')
-
       // Pasar automáticamente al siguiente paso
       setTimeout(() => {
         onNext()
       }, 100)
     } catch (err: any) {
-      console.error('❌ Error managing CompetitionTypes:', err)
+      console.error('Error managing CompetitionTypes:', err)
       const errorMsg =
         err.message || err.response?.data?.message || 'Error al gestionar los tipos de competición'
       setError(errorMsg)
@@ -176,25 +187,45 @@ export function Step0CategoryAndLeagues({ wizardState, onUpdate, onNext }: Step0
           {/* Selección de Ligas */}
           <div className="space-y-3">
             <label className="text-sm font-medium">{t('step0.leagues.label')}</label>
-            <p className="text-sm text-muted-foreground">{t('step0.leagues.description')}</p>
+            <p className="text-sm text-muted-foreground">Selecciona las ligas en orden secuencial. Debes activar la anterior para desbloquear la siguiente.</p>
             <div className="grid grid-cols-5 gap-3">
-              {AVAILABLE_LEAGUES.map((letter) => (
-                <Button
-                  key={letter}
-                  type="button"
-                  variant={selectedLeagues.includes(letter) ? 'default' : 'outline'}
-                  onClick={() => toggleLeague(letter)}
-                  className="h-20 flex flex-col items-center justify-center"
-                >
-                  <span className="text-2xl font-bold">Liga {letter}</span>
-                  {selectedLeagues.includes(letter) && (
-                    <Badge variant="secondary" className="mt-2">
-                      {t('step0.leagues.selected')}
-                    </Badge>
-                  )}
-                </Button>
-              ))}
+              {AVAILABLE_LEAGUES.map((letter) => {
+                const isLeagueA = letter === 'A'
+                const isSelected = selectedLeagues.includes(letter)
+                const isEnabled = isLeagueEnabled(letter)
+                
+                return (
+                  <div key={letter} className="relative">
+                    <Button
+                      type="button"
+                      variant={isSelected ? 'default' : 'outline'}
+                      onClick={() => toggleLeague(letter)}
+                      disabled={isLeagueA || !isEnabled}
+                      className="h-20 w-full flex flex-col items-center justify-center transition-opacity"
+                      style={{ opacity: !isEnabled && !isLeagueA ? 0.4 : 1 }}
+                    >
+                      <span className="text-2xl font-bold">Liga {letter}</span>
+                      {isSelected && (
+                        <Badge variant="secondary" className="mt-2">
+                          {isLeagueA ? 'Obligatoria' : t('step0.leagues.selected')}
+                        </Badge>
+                      )}
+                      {!isSelected && !isEnabled && !isLeagueA && (
+                        <span className="text-xs text-muted-foreground mt-1">Bloqueada</span>
+                      )}
+                    </Button>
+                    {isLeagueA && (
+                      <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                        !
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
             </div>
+            <p className="text-xs text-muted-foreground italic">
+              * La Liga A es obligatoria. Las demás ligas se desbloquean secuencialmente (B → C → D → E)
+            </p>
           </div>
 
           {/* Resumen - siempre visible para evitar cambios de tamaño */}

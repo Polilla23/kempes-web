@@ -23,10 +23,19 @@ import {
 } from '@/features/fixtures/fixtures.errors'
 
 export class FixtureService {
-  constructor(
-    private fixtureRepository: FixtureRepository,
-    private competitionRepository: CompetitionRepository
-  ) {}
+  private fixtureRepository: FixtureRepository
+  private competitionRepository: CompetitionRepository
+
+  constructor({
+    fixtureRepository,
+    competitionRepository,
+  }: {
+    fixtureRepository: FixtureRepository
+    competitionRepository: CompetitionRepository
+  }) {
+    this.fixtureRepository = fixtureRepository
+    this.competitionRepository = competitionRepository
+  }
 
   // ===================== KNOCKOUT STAGE =====================
 
@@ -169,6 +178,23 @@ export class FixtureService {
 
     const created = await this.fixtureRepository.createManyMatches(matches)
 
+    // Generar COVIDs para todos los partidos creados (solo SENIOR)
+    const competitionWithType = await this.competitionRepository.findOneByIdWithType(input.competitionId)
+    if (competitionWithType?.competitionType.category === 'SENIOR') {
+      const createdMatches = await this.fixtureRepository.getMatchesByCompetition(input.competitionId)
+      
+      for (const match of createdMatches) {
+        if (match.status === 'PENDIENTE' && match.homeClubId && match.awayClubId) {
+          try {
+            await this.generateMatchCovids(match.id, match.homeClubId, match.awayClubId)
+          } catch (error) {
+            console.error(`Error generating COVIDs for match ${match.id}:`, error)
+            // Continue with next match even if COVID generation fails
+          }
+        }
+      }
+    }
+
     return {
       success: true,
       competitionId: input.competitionId,
@@ -192,5 +218,95 @@ export class FixtureService {
       throw new Error('Match not found')
     }
     return match
+  }
+
+  /**
+   * Obtiene partidos filtrados por temporada y/o competición
+   */
+  async getMatchesWithFilters(seasonId?: string, competitionId?: string) {
+    return await this.fixtureRepository.getMatchesWithFilters(seasonId, competitionId)
+  }
+
+  /**
+   * Sortea 3 jugadores por equipo para COVID (solo partidos SENIOR/MAYORES)
+   * Se ejecuta automáticamente al crear los fixtures de liga
+   */
+  async generateMatchCovids(matchId: string, homeClubId: string, awayClubId: string) {
+    // Obtener jugadores activos del equipo local (actualClub = homeClub)
+    const homePlayers = await this.fixtureRepository.getActivePlayers(homeClubId)
+
+    // Obtener jugadores activos del equipo visitante
+    const awayPlayers = await this.fixtureRepository.getActivePlayers(awayClubId)
+
+    // Sortear 3 jugadores por equipo
+    const homeCovidPlayers = this.shuffleArray(homePlayers).slice(0, 3)
+    const awayCovidPlayers = this.shuffleArray(awayPlayers).slice(0, 3)
+
+    // Guardar en la base de datos
+    const covidRecords = [
+      ...homeCovidPlayers.map(player => ({
+        matchId,
+        playerId: player.id,
+        clubId: homeClubId
+      })),
+      ...awayCovidPlayers.map(player => ({
+        matchId,
+        playerId: player.id,
+        clubId: awayClubId
+      }))
+    ]
+
+    await this.fixtureRepository.createCovidRecords(covidRecords)
+
+    return covidRecords
+  }
+
+  /**
+   * Obtiene los jugadores COVID de un partido
+   */
+  async getMatchCovids(matchId: string) {
+    const match = await this.fixtureRepository.findById(matchId)
+    if (!match) {
+      throw new Error('Match not found')
+    }
+
+    const covids = await this.fixtureRepository.getMatchCovids(matchId)
+
+    // Separar por equipo
+    const homeTeamCovids = covids
+      .filter(c => c.clubId === match.homeClubId)
+      .map(c => ({
+        id: c.player.id,
+        name: c.player.name,
+        lastName: c.player.lastName,
+        overall: c.player.overall
+      }))
+
+    const awayTeamCovids = covids
+      .filter(c => c.clubId === match.awayClubId)
+      .map(c => ({
+        id: c.player.id,
+        name: c.player.name,
+        lastName: c.player.lastName,
+        overall: c.player.overall
+      }))
+
+    return {
+      matchId,
+      homeTeamCovids,
+      awayTeamCovids
+    }
+  }
+
+  /**
+   * Función auxiliar para mezclar array (Fisher-Yates shuffle)
+   */
+  private shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled
   }
 }

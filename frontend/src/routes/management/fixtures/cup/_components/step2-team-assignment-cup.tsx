@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -39,6 +39,7 @@ export function Step2TeamAssignmentCup({
   const [isLoading, setIsLoading] = useState(true)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
 
   // Sensores para drag & drop
   const sensors = useSensors(
@@ -52,6 +53,13 @@ export function Step2TeamAssignmentCup({
 
   // Cargar equipos disponibles
   const loadAvailableTeams = async () => {
+    // Prevenir múltiples llamadas (Strict Mode en desarrollo ejecuta useEffect dos veces)
+    if (hasLoadedRef.current) {
+      return
+    }
+    
+    hasLoadedRef.current = true
+    
     try {
       setIsLoading(true)
       setError(null)
@@ -66,13 +74,18 @@ export function Step2TeamAssignmentCup({
           isAssigned: false,
         }))
 
-      // Inicializar grupos vacíos
-      const initialGroups: Record<string, AvailableTeam[]> = {}
-      for (let i = 0; i < wizardState.numGroups; i++) {
-        const groupId = String.fromCharCode(65 + i) // A, B, C, D...
-        initialGroups[groupId] = []
+      // Inicializar grupos vacíos si no existen ya
+      const initialGroups: Record<string, AvailableTeam[]> = { ...wizardState.groupAssignments }
+      
+      // Solo crear grupos si están vacíos (primera carga)
+      if (Object.keys(initialGroups).length === 0) {
+        for (let i = 0; i < wizardState.numGroups; i++) {
+          const groupId = String.fromCharCode(65 + i) // A, B, C, D...
+          initialGroups[groupId] = []
+        }
       }
-
+      
+      // Actualizar estado del padre UNA SOLA VEZ
       onStateChange({
         availableTeams: teams,
         groupAssignments: initialGroups,
@@ -80,13 +93,19 @@ export function Step2TeamAssignmentCup({
     } catch (err) {
       console.error('Error loading teams:', err)
       setError(t('cup.errorCreating'))
+      hasLoadedRef.current = false // Permitir retry en caso de error
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    loadAvailableTeams()
+    // Solo cargar si aún no hay equipos disponibles
+    if (wizardState.availableTeams.length === 0) {
+      loadAvailableTeams()
+    } else {
+      setIsLoading(false)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -160,6 +179,10 @@ export function Step2TeamAssignmentCup({
     setError(null)
     return true
   }
+
+  const canContinue = Object.keys(wizardState.groupAssignments).every((groupId) => {
+    return wizardState.groupAssignments[groupId].length === wizardState.teamsPerGroup
+  })
 
   const handleNext = () => {
     if (validateAssignments()) {
@@ -313,7 +336,7 @@ export function Step2TeamAssignmentCup({
           <ChevronLeft className="mr-2 h-4 w-4" />
           Atrás
         </Button>
-        <Button onClick={handleNext} disabled={!validateAssignments()}>
+        <Button onClick={handleNext} disabled={!canContinue}>
           Continuar
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>

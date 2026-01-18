@@ -49,6 +49,7 @@ export type CompetitionDTO = {
     name: string
     category: string
     format: string
+    hierarchy: number
   }
   _count?: {
     matches: number
@@ -73,6 +74,9 @@ export type MatchDTO = {
   status: string
   matchdayOrder: number
   stage: string | null
+  knockoutRound: string | null
+  homePlaceholder?: string | null
+  awayPlaceholder?: string | null
   homeSource?: {
     type: 'DIRECT' | 'FROM_MATCH' | 'FROM_GROUP'
     placeholder?: string
