@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(ls -la \"C:\\\\Users\\\\Leand\\\\kempes-web\\\\frontend\\\\src\\\\i18n\\\\locales\"\" 2>/dev/null || echo \"Directorio no encontrado \")",
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(timeout 15 npx ts-node:*)",
+      "Bash(npx prisma:*)",
+      "Bash(ls:*)"
+    ]
+  }
+}

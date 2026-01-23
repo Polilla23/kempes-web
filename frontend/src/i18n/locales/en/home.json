@@ -1,0 +1,88 @@
+{
+  "hero": {
+    "welcome": "Welcome to",
+    "leagueName": "Kempes Master League",
+    "season": "Season {{number}}",
+    "seasonInProgress": "Season {{number}} in progress",
+    "stats": {
+      "matchesPlayed": "Matches Played",
+      "matchesPending": "Pending",
+      "transfers": "Transfers",
+      "moneyMoved": "Money Moved",
+      "champions": "Champions",
+      "yourPosition": "Your Position",
+      "currentSeason": "Season {{number}}",
+      "previousSeason": "Prev. season",
+      "seasons": "Seasons"
+    }
+  },
+  "champions": {
+    "goldCup": "Gold Cup",
+    "leagueA": "League A",
+    "cindorCup": "Cindor Cup",
+    "champion": "Champion"
+  },
+  "recentResults": {
+    "title": "Recent Results",
+    "subtitle": "Recently uploaded matches",
+    "noResults": "No recent results available",
+    "viewDetails": "View details",
+    "updatingLive": "Updating live"
+  },
+  "standings": {
+    "title": "Your League",
+    "subtitle": "Your current league",
+    "viewFull": "View all",
+    "position": "Pos",
+    "team": "Team",
+    "played": "P",
+    "won": "W",
+    "drawn": "D",
+    "lost": "L",
+    "goalsFor": "GF",
+    "goalsAgainst": "GA",
+    "goalDifference": "GD",
+    "points": "Pts",
+    "noLeague": "You are not participating in any league this season"
+  },
+  "userMatches": {
+    "title": "Your Matches",
+    "subtitle": "Upcoming matches",
+    "viewAll": "Upload",
+    "noMatches": "No recent matches",
+    "win": "W",
+    "draw": "D",
+    "loss": "L"
+  },
+  "transfers": {
+    "title": "Latest Transfers",
+    "viewAll": "View all transfers",
+    "noTransfers": "No transfers available",
+    "free": "Free",
+    "loan": "Loan",
+    "comingSoon": "Transfers feature coming soon"
+  },
+  "news": {
+    "title": "Latest News",
+    "viewAll": "View all news",
+    "noNews": "No news available",
+    "comingSoon": "News feature coming soon"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "madeWith": "Made with",
+    "by": "by",
+    "version": "Version"
+  },
+  "competition": {
+    "league": "League",
+    "cup": "Cup",
+    "matchday": "Matchday {{number}}"
+  },
+  "time": {
+    "minutes": "{{count}} min",
+    "hours": "{{count}}h",
+    "days": "{{count}}d",
+    "weeks": "{{count}}w"
+  }
+}
