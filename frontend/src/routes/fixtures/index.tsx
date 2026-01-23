@@ -1,47 +1,30 @@
-// Fixtures page - refactored
 import { createFileRoute } from '@tanstack/react-router'
-import { useCallback, useMemo, useState, useEffect } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Calendar, Trophy, ChevronLeft, ChevronRight, Loader2, AlertCircle } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  List,
+  GitBranch,
+  Users,
+  Trophy,
+  Layers,
+  ChevronRight,
+  Clock,
+  CheckCircle2,
+  Upload,
+  ChevronDown,
+  ChevronUp,
+  Crown,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { checkAuth } from '@/services/auth-guard'
 import { SeasonService } from '@/services/season.service'
 import CompetitionService, { type Competition } from '@/services/competition.service'
 import api from '@/services/api'
-
-// Types
-import type { 
-  Match, 
-  Season, 
-  ViewMode, 
-  CompetitionPresentation, 
-  KnockoutMatch, 
-  KnockoutResponse,
-  RoundKey
-} from './_components/fixtures.types'
-
-// Utils
-import {
-  formatCompetitionLabel,
-  stageLabelForMatchdayOrder,
-  competitionFormatLabel,
-  formatGroupName,
-  roundKeyForKnockout,
-  inferRoundKeyFromMatchday,
-  roundLabel,
-  makeBracketGrid,
-  buildBracketGraph,
-  buildAdjacency,
-  collectReachable,
-  groupKnockoutByPhase
-} from './_components/fixtures.utils'
-
-// Components
-import { MatchRow, getStatusBadge } from './_components/match-components'
-import { BracketCard, BracketUConnectors, BracketExactConnectors } from './_components/bracket-components'
-import { checkAuth } from '@/services/auth-guard'
-import React from 'react'
 
 export const Route = createFileRoute('/fixtures/')({
   beforeLoad: async ({ location }) => {
@@ -50,763 +33,1122 @@ export const Route = createFileRoute('/fixtures/')({
   component: FixturesPage,
 })
 
+// Types
+type ViewMode = 'list' | 'bracket'
+type Category = 'mayores' | 'menores'
+type CompetitionTypeFilter = 'liga' | 'copa'
+
+interface Season {
+  id: string
+  number: number
+  isActive: boolean
+}
+
+interface Match {
+  id: string
+  competitionId: string
+  competitionName: string
+  matchdayOrder: number
+  knockoutRound?: string | null
+  homeClub: { id: string; name: string; logo: string | null } | null
+  awayClub: { id: string; name: string; logo: string | null } | null
+  homeClubGoals: number
+  awayClubGoals: number
+  status: 'PENDIENTE' | 'JUGADO' | 'CANCELADO'
+  stage?: string
+  homePlaceholder?: string
+  awayPlaceholder?: string
+  homeSourceMatchId?: string | null
+  awaySourceMatchId?: string | null
+  competition?: {
+    id: string
+    name: string
+    competitionType?: {
+      format: string
+      name: string
+      category?: string
+      hierarchy?: number
+    }
+  }
+  events?: MatchEvent[]
+}
+
+interface MatchEvent {
+  type: 'goal' | 'yellow' | 'red' | 'substitution' | 'own-goal'
+  minute: number
+  player: string
+  team: 'home' | 'away'
+  assist?: string
+}
+
+interface BracketMatch extends Match {
+  winner?: 'home' | 'away'
+}
+
+interface BracketRound {
+  name: string
+  matches: BracketMatch[]
+}
+
 function FixturesPage() {
+  const { t } = useTranslation('fixtures')
+
+  // State
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [selectedSeason, setSelectedSeason] = useState<string>('')
+  const [selectedCompetition, setSelectedCompetition] = useState<string>('all')
+  const [selectedCategory, setSelectedCategory] = useState<Category>('mayores')
+  const [selectedType, setSelectedType] = useState<CompetitionTypeFilter>('liga')
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'played' | 'pending'>('all')
+  const [expandedMatches, setExpandedMatches] = useState<string[]>([])
+
+  // Data state
   const [seasons, setSeasons] = useState<Season[]>([])
   const [competitions, setCompetitions] = useState<Competition[]>([])
   const [matches, setMatches] = useState<Match[]>([])
-  const [knockoutMatches, setKnockoutMatches] = useState<KnockoutMatch[]>([])
-  const [selectedSeason, setSelectedSeason] = useState<string>('')
-  const [selectedCompetition, setSelectedCompetition] = useState<string>('')
-  const [selectedTeam, setSelectedTeam] = useState<string>('')
-  const [selectedGroup, setSelectedGroup] = useState<string>('ALL') // 'ALL' o nombre del grupo
-  const [viewMode, setViewMode] = useState<ViewMode>('byDate')
-  const [currentMatchday, setCurrentMatchday] = useState<number>(1)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [knockoutMatches, setKnockoutMatches] = useState<Match[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingKnockout, setIsLoadingKnockout] = useState(false)
 
-  const [hoveredBracketMatchId, setHoveredBracketMatchId] = useState<string | null>(null)
-  const [bracketContainerEl, setBracketContainerEl] = useState<HTMLElement | null>(null)
-  const bracketCardEls = useMemo(() => new Map<string, HTMLElement>(), [])
-  
-  const registerBracketCardEl = useCallback(
-    (id: string) => (el: HTMLElement | null) => {
-      if (!el) {
-        bracketCardEls.delete(id)
-        return
-      }
-      bracketCardEls.set(id, el)
-    },
-    [bracketCardEls]
-  )
+  // Bracket state for cup selection
+  const [activeCup, setActiveCup] = useState<string>('')
 
-  // Data loading
-  const loadSeasons = useCallback(async () => {
-    try {
-      const response = await SeasonService.getSeasons()
-      setSeasons(response.seasons || [])
-      const activeSeason = response.seasons?.find((s: Season) => s.isActive)
-      if (activeSeason) {
-        setSelectedSeason(activeSeason.id)
+  // Load seasons on mount
+  useEffect(() => {
+    const loadSeasons = async () => {
+      try {
+        const response = await SeasonService.getSeasons()
+        setSeasons(response.seasons || [])
+        const activeSeason = response.seasons?.find((s: Season) => s.isActive)
+        if (activeSeason) {
+          setSelectedSeason(activeSeason.id)
+        }
+      } catch (err) {
+        console.error('Error loading seasons:', err)
       }
-    } catch (err) {
-      console.error('Error loading seasons:', err)
-      setError('Error al cargar las temporadas')
     }
+    loadSeasons()
   }, [])
 
-  const loadCompetitions = useCallback(async (seasonId: string) => {
-    try {
-      setIsLoading(true)
-      const response = await CompetitionService.getCompetitions()
-      const filtered =
-        response.data
-          ?.filter((c: Competition) => c.seasonId === seasonId)
+  // Load competitions when season changes
+  useEffect(() => {
+    if (!selectedSeason) return
+
+    const loadCompetitions = async () => {
+      try {
+        const response = await CompetitionService.getCompetitions()
+        const filtered = response.data
+          ?.filter((c: Competition) => c.seasonId === selectedSeason)
           .sort((a, b) => {
             const aType = a.competitionType || a.type
             const bType = b.competitionType || b.type
             const aHierarchy = aType?.hierarchy ?? 999
             const bHierarchy = bType?.hierarchy ?? 999
             if (aHierarchy !== bHierarchy) return aHierarchy - bHierarchy
-            const aFormat = aType?.format ?? ''
-            const bFormat = bType?.format ?? ''
-            if (aFormat !== bFormat) return aFormat.localeCompare(bFormat)
             return a.name.localeCompare(b.name)
           }) || []
-      setCompetitions(filtered)
-      if (filtered.length > 0) {
-        setSelectedCompetition(filtered[0].id)
+        setCompetitions(filtered)
+      } catch (err) {
+        console.error('Error loading competitions:', err)
       }
-    } catch (err) {
-      console.error('Error loading competitions:', err)
-      setError('Error al cargar las competiciones')
-    } finally {
-      setIsLoading(false)
     }
-  }, [])
+    loadCompetitions()
+  }, [selectedSeason])
 
-  const loadKnockoutMatches = useCallback(async (competitionId: string) => {
-    const response = await api.get<KnockoutResponse>(`/api/v1/fixtures/competitions/${competitionId}/knockout`)
-    console.log('🥊 Raw API response (stringified):', JSON.stringify(response, null, 2))
-    const data = response.data?.data || []
-    console.log('🥊 Knockout data (stringified):', JSON.stringify(data, null, 2))
-    return data
-  }, [])
-
-  const loadMatches = useCallback(
-    async (competitionId: string) => {
+  // Load matches when filters change
+  useEffect(() => {
+    const loadMatches = async () => {
+      setIsLoading(true)
       try {
-        setIsLoading(true)
-        setError(null)
-        setMatches([])
-        setKnockoutMatches([])
+        let allMatches: Match[] = []
 
-        const response = await api.get<{ data: Match[]; message?: string; timestamp: string }>(
-          `/api/v1/fixtures/competitions/${competitionId}`
-        )
+        if (selectedCompetition !== 'all') {
+          // Load matches for specific competition
+          const response = await api.get<{ data: Match[] }>(`/api/v1/fixtures/competitions/${selectedCompetition}`)
+          allMatches = response.data?.data || []
+        } else {
+          // Load matches for all filtered competitions
+          const filteredComps = competitions.filter(comp => {
+            const compType = comp.competitionType || comp.type
+            if (compType?.category?.toLowerCase() !== selectedCategory) return false
+            const format = compType?.format?.toLowerCase()
+            if (selectedType === 'liga' && format !== 'league') return false
+            if (selectedType === 'copa' && format !== 'cup') return false
+            return true
+          })
 
-        const matchesData = response.data?.data || []
-        setMatches(matchesData)
+          // Load matches for each competition
+          const matchPromises = filteredComps.map(comp =>
+            api.get<{ data: Match[] }>(`/api/v1/fixtures/competitions/${comp.id}`)
+              .then(res => (res.data?.data || []).map(m => ({
+                ...m,
+                competitionId: comp.id,
+                competitionName: comp.name,
+                competition: {
+                  id: comp.id,
+                  name: comp.name,
+                  competitionType: comp.competitionType || comp.type,
+                }
+              })))
+              .catch(() => [])
+          )
 
-        const knockout = await loadKnockoutMatches(competitionId)
-        setKnockoutMatches(knockout)
-        setCurrentMatchday(1)
+          const results = await Promise.all(matchPromises)
+          allMatches = results.flat()
+        }
+
+        setMatches(allMatches)
       } catch (err) {
         console.error('Error loading matches:', err)
-        setError('Error al cargar los partidos')
-        setMatches([])
-        setKnockoutMatches([])
       } finally {
         setIsLoading(false)
       }
-    },
-    [loadKnockoutMatches]
-  )
+    }
 
-  // Effects
-  useEffect(() => { loadSeasons() }, [loadSeasons])
-  useEffect(() => { if (selectedSeason) loadCompetitions(selectedSeason) }, [selectedSeason, loadCompetitions])
-  useEffect(() => { if (selectedCompetition) loadMatches(selectedCompetition) }, [selectedCompetition, loadMatches])
-  useEffect(() => { setSelectedTeam('') }, [selectedCompetition, viewMode])
+    if (competitions.length > 0) {
+      loadMatches()
+    }
+  }, [selectedCompetition, selectedCategory, selectedType, competitions])
 
-  // Computed values
-  const getMatchesByMatchday = (matchday: number) => matches.filter((m) => m.matchdayOrder === matchday)
-  const getUniqueMatchdays = () => [...new Set(matches.map((m) => m.matchdayOrder))].sort((a, b) => a - b)
-  const getTeamsFromMatches = () => {
-    const teams = new Set<string>()
-    matches.forEach((match) => {
-      if (match.homeClub) teams.add(match.homeClub.id)
-      if (match.awayClub) teams.add(match.awayClub.id)
+  // Filtered competitions based on category and type
+  const filteredCompetitions = useMemo(() => {
+    return competitions.filter(comp => {
+      const compType = comp.competitionType || comp.type
+      if (compType?.category?.toLowerCase() !== selectedCategory) return false
+      const format = compType?.format?.toLowerCase()
+      if (selectedType === 'liga' && format !== 'league') return false
+      if (selectedType === 'copa' && format !== 'cup') return false
+      return true
     })
-    return Array.from(teams)
-  }
-  const getMatchesByTeam = (teamId: string) => matches.filter((m) => m.homeClub?.id === teamId || m.awayClub?.id === teamId)
+  }, [competitions, selectedCategory, selectedType])
 
-  const totalMatchdays = getUniqueMatchdays().length
-  const selectedCompetitionObj = useMemo(() => competitions.find((c) => c.id === selectedCompetition), [competitions, selectedCompetition])
-  
-  // Helper to get competition type (backend returns competitionType, but we support both)
-  const getCompetitionType = (comp: Competition | undefined) => comp?.competitionType || comp?.type
-  const selectedCompetitionType = useMemo(() => getCompetitionType(selectedCompetitionObj), [selectedCompetitionObj])
-  
-  // Determine if this is a CUP or LEAGUE based on competition type format or name
-  const competitionPresentation: CompetitionPresentation = useMemo(() => {
-    const format = selectedCompetitionType?.format
-    const typeName = selectedCompetitionType?.name?.toLowerCase() || ''
-    const compName = selectedCompetitionObj?.name?.toLowerCase() || ''
-    
-    // Check format first, then fallback to name-based detection
-    if (format === 'CUP') return 'CUP'
-    if (format === 'LEAGUE') return 'LEAGUE'
-    
-    // Fallback: check if name contains "copa" or "cup"
-    if (typeName.includes('copa') || typeName.includes('cup') || 
-        compName.includes('copa') || compName.includes('cup')) {
-      return 'CUP'
-    }
-    
-    return 'LEAGUE'
-  }, [selectedCompetitionObj, selectedCompetitionType])
+  // Check if current competition has bracket view available
+  const currentCompetition = useMemo(() => {
+    return competitions.find(c => c.id === selectedCompetition)
+  }, [competitions, selectedCompetition])
 
-  // Check if there are knockout matches (pure knockout cups like Copa de Oro)
-  const hasKnockout = knockoutMatches.length > 0
-  
-  // For knockout-only cups, also check if regular matches have stage === 'KNOCKOUT'
-  const hasKnockoutInMatches = useMemo(() => {
-    return matches.some(m => m.stage === 'KNOCKOUT')
-  }, [matches])
+  const showBracketOption = useMemo(() => {
+    if (selectedCompetition === 'all') return true // Allow bracket view when "all" is selected
+    const compType = currentCompetition?.competitionType || currentCompetition?.type
+    return compType?.format?.toLowerCase() === 'cup'
+  }, [currentCompetition, selectedCompetition])
 
-  // Check if this is a cup with groups (matches have homePlaceholder like 'A', 'B', 'C' or 'GROUP_A')
-  const availableGroups = useMemo(() => {
-    const groups = new Set<string>()
-    matches.forEach((m) => {
-      // Check for group placeholders (single letter A-Z or GROUP_X format)
-      if (m.homePlaceholder) {
-        const ph = m.homePlaceholder.trim()
-        // Match single letter groups (A, B, C...) or GROUP_X format
-        if (/^[A-Z]$/.test(ph) || ph.startsWith('GROUP_')) {
-          groups.add(ph)
-        }
-      }
-    })
-    return Array.from(groups).sort()
-  }, [matches])
-
-  const hasGroups = availableGroups.length > 0
-  
-  // Determine what type of matches this competition has
-  // - ROUND_ROBIN_ONLY: Liga pura (solo fechas)
-  // - GROUPS_ONLY: Copa Kempes fase de grupos (solo grupos, sin knockout aún)
-  // - KNOCKOUT_ONLY: Copas de eliminación directa (Copa de Oro, Plata, Bronce)
-  // - GROUPS_AND_KNOCKOUT: Copa Kempes completa (grupos + knockout)
-  const competitionMode = useMemo(() => {
-    if (competitionPresentation === 'LEAGUE') return 'ROUND_ROBIN_ONLY'
-    // Check both knockoutMatches and matches with KNOCKOUT stage
-    const isKnockout = hasKnockout || hasKnockoutInMatches
-    if (hasGroups && isKnockout) return 'GROUPS_AND_KNOCKOUT'
-    if (hasGroups) return 'GROUPS_ONLY'
-    if (isKnockout) return 'KNOCKOUT_ONLY'
-    return 'ROUND_ROBIN_ONLY' // fallback
-  }, [competitionPresentation, hasGroups, hasKnockout, hasKnockoutInMatches])
-  
-  // Get unique knockout phases for display
-  const knockoutPhases = useMemo(() => {
-    const phases = new Set<string>()
-    // First try knockoutMatches
-    if (knockoutMatches.length > 0) {
-      knockoutMatches.forEach((m) => {
-        if (m.knockoutRound) phases.add(m.knockoutRound)
-      })
-    } else {
-      // Fallback to matches with KNOCKOUT stage
-      matches.filter(m => m.stage === 'KNOCKOUT').forEach((m) => {
-        phases.add(String(m.matchdayOrder)) // Use matchdayOrder as phase identifier
-      })
-    }
-    return Array.from(phases)
-  }, [knockoutMatches, matches])
-  
-  // Combined knockout matches: use knockoutMatches if available, otherwise convert from matches
-  const effectiveKnockoutMatches = useMemo((): KnockoutMatch[] => {
-    if (knockoutMatches.length > 0) return knockoutMatches
-    // Convert matches with KNOCKOUT stage to KnockoutMatch format
-    return matches
-      .filter(m => m.stage === 'KNOCKOUT')
-      .map(m => ({
-        ...m,
-        knockoutRound: null, // Will be determined by matchdayOrder
-        homeSourceMatch: null,
-        awaySourceMatch: null,
-        homeSourceMatchId: null,
-        awaySourceMatchId: null,
-      }))
-  }, [knockoutMatches, matches])
-  
-  // Get unique knockout rounds in order for navigation
-  // Order: SEMIFINAL before FINAL
-  const knockoutRoundOrder = ['ROUND_OF_64', 'ROUND_OF_32', 'ROUND_OF_16', 'QUARTERFINAL', 'SEMIFINAL', 'FINAL']
-  
-  const uniqueKnockoutRounds = useMemo(() => {
-    const rounds = [...new Set(effectiveKnockoutMatches.map(m => m.knockoutRound).filter(Boolean))] as string[]
-    // Sort by the defined order
-    return rounds.sort((a, b) => knockoutRoundOrder.indexOf(a) - knockoutRoundOrder.indexOf(b))
-  }, [effectiveKnockoutMatches])
-  
-  // Label for knockout round
-  const knockoutRoundLabel = (round: string | null): string => {
-    if (!round) return 'Fase'
-    switch (round) {
-      case 'ROUND_OF_64': return '64vos de Final'
-      case 'ROUND_OF_32': return '32vos de Final'
-      case 'ROUND_OF_16': return 'Octavos de Final'
-      case 'QUARTERFINAL': return 'Cuartos de Final'
-      case 'SEMIFINAL': return 'Semifinal'
-      case 'FINAL': return 'Final'
-      default: return round
-    }
-  }
-  
-  const [currentKnockoutPhase, setCurrentKnockoutPhase] = useState(0)
-  
-  // Reset knockout phase when competition changes
-  useEffect(() => {
-    setCurrentKnockoutPhase(0)
-  }, [selectedCompetition])
-
-  // Reset group filter and viewMode when competition changes
-  // Use a ref to track if we need to update viewMode based on loaded data
-  const lastCompetitionRef = React.useRef<string | null>(null)
-  const viewModeSetRef = React.useRef(false)
-  
-  useEffect(() => {
-    if (selectedCompetition !== lastCompetitionRef.current) {
-      lastCompetitionRef.current = selectedCompetition
-      viewModeSetRef.current = false // Reset flag when competition changes
-      setSelectedGroup('ALL')
-    }
-  }, [selectedCompetition])
-  
-  // Set viewMode based on competitionMode, but only once per competition load
-  useEffect(() => {
-    if (!viewModeSetRef.current && (matches.length > 0 || knockoutMatches.length > 0)) {
-      viewModeSetRef.current = true
-      if (competitionMode === 'KNOCKOUT_ONLY') {
-        setViewMode('byPhase')
-      } else {
-        setViewMode('byDate')
-      }
-    }
-  }, [competitionMode, matches.length, knockoutMatches.length])
-
-  // Reset matchday when group filter changes
-  useEffect(() => {
-    setCurrentMatchday(1)
-  }, [selectedGroup])
-
-  // Filter matches by selected group
+  // Filter matches by status
   const filteredMatches = useMemo(() => {
-    if (!hasGroups || selectedGroup === 'ALL') return matches
-    return matches.filter((m) => m.homePlaceholder === selectedGroup)
-  }, [matches, selectedGroup, hasGroups])
+    return matches.filter(match => {
+      if (selectedStatus === 'played' && match.status !== 'JUGADO') return false
+      if (selectedStatus === 'pending' && match.status !== 'PENDIENTE') return false
+      return true
+    })
+  }, [matches, selectedStatus])
 
-  // Use filtered matches for display
-  const getFilteredMatchesByMatchday = (matchday: number) => filteredMatches.filter((m) => m.matchdayOrder === matchday)
-  const getFilteredUniqueMatchdays = () => [...new Set(filteredMatches.map((m) => m.matchdayOrder))].sort((a, b) => a - b)
-  const filteredTotalMatchdays = getFilteredUniqueMatchdays().length
+  // Group matches by competition
+  const groupedMatches = useMemo(() => {
+    const groups: Record<string, { name: string; matches: Match[] }> = {}
 
-  const bracketColumns = useMemo(() => {
-    const map = new Map<RoundKey, KnockoutMatch[]>()
-    const totalRounds = uniqueKnockoutRounds.length
-    
-    for (const match of effectiveKnockoutMatches) {
-      // Try to get round from knockoutRound, otherwise infer from matchdayOrder
-      let key = roundKeyForKnockout(match.knockoutRound)
-      if (!key && match.matchdayOrder) {
-        key = inferRoundKeyFromMatchday(match.matchdayOrder, totalRounds)
+    filteredMatches.forEach(match => {
+      const key = match.competitionId || match.competition?.id || 'unknown'
+      const name = match.competitionName || match.competition?.name || 'Competición'
+
+      if (!groups[key]) {
+        groups[key] = { name, matches: [] }
       }
-      if (!key) continue
-      const list = map.get(key) ?? []
-      list.push(match)
-      map.set(key, list)
+      groups[key].matches.push(match)
+    })
+
+    return groups
+  }, [filteredMatches])
+
+  // Cup competitions for bracket selector (exclude Copa Kempes - it's groups only)
+  const cupCompetitions = useMemo(() => {
+    return competitions.filter(comp => {
+      const compType = comp.competitionType || comp.type
+      if (compType?.format?.toLowerCase() !== 'cup') return false
+      // Exclude Copa Kempes as it only has group stage, no knockout brackets
+      const name = comp.name.toLowerCase()
+      if (name.includes('kempes')) return false
+      return true
+    })
+  }, [competitions])
+
+  // Set initial active cup
+  useEffect(() => {
+    if (cupCompetitions.length > 0 && !activeCup) {
+      setActiveCup(cupCompetitions[0].id)
     }
-    const order: RoundKey[] = ['R32', 'R16', 'QF', 'SF', 'F']
-    for (const key of order) {
-      const list = map.get(key)
-      if (!list) continue
-      list.sort((a, b) => (a.matchdayOrder ?? 0) - (b.matchdayOrder ?? 0))
+  }, [cupCompetitions, activeCup])
+
+  // Load knockout matches from dedicated endpoint when activeCup changes
+  useEffect(() => {
+    if (!activeCup || viewMode !== 'bracket') {
+      setKnockoutMatches([])
+      return
     }
-    return order.map((key) => ({ key, label: roundLabel(key), matches: map.get(key) ?? [] })).filter((col) => col.matches.length > 0)
-  }, [effectiveKnockoutMatches, uniqueKnockoutRounds.length])
 
-  const bracketGrid = useMemo(() => bracketColumns.length === 0 ? null : makeBracketGrid(bracketColumns), [bracketColumns])
-  const bracketGraph = useMemo(() => bracketColumns.length === 0 ? null : buildBracketGraph(bracketColumns), [bracketColumns])
+    const loadKnockoutMatches = async () => {
+      setIsLoadingKnockout(true)
+      try {
+        const response = await api.get<{ data: Match[] }>(`/api/v1/fixtures/competitions/${activeCup}/knockout`)
+        setKnockoutMatches(response.data?.data || [])
+      } catch (err) {
+        console.error('Error loading knockout matches:', err)
+        setKnockoutMatches([])
+      } finally {
+        setIsLoadingKnockout(false)
+      }
+    }
 
-  const bracketHighlightSet = useMemo(() => {
-    if (!bracketGraph || !hoveredBracketMatchId) return null
-    const { forward, backward } = buildAdjacency(bracketGraph.edges)
-    const up = collectReachable(hoveredBracketMatchId, backward)
-    const down = collectReachable(hoveredBracketMatchId, forward)
-    const combined = new Set<string>()
-    for (const id of up) combined.add(id)
-    for (const id of down) combined.add(id)
-    return combined
-  }, [bracketGraph, hoveredBracketMatchId])
+    loadKnockoutMatches()
+  }, [activeCup, viewMode])
 
-  const knockoutByPhase = useMemo(() => groupKnockoutByPhase(effectiveKnockoutMatches), [effectiveKnockoutMatches])
-  const seasonNumber = seasons.find((s) => s.id === selectedSeason)?.number
+  // Bracket data for the active cup - use knockout matches from dedicated endpoint
+  const bracketData = useMemo((): BracketRound[] => {
+    if (!activeCup || knockoutMatches.length === 0) return []
+
+    // Group by knockout round
+    const roundOrder = ['ROUND_OF_64', 'ROUND_OF_32', 'ROUND_OF_16', 'QUARTERFINAL', 'SEMIFINAL', 'FINAL']
+    const roundLabels: Record<string, string> = {
+      'ROUND_OF_64': '64vos de Final',
+      'ROUND_OF_32': '32vos de Final',
+      'ROUND_OF_16': 'Octavos de Final',
+      'QUARTERFINAL': 'Cuartos de Final',
+      'SEMIFINAL': 'Semifinales',
+      'FINAL': 'Final',
+    }
+
+    const rounds: Record<string, BracketMatch[]> = {}
+
+    knockoutMatches.forEach(match => {
+      const round = match.knockoutRound || inferRoundFromMatchday(match.matchdayOrder, knockoutMatches.length)
+      if (!rounds[round]) {
+        rounds[round] = []
+      }
+
+      // Determine winner
+      let winner: 'home' | 'away' | undefined
+      if (match.status === 'JUGADO') {
+        if (match.homeClubGoals > match.awayClubGoals) winner = 'home'
+        else if (match.awayClubGoals > match.homeClubGoals) winner = 'away'
+      }
+
+      rounds[round].push({ ...match, winner })
+    })
+
+    return roundOrder
+      .filter(r => rounds[r] && rounds[r].length > 0)
+      .map(r => ({
+        name: roundLabels[r] || r,
+        matches: rounds[r],
+      }))
+  }, [activeCup, knockoutMatches])
+
+  const toggleExpand = (matchId: string) => {
+    setExpandedMatches(prev =>
+      prev.includes(matchId)
+        ? prev.filter(id => id !== matchId)
+        : [...prev, matchId]
+    )
+  }
+
+  const getEventIcon = (type: MatchEvent['type']) => {
+    switch (type) {
+      case 'goal': return '⚽'
+      case 'own-goal': return '⚽ (p.p.)'
+      case 'yellow': return '🟨'
+      case 'red': return '🟥'
+      case 'substitution': return '🔄'
+      default: return ''
+    }
+  }
+
+  const seasonNumber = seasons.find(s => s.id === selectedSeason)?.number
 
   return (
-    <div className="w-full">
-      <div className="mx-auto w-full max-w-6xl px-4 py-6">
-        {/* Header */}
-        <div className="rounded-xl border bg-card overflow-hidden">
-          <div className="bg-gradient-to-b from-foreground/5 to-transparent px-5 py-4">
-            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Kempes Web / Fixtures</div>
-                <div className="flex items-center gap-3">
-                  <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-xl font-semibold leading-tight">Fixture</h1>
-                    <p className="text-sm text-muted-foreground">Ligas y copas, por fecha o equipo</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {selectedCompetitionType?.format && (
-                  <Badge variant="outline" className="bg-background">
-                    {competitionFormatLabel(selectedCompetitionType.format)}
-                  </Badge>
-                )}
-                {seasonNumber && <Badge variant="secondary">Temporada T{seasonNumber}</Badge>}
-              </div>
-            </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-[5%] lg:px-[7%] xl:px-[10%] py-8">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Fixtures y Resultados</h1>
+            <p className="text-muted-foreground mt-1">
+              Todos los partidos de la temporada {seasonNumber ? `T${seasonNumber}` : ''}
+            </p>
           </div>
 
-          {/* Filters */}
-          <div className="border-t bg-background px-5 py-4">
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="space-y-1 min-w-[140px]">
-                <div className="text-[11px] font-semibold text-muted-foreground">TEMPORADA</div>
-                <Select value={selectedSeason} onValueChange={setSelectedSeason}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Selecciona una temporada" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasons.map((season) => (
-                      <SelectItem key={season.id} value={season.id}>
-                        T{season.number} {season.isActive && '(Activa)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1 flex-1 min-w-[200px] max-w-[320px]">
-                <div className="text-[11px] font-semibold text-muted-foreground">TORNEO</div>
-                <Select
-                  value={selectedCompetition}
-                  onValueChange={setSelectedCompetition}
-                  disabled={!selectedSeason || competitions.length === 0}
-                >
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Selecciona un torneo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {competitions.map((comp) => (
-                      <SelectItem key={comp.id} value={comp.id}>
-                        <span className="truncate">{formatCompetitionLabel(seasonNumber, comp.name)}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Group filter - only shown for cups with groups */}
-              {hasGroups && (
-                <div className="space-y-1 min-w-[160px]">
-                  <div className="text-[11px] font-semibold text-muted-foreground">GRUPO</div>
-                  <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Todos los grupos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL">Todos los grupos</SelectItem>
-                      {availableGroups.map((group) => (
-                        <SelectItem key={group} value={group}>
-                          {formatGroupName(group)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="space-y-1">
-                <div className="text-[11px] font-semibold text-muted-foreground">VISTA</div>
-                <div className="flex gap-2">
-                  {/* Liga o Fase de Grupos: solo Fechas y Equipo */}
-                  {(competitionMode === 'ROUND_ROBIN_ONLY' || competitionMode === 'GROUPS_ONLY') && (
-                    <>
-                      <Button variant={viewMode === 'byDate' ? 'default' : 'outline'} onClick={() => setViewMode('byDate')} className="h-10">Fechas</Button>
-                      <Button variant={viewMode === 'byTeam' ? 'default' : 'outline'} onClick={() => setViewMode('byTeam')} className="h-10">Equipo</Button>
-                    </>
-                  )}
-                  {/* Copa de eliminación directa: Fases y Bracket */}
-                  {competitionMode === 'KNOCKOUT_ONLY' && (
-                    <>
-                      <Button variant={viewMode === 'byPhase' ? 'default' : 'outline'} onClick={() => setViewMode('byPhase')} className="h-10">Fases</Button>
-                      <Button variant={viewMode === 'bracket' ? 'default' : 'outline'} onClick={() => setViewMode('bracket')} className="h-10">Bracket</Button>
-                    </>
-                  )}
-                  {/* Copa con grupos Y knockout (Copa Kempes completa): todos los botones */}
-                  {competitionMode === 'GROUPS_AND_KNOCKOUT' && (
-                    <>
-                      <Button variant={viewMode === 'byDate' ? 'default' : 'outline'} onClick={() => setViewMode('byDate')} className="h-10">Fechas</Button>
-                      <Button variant={viewMode === 'byPhase' ? 'default' : 'outline'} onClick={() => setViewMode('byPhase')} className="h-10">Fases</Button>
-                      <Button variant={viewMode === 'bracket' ? 'default' : 'outline'} onClick={() => setViewMode('bracket')} className="h-10">Bracket</Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+          {/* View Toggle */}
+          <div className="flex items-center gap-2 bg-secondary/50 p-1 rounded-lg">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="gap-2"
+            >
+              <List className="w-4 h-4" />
+              Lista
+            </Button>
+            <Button
+              variant={viewMode === 'bracket' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('bracket')}
+              disabled={!showBracketOption}
+              className="gap-2"
+            >
+              <GitBranch className="w-4 h-4" />
+              Brackets
+            </Button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="mt-6">
-          <div className="space-y-4">
-            {/* Competition info card */}
-            {selectedCompetitionObj && (
-              <div className="rounded-xl border bg-card">
-                <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                  <div className="min-w-0">
-                    <div className="text-xs text-muted-foreground">Torneo</div>
-                    <div className="truncate text-base font-semibold">{formatCompetitionLabel(seasonNumber, selectedCompetitionObj.name)}</div>
-                  </div>
-                  <Badge variant="secondary" className="gap-2">
-                    <Trophy className="h-4 w-4" />
-                    {competitionPresentation === 'CUP' ? 'Copa' : 'Liga'}
-                  </Badge>
-                </div>
-                <div className="grid grid-cols-3 gap-3 px-4 py-3 text-center">
-                  <div className="rounded-lg bg-muted/30 py-2">
-                    <div className="text-[11px] font-semibold text-muted-foreground">
-                      {competitionMode === 'KNOCKOUT_ONLY' ? 'Partidos' : 'Equipos'}
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {competitionMode === 'KNOCKOUT_ONLY' 
-                        ? effectiveKnockoutMatches.length
-                        : getTeamsFromMatches().length}
-                    </div>
-                  </div>
-                  <div className="rounded-lg bg-muted/30 py-2">
-                    <div className="text-[11px] font-semibold text-muted-foreground">
-                      {competitionMode === 'KNOCKOUT_ONLY' ? 'Fases' : 
-                       competitionMode === 'GROUPS_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT' ? 'Grupos' : 
-                       'Fechas'}
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {competitionMode === 'KNOCKOUT_ONLY' 
-                        ? uniqueKnockoutRounds.length
-                        : competitionMode === 'GROUPS_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT' 
-                          ? availableGroups.length
-                          : totalMatchdays}
-                    </div>
-                  </div>
-                  <div className="rounded-lg bg-muted/30 py-2">
-                    <div className="text-[11px] font-semibold text-muted-foreground">Formato</div>
-                    <div className="text-lg font-semibold">{competitionFormatLabel(selectedCompetitionType?.format)}</div>
-                  </div>
-                </div>
-              </div>
-            )}
+        {/* Filters */}
+        <div className="bg-card border border-border rounded-xl p-4 mb-6">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Category Tabs */}
+            <div className="flex bg-secondary/50 p-1 rounded-lg">
+              <Button
+                variant={selectedCategory === 'mayores' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedCategory('mayores')}
+                className="gap-1.5"
+              >
+                <Users className="w-3.5 h-3.5" />
+                Mayores
+              </Button>
+              <Button
+                variant={selectedCategory === 'menores' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedCategory('menores')}
+                className="gap-1.5"
+              >
+                <Users className="w-3.5 h-3.5" />
+                Menores
+              </Button>
+            </div>
 
-            {/* Error */}
-            {error && (
-              <Alert variant="destructive" className="w-full">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+            {/* Type Tabs */}
+            <div className="flex bg-secondary/50 p-1 rounded-lg">
+              <Button
+                variant={selectedType === 'liga' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedType('liga')}
+                className="gap-1.5"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                Liga
+              </Button>
+              <Button
+                variant={selectedType === 'copa' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSelectedType('copa')}
+                className="gap-1.5"
+              >
+                <Trophy className="w-3.5 h-3.5" />
+                Copa
+              </Button>
+            </div>
 
-            {/* Loading */}
-            {isLoading && (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            )}
-
-            {/* Match views */}
-            {!isLoading && (matches.length > 0 || knockoutMatches.length > 0) && (
-              <>
-                {/* LEAGUE/GROUPS: by date */}
-                {viewMode === 'byDate' && (competitionMode === 'ROUND_ROBIN_ONLY' || competitionMode === 'GROUPS_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT') && (
-                  <>
-                    {/* If it has groups, show grouped view */}
-                    {hasGroups ? (
-                      selectedGroup === 'ALL' ? (
-                        // Show all groups separated, each with matchday navigation
-                        <div className="space-y-4">
-                          {availableGroups.map((group) => (
-                            <div key={group} className="rounded-xl border bg-card">
-                              <div className="flex items-center justify-between gap-3 border-b px-4 py-3 bg-muted/30">
-                                <div className="text-sm font-semibold">{formatGroupName(group)}</div>
-                                <Badge variant="outline">{matches.filter(m => m.homePlaceholder === group).length} partidos</Badge>
-                              </div>
-                              {/* Show all matchdays for this group */}
-                              {[...new Set(matches.filter(m => m.homePlaceholder === group).map(m => m.matchdayOrder))].sort((a, b) => a - b).map((matchday) => (
-                                <div key={matchday}>
-                                  <div className="px-4 py-2 bg-muted/10 text-xs font-medium text-muted-foreground">Fecha {matchday}</div>
-                                  <div className="divide-y">
-                                    {matches.filter(m => m.homePlaceholder === group && m.matchdayOrder === matchday).map((match) => (
-                                      <MatchRow key={match.id} match={match} rightMeta={getStatusBadge(match.status)} />
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        // Show only selected group with matchday navigation
-                        <div className="rounded-xl border bg-card">
-                          <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                            <div className="text-sm font-semibold">{formatGroupName(selectedGroup)} - Fecha</div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => setCurrentMatchday(Math.max(1, currentMatchday - 1))} disabled={currentMatchday === 1}>
-                                <ChevronLeft className="h-4 w-4" />
-                              </Button>
-                              <div className="text-sm"><span className="font-semibold">{currentMatchday}</span><span className="text-muted-foreground"> / {filteredTotalMatchdays}</span></div>
-                              <Button variant="outline" size="sm" onClick={() => setCurrentMatchday(Math.min(filteredTotalMatchdays, currentMatchday + 1))} disabled={currentMatchday === filteredTotalMatchdays}>
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="divide-y">
-                            {getFilteredMatchesByMatchday(currentMatchday).map((match) => (
-                              <MatchRow key={match.id} match={match} rightMeta={getStatusBadge(match.status)} />
-                            ))}
-                          </div>
-                        </div>
-                      )
-                    ) : (
-                      // No groups - standard league view with matchday navigation
-                      <div className="rounded-xl border bg-card">
-                        <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                          <div className="text-sm font-semibold">Fecha</div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentMatchday(Math.max(1, currentMatchday - 1))} disabled={currentMatchday === 1}>
-                              <ChevronLeft className="h-4 w-4" />
-                            </Button>
-                            <div className="text-sm"><span className="font-semibold">{currentMatchday}</span><span className="text-muted-foreground"> / {totalMatchdays}</span></div>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentMatchday(Math.min(totalMatchdays, currentMatchday + 1))} disabled={currentMatchday === totalMatchdays}>
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="divide-y">
-                          {getMatchesByMatchday(currentMatchday).map((match) => (
-                            <MatchRow key={match.id} match={match} rightMeta={getStatusBadge(match.status)} />
-                          ))}
-                        </div>
+            {/* Competition Filter */}
+            <Select value={selectedCompetition} onValueChange={setSelectedCompetition}>
+              <SelectTrigger className="w-[200px] bg-secondary/50 border-border">
+                <SelectValue placeholder="Todas las competencias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                {filteredCompetitions.map((comp) => {
+                  const compType = comp.competitionType || comp.type
+                  return (
+                    <SelectItem key={comp.id} value={comp.id}>
+                      <div className="flex items-center gap-2">
+                        {comp.name}
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                          {compType?.format === 'CUP' ? 'Copa' : `Div ${compType?.hierarchy || ''}`}
+                        </Badge>
                       </div>
-                    )}
-                  </>
-                )}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
 
-                {/* LEAGUE: by team */}
-                {/* LEAGUE/GROUPS: by team */}
-                {viewMode === 'byTeam' && (competitionMode === 'ROUND_ROBIN_ONLY' || competitionMode === 'GROUPS_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT') && (
-                  <div className="rounded-xl border bg-card">
-                    <div className="border-b px-4 py-3">
-                      <div className="text-sm font-semibold">Equipo</div>
-                      <div className="mt-2">
-                        <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                          <SelectTrigger className="h-10"><SelectValue placeholder="Selecciona un equipo" /></SelectTrigger>
-                          <SelectContent>
-                            {getTeamsFromMatches().map((teamId) => {
-                              const team = matches.find((m) => m.homeClub?.id === teamId)?.homeClub || matches.find((m) => m.awayClub?.id === teamId)?.awayClub
-                              return <SelectItem key={teamId} value={teamId}>{team?.name}</SelectItem>
-                            })}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {selectedTeam ? (
-                      <div className="divide-y">
-                        {getMatchesByTeam(selectedTeam).map((match) => (
-                          <MatchRow key={match.id} match={match} rightMeta={<Badge variant="outline">F{match.matchdayOrder}</Badge>} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="px-4 py-10 text-center text-sm text-muted-foreground">Elegí un equipo para ver sus partidos.</div>
-                    )}
-                  </div>
-                )}
-
-                {/* CUP: by phase (knockout phases with navigation) */}
-                {viewMode === 'byPhase' && (competitionMode === 'KNOCKOUT_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT') && (
-                  <div className="space-y-6">
-                    {/* Knockout phase section */}
-                    {effectiveKnockoutMatches.length > 0 && uniqueKnockoutRounds.length > 0 && (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">Eliminación Directa</Badge>
-                        </div>
-                        
-                        {/* Navigation for phases */}
-                        <div className="rounded-xl border bg-card">
-                          <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-                            <div className="text-sm font-semibold">{knockoutRoundLabel(uniqueKnockoutRounds[currentKnockoutPhase])}</div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => setCurrentKnockoutPhase(Math.max(0, currentKnockoutPhase - 1))} disabled={currentKnockoutPhase === 0}>
-                                <ChevronLeft className="h-4 w-4" />
-                              </Button>
-                              <div className="text-sm"><span className="font-semibold">{currentKnockoutPhase + 1}</span><span className="text-muted-foreground"> / {uniqueKnockoutRounds.length}</span></div>
-                              <Button variant="outline" size="sm" onClick={() => setCurrentKnockoutPhase(Math.min(uniqueKnockoutRounds.length - 1, currentKnockoutPhase + 1))} disabled={currentKnockoutPhase === uniqueKnockoutRounds.length - 1}>
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="divide-y">
-                            {effectiveKnockoutMatches
-                              .filter(m => m.knockoutRound === uniqueKnockoutRounds[currentKnockoutPhase])
-                              .map((match) => (
-                                <MatchRow key={match.id} match={match} rightMeta={<Badge variant="outline" className="text-[11px]">{knockoutRoundLabel(match.knockoutRound)}</Badge>} />
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {effectiveKnockoutMatches.length === 0 && (
-                      <Alert className="w-full">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>No hay partidos de eliminación directa aún.</AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                )}
-
-                {/* CUP: bracket view */}
-                {viewMode === 'bracket' && (competitionMode === 'KNOCKOUT_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT') && effectiveKnockoutMatches.length > 0 && (
-                  <div className="rounded-xl border bg-card overflow-hidden">
-                    <div className="border-b px-4 py-3">
-                      <div className="text-sm font-semibold">Bracket de Eliminación</div>
-                      <div className="text-xs text-muted-foreground">Vista completa del cuadro eliminatorio</div>
-                    </div>
-                    <div className="p-4">
-                      <div className="overflow-x-auto">
-                        <div className="min-w-[720px] relative" ref={(el) => setBracketContainerEl(el)}>
-                          {bracketGrid && (
-                            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${bracketGrid.columns.length}, minmax(0, 1fr))` }}>
-                              {bracketGrid.columns.map((col) => (
-                                <div key={col.key} className="min-w-0">
-                                  <div className="mb-2 flex items-center justify-between">
-                                    <div className="text-[11px] font-semibold text-muted-foreground">{col.label}</div>
-                                    <Badge variant="secondary" className="text-[11px]">{col.matches.length}</Badge>
-                                  </div>
-                                  <div className="relative">
-                                    {col.key !== 'F' && <div className="pointer-events-none absolute -right-2 top-0 bottom-0 w-px bg-border/70" />}
-                                    <div className="grid" style={{ gridTemplateRows: `repeat(${bracketGrid.rows}, 12px)` }}>
-                                      {col.cells.map((cell, idx) => {
-                                        if (cell.kind === 'spacer') return <div key={idx} />
-                                        return (
-                                          <div
-                                            key={cell.match!.id}
-                                            style={{ gridRow: `span 10` }}
-                                            className={bracketHighlightSet ? (bracketHighlightSet.has(cell.match!.id) ? '-my-1' : '-my-1 opacity-35') : '-my-1'}
-                                            ref={registerBracketCardEl(cell.match!.id)}
-                                            onMouseEnter={() => setHoveredBracketMatchId(cell.match!.id)}
-                                            onMouseLeave={() => setHoveredBracketMatchId(null)}
-                                          >
-                                            <BracketCard match={cell.match!} />
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {bracketContainerEl && bracketGrid && bracketGraph && (
-                            <>
-                              <BracketUConnectors rows={bracketGrid.rows} />
-                              <BracketExactConnectors 
-                                edges={bracketGraph.edges} 
-                                getEl={(id) => bracketCardEls.get(id) ?? null} 
-                                containerEl={bracketContainerEl} 
-                                highlight={bracketHighlightSet ?? undefined} 
-                              />
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {viewMode === 'bracket' && (competitionMode === 'KNOCKOUT_ONLY' || competitionMode === 'GROUPS_AND_KNOCKOUT') && effectiveKnockoutMatches.length === 0 && (
-                  <Alert className="w-full">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>No hay partidos de eliminación directa aún. La fase de grupos debe completarse primero.</AlertDescription>
-                  </Alert>
-                )}
-              </>
-            )}
-
-            {!isLoading && selectedCompetition && matches.length === 0 && effectiveKnockoutMatches.length === 0 && (
-              <Alert className="w-full">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>No hay partidos disponibles para esta competición. Asegúrate de haber creado los fixtures.</AlertDescription>
-              </Alert>
-            )}
+            {/* Status Filter */}
+            <Select value={selectedStatus} onValueChange={(v) => setSelectedStatus(v as 'all' | 'played' | 'pending')}>
+              <SelectTrigger className="w-[140px] bg-secondary/50 border-border">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="played">Jugados</SelectItem>
+                <SelectItem value="pending">Pendientes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Active Filters */}
+          {selectedCompetition !== 'all' && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              <Badge variant="secondary" className="gap-1">
+                {competitions.find((c) => c.id === selectedCompetition)?.name}
+                <button onClick={() => setSelectedCompetition('all')} className="ml-1 hover:text-destructive">
+                  ×
+                </button>
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <Card key={i} className="bg-card border-border">
+                <div className="bg-primary/10 px-4 py-3 border-b border-border">
+                  <Skeleton className="h-8 w-48" />
+                </div>
+                <CardContent className="p-0">
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="px-4 py-3 border-b border-border last:border-0">
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : viewMode === 'list' ? (
+          <FixturesListView
+            groupedMatches={groupedMatches}
+            expandedMatches={expandedMatches}
+            toggleExpand={toggleExpand}
+            getEventIcon={getEventIcon}
+          />
+        ) : (
+          <BracketView
+            cupCompetitions={cupCompetitions}
+            activeCup={activeCup}
+            setActiveCup={setActiveCup}
+            bracketData={bracketData}
+            seasonNumber={seasonNumber}
+            isLoading={isLoadingKnockout}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// List View Component
+interface FixturesListViewProps {
+  groupedMatches: Record<string, { name: string; matches: Match[] }>
+  expandedMatches: string[]
+  toggleExpand: (matchId: string) => void
+  getEventIcon: (type: MatchEvent['type']) => string
+}
+
+function FixturesListView({
+  groupedMatches,
+  expandedMatches,
+  toggleExpand,
+  getEventIcon,
+}: FixturesListViewProps) {
+  if (Object.keys(groupedMatches).length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <p>No se encontraron partidos con los filtros seleccionados.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {Object.entries(groupedMatches).map(([competitionId, { name, matches }]) => (
+        <Card key={competitionId} className="bg-card border-border overflow-hidden">
+          {/* Competition Header */}
+          <div className="bg-primary/10 px-4 py-3 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+                <span className="text-primary font-bold text-sm">
+                  {name.substring(0, 2).toUpperCase()}
+                </span>
+              </div>
+              <span className="font-semibold text-foreground">{name}</span>
+              <Badge variant="outline" className="text-xs">
+                {matches.length} partidos
+              </Badge>
+            </div>
+            <Button variant="ghost" size="sm" className="text-primary">
+              Ver todo <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+
+          {/* Matches Table */}
+          <CardContent className="p-0">
+            <div className="divide-y divide-border">
+              {matches.map((match) => {
+                const isExpanded = expandedMatches.includes(match.id)
+                const hasEvents = match.events && match.events.length > 0
+
+                return (
+                  <div key={match.id}>
+                    <div
+                      className={cn(
+                        'px-4 py-3 hover:bg-secondary/30 transition-colors flex items-center gap-4',
+                        hasEvents && 'cursor-pointer'
+                      )}
+                      onClick={() => hasEvents && toggleExpand(match.id)}
+                    >
+                      {/* Expand Button */}
+                      <div className="w-6 flex-shrink-0">
+                        {hasEvents && (
+                          <Button variant="ghost" size="icon" className="w-6 h-6 p-0">
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Round/Matchday */}
+                      <div className="w-20 flex-shrink-0">
+                        <span className="text-xs text-muted-foreground">
+                          {match.knockoutRound
+                            ? getRoundLabel(match.knockoutRound)
+                            : `Fecha ${match.matchdayOrder}`}
+                        </span>
+                      </div>
+
+                      {/* Home Team */}
+                      <div className="flex-1 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {match.homeClub?.name || 'TBD'}
+                            </p>
+                          </div>
+                          <div className="w-7 h-7 bg-muted rounded flex items-center justify-center text-[10px] font-bold text-muted-foreground border border-border shrink-0">
+                            {match.homeClub?.logo ? (
+                              <img src={match.homeClub.logo} alt="" className="w-5 h-5 object-contain" />
+                            ) : (
+                              match.homeClub?.name?.slice(0, 3).toUpperCase() || 'TBD'
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Score / Status */}
+                      <div className="w-24 flex-shrink-0 flex items-center justify-center">
+                        {match.status === 'JUGADO' ? (
+                          <div className="flex items-center gap-2 bg-secondary/50 px-3 py-1.5 rounded-lg">
+                            <span className="text-lg font-bold text-foreground">{match.homeClubGoals}</span>
+                            <span className="text-muted-foreground">-</span>
+                            <span className="text-lg font-bold text-foreground">{match.awayClubGoals}</span>
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Pendiente
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Away Team */}
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 bg-muted rounded flex items-center justify-center text-[10px] font-bold text-muted-foreground border border-border shrink-0">
+                            {match.awayClub?.logo ? (
+                              <img src={match.awayClub.logo} alt="" className="w-5 h-5 object-contain" />
+                            ) : (
+                              match.awayClub?.name?.slice(0, 3).toUpperCase() || 'TBD'
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {match.awayClub?.name || 'TBD'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Icon */}
+                      <div className="w-10 flex-shrink-0 flex justify-end">
+                        {match.status === 'JUGADO' ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <Button variant="ghost" size="icon" className="w-8 h-8 text-primary hover:bg-primary/10">
+                            <Upload className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expanded Events */}
+                    {isExpanded && hasEvents && (
+                      <div className="bg-muted/30 px-4 py-3 border-t border-border">
+                        <div className="flex gap-8">
+                          {/* Home Team Events */}
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                              {match.homeClub?.name}
+                            </p>
+                            <div className="space-y-1">
+                              {match.events
+                                ?.filter((e) => e.team === 'home')
+                                .sort((a, b) => a.minute - b.minute)
+                                .map((event, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-sm">
+                                    <span className="text-muted-foreground w-8">{event.minute}'</span>
+                                    <span>{getEventIcon(event.type)}</span>
+                                    <span className="text-foreground">{event.player}</span>
+                                    {event.assist && (
+                                      <span className="text-muted-foreground text-xs">
+                                        (Asist: {event.assist})
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              {match.events?.filter((e) => e.team === 'home').length === 0 && (
+                                <p className="text-xs text-muted-foreground">Sin eventos</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Divider */}
+                          <div className="w-px bg-border" />
+
+                          {/* Away Team Events */}
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">
+                              {match.awayClub?.name}
+                            </p>
+                            <div className="space-y-1">
+                              {match.events
+                                ?.filter((e) => e.team === 'away')
+                                .sort((a, b) => a.minute - b.minute)
+                                .map((event, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-sm">
+                                    <span className="text-muted-foreground w-8">{event.minute}'</span>
+                                    <span>{getEventIcon(event.type)}</span>
+                                    <span className="text-foreground">{event.player}</span>
+                                    {event.assist && (
+                                      <span className="text-muted-foreground text-xs">
+                                        (Asist: {event.assist})
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              {match.events?.filter((e) => e.team === 'away').length === 0 && (
+                                <p className="text-xs text-muted-foreground">Sin eventos</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
+// Bracket View Component
+interface BracketViewProps {
+  cupCompetitions: Competition[]
+  activeCup: string
+  setActiveCup: (cup: string) => void
+  bracketData: BracketRound[]
+  seasonNumber?: number
+  isLoading?: boolean
+}
+
+function BracketView({
+  cupCompetitions,
+  activeCup,
+  setActiveCup,
+  bracketData,
+  seasonNumber,
+  isLoading,
+}: BracketViewProps) {
+  const currentCup = cupCompetitions.find((c) => c.id === activeCup)
+  const matchHeight = 80
+  const matchGap = 12
+
+  if (cupCompetitions.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <p>No hay copas disponibles para mostrar brackets.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Cup Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+            <Trophy className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-foreground">{currentCup?.name || 'Copa'}</h2>
+            <p className="text-sm text-muted-foreground">
+              Temporada {seasonNumber ? `T${seasonNumber}` : ''}
+            </p>
+          </div>
+        </div>
+
+        <Select value={activeCup} onValueChange={setActiveCup}>
+          <SelectTrigger className="w-48 bg-secondary/50 border-border">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {cupCompetitions.map((cup) => {
+              const isGold = cup.name.toLowerCase().includes('oro')
+              const isSilver = cup.name.toLowerCase().includes('plata')
+
+              return (
+                <SelectItem key={cup.id} value={cup.id}>
+                  <div className="flex items-center gap-2">
+                    {isGold ? (
+                      <Crown className="w-4 h-4 text-amber-500" />
+                    ) : isSilver ? (
+                      <Trophy className="w-4 h-4 text-slate-400" />
+                    ) : (
+                      <Trophy className="w-4 h-4 text-primary" />
+                    )}
+                    {cup.name}
+                  </div>
+                </SelectItem>
+              )
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Bracket Visualization */}
+      {isLoading ? (
+        <Card className="bg-card border-border p-6">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-48 mx-auto" />
+            <div className="flex gap-8 justify-center">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="space-y-3">
+                  <Skeleton className="h-20 w-48" />
+                  <Skeleton className="h-20 w-48" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      ) : bracketData.length === 0 ? (
+        <Card className="bg-card border-border p-6">
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No hay partidos de eliminación directa aún.</p>
+            <p className="text-sm mt-2">Los brackets aparecerán cuando la fase eliminatoria comience.</p>
+          </div>
+        </Card>
+      ) : (
+        <Card className="bg-card border-border p-6 overflow-x-auto">
+          <div className="flex items-start min-w-max gap-0">
+            {bracketData.map((round, roundIndex) => {
+              const isLastRound = roundIndex === bracketData.length - 1
+              const spacing = Math.pow(2, roundIndex)
+              const gapBetweenMatches = spacing * (matchHeight + matchGap) - matchHeight
+              const topPadding = roundIndex === 0 ? 0 : (Math.pow(2, roundIndex) - 1) * (matchHeight + matchGap) / 2
+
+              return (
+                <div key={round.name} className="flex items-start">
+                  {/* Round Column */}
+                  <div className="flex flex-col" style={{ width: 200 }}>
+                    {/* Round Header */}
+                    <div className="text-center mb-4 h-8 flex items-center justify-center">
+                      <Badge
+                        variant={isLastRound ? 'default' : 'outline'}
+                        className={cn(isLastRound && 'bg-primary text-primary-foreground', 'px-3 py-1')}
+                      >
+                        {round.name}
+                      </Badge>
+                    </div>
+
+                    {/* Matches */}
+                    <div
+                      className="flex flex-col"
+                      style={{
+                        gap: gapBetweenMatches,
+                        paddingTop: topPadding,
+                      }}
+                    >
+                      {round.matches.map((match) => (
+                        <BracketMatchCard
+                          key={match.id}
+                          match={match}
+                          isFinal={isLastRound}
+                          height={matchHeight}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Connector Lines */}
+                  {!isLastRound && (
+                    <div className="flex flex-col" style={{ paddingTop: topPadding + 8 + 4, width: 32 }}>
+                      {round.matches.map((_, matchIndex) => {
+                        if (matchIndex % 2 === 1) return null
+                        return (
+                          <BracketConnector
+                            key={matchIndex}
+                            matchHeight={matchHeight}
+                            gapBetweenMatches={gapBetweenMatches}
+                          />
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-6 text-sm text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-emerald-500" />
+          <span>Ganador / Clasificado</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-border" />
+          <span>Por definir (TBD)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-amber-500" />
+          <span>Empate (pendiente desempate)</span>
         </div>
       </div>
     </div>
   )
+}
+
+// Bracket Match Card
+function BracketMatchCard({
+  match,
+  isFinal,
+  height,
+}: {
+  match: BracketMatch
+  isFinal: boolean
+  height: number
+}) {
+  const isPlayed = match.status === 'JUGADO'
+  const isDraw = isPlayed && match.homeClubGoals === match.awayClubGoals
+  const isTBD = !match.homeClub || !match.awayClub
+
+  return (
+    <div
+      className={cn(
+        'rounded-lg border overflow-hidden transition-all hover:shadow-md',
+        isFinal
+          ? 'border-primary bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-primary/20'
+          : 'border-border bg-card hover:border-primary/30'
+      )}
+      style={{ height }}
+    >
+      {/* Final Trophy Icon */}
+      {isFinal && (
+        <div className="bg-primary/20 px-2 py-1 flex items-center justify-center gap-1.5 border-b border-primary/20">
+          <Trophy className="w-3 h-3 text-primary" />
+          <span className="text-[10px] font-semibold text-primary">FINAL</span>
+        </div>
+      )}
+
+      {/* Home Team */}
+      <div
+        className={cn(
+          'flex items-center justify-between px-2.5 py-1.5 border-b border-border/50 transition-colors',
+          match.winner === 'home' ? 'bg-emerald-500/10' : 'hover:bg-secondary/30'
+        )}
+        style={{ height: isFinal ? (height - 24) / 2 : height / 2 }}
+      >
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {match.winner === 'home' && (
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+          )}
+          <div className="min-w-0">
+            <p
+              className={cn(
+                'text-xs font-medium truncate',
+                isTBD
+                  ? 'text-muted-foreground/50 italic'
+                  : match.winner === 'home'
+                  ? 'text-emerald-500'
+                  : 'text-foreground'
+              )}
+            >
+              {match.homeClub?.name || 'TBD'}
+            </p>
+          </div>
+        </div>
+        <div className="flex-shrink-0 ml-1">
+          {isPlayed ? (
+            <span
+              className={cn(
+                'text-sm font-bold tabular-nums',
+                match.winner === 'home'
+                  ? 'text-emerald-500'
+                  : isDraw
+                  ? 'text-amber-500'
+                  : 'text-foreground'
+              )}
+            >
+              {match.homeClubGoals}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/30">-</span>
+          )}
+        </div>
+      </div>
+
+      {/* Away Team */}
+      <div
+        className={cn(
+          'flex items-center justify-between px-2.5 py-1.5 transition-colors',
+          match.winner === 'away' ? 'bg-emerald-500/10' : 'hover:bg-secondary/30'
+        )}
+        style={{ height: isFinal ? (height - 24) / 2 : height / 2 }}
+      >
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {match.winner === 'away' && (
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+          )}
+          <div className="min-w-0">
+            <p
+              className={cn(
+                'text-xs font-medium truncate',
+                isTBD
+                  ? 'text-muted-foreground/50 italic'
+                  : match.winner === 'away'
+                  ? 'text-emerald-500'
+                  : 'text-foreground'
+              )}
+            >
+              {match.awayClub?.name || 'TBD'}
+            </p>
+          </div>
+        </div>
+        <div className="flex-shrink-0 ml-1">
+          {isPlayed ? (
+            <span
+              className={cn(
+                'text-sm font-bold tabular-nums',
+                match.winner === 'away'
+                  ? 'text-emerald-500'
+                  : isDraw
+                  ? 'text-amber-500'
+                  : 'text-foreground'
+              )}
+            >
+              {match.awayClubGoals}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground/30">-</span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Bracket Connector
+function BracketConnector({
+  matchHeight,
+  gapBetweenMatches,
+}: {
+  matchHeight: number
+  gapBetweenMatches: number
+}) {
+  const halfMatch = matchHeight / 2
+  const totalPairHeight = matchHeight * 2 + gapBetweenMatches
+  const middlePoint = halfMatch + (matchHeight + gapBetweenMatches) / 2
+
+  return (
+    <div className="relative" style={{ height: totalPairHeight, marginBottom: gapBetweenMatches }}>
+      {/* Top match horizontal line */}
+      <div
+        className="absolute bg-border"
+        style={{
+          left: 0,
+          top: halfMatch,
+          width: 16,
+          height: 2,
+        }}
+      />
+      {/* Vertical line connecting both matches */}
+      <div
+        className="absolute bg-border"
+        style={{
+          left: 15,
+          top: halfMatch,
+          width: 2,
+          height: matchHeight + gapBetweenMatches,
+        }}
+      />
+      {/* Bottom match horizontal line */}
+      <div
+        className="absolute bg-border"
+        style={{
+          left: 0,
+          top: matchHeight + gapBetweenMatches + halfMatch,
+          width: 16,
+          height: 2,
+        }}
+      />
+      {/* Middle horizontal line going to next round */}
+      <div
+        className="absolute bg-border"
+        style={{
+          left: 16,
+          top: middlePoint,
+          width: 16,
+          height: 2,
+        }}
+      />
+    </div>
+  )
+}
+
+// Helper functions
+function getRoundLabel(round: string | null | undefined): string {
+  if (!round) return 'Fase'
+  switch (round) {
+    case 'ROUND_OF_64': return '64vos'
+    case 'ROUND_OF_32': return '32vos'
+    case 'ROUND_OF_16': return 'Octavos'
+    case 'QUARTERFINAL': return 'Cuartos'
+    case 'SEMIFINAL': return 'Semifinal'
+    case 'FINAL': return 'Final'
+    default: return round
+  }
+}
+
+function inferRoundFromMatchday(matchday: number, totalMatches: number): string {
+  // Simple inference based on matchday order
+  if (totalMatches <= 1) return 'FINAL'
+  if (totalMatches <= 2) return matchday === 1 ? 'SEMIFINAL' : 'FINAL'
+  if (totalMatches <= 4) {
+    if (matchday <= 2) return 'QUARTERFINAL'
+    if (matchday <= 4) return 'SEMIFINAL'
+    return 'FINAL'
+  }
+  if (totalMatches <= 8) {
+    if (matchday <= 4) return 'ROUND_OF_16'
+    if (matchday <= 6) return 'QUARTERFINAL'
+    if (matchday <= 7) return 'SEMIFINAL'
+    return 'FINAL'
+  }
+  return 'ROUND_OF_32'
 }

@@ -10,6 +10,7 @@ import { UserController } from '@/features/users/users.controller'
 import { EmailService } from '@/features/core/email/email.service'
 import { MyAccountService } from '@/features/me/me.service'
 import { MyAccountController } from '@/features/me/me.controller'
+import { MyAccountRepository } from '@/features/me/me.repository'
 import { PlayerRepository } from '@/features/players/players.repository'
 import { PlayerController } from '@/features/players/players.controller'
 import { PlayerService } from '@/features/players/players.service'
@@ -57,6 +58,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventTypeRepository: asClass(EventTypeRepository).singleton(),
     seasonRepository: asClass(SeasonRepository).singleton(),
     salaryRateRepository: asClass(SalaryRateRepository).singleton(),
+    myAccountRepository: asClass(MyAccountRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(MyAccountController).singleton(),

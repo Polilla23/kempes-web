@@ -1,0 +1,88 @@
+{
+  "hero": {
+    "welcome": "Bienvenido a",
+    "leagueName": "Kempes Master League",
+    "season": "Temporada {{number}}",
+    "seasonInProgress": "Temporada {{number}} en curso",
+    "stats": {
+      "matchesPlayed": "Partidos Jugados",
+      "matchesPending": "Pendientes",
+      "transfers": "Transferencias",
+      "moneyMoved": "Dinero Movido",
+      "champions": "Campeones",
+      "yourPosition": "Tu Posición",
+      "currentSeason": "Temporada {{number}}",
+      "previousSeason": "Temp. anterior",
+      "seasons": "Temporadas"
+    }
+  },
+  "champions": {
+    "goldCup": "Copa de Oro",
+    "leagueA": "Liga A",
+    "cindorCup": "Copa Cindor",
+    "champion": "Campeón"
+  },
+  "recentResults": {
+    "title": "Últimos Resultados",
+    "subtitle": "Partidos subidos recientemente",
+    "noResults": "No hay resultados recientes disponibles",
+    "viewDetails": "Ver detalles",
+    "updatingLive": "Actualizando en vivo"
+  },
+  "standings": {
+    "title": "Tu Liga",
+    "subtitle": "Tu liga actual",
+    "viewFull": "Ver todas",
+    "position": "Pos",
+    "team": "Equipo",
+    "played": "PJ",
+    "won": "PG",
+    "drawn": "PE",
+    "lost": "PP",
+    "goalsFor": "GF",
+    "goalsAgainst": "GC",
+    "goalDifference": "DG",
+    "points": "Pts",
+    "noLeague": "No participas en ninguna liga esta temporada"
+  },
+  "userMatches": {
+    "title": "Tus Partidos",
+    "subtitle": "Próximos a jugar",
+    "viewAll": "Subir",
+    "noMatches": "Sin partidos recientes",
+    "win": "V",
+    "draw": "E",
+    "loss": "D"
+  },
+  "transfers": {
+    "title": "Últimos Fichajes",
+    "viewAll": "Ver todos los fichajes",
+    "noTransfers": "No hay fichajes disponibles",
+    "free": "Libre",
+    "loan": "Préstamo",
+    "comingSoon": "Próximamente: sistema de fichajes"
+  },
+  "news": {
+    "title": "Últimas Noticias",
+    "viewAll": "Ver todas las noticias",
+    "noNews": "No hay noticias disponibles",
+    "comingSoon": "Próximamente: noticias de la liga"
+  },
+  "footer": {
+    "rights": "Todos los derechos reservados",
+    "madeWith": "Hecho con",
+    "by": "por",
+    "version": "Versión"
+  },
+  "competition": {
+    "league": "Liga",
+    "cup": "Copa",
+    "matchday": "Fecha {{number}}"
+  },
+  "time": {
+    "minutes": "{{count}} min",
+    "hours": "{{count}}h",
+    "days": "{{count}}d",
+    "weeks": "{{count}}sem"
+  }
+}
