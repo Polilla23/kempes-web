@@ -57,6 +57,9 @@ function MatchCard({ match }: { match: RecentMatch }) {
   const awayWin = match.awayClubGoals > match.homeClubGoals
   const isDraw = match.homeClubGoals === match.awayClubGoals
 
+  const homeClubName = match.homeClub?.name || 'TBD'
+  const awayClubName = match.awayClub?.name || 'TBD'
+
   return (
     <div className={cn('bg-card border rounded-xl overflow-hidden transition-all hover:shadow-lg', style.border)}>
       {/* Header with competition and time */}
@@ -76,10 +79,10 @@ function MatchCard({ match }: { match: RecentMatch }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center text-[10px] font-bold text-muted-foreground border border-border">
-              {match.homeClub.logo ? (
-                <img src={match.homeClub.logo} alt={match.homeClub.name} className="w-6 h-6 object-contain" />
+              {match.homeClub?.logo ? (
+                <img src={match.homeClub.logo} alt={homeClubName} className="w-6 h-6 object-contain" />
               ) : (
-                match.homeClub.name.slice(0, 3).toUpperCase()
+                homeClubName.slice(0, 3).toUpperCase()
               )}
             </div>
             <span
@@ -88,7 +91,7 @@ function MatchCard({ match }: { match: RecentMatch }) {
                 homeWin ? 'text-foreground font-semibold' : 'text-muted-foreground'
               )}
             >
-              {match.homeClub.name}
+              {homeClubName}
             </span>
           </div>
           <span
@@ -105,10 +108,10 @@ function MatchCard({ match }: { match: RecentMatch }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-muted rounded-md flex items-center justify-center text-[10px] font-bold text-muted-foreground border border-border">
-              {match.awayClub.logo ? (
-                <img src={match.awayClub.logo} alt={match.awayClub.name} className="w-6 h-6 object-contain" />
+              {match.awayClub?.logo ? (
+                <img src={match.awayClub.logo} alt={awayClubName} className="w-6 h-6 object-contain" />
               ) : (
-                match.awayClub.name.slice(0, 3).toUpperCase()
+                awayClubName.slice(0, 3).toUpperCase()
               )}
             </div>
             <span
@@ -117,7 +120,7 @@ function MatchCard({ match }: { match: RecentMatch }) {
                 awayWin ? 'text-foreground font-semibold' : 'text-muted-foreground'
               )}
             >
-              {match.awayClub.name}
+              {awayClubName}
             </span>
           </div>
           <span

@@ -90,8 +90,8 @@ export interface RecentMatch {
   status: string
   stage: string
   knockoutRound: string | null
-  homeClub: Club
-  awayClub: Club
+  homeClub: Club | null
+  awayClub: Club | null
   homeClubGoals: number
   awayClubGoals: number
   competition: MatchCompetition
@@ -108,8 +108,8 @@ export interface UpcomingMatch {
   status: string
   stage: string
   knockoutRound: string | null
-  homeClub: Club
-  awayClub: Club
+  homeClub: Club | null
+  awayClub: Club | null
   competition: MatchCompetition
   isUserHome: boolean
 }

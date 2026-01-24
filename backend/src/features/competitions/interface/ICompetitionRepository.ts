@@ -1,15 +1,14 @@
-import { LeaguesRules, KempesCupRules } from '@/types'
+import { CompetitionRules } from '@/types'
 import { Competition, CompetitionType, Prisma } from '@prisma/client'
 
-type CompetitionWithType = Competition & { competitionType: CompetitionType }
+export type CompetitionWithType = Competition & { competitionType: CompetitionType }
 
 export interface ICompetitionRepository {
-  // generateFixture(): Promise<[] | null> // TODO: Return type (Prisma Fixture Model or null)
-  save(config: LeaguesRules | KempesCupRules): Promise<Competition[]>
-  updateOneById(id: string, config: Partial<LeaguesRules | KempesCupRules>): Promise<Competition>
+  save(config: CompetitionRules): Promise<Competition[]>
+  updateOneById(id: string, config: CompetitionRules): Promise<Competition>
   deleteOneById(id: string): Promise<void>
-  findAll(): Promise<Competition[] | null>
+  findAll(): Promise<CompetitionWithType[] | null>
   findOneById(id: string): Promise<Competition | null>
   findOneByIdWithType(id: string): Promise<CompetitionWithType | null>
-  findOneBySeasonId(seasonId: string): Promise<Competition[] | null>
+  findOneBySeasonId(seasonId: string): Promise<CompetitionWithType[] | null>
 }

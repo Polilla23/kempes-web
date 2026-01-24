@@ -59,6 +59,7 @@ export type CompetitionDTO = {
 
 export type MatchDTO = {
   id: string
+  competitionId: string
   homeClub: {
     id: string
     name: string
@@ -84,6 +85,21 @@ export type MatchDTO = {
   awaySource?: {
     type: 'DIRECT' | 'FROM_MATCH' | 'FROM_GROUP'
     placeholder?: string
+  }
+}
+
+// MatchDTO con información de competencia para filtrado en frontend
+export type MatchDetailedDTO = MatchDTO & {
+  competition: {
+    id: string
+    name: string
+    competitionType: {
+      id: string
+      name: string
+      category: string // 'SENIOR' | 'KEMPESITA' | 'MIXED'
+      format: string // 'LEAGUE' | 'CUP'
+      hierarchy: number
+    }
   }
 }
 

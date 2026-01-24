@@ -332,6 +332,178 @@ function getShortRoundName(round: KnockoutRound): string {
 }
 
 /**
+ * Información de un partido en el bracket, usado para linking posterior
+ */
+export interface BracketMatchInfo {
+  match: Prisma.MatchCreateInput
+  round: KnockoutRound
+  position: number           // Posición en la ronda (1-indexed)
+  isBye: boolean
+  byeTeamId?: string         // ID del equipo que tiene BYE (si aplica)
+}
+
+/**
+ * Resultado de generateDirectKnockoutBracket
+ */
+export interface DirectKnockoutResult {
+  matchesByRound: Map<KnockoutRound, BracketMatchInfo[]>
+  roundOrder: KnockoutRound[]  // Rondas en orden de ejecución
+  startRoundIndex: number      // Índice de la primera ronda
+}
+
+/**
+ * Genera bracket de eliminación directa con equipos asignados directamente
+ * Usado para Copa Cindor (Kempesitas) y Supercopa
+ *
+ * IMPORTANTE: Esta función retorna la estructura del bracket pero NO crea matches.
+ * El service debe:
+ * 1. Crear los matches de la primera ronda
+ * 2. Crear los matches de rondas siguientes con sourceMatchId apuntando a la ronda anterior
+ * 3. Para BYEs: asignar el equipo directamente al match de la siguiente ronda
+ *
+ * @param competitionId - ID de la competición
+ * @param teamIds - Array de IDs de equipos participantes
+ * @returns Estructura del bracket con metadata para linking
+ */
+export function generateDirectKnockoutBracket(
+  competitionId: string,
+  teamIds: string[]
+): DirectKnockoutResult {
+  const { byeCount, bracketSize, firstRound } = calculateBracketStructure(teamIds.length)
+
+  // Shuffle teams para sorteo aleatorio
+  const shuffledTeams = [...teamIds].sort(() => Math.random() - 0.5)
+
+  // Definir las rondas en orden
+  const roundOrder: KnockoutRound[] = [
+    KnockoutRound.ROUND_OF_64,
+    KnockoutRound.ROUND_OF_32,
+    KnockoutRound.ROUND_OF_16,
+    KnockoutRound.QUARTERFINAL,
+    KnockoutRound.SEMIFINAL,
+    KnockoutRound.FINAL,
+  ]
+
+  const startIndex = roundOrder.indexOf(firstRound)
+  let matchdayOrder = 1
+  let matchesInRound = bracketSize / 2
+
+  // Equipos que pasan directo (byes) van al inicio
+  // Equipos que juegan primera ronda van después
+  const teamsWithByes: (string | null)[] = []
+
+  // Primero asignamos los byes (slots vacíos para equipos que pasan directo)
+  for (let i = 0; i < byeCount; i++) {
+    teamsWithByes.push(shuffledTeams[i]) // Equipos con bye
+    teamsWithByes.push(null) // Slot vacío (el rival es null)
+  }
+
+  // Luego los equipos que juegan primera ronda
+  for (let i = byeCount; i < shuffledTeams.length; i++) {
+    teamsWithByes.push(shuffledTeams[i])
+  }
+
+  // Track matches by round for linking
+  const matchesByRound: Map<KnockoutRound, BracketMatchInfo[]> = new Map()
+
+  // Generar cada ronda
+  for (let roundIdx = startIndex; roundIdx < roundOrder.length; roundIdx++) {
+    const currentRound = roundOrder[roundIdx]
+    const roundMatches: BracketMatchInfo[] = []
+
+    for (let matchNum = 0; matchNum < matchesInRound; matchNum++) {
+      const position = matchNum + 1  // 1-indexed
+
+      if (roundIdx === startIndex) {
+        // Primera ronda - asignar equipos directamente
+        const homeIdx = matchNum * 2
+        const awayIdx = matchNum * 2 + 1
+
+        const homeTeamId = teamsWithByes[homeIdx]
+        const awayTeamId = teamsWithByes[awayIdx]
+
+        // Si uno de los dos es null (bye)
+        if (homeTeamId === null || awayTeamId === null) {
+          const byeTeamId = homeTeamId || awayTeamId
+          if (byeTeamId) {
+            // Crear "partido fantasma" donde el equipo ya está clasificado
+            roundMatches.push({
+              match: {
+                competition: { connect: { id: competitionId } },
+                matchdayOrder,
+                stage: CompetitionStage.KNOCKOUT,
+                knockoutRound: currentRound,
+                status: MatchStatus.FINALIZADO, // Ya está "jugado" (bye)
+                homeClub: { connect: { id: byeTeamId } },
+                awayClub: undefined,
+                homePlaceholder: 'BYE',
+                awayPlaceholder: 'BYE',
+                homeClubGoals: 3, // Victoria por defecto
+                awayClubGoals: 0,
+              },
+              round: currentRound,
+              position,
+              isBye: true,
+              byeTeamId,
+            })
+          }
+          continue
+        }
+
+        // Partido normal (sin bye)
+        roundMatches.push({
+          match: {
+            competition: { connect: { id: competitionId } },
+            matchdayOrder,
+            stage: CompetitionStage.KNOCKOUT,
+            knockoutRound: currentRound,
+            status: MatchStatus.PENDIENTE,
+            homeClub: { connect: { id: homeTeamId } },
+            awayClub: { connect: { id: awayTeamId } },
+          },
+          round: currentRound,
+          position,
+          isBye: false,
+        })
+      } else {
+        // Rondas siguientes - placeholders (se actualizarán con sourceMatchId en el service)
+        const prevRound = roundOrder[roundIdx - 1]
+        const prevRoundName = getShortRoundName(prevRound)
+        const homePlaceholder = `W_${prevRoundName}_${matchNum * 2 + 1}`
+        const awayPlaceholder = `W_${prevRoundName}_${matchNum * 2 + 2}`
+
+        roundMatches.push({
+          match: {
+            competition: { connect: { id: competitionId } },
+            matchdayOrder,
+            stage: CompetitionStage.KNOCKOUT,
+            knockoutRound: currentRound,
+            status: MatchStatus.PENDIENTE,
+            homePlaceholder,
+            awayPlaceholder,
+            homeClub: undefined,
+            awayClub: undefined,
+          },
+          round: currentRound,
+          position,
+          isBye: false,
+        })
+      }
+    }
+
+    matchesByRound.set(currentRound, roundMatches)
+    matchdayOrder++
+    matchesInRound = Math.ceil(matchesInRound / 2)
+  }
+
+  return {
+    matchesByRound,
+    roundOrder,
+    startRoundIndex: startIndex,
+  }
+}
+
+/**
  * Genera fixture completo de Copa Kempes
  * Incluye: Fase de grupos + Bracket Copa Oro + Bracket Copa Plata
  */

@@ -21,11 +21,10 @@ export class FixtureRepository implements IFixtureRepository {
     })
   }
 
-  async createManyMatches(data: Prisma.MatchCreateInput[]): Promise<number> {
-    const results = await this.prisma.$transaction(
+  async createManyMatches(data: Prisma.MatchCreateInput[]): Promise<Match[]> {
+    return await this.prisma.$transaction(
       data.map((matchData) => this.prisma.match.create({ data: matchData }))
     )
-    return results.length
   }
 
   async findAll(): Promise<Match[]> {

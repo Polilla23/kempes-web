@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify'
 import { CompetitionService } from '@/features/competitions/competitions.service'
 import { CompetitionMapper, Response } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
-import { KempesCupRules, LeaguesRules } from '@/types'
+import { KempesCupRules, LeaguesRules, CompetitionRules } from '@/types'
 import { CompetitionDTO } from '@/types'
 
 export class CompetitionController {
@@ -29,13 +29,18 @@ export class CompetitionController {
           const competitionType = await this.competitionService['competitionTypeRepository'].findOneById(
             comp.competitionTypeId
           )
+
+          if (!competitionType) {
+            console.warn(`CompetitionType not found for competition ${comp.id} with typeId: ${comp.competitionTypeId}`)
+          }
+
           return {
             competition: comp,
             competitionTypeData: competitionType
               ? {
                   id: competitionType.id,
                   name: competitionType.name.toString(),
-                  category: competitionType.category.toString(),
+                  category: competitionType.category?.toString() || 'MIXED',
                   format: competitionType.format.toString(),
                   hierarchy: competitionType.hierarchy,
                 }
@@ -44,9 +49,20 @@ export class CompetitionController {
         })
       )
 
-      const competitionDTOs = enrichedCompetitions.map((enriched) =>
-        CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData!)
-      )
+      const competitionDTOs = enrichedCompetitions
+        .map((enriched) => {
+          if (!enriched.competitionTypeData) {
+            console.warn(`Competition ${enriched.competition.id} (${enriched.competition.name}) has no competitionType data - using defaults`)
+            return CompetitionMapper.toDTO(enriched.competition, {
+              id: enriched.competition.competitionTypeId,
+              name: 'UNKNOWN',
+              category: 'MIXED',
+              format: 'CUP',
+              hierarchy: 999,
+            })
+          }
+          return CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData)
+        })
 
       // Preparar respuesta completa
       const responseData = {
@@ -77,12 +93,30 @@ export class CompetitionController {
         return Response.success(reply, [], 'No competitions found')
       }
 
-      const competitionDTOs = enrichedCompetitions.map((enriched) =>
-        CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData!)
-      )
+      const competitionDTOs = enrichedCompetitions
+        .map((enriched) => {
+          if (!enriched.competitionTypeData) {
+            console.warn(`Competition ${enriched.competition.id} (${enriched.competition.name}) has no competitionType data - using defaults`)
+            // Provide default competitionType data for competitions without type
+            return CompetitionMapper.toDTO(enriched.competition, {
+              id: enriched.competition.competitionTypeId,
+              name: 'UNKNOWN',
+              category: 'UNKNOWN',
+              format: 'UNKNOWN',
+              hierarchy: 999,
+            })
+          }
+          return CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData)
+        })
+
+      // Log the first DTO to verify competitionType is included
+      if (competitionDTOs.length > 0) {
+        console.log('🔍 First competitionDTO being sent:', JSON.stringify(competitionDTOs[0], null, 2))
+      }
 
       return Response.success(reply, competitionDTOs, 'Competitions fetched successfully')
     } catch (error) {
+      console.error('Error in findAll competitions:', error)
       return Response.error(
         reply,
         'FETCH_ERROR',
@@ -145,7 +179,7 @@ export class CompetitionController {
   async update(
     req: FastifyRequest<{
       Params: { id: string }
-      Body: Partial<LeaguesRules | KempesCupRules>
+      Body: CompetitionRules
     }>,
     reply: FastifyReply
   ) {

@@ -39,6 +39,10 @@ import { Route as AuthVerifyEmailIndexTokenRouteImport } from './routes/_auth/ve
 import { Route as AuthResetPasswordIndexTokenRouteImport } from './routes/_auth/reset-password/index.$token'
 import { Route as ManagementFixturesLeagueIndexRouteImport } from './routes/management/fixtures/league/index'
 import { Route as ManagementFixturesCupIndexRouteImport } from './routes/management/fixtures/cup/index'
+import { Route as ManagementFixturesCupSupercopaIndexRouteImport } from './routes/management/fixtures/cup/supercopa/index'
+import { Route as ManagementFixturesCupKempesIndexRouteImport } from './routes/management/fixtures/cup/kempes/index'
+import { Route as ManagementFixturesCupCindorIndexRouteImport } from './routes/management/fixtures/cup/cindor/index'
+import { Route as ManagementFixturesCupKempesGenerateBracketsRouteImport } from './routes/management/fixtures/cup/kempes/generate-brackets'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -199,6 +203,30 @@ const ManagementFixturesCupIndexRoute =
     path: '/management/fixtures/cup/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ManagementFixturesCupSupercopaIndexRoute =
+  ManagementFixturesCupSupercopaIndexRouteImport.update({
+    id: '/management/fixtures/cup/supercopa/',
+    path: '/management/fixtures/cup/supercopa/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementFixturesCupKempesIndexRoute =
+  ManagementFixturesCupKempesIndexRouteImport.update({
+    id: '/management/fixtures/cup/kempes/',
+    path: '/management/fixtures/cup/kempes/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementFixturesCupCindorIndexRoute =
+  ManagementFixturesCupCindorIndexRouteImport.update({
+    id: '/management/fixtures/cup/cindor/',
+    path: '/management/fixtures/cup/cindor/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementFixturesCupKempesGenerateBracketsRoute =
+  ManagementFixturesCupKempesGenerateBracketsRouteImport.update({
+    id: '/management/fixtures/cup/kempes/generate-brackets',
+    path: '/management/fixtures/cup/kempes/generate-brackets',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -231,6 +259,10 @@ export interface FileRoutesByFullPath {
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
+  '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
+  '/management/fixtures/cup/cindor': typeof ManagementFixturesCupCindorIndexRoute
+  '/management/fixtures/cup/kempes': typeof ManagementFixturesCupKempesIndexRoute
+  '/management/fixtures/cup/supercopa': typeof ManagementFixturesCupSupercopaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -263,6 +295,10 @@ export interface FileRoutesByTo {
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
+  '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
+  '/management/fixtures/cup/cindor': typeof ManagementFixturesCupCindorIndexRoute
+  '/management/fixtures/cup/kempes': typeof ManagementFixturesCupKempesIndexRoute
+  '/management/fixtures/cup/supercopa': typeof ManagementFixturesCupSupercopaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -296,6 +332,10 @@ export interface FileRoutesById {
   '/management/fixtures/league/': typeof ManagementFixturesLeagueIndexRoute
   '/_auth/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
   '/_auth/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
+  '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
+  '/management/fixtures/cup/cindor/': typeof ManagementFixturesCupCindorIndexRoute
+  '/management/fixtures/cup/kempes/': typeof ManagementFixturesCupKempesIndexRoute
+  '/management/fixtures/cup/supercopa/': typeof ManagementFixturesCupSupercopaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -330,6 +370,10 @@ export interface FileRouteTypes {
     | '/management/fixtures/league'
     | '/reset-password/index/$token'
     | '/verify-email/index/$token'
+    | '/management/fixtures/cup/kempes/generate-brackets'
+    | '/management/fixtures/cup/cindor'
+    | '/management/fixtures/cup/kempes'
+    | '/management/fixtures/cup/supercopa'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -362,6 +406,10 @@ export interface FileRouteTypes {
     | '/management/fixtures/league'
     | '/reset-password/index/$token'
     | '/verify-email/index/$token'
+    | '/management/fixtures/cup/kempes/generate-brackets'
+    | '/management/fixtures/cup/cindor'
+    | '/management/fixtures/cup/kempes'
+    | '/management/fixtures/cup/supercopa'
   id:
     | '__root__'
     | '/'
@@ -394,6 +442,10 @@ export interface FileRouteTypes {
     | '/management/fixtures/league/'
     | '/_auth/reset-password/index/$token'
     | '/_auth/verify-email/index/$token'
+    | '/management/fixtures/cup/kempes/generate-brackets'
+    | '/management/fixtures/cup/cindor/'
+    | '/management/fixtures/cup/kempes/'
+    | '/management/fixtures/cup/supercopa/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -427,6 +479,10 @@ export interface RootRouteChildren {
   ManagementFixturesLeagueIndexRoute: typeof ManagementFixturesLeagueIndexRoute
   AuthResetPasswordIndexTokenRoute: typeof AuthResetPasswordIndexTokenRoute
   AuthVerifyEmailIndexTokenRoute: typeof AuthVerifyEmailIndexTokenRoute
+  ManagementFixturesCupKempesGenerateBracketsRoute: typeof ManagementFixturesCupKempesGenerateBracketsRoute
+  ManagementFixturesCupCindorIndexRoute: typeof ManagementFixturesCupCindorIndexRoute
+  ManagementFixturesCupKempesIndexRoute: typeof ManagementFixturesCupKempesIndexRoute
+  ManagementFixturesCupSupercopaIndexRoute: typeof ManagementFixturesCupSupercopaIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -641,6 +697,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementFixturesCupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/fixtures/cup/supercopa/': {
+      id: '/management/fixtures/cup/supercopa/'
+      path: '/management/fixtures/cup/supercopa'
+      fullPath: '/management/fixtures/cup/supercopa'
+      preLoaderRoute: typeof ManagementFixturesCupSupercopaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/fixtures/cup/kempes/': {
+      id: '/management/fixtures/cup/kempes/'
+      path: '/management/fixtures/cup/kempes'
+      fullPath: '/management/fixtures/cup/kempes'
+      preLoaderRoute: typeof ManagementFixturesCupKempesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/fixtures/cup/cindor/': {
+      id: '/management/fixtures/cup/cindor/'
+      path: '/management/fixtures/cup/cindor'
+      fullPath: '/management/fixtures/cup/cindor'
+      preLoaderRoute: typeof ManagementFixturesCupCindorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/fixtures/cup/kempes/generate-brackets': {
+      id: '/management/fixtures/cup/kempes/generate-brackets'
+      path: '/management/fixtures/cup/kempes/generate-brackets'
+      fullPath: '/management/fixtures/cup/kempes/generate-brackets'
+      preLoaderRoute: typeof ManagementFixturesCupKempesGenerateBracketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -676,6 +760,12 @@ const rootRouteChildren: RootRouteChildren = {
   ManagementFixturesLeagueIndexRoute: ManagementFixturesLeagueIndexRoute,
   AuthResetPasswordIndexTokenRoute: AuthResetPasswordIndexTokenRoute,
   AuthVerifyEmailIndexTokenRoute: AuthVerifyEmailIndexTokenRoute,
+  ManagementFixturesCupKempesGenerateBracketsRoute:
+    ManagementFixturesCupKempesGenerateBracketsRoute,
+  ManagementFixturesCupCindorIndexRoute: ManagementFixturesCupCindorIndexRoute,
+  ManagementFixturesCupKempesIndexRoute: ManagementFixturesCupKempesIndexRoute,
+  ManagementFixturesCupSupercopaIndexRoute:
+    ManagementFixturesCupSupercopaIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

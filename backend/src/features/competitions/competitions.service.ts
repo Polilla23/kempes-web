@@ -5,9 +5,9 @@ import {
 import { ICompetitionRepository } from '@/features/competitions/interface/ICompetitionRepository'
 import { ICompetitionTypeRepository } from '@/features/competition-types/interface/ICompetitionTypeRepository'
 import { FixtureRepository } from '@/features/fixtures/fixtures.repository'
-import { validateCompetitionRules, isLeaguesRules, isKempesCupRules } from '@/features/utils/jsonTypeChecker'
-import { generateLeagueFixture, generateFullCupFixture } from '@/features/utils/generateFixture'
-import { KempesCupRules, LeaguesRules } from '@/types'
+import { validateCompetitionRules, isLeaguesRules, isKempesCupRules, isCindorCupRules, isSuperCupRules } from '@/features/utils/jsonTypeChecker'
+import { generateLeagueFixture, generateFullCupFixture, generateDirectKnockoutBracket } from '@/features/utils/generateFixture'
+import { KempesCupRules, LeaguesRules, CompetitionRules, CindorCupRules, SuperCupRules } from '@/types'
 import { Competition, Match, Prisma, PrismaClient, CompetitionStage, CompetitionName } from '@prisma/client'
 
 export class CompetitionService {
@@ -36,6 +36,11 @@ export class CompetitionService {
   // Helper method para enriquecer competitions con competitionType data
   private async enrichCompetitionWithType(competition: Competition) {
     const competitionType = await this.competitionTypeRepository.findOneById(competition.competitionTypeId)
+
+    if (!competitionType) {
+      console.warn(`CompetitionType not found for competition ${competition.id} with typeId: ${competition.competitionTypeId}`)
+    }
+
     return {
       competition,
       competitionTypeData: competitionType
@@ -51,12 +56,31 @@ export class CompetitionService {
   }
 
   async findAllCompetitions() {
+    // findAll() ya incluye competitionType gracias al include de Prisma
     const competitions = await this.competitionRepository.findAll()
     if (!competitions) return null
 
-    // Enriquecer cada competition con su competitionType
-    const enrichedPromises = competitions.map((comp) => this.enrichCompetitionWithType(comp))
-    return await Promise.all(enrichedPromises)
+    // Mapear directamente usando los datos incluidos por Prisma
+    return competitions.map((comp) => {
+      const { competitionType } = comp
+
+      if (!competitionType) {
+        console.warn(`CompetitionType not included for competition ${comp.id} (${comp.name}) with typeId: ${comp.competitionTypeId}`)
+      }
+
+      return {
+        competition: comp,
+        competitionTypeData: competitionType
+          ? {
+              id: competitionType.id,
+              name: competitionType.name.toString(),
+              category: competitionType.category.toString(),
+              format: competitionType.format.toString(),
+              hierarchy: competitionType.hierarchy,
+            }
+          : null,
+      }
+    })
   }
 
   async findCompetition(id: string) {
@@ -67,35 +91,47 @@ export class CompetitionService {
     return await this.enrichCompetitionWithType(competitionFound)
   }
 
-  async createCompetition(config: Partial<LeaguesRules | KempesCupRules>) {    
+  async createCompetition(config: Partial<LeaguesRules | KempesCupRules | CindorCupRules | SuperCupRules>) {
     const validatedConfig = validateCompetitionRules(config)
-    
+
     // Verificar si ya existen competiciones del mismo tipo en esta temporada
     const existingCompetitions = await this.competitionRepository.findOneBySeasonId(
       validatedConfig.activeSeason.id
     )
-    
+
     if (existingCompetitions && existingCompetitions.length > 0) {
-      // Verificar si es el mismo tipo de competición (ligas vs copa)
+      // Verificar si es el mismo tipo de competición
       const isCreatingLeagues = isLeaguesRules(validatedConfig)
-      const isCreatingCup = isKempesCupRules(validatedConfig)
-      
+      const isCreatingKempesCup = isKempesCupRules(validatedConfig)
+      const isCreatingCindorCup = isCindorCupRules(validatedConfig)
+      const isCreatingSuperCup = isSuperCupRules(validatedConfig)
+
       // Obtener los tipos de las competiciones existentes
-      const existingTypes = await Promise.all(
+      const existingTypeNames = await Promise.all(
         existingCompetitions.map(async (comp) => {
           const type = await this.competitionTypeRepository.findOneById(comp.competitionTypeId)
-          return type?.format
+          return type?.name
         })
       )
-      
-      const hasExistingLeagues = existingTypes.some(format => format === 'LEAGUE')
-      const hasExistingCup = existingTypes.some(format => format === 'CUP')
-      
-      // Solo bloquear si ya existe el mismo tipo
+
+      const hasExistingLeagues = existingTypeNames.some(name =>
+        name && ['LEAGUE_A', 'LEAGUE_B', 'LEAGUE_C', 'LEAGUE_D', 'LEAGUE_E'].includes(name.toString())
+      )
+      const hasExistingKempesCup = existingTypeNames.some(name => name === 'KEMPES_CUP')
+      const hasExistingCindorCup = existingTypeNames.some(name => name === 'CINDOR_CUP')
+      const hasExistingSuperCup = existingTypeNames.some(name => name === 'SUPER_CUP')
+
+      // Solo bloquear si ya existe el mismo tipo específico
       if (isCreatingLeagues && hasExistingLeagues) {
         throw new CompetitionAlreadyExistsError()
       }
-      if (isCreatingCup && hasExistingCup) {
+      if (isCreatingKempesCup && hasExistingKempesCup) {
+        throw new CompetitionAlreadyExistsError()
+      }
+      if (isCreatingCindorCup && hasExistingCindorCup) {
+        throw new CompetitionAlreadyExistsError()
+      }
+      if (isCreatingSuperCup && hasExistingSuperCup) {
         throw new CompetitionAlreadyExistsError()
       }
     }
@@ -294,10 +330,78 @@ export class CompetitionService {
       return result
     }
 
+    // Copa Cindor (Kempesitas - eliminación directa)
+    if (isCindorCupRules(validatedConfig)) {
+      const cindorConfig = validatedConfig as CindorCupRules
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Crear competición
+        const competition = await tx.competition.create({
+          data: {
+            name: `Copa Cindor - T${cindorConfig.activeSeason.number}`,
+            system: CompetitionStage.KNOCKOUT,
+            competitionTypeId: cindorConfig.competitionType.id,
+            seasonId: cindorConfig.activeSeason.id,
+            isActive: true,
+            rules: cindorConfig as unknown as Prisma.InputJsonValue,
+          },
+        })
+
+        // Generar fixtures de eliminación directa con linking correcto
+        const createdMatches = await this.createDirectKnockoutMatchesInTransaction(
+          tx,
+          competition.id,
+          cindorConfig.teamIds
+        )
+
+        return {
+          success: true,
+          competitions: [competition],
+          fixtures: [{ competition, matchesCreated: createdMatches.length, matches: createdMatches }],
+        }
+      }, { timeout: 60000 })
+
+      return result
+    }
+
+    // Supercopa (6 equipos - mixta, sin categoría)
+    if (isSuperCupRules(validatedConfig)) {
+      const superConfig = validatedConfig as SuperCupRules
+
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Crear competición
+        const competition = await tx.competition.create({
+          data: {
+            name: `Supercopa - T${superConfig.activeSeason.number}`,
+            system: CompetitionStage.KNOCKOUT,
+            competitionTypeId: superConfig.competitionType.id,
+            seasonId: superConfig.activeSeason.id,
+            isActive: true,
+            rules: superConfig as unknown as Prisma.InputJsonValue,
+          },
+        })
+
+        // Generar fixtures de eliminación directa con linking correcto
+        const createdMatches = await this.createDirectKnockoutMatchesInTransaction(
+          tx,
+          competition.id,
+          superConfig.teamIds
+        )
+
+        return {
+          success: true,
+          competitions: [competition],
+          fixtures: [{ competition, matchesCreated: createdMatches.length, matches: createdMatches }],
+        }
+      }, { timeout: 60000 })
+
+      return result
+    }
+
     throw new Error('Invalid competition configuration')
   }
 
-  async updateCompetition(id: string, config: Partial<LeaguesRules | KempesCupRules>) {
+  async updateCompetition(id: string, config: CompetitionRules) {
     const competitionFound = await this.competitionRepository.findOneById(id)
     if (!competitionFound) {
       throw new CompetitionNotFoundError()
@@ -311,6 +415,110 @@ export class CompetitionService {
     if (!competitionFound) {
       throw new CompetitionNotFoundError()
     }
-    return await this.competitionRepository.deleteOneById(id)
+
+    // Eliminar en transacción: primero matches relacionados, luego la competición
+    await this.prisma.$transaction(async (tx) => {
+      // Eliminar COVIDs de los matches de esta competición
+      await tx.matchCovid.deleteMany({
+        where: {
+          match: {
+            competitionId: id
+          }
+        }
+      })
+
+      // Eliminar matches de esta competición
+      await tx.match.deleteMany({
+        where: { competitionId: id }
+      })
+
+      // Eliminar la competición
+      await tx.competition.delete({
+        where: { id }
+      })
+    })
+  }
+
+  /**
+   * Crea partidos de knockout directo dentro de una transacción
+   * Maneja correctamente las conexiones entre rondas y los BYEs
+   */
+  private async createDirectKnockoutMatchesInTransaction(
+    tx: Prisma.TransactionClient,
+    competitionId: string,
+    teamIds: string[]
+  ): Promise<Match[]> {
+    const bracketResult = generateDirectKnockoutBracket(competitionId, teamIds)
+    const { matchesByRound, roundOrder, startRoundIndex } = bracketResult
+
+    // Map para guardar: round_position -> matchId (para linking)
+    const matchIdMap = new Map<string, string>()
+    // Map para guardar: round_position -> byeTeamId (para propagar a siguiente ronda)
+    const byeTeamMap = new Map<string, string>()
+
+    const createdMatches: Match[] = []
+
+    // Crear partidos ronda por ronda
+    for (let roundIdx = startRoundIndex; roundIdx < roundOrder.length; roundIdx++) {
+      const currentRound = roundOrder[roundIdx]
+      const roundMatches = matchesByRound.get(currentRound) || []
+      const isFirstRound = roundIdx === startRoundIndex
+
+      for (const bracketMatch of roundMatches) {
+        const { match, round, position, isBye, byeTeamId } = bracketMatch
+        const key = `${round}_${position}`
+
+        // Limpiar match data (remover undefined)
+        const cleanedMatch: any = { ...match }
+        if (!cleanedMatch.homeClub) delete cleanedMatch.homeClub
+        if (!cleanedMatch.awayClub) delete cleanedMatch.awayClub
+
+        if (!isFirstRound) {
+          // Rondas posteriores: establecer sourceMatchId
+          const prevRound = roundOrder[roundIdx - 1]
+          const homeSourcePosition = position * 2 - 1
+          const awaySourcePosition = position * 2
+
+          const homeSourceKey = `${prevRound}_${homeSourcePosition}`
+          const awaySourceKey = `${prevRound}_${awaySourcePosition}`
+
+          const homeSourceMatchId = matchIdMap.get(homeSourceKey)
+          const awaySourceMatchId = matchIdMap.get(awaySourceKey)
+
+          const homeByeTeamId = byeTeamMap.get(homeSourceKey)
+          const awayByeTeamId = byeTeamMap.get(awaySourceKey)
+
+          // Si home viene de un BYE, asignar el equipo directamente
+          if (homeByeTeamId) {
+            cleanedMatch.homeClub = { connect: { id: homeByeTeamId } }
+            cleanedMatch.homePlaceholder = null
+          } else if (homeSourceMatchId) {
+            cleanedMatch.homeSourceMatch = { connect: { id: homeSourceMatchId } }
+            cleanedMatch.homeSourcePosition = 'WINNER'
+          }
+
+          // Si away viene de un BYE, asignar el equipo directamente
+          if (awayByeTeamId) {
+            cleanedMatch.awayClub = { connect: { id: awayByeTeamId } }
+            cleanedMatch.awayPlaceholder = null
+          } else if (awaySourceMatchId) {
+            cleanedMatch.awaySourceMatch = { connect: { id: awaySourceMatchId } }
+            cleanedMatch.awaySourcePosition = 'WINNER'
+          }
+        }
+
+        // Crear el partido
+        const createdMatch = await tx.match.create({ data: cleanedMatch })
+        matchIdMap.set(key, createdMatch.id)
+        createdMatches.push(createdMatch)
+
+        // Si es BYE, guardar el equipo para propagarlo a la siguiente ronda
+        if (isBye && byeTeamId) {
+          byeTeamMap.set(key, byeTeamId)
+        }
+      }
+    }
+
+    return createdMatches
   }
 }

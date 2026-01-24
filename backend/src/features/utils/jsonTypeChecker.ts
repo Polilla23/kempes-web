@@ -1,4 +1,4 @@
-import { CompetitionRules, KempesCupRules, LeaguesRules } from '@/types'
+import { CompetitionRules, KempesCupRules, LeaguesRules, CindorCupRules, SuperCupRules } from '@/types'
 
 /**
  * Type guard for LeaguesRules
@@ -8,10 +8,25 @@ export function isLeaguesRules(config: CompetitionRules): config is LeaguesRules
 }
 
 /**
- * Type guard for KempesCupRules
+ * Type guard for KempesCupRules (Copa Kempes - fase de grupos)
  */
 export function isKempesCupRules(config: CompetitionRules): config is KempesCupRules {
-  return config.type === 'CUP'
+  // Support both old 'CUP' type and new 'KEMPES_CUP' type for backward compatibility
+  return config.type === 'KEMPES_CUP' || config.type === 'CUP'
+}
+
+/**
+ * Type guard for CindorCupRules (Copa Cindor - eliminación directa Kempesitas)
+ */
+export function isCindorCupRules(config: CompetitionRules): config is CindorCupRules {
+  return config.type === 'CINDOR_CUP'
+}
+
+/**
+ * Type guard for SuperCupRules (Supercopa - eliminación directa 6 equipos)
+ */
+export function isSuperCupRules(config: CompetitionRules): config is SuperCupRules {
+  return config.type === 'SUPER_CUP'
 }
 
 /**
@@ -36,7 +51,8 @@ export function validateCompetitionRules(json: unknown): CompetitionRules {
     return config as LeaguesRules
   }
 
-  if (config.type === 'CUP') {
+  // Support both old 'CUP' type and new 'KEMPES_CUP' type
+  if (config.type === 'CUP' || config.type === 'KEMPES_CUP') {
     // Validate kempesCup-specific fields
     if (
       typeof config.numGroups !== 'number' ||
@@ -47,6 +63,29 @@ export function validateCompetitionRules(json: unknown): CompetitionRules {
       throw new Error('Invalid kempesCup rules: missing required fields')
     }
     return config as KempesCupRules
+  }
+
+  if (config.type === 'CINDOR_CUP') {
+    // Validate CindorCup-specific fields
+    if (!Array.isArray(config.teamIds)) {
+      throw new Error('Invalid CindorCup rules: missing teamIds array')
+    }
+    if (config.competitionCategory !== 'KEMPESITA') {
+      throw new Error('Invalid CindorCup rules: category must be KEMPESITA')
+    }
+    return config as CindorCupRules
+  }
+
+  if (config.type === 'SUPER_CUP') {
+    // Validate SuperCup-specific fields
+    if (!Array.isArray(config.teamIds)) {
+      throw new Error('Invalid SuperCup rules: missing teamIds array')
+    }
+    if (config.teamIds.length !== 6) {
+      throw new Error('Invalid SuperCup rules: must have exactly 6 teams')
+    }
+    // No validar categoría - Supercopa es mixta (Mayores + Kempesitas)
+    return config as SuperCupRules
   }
 
   throw new Error(`Unknown competition rules type: ${config.type}`)

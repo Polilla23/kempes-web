@@ -1,6 +1,6 @@
 import { FixtureRepository } from '@/features/fixtures/fixtures.repository'
 import { CompetitionRepository } from '@/features/competitions/competitions.repository'
-import { MatchStatus, CompetitionStage, Prisma } from '@prisma/client'
+import { MatchStatus, CompetitionStage, Prisma, PrismaClient, CompetitionName, KnockoutRound } from '@prisma/client'
 import {
   BracketMatch,
   KnockoutFixtureInput,
@@ -12,8 +12,9 @@ import {
   FinishMatchInput,
   FinishMatchResponse,
 } from '@/types'
+import { MatchMapper } from '@/mappers'
 import { sortBracketsByRound, buildKnockoutMatchData } from '@/features/utils/generateKnockoutFixture'
-import { generateLeagueFixture, generateGroupStageFixture } from '@/features/utils/generateFixture'
+import { generateLeagueFixture, generateGroupStageFixture, generateDirectKnockoutBracket } from '@/features/utils/generateFixture'
 import { CompetitionNotFoundError } from '@/features/competitions/competitions.errors'
 import {
   KnockoutMatchDrawError,
@@ -22,19 +23,41 @@ import {
   MatchNotFoundError,
 } from '@/features/fixtures/fixtures.errors'
 
+// Type for bracket input from admin
+type BracketInput = {
+  round: number
+  position: number
+  homeTeamId?: string
+  awayTeamId?: string
+  isBye?: boolean
+}
+
+// Type for qualified team info
+type QualifiedTeam = {
+  clubId: string
+  clubName: string
+  clubLogo?: string
+  groupName: string
+  position: number
+}
+
 export class FixtureService {
   private fixtureRepository: FixtureRepository
   private competitionRepository: CompetitionRepository
+  private prisma: PrismaClient
 
   constructor({
     fixtureRepository,
     competitionRepository,
+    prisma,
   }: {
     fixtureRepository: FixtureRepository
     competitionRepository: CompetitionRepository
+    prisma: PrismaClient
   }) {
     this.fixtureRepository = fixtureRepository
     this.competitionRepository = competitionRepository
+    this.prisma = prisma
   }
 
   // ===================== KNOCKOUT STAGE =====================
@@ -154,7 +177,7 @@ export class FixtureService {
 
     return {
       success: true,
-      matchesCreated: created,
+      matchesCreated: created.length,
       competitionId: input.competitionId,
     }
   }
@@ -198,8 +221,374 @@ export class FixtureService {
     return {
       success: true,
       competitionId: input.competitionId,
-      matchesCreated: created,
+      matchesCreated: created.length,
     }
+  }
+
+  // ===================== DIRECT KNOCKOUT (Cindor & Supercopa) =====================
+
+  /**
+   * Create direct knockout fixture for Copa Cindor and Supercopa
+   * Teams are assigned directly (no group stage placeholders)
+   *
+   * Flujo:
+   * 1. Genera estructura del bracket
+   * 2. Crea partidos ronda por ronda
+   * 3. Establece sourceMatchId para conectar rondas
+   * 4. Para BYEs: asigna equipo directamente a la siguiente ronda
+   */
+  async createDirectKnockoutFixture(input: { competitionId: string; teamIds: string[] }) {
+    const competition = await this.competitionRepository.findOneById(input.competitionId)
+    if (!competition) {
+      throw new CompetitionNotFoundError()
+    }
+
+    const bracketResult = generateDirectKnockoutBracket(input.competitionId, input.teamIds)
+    const { matchesByRound, roundOrder, startRoundIndex } = bracketResult
+
+    // Map para guardar: round_position -> matchId (para linking)
+    const matchIdMap = new Map<string, string>()
+    // Map para guardar: round_position -> byeTeamId (para propagar a siguiente ronda)
+    const byeTeamMap = new Map<string, string>()
+
+    let totalMatchesCreated = 0
+
+    // Crear partidos ronda por ronda
+    for (let roundIdx = startRoundIndex; roundIdx < roundOrder.length; roundIdx++) {
+      const currentRound = roundOrder[roundIdx]
+      const roundMatches = matchesByRound.get(currentRound) || []
+      const isFirstRound = roundIdx === startRoundIndex
+
+      for (const bracketMatch of roundMatches) {
+        const { match, round, position, isBye, byeTeamId } = bracketMatch
+        const key = `${round}_${position}`
+
+        // Limpiar match data (remover undefined)
+        const cleanedMatch = { ...match }
+        if (!cleanedMatch.homeClub) delete (cleanedMatch as any).homeClub
+        if (!cleanedMatch.awayClub) delete (cleanedMatch as any).awayClub
+
+        if (!isFirstRound) {
+          // Rondas posteriores: establecer sourceMatchId
+          const prevRound = roundOrder[roundIdx - 1]
+          const homeSourcePosition = position * 2 - 1  // Posición del partido home en ronda anterior
+          const awaySourcePosition = position * 2      // Posición del partido away en ronda anterior
+
+          const homeSourceKey = `${prevRound}_${homeSourcePosition}`
+          const awaySourceKey = `${prevRound}_${awaySourcePosition}`
+
+          const homeSourceMatchId = matchIdMap.get(homeSourceKey)
+          const awaySourceMatchId = matchIdMap.get(awaySourceKey)
+
+          // Verificar si hay BYEs de la ronda anterior
+          const homeByeTeamId = byeTeamMap.get(homeSourceKey)
+          const awayByeTeamId = byeTeamMap.get(awaySourceKey)
+
+          // Si home viene de un BYE, asignar el equipo directamente
+          if (homeByeTeamId) {
+            cleanedMatch.homeClub = { connect: { id: homeByeTeamId } }
+            cleanedMatch.homePlaceholder = null
+          } else if (homeSourceMatchId) {
+            cleanedMatch.homeSourceMatch = { connect: { id: homeSourceMatchId } }
+            cleanedMatch.homeSourcePosition = 'WINNER'
+          }
+
+          // Si away viene de un BYE, asignar el equipo directamente
+          if (awayByeTeamId) {
+            cleanedMatch.awayClub = { connect: { id: awayByeTeamId } }
+            cleanedMatch.awayPlaceholder = null
+          } else if (awaySourceMatchId) {
+            cleanedMatch.awaySourceMatch = { connect: { id: awaySourceMatchId } }
+            cleanedMatch.awaySourcePosition = 'WINNER'
+          }
+        }
+
+        // Crear el partido
+        const createdMatch = await this.fixtureRepository.createMatch(cleanedMatch)
+        matchIdMap.set(key, createdMatch.id)
+        totalMatchesCreated++
+
+        // Si es BYE, guardar el equipo para propagarlo a la siguiente ronda
+        if (isBye && byeTeamId) {
+          byeTeamMap.set(key, byeTeamId)
+        }
+      }
+    }
+
+    return {
+      success: true,
+      competitionId: input.competitionId,
+      matchesCreated: totalMatchesCreated,
+      totalTeams: input.teamIds.length,
+    }
+  }
+
+  // ===================== COPA ORO / COPA PLATA GENERATION =====================
+
+  /**
+   * Genera Copa Oro y Copa Plata a partir de los equipos clasificados de Copa Kempes
+   * El admin define los cruces manualmente
+   */
+  async generateGoldSilverCups(input: {
+    kempesCupId: string
+    goldTeams: QualifiedTeam[]
+    silverTeams: QualifiedTeam[]
+    goldBrackets: BracketInput[]
+    silverBrackets: BracketInput[]
+  }) {
+    const kempesCup = await this.competitionRepository.findOneById(input.kempesCupId)
+    if (!kempesCup) {
+      throw new CompetitionNotFoundError()
+    }
+
+    // Get season info and category from Kempes Cup
+    const kempesCupWithDetails = await this.prisma.competition.findUnique({
+      where: { id: input.kempesCupId },
+      include: {
+        season: true,
+        competitionType: true,
+      },
+    })
+
+    if (!kempesCupWithDetails) {
+      throw new CompetitionNotFoundError()
+    }
+
+    const seasonNumber = kempesCupWithDetails.season.number
+    const category = kempesCupWithDetails.competitionType.category
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 1. Find or create GOLD_CUP CompetitionType
+      let goldCupType = await tx.competitionType.findFirst({
+        where: { name: CompetitionName.GOLD_CUP, category },
+      })
+      if (!goldCupType) {
+        goldCupType = await tx.competitionType.create({
+          data: {
+            name: CompetitionName.GOLD_CUP,
+            category,
+            format: 'CUP',
+            hierarchy: 10,
+          },
+        })
+      }
+
+      // 2. Create Copa Oro competition
+      const goldCupCompetition = await tx.competition.create({
+        data: {
+          name: `Copa de Oro ${category} - T${seasonNumber}`,
+          system: CompetitionStage.KNOCKOUT,
+          competitionTypeId: goldCupType.id,
+          seasonId: kempesCupWithDetails.seasonId,
+          isActive: true,
+          rules: {
+            type: 'CUP_KNOCKOUT',
+            parentCup: input.kempesCupId,
+            cupType: 'GOLD',
+          } as unknown as Prisma.InputJsonValue,
+        },
+      })
+
+      // 3. Connect gold teams to Copa Oro
+      await tx.competition.update({
+        where: { id: goldCupCompetition.id },
+        data: {
+          teams: {
+            connect: input.goldTeams.map((t) => ({ id: t.clubId })),
+          },
+        },
+      })
+
+      // 4. Generate Copa Oro matches from brackets
+      const goldMatches = this.generateKnockoutMatchesFromBrackets(
+        goldCupCompetition.id,
+        input.goldBrackets,
+        input.goldTeams
+      )
+
+      for (const matchData of goldMatches) {
+        await tx.match.create({ data: matchData })
+      }
+
+      // 5. Find or create SILVER_CUP CompetitionType (if there are silver teams)
+      let silverCupCompetition = null
+      if (input.silverTeams.length > 0) {
+        let silverCupType = await tx.competitionType.findFirst({
+          where: { name: CompetitionName.SILVER_CUP, category },
+        })
+        if (!silverCupType) {
+          silverCupType = await tx.competitionType.create({
+            data: {
+              name: CompetitionName.SILVER_CUP,
+              category,
+              format: 'CUP',
+              hierarchy: 11,
+            },
+          })
+        }
+
+        // 6. Create Copa Plata competition
+        silverCupCompetition = await tx.competition.create({
+          data: {
+            name: `Copa de Plata ${category} - T${seasonNumber}`,
+            system: CompetitionStage.KNOCKOUT,
+            competitionTypeId: silverCupType.id,
+            seasonId: kempesCupWithDetails.seasonId,
+            isActive: true,
+            rules: {
+              type: 'CUP_KNOCKOUT',
+              parentCup: input.kempesCupId,
+              cupType: 'SILVER',
+            } as unknown as Prisma.InputJsonValue,
+          },
+        })
+
+        // 7. Connect silver teams to Copa Plata
+        await tx.competition.update({
+          where: { id: silverCupCompetition.id },
+          data: {
+            teams: {
+              connect: input.silverTeams.map((t) => ({ id: t.clubId })),
+            },
+          },
+        })
+
+        // 8. Generate Copa Plata matches from brackets
+        const silverMatches = this.generateKnockoutMatchesFromBrackets(
+          silverCupCompetition.id,
+          input.silverBrackets,
+          input.silverTeams
+        )
+
+        for (const matchData of silverMatches) {
+          await tx.match.create({ data: matchData })
+        }
+      }
+
+      return {
+        success: true,
+        goldCup: {
+          id: goldCupCompetition.id,
+          name: goldCupCompetition.name,
+          teamsCount: input.goldTeams.length,
+          matchesCreated: goldMatches.length,
+        },
+        silverCup: silverCupCompetition
+          ? {
+              id: silverCupCompetition.id,
+              name: silverCupCompetition.name,
+              teamsCount: input.silverTeams.length,
+              matchesCreated: input.silverBrackets.length,
+            }
+          : null,
+      }
+    }, {
+      timeout: 60000,
+    })
+
+    return result
+  }
+
+  /**
+   * Genera los matches de knockout a partir de los brackets definidos por el admin
+   * Los byes se marcan con homeClub o awayClub vacío, y el equipo con bye pasa directo
+   */
+  private generateKnockoutMatchesFromBrackets(
+    competitionId: string,
+    brackets: BracketInput[],
+    teams: QualifiedTeam[]
+  ): Prisma.MatchCreateInput[] {
+    const matches: Prisma.MatchCreateInput[] = []
+
+    // Determine knockout round based on round number
+    const getKnockoutRound = (round: number, totalRounds: number): KnockoutRound => {
+      const roundsFromFinal = totalRounds - round
+      switch (roundsFromFinal) {
+        case 0:
+          return KnockoutRound.FINAL
+        case 1:
+          return KnockoutRound.SEMIFINAL
+        case 2:
+          return KnockoutRound.QUARTERFINAL
+        case 3:
+          return KnockoutRound.ROUND_OF_16
+        case 4:
+          return KnockoutRound.ROUND_OF_32
+        default:
+          return KnockoutRound.ROUND_OF_64
+      }
+    }
+
+    // Calculate total rounds based on bracket positions
+    const maxRound = Math.max(...brackets.map((b) => b.round))
+
+    // Group brackets by round for dependency tracking
+    const bracketsByRound = new Map<number, BracketInput[]>()
+    brackets.forEach((b) => {
+      if (!bracketsByRound.has(b.round)) {
+        bracketsByRound.set(b.round, [])
+      }
+      bracketsByRound.get(b.round)!.push(b)
+    })
+
+    // Sort rounds
+    const rounds = Array.from(bracketsByRound.keys()).sort((a, b) => a - b)
+
+    for (const round of rounds) {
+      const roundBrackets = bracketsByRound.get(round)!
+      roundBrackets.sort((a, b) => a.position - b.position)
+
+      for (const bracket of roundBrackets) {
+        const knockoutRound = getKnockoutRound(round, maxRound)
+
+        // Build placeholder text based on previous round matches
+        let homePlaceholder: string | undefined
+        let awayPlaceholder: string | undefined
+
+        if (round > 1) {
+          // Link to previous round matches (winner of match X)
+          const prevPos1 = bracket.position * 2 - 1
+          const prevPos2 = bracket.position * 2
+
+          homePlaceholder = `Ganador P${prevPos1}`
+          awayPlaceholder = `Ganador P${prevPos2}`
+        }
+
+        const matchData: Prisma.MatchCreateInput = {
+          competition: { connect: { id: competitionId } },
+          status: MatchStatus.PENDIENTE,
+          stage: CompetitionStage.KNOCKOUT,
+          knockoutRound,
+          matchdayOrder: round, // matchdayOrder corresponds to round for knockout
+        }
+
+        // If home team is assigned (not a bye, not waiting for previous match)
+        if (bracket.homeTeamId) {
+          matchData.homeClub = { connect: { id: bracket.homeTeamId } }
+        } else if (homePlaceholder) {
+          matchData.homePlaceholder = homePlaceholder
+        }
+
+        // If away team is assigned (not a bye, not waiting for previous match)
+        if (bracket.awayTeamId) {
+          matchData.awayClub = { connect: { id: bracket.awayTeamId } }
+        } else if (awayPlaceholder) {
+          matchData.awayPlaceholder = awayPlaceholder
+        }
+
+        // Handle bye case - if one team is assigned and the other is a bye,
+        // this match is effectively already decided (team with bye advances)
+        if (bracket.isBye) {
+          // Mark as a bye match - will be handled specially
+          // The team assigned advances automatically
+          matchData.status = MatchStatus.PENDIENTE // Still pending until processed
+        }
+
+        matches.push(matchData)
+      }
+    }
+
+    return matches
   }
 
   // ===================== QUERIES =====================
@@ -222,9 +611,11 @@ export class FixtureService {
 
   /**
    * Obtiene partidos filtrados por temporada y/o competición
+   * Devuelve MatchDetailedDTO con información de competencia para filtrado en frontend
    */
   async getMatchesWithFilters(seasonId?: string, competitionId?: string) {
-    return await this.fixtureRepository.getMatchesWithFilters(seasonId, competitionId)
+    const matches = await this.fixtureRepository.getMatchesWithFilters(seasonId, competitionId)
+    return MatchMapper.toDetailedDTOArray(matches as any)
   }
 
   /**

@@ -1,4 +1,4 @@
-import { PrismaClient, MovementType, CompetitionFormat, MatchStatus, CupPhase } from '@prisma/client'
+import { PrismaClient, MovementType, CompetitionFormat, MatchStatus, CupPhase, CompetitionStage } from '@prisma/client'
 import { TeamStanding, CompetitionStandings } from '@/types'
 
 interface LeagueRules {
@@ -497,6 +497,241 @@ export class StandingsService {
           },
         })
       }
+    }
+  }
+
+  /**
+   * Verifica si todos los partidos de fase de grupos de una Copa Kempes están finalizados
+   * y devuelve el estado de cada grupo
+   */
+  async getKempesCupGroupsStatus(competitionId: string): Promise<{
+    competitionId: string
+    competitionName: string
+    allGroupsComplete: boolean
+    groups: Array<{
+      groupName: string
+      isComplete: boolean
+      matchesPlayed: number
+      matchesTotal: number
+      standings: TeamStanding[]
+    }>
+    qualifyToGold: number
+    qualifyToSilver: number
+  }> {
+    const competition = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+      include: {
+        matches: {
+          include: {
+            homeClub: true,
+            awayClub: true,
+          },
+        },
+        teams: true,
+        season: true,
+        competitionType: true,
+      },
+    })
+
+    if (!competition) {
+      throw new Error('Competition not found')
+    }
+
+    // Parse rules to get qualifyToGold and qualifyToSilver
+    const rules = competition.rules as any
+    const qualifyToGold = rules?.qualifyToGold ?? 3
+    const qualifyToSilver = rules?.qualifyToSilver ?? 2
+
+    // Group matches by groupName (stored in homePlaceholder field for group stage matches)
+    const matchesByGroup = new Map<string, typeof competition.matches>()
+
+    competition.matches.forEach((match) => {
+      // In group stage, homePlaceholder contains the group name (e.g., "GROUP_A", "A")
+      // Only process ROUND_ROBIN matches (group stage)
+      if (match.stage !== CompetitionStage.ROUND_ROBIN) return
+
+      const groupName = match.homePlaceholder || 'Unknown'
+      if (!matchesByGroup.has(groupName)) {
+        matchesByGroup.set(groupName, [])
+      }
+      matchesByGroup.get(groupName)!.push(match)
+    })
+
+    const groups: Array<{
+      groupName: string
+      isComplete: boolean
+      matchesPlayed: number
+      matchesTotal: number
+      standings: TeamStanding[]
+    }> = []
+
+    for (const [groupName, matches] of matchesByGroup.entries()) {
+      // Calculate stats for each team in this group
+      const teamIds = new Set<string>()
+      matches.forEach((m) => {
+        if (m.homeClubId) teamIds.add(m.homeClubId)
+        if (m.awayClubId) teamIds.add(m.awayClubId)
+      })
+
+      const stats = new Map<string, TeamStanding>()
+      teamIds.forEach((clubId) => {
+        const club = competition.teams.find((c) => c.id === clubId)
+        if (club) {
+          stats.set(clubId, {
+            clubId: club.id,
+            clubName: club.name,
+            clubLogo: club.logo || undefined,
+            played: 0,
+            won: 0,
+            drawn: 0,
+            lost: 0,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            goalDifference: 0,
+            points: 0,
+            position: 0,
+            zone: null,
+          })
+        }
+      })
+
+      let matchesPlayed = 0
+      const matchesTotal = matches.length
+
+      matches.forEach((match) => {
+        if (match.status === MatchStatus.FINALIZADO || match.status === MatchStatus.CANCELADO) {
+          matchesPlayed++
+        }
+
+        if (match.status !== MatchStatus.FINALIZADO) return
+        if (!match.homeClubId || !match.awayClubId) return
+
+        const homeStats = stats.get(match.homeClubId)
+        const awayStats = stats.get(match.awayClubId)
+        if (!homeStats || !awayStats) return
+
+        homeStats.played++
+        awayStats.played++
+        homeStats.goalsFor += match.homeClubGoals
+        homeStats.goalsAgainst += match.awayClubGoals
+        awayStats.goalsFor += match.awayClubGoals
+        awayStats.goalsAgainst += match.homeClubGoals
+
+        if (match.homeClubGoals > match.awayClubGoals) {
+          homeStats.won++
+          homeStats.points += 3
+          awayStats.lost++
+        } else if (match.homeClubGoals < match.awayClubGoals) {
+          awayStats.won++
+          awayStats.points += 3
+          homeStats.lost++
+        } else {
+          homeStats.drawn++
+          awayStats.drawn++
+          homeStats.points++
+          awayStats.points++
+        }
+      })
+
+      // Calculate goal difference and sort
+      const standings = Array.from(stats.values()).map((stat) => ({
+        ...stat,
+        goalDifference: stat.goalsFor - stat.goalsAgainst,
+      }))
+
+      standings.sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points
+        if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference
+        return b.goalsFor - a.goalsFor
+      })
+
+      standings.forEach((standing, index) => {
+        standing.position = index + 1
+        // Mark zones based on qualification
+        if (index < qualifyToGold) {
+          standing.zone = 'promotion' // Goes to Copa de Oro
+        } else if (index < qualifyToGold + qualifyToSilver) {
+          standing.zone = 'playoff' // Goes to Copa de Plata
+        }
+      })
+
+      const isComplete = matchesPlayed === matchesTotal && matchesTotal > 0
+
+      groups.push({
+        groupName,
+        isComplete,
+        matchesPlayed,
+        matchesTotal,
+        standings,
+      })
+    }
+
+    // Sort groups by name
+    groups.sort((a, b) => a.groupName.localeCompare(b.groupName))
+
+    const allGroupsComplete = groups.length > 0 && groups.every((g) => g.isComplete)
+
+    return {
+      competitionId: competition.id,
+      competitionName: competition.name,
+      allGroupsComplete,
+      groups,
+      qualifyToGold,
+      qualifyToSilver,
+    }
+  }
+
+  /**
+   * Obtiene los equipos clasificados de una Copa Kempes para generar Copa Oro y Copa Plata
+   * Devuelve los equipos agrupados por destino (oro/plata) y ordenados por posición
+   */
+  async getKempesCupQualifiedTeams(competitionId: string): Promise<{
+    competitionId: string
+    isReady: boolean
+    goldTeams: Array<{ clubId: string; clubName: string; clubLogo?: string; groupName: string; position: number }>
+    silverTeams: Array<{ clubId: string; clubName: string; clubLogo?: string; groupName: string; position: number }>
+  }> {
+    const groupsStatus = await this.getKempesCupGroupsStatus(competitionId)
+
+    if (!groupsStatus.allGroupsComplete) {
+      return {
+        competitionId,
+        isReady: false,
+        goldTeams: [],
+        silverTeams: [],
+      }
+    }
+
+    const goldTeams: Array<{ clubId: string; clubName: string; clubLogo?: string; groupName: string; position: number }> = []
+    const silverTeams: Array<{ clubId: string; clubName: string; clubLogo?: string; groupName: string; position: number }> = []
+
+    for (const group of groupsStatus.groups) {
+      group.standings.forEach((standing, index) => {
+        const teamInfo = {
+          clubId: standing.clubId,
+          clubName: standing.clubName,
+          clubLogo: standing.clubLogo,
+          groupName: group.groupName,
+          position: standing.position,
+        }
+
+        if (index < groupsStatus.qualifyToGold) {
+          goldTeams.push(teamInfo)
+        } else if (index < groupsStatus.qualifyToGold + groupsStatus.qualifyToSilver) {
+          silverTeams.push(teamInfo)
+        }
+      })
+    }
+
+    // Sort by position (1ros first, then 2dos, then 3ros, etc.)
+    goldTeams.sort((a, b) => a.position - b.position)
+    silverTeams.sort((a, b) => a.position - b.position)
+
+    return {
+      competitionId,
+      isReady: true,
+      goldTeams,
+      silverTeams,
     }
   }
 
