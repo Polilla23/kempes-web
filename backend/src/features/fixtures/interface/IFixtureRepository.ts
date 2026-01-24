@@ -2,7 +2,7 @@ import { Match, Prisma } from "@prisma/client";
 
 export interface IFixtureRepository {
     createMatch(data: Prisma.MatchCreateInput): Promise<Match>;
-    createManyMatches(data: Prisma.MatchCreateInput[]): Promise<number>;
+    createManyMatches(data: Prisma.MatchCreateInput[]): Promise<Match[]>;
 
     findAll(): Promise<Match[]>;
     findById(id: string): Promise<Match | null>;

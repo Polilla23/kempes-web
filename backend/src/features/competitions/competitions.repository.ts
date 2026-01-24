@@ -1,7 +1,7 @@
 import { Competition, CompetitionStage, PrismaClient, Prisma } from '@prisma/client'
 import { ICompetitionRepository } from '@/features/competitions/interface/ICompetitionRepository'
-import { isKempesCupRules, isLeaguesRules } from '@/features/utils/jsonTypeChecker'
-import type { KempesCupRules, LeaguesRules } from '@/types'
+import { isKempesCupRules, isLeaguesRules, isCindorCupRules, isSuperCupRules } from '@/features/utils/jsonTypeChecker'
+import type { KempesCupRules, LeaguesRules, CindorCupRules, SuperCupRules, CompetitionRules } from '@/types'
 
 export class CompetitionRepository implements ICompetitionRepository {
   private prisma: PrismaClient
@@ -9,7 +9,7 @@ export class CompetitionRepository implements ICompetitionRepository {
     this.prisma = prisma
   }
 
-  async save(config: LeaguesRules | KempesCupRules): Promise<Competition[]> {
+  async save(config: CompetitionRules): Promise<Competition[]> {
     if (isLeaguesRules(config)) {
       // Para leagues, creamos múltiples competencias y retornamos todas
       const createdCompetitions: Competition[] = []
@@ -43,11 +43,39 @@ export class CompetitionRepository implements ICompetitionRepository {
         },
       })
       return [competition]
+    } else if (isCindorCupRules(config)) {
+      // Copa Cindor: Eliminación directa para Kempesitas
+      const cindorConfig = config as CindorCupRules
+      const competition = await this.prisma.competition.create({
+        data: {
+          name: `Copa Cindor - T${cindorConfig.activeSeason.number}`,
+          system: CompetitionStage.KNOCKOUT,
+          competitionTypeId: cindorConfig.competitionType.id,
+          seasonId: cindorConfig.activeSeason.id,
+          isActive: true,
+          rules: cindorConfig as unknown as Prisma.InputJsonValue,
+        },
+      })
+      return [competition]
+    } else if (isSuperCupRules(config)) {
+      // Supercopa: Eliminación directa con 6 equipos (mixta - sin categoría)
+      const superConfig = config as SuperCupRules
+      const competition = await this.prisma.competition.create({
+        data: {
+          name: `Supercopa - T${superConfig.activeSeason.number}`,
+          system: CompetitionStage.KNOCKOUT,
+          competitionTypeId: superConfig.competitionType.id,
+          seasonId: superConfig.activeSeason.id,
+          isActive: true,
+          rules: superConfig as unknown as Prisma.InputJsonValue,
+        },
+      })
+      return [competition]
     } else {
       throw new Error('Invalid competition configuration')
     }
   }
-  async updateOneById(id: string, config: LeaguesRules | KempesCupRules): Promise<Competition> {
+  async updateOneById(id: string, config: CompetitionRules): Promise<Competition> {
     const updatedCompetition = await this.prisma.competition.update({
       where: { id },
       data: { rules: config as unknown as Prisma.InputJsonValue },

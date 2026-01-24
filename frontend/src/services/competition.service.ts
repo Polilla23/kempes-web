@@ -39,10 +39,23 @@ export interface CompetitionResponse {
   data: Competition
 }
 
+// Response type for creating competitions with fixtures
+export interface CreateCompetitionWithFixturesResponse {
+  competitions: Competition[]
+  fixtures: {
+    competitionId: string
+    competitionName: string
+    matchesCreated: number
+    totalMatches: number
+  }[]
+}
+
 class CompetitionService {
   static async getCompetitions(): Promise<CompetitionsResponse> {
     try {
       const response = await api.get<CompetitionsResponse>('/api/v1/competitions')
+      console.log('🔍 getCompetitions - axios response.data:', response.data)
+      console.log('🔍 getCompetitions - competitions array:', (response.data as any)?.data)
       return response.data || { data: [] }
     } catch (error: any) {
       console.error('Error fetching competitions:', error)
@@ -60,11 +73,13 @@ class CompetitionService {
     }
   }
 
-  static async createCompetition(data: CompetitionFormData): Promise<CompetitionResponse> {
+  static async createCompetition(data: any): Promise<CreateCompetitionWithFixturesResponse> {
     try {
-      const response = await api.post<CompetitionResponse>('/api/v1/competitions', data)
-      return response.data || { data: {} as Competition }
+      const response = await api.post<{ data: CreateCompetitionWithFixturesResponse }>('/api/v1/competitions', data)
+      console.log('Raw API response:', response.data)
+      return response.data?.data || { competitions: [], fixtures: [] }
     } catch (error: any) {
+      console.error('API error:', error?.response?.data || error.message)
       throw new Error(error?.response?.data?.message || error.message || 'Error creating competition')
     }
   }

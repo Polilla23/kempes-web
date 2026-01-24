@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -251,6 +252,7 @@ enum KnockoutRound {
 enum CompetitionCategory {
   SENIOR    // For "Mayores" competitions
   KEMPESITA // For "Kempesitas" competitions
+  MIXED     // For mixed competitions like Supercopa (both Mayores and Kempesitas)
 }
 
 enum CompetitionName {

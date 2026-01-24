@@ -128,7 +128,7 @@ export type BottomLeagueRules = {
   }
 }
 
-export type CompetitionRules = LeaguesRules | KempesCupRules
+export type CompetitionRules = LeaguesRules | KempesCupRules | CindorCupRules | SuperCupRules
 
 export type LeaguesRules = {
   type: 'LEAGUES'
@@ -145,7 +145,7 @@ export type CupGroup = {
 }
 
 export type KempesCupRules = {
-  type: 'CUP'
+  type: 'KEMPES_CUP' | 'CUP'  // 'CUP' for backward compatibility with existing data
   activeSeason: Season
   competitionCategory: competitionCategory
   competitionType: CompetitionType
@@ -154,6 +154,25 @@ export type KempesCupRules = {
   qualifyToGold: number
   qualifyToSilver: number
   groups?: CupGroup[]  // Grupos con equipos asignados (opcional, se llena en paso 2)
+}
+
+// Copa Cindor: Eliminación directa para todos los Kempesitas
+export type CindorCupRules = {
+  type: 'CINDOR_CUP'
+  activeSeason: Season
+  competitionCategory: 'KEMPESITA'  // Siempre Kempesita
+  competitionType: CompetitionType
+  teamIds: string[]  // IDs de los equipos participantes (todos los Kempesitas activos)
+}
+
+// Supercopa: Eliminación directa con 6 equipos elegidos por el admin
+// La Supercopa NO tiene categoría porque participan Mayores y Kempesitas juntos
+export type SuperCupRules = {
+  type: 'SUPER_CUP'
+  activeSeason: Season
+  // Sin competitionCategory - la Supercopa es mixta
+  competitionType: CompetitionType
+  teamIds: string[]  // Exactamente 6 equipos elegidos por el admin
 }
 
 // ============================================

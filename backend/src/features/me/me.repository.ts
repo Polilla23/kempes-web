@@ -153,6 +153,15 @@ export class MyAccountRepository {
         competition: {
           seasonId: activeSeason.id,
         },
+        // Excluir partidos BYE (tienen awayClubId null o homePlaceholder/awayPlaceholder es 'BYE')
+        homeClubId: { not: null },
+        awayClubId: { not: null },
+        NOT: {
+          OR: [
+            { homePlaceholder: 'BYE' },
+            { awayPlaceholder: 'BYE' },
+          ],
+        },
       },
       include: {
         homeClub: {

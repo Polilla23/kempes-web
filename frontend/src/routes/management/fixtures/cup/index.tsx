@@ -1,146 +1,82 @@
-import { useState, useCallback } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { InteractiveStepper, type StepItem } from '@/components/ui/interactive-stepper'
-import { Step1CreateCup } from './_components/step1-create-cup'
-import { Step2TeamAssignmentCup } from './_components/step2-team-assignment-cup'
-import { Step3PreviewCup } from './_components/step3-preview-cup'
-import type { CupWizardState } from '@/types/fixture'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Trophy, Users, Crown } from 'lucide-react'
 
 export const Route = createFileRoute('/management/fixtures/cup/')({
-  component: CupFixtureWizard,
+  component: CupTypeSelector,
 })
 
-function CupFixtureWizard() {
+function CupTypeSelector() {
   const { t } = useTranslation('fixtures')
-  const [wizardState, setWizardState] = useState<CupWizardState>({
-    currentStep: 1,
-    numGroups: 4,
-    teamsPerGroup: 4,
-    qualifyToGold: 2,
-    qualifyToSilver: 1,
-    groupAssignments: {},
-    availableTeams: [],
-    isValid: false,
-  })
+  const navigate = useNavigate()
 
-  const steps: StepItem[] = [
+  const cupTypes = [
     {
-      id: 1,
-      label: t('cup.title'),
-      description: t('cup.description'),
+      id: 'kempes',
+      title: 'Copa Kempes',
+      description: 'Fase de grupos para equipos Mayores. Los clasificados pasan a Copa de Oro y Copa de Plata.',
+      icon: Trophy,
+      category: 'SENIOR',
+      route: '/management/fixtures/cup/kempes',
     },
     {
-      id: 2,
-      label: t('wizard.steps.assignTeams.label'),
-      description: 'Asignar equipos a cada grupo',
+      id: 'cindor',
+      title: 'Copa Cindor',
+      description: 'Eliminacion directa para todos los equipos Kempesitas activos.',
+      icon: Users,
+      category: 'KEMPESITA',
+      route: '/management/fixtures/cup/cindor',
     },
     {
-      id: 3,
-      label: t('wizard.steps.preview.label'),
-      description: t('wizard.steps.preview.description'),
+      id: 'supercopa',
+      title: 'Supercopa',
+      description: 'Eliminacion directa con 6 equipos seleccionados manualmente (Mayores o Kempesitas).',
+      icon: Crown,
+      category: 'AMBAS',
+      route: '/management/fixtures/cup/supercopa',
     },
   ]
 
-  const handleNext = () => {
-    if (validateCurrentStep()) {
-      setWizardState((prev) => ({
-        ...prev,
-        currentStep: (prev.currentStep + 1) as 1 | 2 | 3,
-      }))
-    }
-  }
-
-  const handleBack = () => {
-    setWizardState((prev) => ({
-      ...prev,
-      currentStep: (prev.currentStep - 1) as 1 | 2 | 3,
-    }))
-  }
-
-  const handleStepClick = (stepId: number) => {
-    if (stepId < wizardState.currentStep) {
-      setWizardState((prev) => ({
-        ...prev,
-        currentStep: stepId as 1 | 2 | 3,
-      }))
-    }
-  }
-
-  // useCallback para evitar que se recree la función en cada render
-  // Esto previene re-renders innecesarios de los componentes hijos
-  const handleStateChange = useCallback((updates: Partial<CupWizardState>) => {
-    setWizardState((prev) => ({
-      ...prev,
-      ...updates,
-    }))
-  }, [])
-
-  const validateCurrentStep = (): boolean => {
-    switch (wizardState.currentStep) {
-      case 1: {
-        return (
-          wizardState.numGroups >= 2 &&
-          wizardState.teamsPerGroup >= 2 &&
-          wizardState.qualifyToGold + wizardState.qualifyToSilver > 0
-        )
-      }
-      case 2: {
-        const totalTeamsNeeded = wizardState.numGroups * wizardState.teamsPerGroup
-        const totalAssigned = Object.values(wizardState.groupAssignments).reduce(
-          (sum, teams) => sum + teams.length,
-          0
-        )
-        return totalAssigned === totalTeamsNeeded
-      }
-      default:
-        return true
-    }
-  }
-
-  const renderCurrentStep = () => {
-    switch (wizardState.currentStep) {
-      case 1:
-        return (
-          <Step1CreateCup
-            key="step1"
-            wizardState={wizardState}
-            onStateChange={handleStateChange}
-            onNext={handleNext}
-          />
-        )
-      case 2:
-        return (
-          <Step2TeamAssignmentCup
-            key="step2"
-            wizardState={wizardState}
-            onStateChange={handleStateChange}
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        )
-      case 3:
-        return <Step3PreviewCup key="step3" wizardState={wizardState} onBack={handleBack} />
-      default:
-        return null
-    }
-  }
-
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t('wizard.titleCup')}</h1>
-        <p className="text-muted-foreground">{t('wizard.subtitleCup')}</p>
+        <h1 className="text-3xl font-bold mb-2">Crear Copa</h1>
+        <p className="text-muted-foreground">Selecciona el tipo de copa que deseas crear</p>
       </div>
 
-      <Card className="p-6 mb-8">
-        <InteractiveStepper steps={steps} currentStep={wizardState.currentStep} onStepClick={handleStepClick} />
-      </Card>
-
-      <div className="mt-8">{renderCurrentStep()}</div>
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+        {cupTypes.map((cup) => (
+          <Card
+            key={cup.id}
+            className="cursor-pointer hover:border-primary transition-colors"
+            onClick={() => navigate({ to: cup.route })}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <cup.icon className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">{cup.title}</CardTitle>
+                  <span className="text-xs text-muted-foreground">
+                    {cup.category === 'AMBAS' ? 'Mayores / Kempesitas' : cup.category === 'SENIOR' ? 'Mayores' : 'Kempesitas'}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-sm">{cup.description}</CardDescription>
+              <Button variant="outline" className="w-full mt-4">
+                Crear {cup.title}
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }
 
-export default CupFixtureWizard
+export default CupTypeSelector

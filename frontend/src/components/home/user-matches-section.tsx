@@ -24,6 +24,7 @@ function MatchRow({ match }: { match: UserMatch }) {
   const { t } = useTranslation('home')
 
   const opponent = match.isUserHome ? match.awayClub : match.homeClub
+  const opponentName = opponent?.name || 'TBD'
   const userGoals = match.isUserHome ? match.homeClubGoals : match.awayClubGoals
   const opponentGoals = match.isUserHome ? match.awayClubGoals : match.homeClubGoals
 
@@ -40,16 +41,16 @@ function MatchRow({ match }: { match: UserMatch }) {
       {/* Opponent */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
         <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center shrink-0 border border-border">
-          {opponent.logo ? (
-            <img src={opponent.logo} alt={opponent.name} className="w-7 h-7 object-contain" />
+          {opponent?.logo ? (
+            <img src={opponent.logo} alt={opponentName} className="w-7 h-7 object-contain" />
           ) : (
             <span className="text-[10px] font-bold text-muted-foreground">
-              {opponent.name.slice(0, 3).toUpperCase()}
+              {opponentName.slice(0, 3).toUpperCase()}
             </span>
           )}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{opponent.name}</p>
+          <p className="text-sm font-medium text-foreground truncate">{opponentName}</p>
           <p className="text-xs text-muted-foreground truncate">{match.competition.name}</p>
         </div>
       </div>
