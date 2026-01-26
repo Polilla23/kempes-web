@@ -1,4 +1,9 @@
 import api from './api'
+import type {
+  EmptyBracketStructure,
+  BracketTeamPlacement,
+  CreateCompetitionWithFixturesResponse as BracketCompetitionResponse,
+} from '@/types/bracket-editor'
 
 export interface CompetitionTypeInfo {
   id: string
@@ -132,6 +137,62 @@ class CompetitionService {
       return response.data || { data: [] }
     } catch (error: any) {
       throw new Error(error?.response?.data?.message || error.message || 'Error creating cup')
+    }
+  }
+
+  // ============================================
+  // BRACKET EDITOR METHODS (Supercopa & Cindor)
+  // ============================================
+
+  /**
+   * Obtiene la estructura vacía del bracket para mostrar en el editor
+   */
+  static async getBracketStructure(teamCount: number): Promise<EmptyBracketStructure> {
+    try {
+      const response = await api.get<{ data: EmptyBracketStructure }>(
+        `/api/v1/competitions/bracket-structure?teamCount=${teamCount}`
+      )
+      return response.data?.data || response.data as unknown as EmptyBracketStructure
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error getting bracket structure')
+    }
+  }
+
+  /**
+   * Crea una Supercopa con posicionamiento manual de equipos
+   */
+  static async createSupercup(data: {
+    seasonId: string
+    competitionTypeId: string
+    teamPlacements: BracketTeamPlacement[]
+  }): Promise<BracketCompetitionResponse> {
+    try {
+      const response = await api.post<{ data: BracketCompetitionResponse }>(
+        '/api/v1/competitions/supercup',
+        data
+      )
+      return response.data?.data || response.data as unknown as BracketCompetitionResponse
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error creating Supercup')
+    }
+  }
+
+  /**
+   * Crea una Copa Cindor con posicionamiento manual de equipos
+   */
+  static async createCindor(data: {
+    seasonId: string
+    competitionTypeId: string
+    teamPlacements: BracketTeamPlacement[]
+  }): Promise<BracketCompetitionResponse> {
+    try {
+      const response = await api.post<{ data: BracketCompetitionResponse }>(
+        '/api/v1/competitions/cindor',
+        data
+      )
+      return response.data?.data || response.data as unknown as BracketCompetitionResponse
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error creating Copa Cindor')
     }
   }
 }

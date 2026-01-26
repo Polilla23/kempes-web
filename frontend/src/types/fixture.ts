@@ -1,6 +1,15 @@
 // Tipos para el sistema de fixtures (ligas y copas)
 // Alineados con los tipos del backend
 
+// Rondas de knockout (debe coincidir con el enum del backend)
+export type KnockoutRound =
+  | 'ROUND_OF_64'
+  | 'ROUND_OF_32'
+  | 'ROUND_OF_16'
+  | 'QUARTERFINAL'
+  | 'SEMIFINAL'
+  | 'FINAL'
+
 export interface Competition {
   id: string
   name: string

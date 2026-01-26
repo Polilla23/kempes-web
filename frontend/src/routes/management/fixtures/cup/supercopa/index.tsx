@@ -3,31 +3,36 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Loader2, AlertCircle, CheckCircle, Crown, X } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle, Crown, ArrowRight, ArrowLeft } from 'lucide-react'
 import { ClubService } from '@/services/club.service'
 import { SeasonService } from '@/services/season.service'
 import { CompetitionTypeService } from '@/services/competition-type.service'
 import CompetitionService from '@/services/competition.service'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { BracketEditorContainer } from '../_components/bracket-editor'
 import type { Club, Season } from '@/types'
+import type { EmptyBracketStructure, AvailableTeam, BracketTeamPlacement } from '@/types/bracket-editor'
 
 export const Route = createFileRoute('/management/fixtures/cup/supercopa/')({
   component: SupercupWizard,
 })
 
+type WizardStep = 'select-teams' | 'place-teams' | 'success'
+
 function SupercupWizard() {
   const navigate = useNavigate()
+  const [step, setStep] = useState<WizardStep>('select-teams')
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   const [clubs, setClubs] = useState<Club[]>([])
   const [activeSeason, setActiveSeason] = useState<Season | null>(null)
   const [superTypeId, setSuperTypeId] = useState<string | null>(null)
 
-  const [selectedTeams, setSelectedTeams] = useState<Club[]>([])
+  const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set())
+  const [bracketStructure, setBracketStructure] = useState<EmptyBracketStructure | null>(null)
 
   useEffect(() => {
     loadData()
@@ -70,31 +75,53 @@ function SupercupWizard() {
     }
   }
 
-  const handleSelectTeam = (clubId: string) => {
-    const club = clubs.find((c) => c.id === clubId)
-    if (!club) return
-
-    if (selectedTeams.length >= 6) {
-      setError('Ya tienes 6 equipos seleccionados')
-      return
-    }
-
-    if (selectedTeams.find((t) => t.id === clubId)) {
-      setError('Este equipo ya esta seleccionado')
-      return
-    }
-
-    setSelectedTeams([...selectedTeams, club])
-    setError(null)
+  const handleToggleTeam = (clubId: string) => {
+    setSelectedTeamIds((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(clubId)) {
+        newSet.delete(clubId)
+      } else {
+        if (newSet.size >= 6) {
+          setError('Solo puedes seleccionar 6 equipos')
+          return prev
+        }
+        newSet.add(clubId)
+      }
+      setError(null)
+      return newSet
+    })
   }
 
-  const handleRemoveTeam = (clubId: string) => {
-    setSelectedTeams(selectedTeams.filter((t) => t.id !== clubId))
-  }
-
-  const handleCreate = async () => {
-    if (!activeSeason || !superTypeId || selectedTeams.length !== 6) {
+  const handleContinueToPlacement = async () => {
+    if (selectedTeamIds.size !== 6) {
       setError('Debes seleccionar exactamente 6 equipos')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Obtener estructura del bracket desde el backend
+      const structure = await CompetitionService.getBracketStructure(6)
+      setBracketStructure(structure)
+      setStep('place-teams')
+    } catch (err) {
+      console.error('Error getting bracket structure:', err)
+      setError('Error al obtener la estructura del bracket')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBackToSelection = () => {
+    setStep('select-teams')
+    setBracketStructure(null)
+  }
+
+  const handleConfirmPlacements = async (placements: BracketTeamPlacement[]) => {
+    if (!activeSeason || !superTypeId) {
+      setError('Datos de temporada o tipo de competicion no disponibles')
       return
     }
 
@@ -102,24 +129,13 @@ function SupercupWizard() {
       setCreating(true)
       setError(null)
 
-      // Crear la competicion (los fixtures se generan automaticamente en el backend)
-      const competitionRules = {
-        type: 'SUPER_CUP',
-        activeSeason: activeSeason,
-        // Sin competitionCategory - la Supercopa es mixta (Mayores + Kempesitas)
-        competitionType: { id: superTypeId, name: 'SUPER_CUP', format: 'CUP' },
-        teamIds: selectedTeams.map((c) => c.id),
-      }
+      await CompetitionService.createSupercup({
+        seasonId: activeSeason.id,
+        competitionTypeId: superTypeId,
+        teamPlacements: placements,
+      })
 
-      const competitionResponse = await CompetitionService.createCompetition(competitionRules)
-      console.log('Competition response:', competitionResponse)
-
-      if (!competitionResponse.competitions || competitionResponse.competitions.length === 0) {
-        console.error('Empty competitions response:', competitionResponse)
-        throw new Error('No se pudo crear la competicion')
-      }
-
-      setSuccess(true)
+      setStep('success')
     } catch (err) {
       console.error('Error creating Supercopa:', err)
       setError(err instanceof Error ? err.message : 'Error al crear la Supercopa')
@@ -128,11 +144,19 @@ function SupercupWizard() {
     }
   }
 
-  const availableTeams = clubs.filter((c) => !selectedTeams.find((t) => t.id === c.id))
+  // Convertir clubs seleccionados a AvailableTeam
+  const availableTeams: AvailableTeam[] = clubs
+    .filter((c) => selectedTeamIds.has(c.id))
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      logo: c.logo || null,
+      isAssigned: false,
+    }))
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-6xl">
         <Card>
           <CardContent className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -143,14 +167,15 @@ function SupercupWizard() {
     )
   }
 
-  if (success) {
+  // Pantalla de exito
+  if (step === 'success') {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Supercopa creada exitosamente</AlertTitle>
           <AlertDescription className="text-green-700">
-            Se ha creado la Supercopa con 6 equipos participantes.
+            Se ha creado la Supercopa con 6 equipos participantes. Los brackets se han generado correctamente.
           </AlertDescription>
         </Alert>
         <div className="mt-6 flex gap-4">
@@ -163,12 +188,47 @@ function SupercupWizard() {
     )
   }
 
+  // Paso 2: Posicionar equipos en el bracket
+  if (step === 'place-teams' && bracketStructure) {
+    return (
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={handleBackToSelection} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver a seleccion
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Supercopa - Posicionar Equipos</h1>
+          <p className="text-muted-foreground">
+            Arrastra los equipos a las posiciones del bracket. Los BYEs estan predefinidos (1 arriba, 1 abajo).
+          </p>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <BracketEditorContainer
+          structure={bracketStructure}
+          teams={availableTeams}
+          onConfirm={handleConfirmPlacements}
+          onCancel={handleBackToSelection}
+          isSubmitting={creating}
+        />
+      </div>
+    )
+  }
+
+  // Paso 1: Seleccionar equipos
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Supercopa</h1>
         <p className="text-muted-foreground">
-          Eliminacion directa con 6 equipos seleccionados manualmente. Participan Mayores y Kempesitas juntos.
+          Paso 1: Selecciona los 6 equipos que participaran en la Supercopa (Mayores + Kempesitas).
         </p>
       </div>
 
@@ -186,58 +246,39 @@ function SupercupWizard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="h-5 w-5" />
-              Seleccionar Equipos ({selectedTeams.length}/6)
+              Seleccionar Equipos ({selectedTeamIds.size}/6)
             </CardTitle>
-            <CardDescription>Elige exactamente 6 equipos para la Supercopa</CardDescription>
+            <CardDescription>Marca los 6 equipos que participaran en la Supercopa</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Equipos seleccionados */}
-            <div>
-              <Label className="text-sm font-medium">Equipos seleccionados:</Label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {selectedTeams.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No hay equipos seleccionados</p>
-                ) : (
-                  selectedTeams.map((club) => (
-                    <div
-                      key={club.id}
-                      className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full"
-                    >
-                      {club.logo && <img src={club.logo} alt={club.name} className="h-5 w-5 object-contain" />}
-                      <span className="text-sm">{club.name}</span>
-                      <button
-                        onClick={() => handleRemoveTeam(club.id)}
-                        className="ml-1 text-muted-foreground hover:text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {clubs.map((club) => {
+                const isSelected = selectedTeamIds.has(club.id)
+                const isDisabled = !isSelected && selectedTeamIds.size >= 6
 
-            {/* Selector de equipo */}
-            {selectedTeams.length < 6 && (
-              <div>
-                <Label className="text-sm font-medium">Agregar equipo:</Label>
-                <Select onValueChange={handleSelectTeam}>
-                  <SelectTrigger className="mt-2">
-                    <SelectValue placeholder="Selecciona un equipo..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableTeams.map((club) => (
-                      <SelectItem key={club.id} value={club.id}>
-                        <div className="flex items-center gap-2">
-                          {club.logo && <img src={club.logo} alt={club.name} className="h-5 w-5 object-contain" />}
-                          <span>{club.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                return (
+                  <div
+                    key={club.id}
+                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${
+                      isSelected
+                        ? 'bg-primary/10 border-primary'
+                        : isDisabled
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'hover:bg-accent'
+                    }`}
+                    onClick={() => !isDisabled && handleToggleTeam(club.id)}
+                  >
+                    <Checkbox
+                      checked={isSelected}
+                      disabled={isDisabled}
+                      onCheckedChange={() => handleToggleTeam(club.id)}
+                    />
+                    {club.logo && <img src={club.logo} alt={club.name} className="h-8 w-8 object-contain" />}
+                    <Label className="cursor-pointer flex-1">{club.name}</Label>
+                  </div>
+                )
+              })}
+            </div>
           </CardContent>
         </Card>
 
@@ -251,28 +292,22 @@ function SupercupWizard() {
               <strong>Temporada:</strong> {activeSeason?.number}
             </p>
             <p className="text-sm">
-              <strong>Equipos:</strong> {selectedTeams.length}/6
+              <strong>Equipos seleccionados:</strong> {selectedTeamIds.size}/6
             </p>
             <p className="text-sm">
-              <strong>Formato:</strong> Eliminacion directa (Mixta: Mayores + Kempesitas)
+              <strong>Formato:</strong> Eliminacion directa (Bracket de 8 con 2 BYEs)
             </p>
           </CardContent>
         </Card>
 
         {/* Botones de accion */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 justify-end">
           <Button variant="outline" onClick={() => navigate({ to: '/management/fixtures/cup' })}>
             Cancelar
           </Button>
-          <Button onClick={handleCreate} disabled={creating || selectedTeams.length !== 6}>
-            {creating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creando...
-              </>
-            ) : (
-              'Crear Supercopa'
-            )}
+          <Button onClick={handleContinueToPlacement} disabled={selectedTeamIds.size !== 6}>
+            Continuar a Posicionamiento
+            <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </div>

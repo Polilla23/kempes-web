@@ -6,7 +6,7 @@ import { ICompetitionRepository } from '@/features/competitions/interface/ICompe
 import { ICompetitionTypeRepository } from '@/features/competition-types/interface/ICompetitionTypeRepository'
 import { FixtureRepository } from '@/features/fixtures/fixtures.repository'
 import { validateCompetitionRules, isLeaguesRules, isKempesCupRules, isCindorCupRules, isSuperCupRules } from '@/features/utils/jsonTypeChecker'
-import { generateLeagueFixture, generateFullCupFixture, generateDirectKnockoutBracket } from '@/features/utils/generateFixture'
+import { generateLeagueFixture, generateFullCupFixture, generateDirectKnockoutBracket, generateEmptyBracketStructure, BracketTeamPlacement, EmptyBracketStructure } from '@/features/utils/generateFixture'
 import { KempesCupRules, LeaguesRules, CompetitionRules, CindorCupRules, SuperCupRules } from '@/types'
 import { Competition, Match, Prisma, PrismaClient, CompetitionStage, CompetitionName } from '@prisma/client'
 
@@ -440,15 +440,131 @@ export class CompetitionService {
   }
 
   /**
+   * Genera la estructura vacía del bracket para mostrar en el frontend
+   * No crea nada en la base de datos
+   */
+  getBracketStructure(teamCount: number): EmptyBracketStructure {
+    return generateEmptyBracketStructure(teamCount)
+  }
+
+  /**
+   * Crea una Supercopa con posicionamiento manual de equipos
+   */
+  async createSupercupWithPlacements(config: {
+    seasonId: string
+    competitionTypeId: string
+    teamPlacements: BracketTeamPlacement[]
+  }) {
+    // Extraer team IDs de los placements
+    const teamIds = [...new Set(config.teamPlacements.map(p => p.teamId))]
+
+    // Validar que sean exactamente 6 equipos
+    if (teamIds.length !== 6) {
+      throw new Error(`Supercopa requires exactly 6 teams, got ${teamIds.length}`)
+    }
+
+    const season = await this.prisma.season.findUnique({ where: { id: config.seasonId } })
+    if (!season) {
+      throw new Error('Season not found')
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Crear competición
+      const competition = await tx.competition.create({
+        data: {
+          name: `Supercopa - T${season.number}`,
+          system: CompetitionStage.KNOCKOUT,
+          competitionTypeId: config.competitionTypeId,
+          seasonId: config.seasonId,
+          isActive: true,
+          rules: {
+            type: 'SUPER_CUP',
+            teamCount: 6,
+            teamPlacements: config.teamPlacements,
+          } as unknown as Prisma.InputJsonValue,
+        },
+      })
+
+      // Generar fixtures con placements manuales
+      const createdMatches = await this.createDirectKnockoutMatchesInTransaction(
+        tx,
+        competition.id,
+        teamIds,
+        config.teamPlacements
+      )
+
+      return {
+        success: true,
+        competitions: [competition],
+        fixtures: [{ competition, matchesCreated: createdMatches.length, matches: createdMatches }],
+      }
+    }, { timeout: 60000 })
+
+    return result
+  }
+
+  /**
+   * Crea una Copa Cindor con posicionamiento manual de equipos
+   */
+  async createCindorWithPlacements(config: {
+    seasonId: string
+    competitionTypeId: string
+    teamPlacements: BracketTeamPlacement[]
+  }) {
+    // Extraer team IDs de los placements
+    const teamIds = [...new Set(config.teamPlacements.map(p => p.teamId))]
+
+    const season = await this.prisma.season.findUnique({ where: { id: config.seasonId } })
+    if (!season) {
+      throw new Error('Season not found')
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Crear competición
+      const competition = await tx.competition.create({
+        data: {
+          name: `Copa Cindor - T${season.number}`,
+          system: CompetitionStage.KNOCKOUT,
+          competitionTypeId: config.competitionTypeId,
+          seasonId: config.seasonId,
+          isActive: true,
+          rules: {
+            type: 'CINDOR_CUP',
+            teamCount: teamIds.length,
+            teamPlacements: config.teamPlacements,
+          } as unknown as Prisma.InputJsonValue,
+        },
+      })
+
+      // Generar fixtures con placements manuales
+      const createdMatches = await this.createDirectKnockoutMatchesInTransaction(
+        tx,
+        competition.id,
+        teamIds,
+        config.teamPlacements
+      )
+
+      return {
+        success: true,
+        competitions: [competition],
+        fixtures: [{ competition, matchesCreated: createdMatches.length, matches: createdMatches }],
+      }
+    }, { timeout: 60000 })
+
+    return result
+  }
+
+  /**
    * Crea partidos de knockout directo dentro de una transacción
    * Maneja correctamente las conexiones entre rondas y los BYEs
    */
   private async createDirectKnockoutMatchesInTransaction(
     tx: Prisma.TransactionClient,
     competitionId: string,
-    teamIds: string[]
+    teamIds: string[],
+    teamPlacements?: BracketTeamPlacement[]
   ): Promise<Match[]> {
-    const bracketResult = generateDirectKnockoutBracket(competitionId, teamIds)
+    const bracketResult = generateDirectKnockoutBracket(competitionId, teamIds, teamPlacements)
     const { matchesByRound, roundOrder, startRoundIndex } = bracketResult
 
     // Map para guardar: round_position -> matchId (para linking)

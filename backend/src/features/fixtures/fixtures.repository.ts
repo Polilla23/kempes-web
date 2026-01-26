@@ -157,7 +157,7 @@ export class FixtureRepository implements IFixtureRepository {
           },
         },
       },
-      orderBy: [{ matchdayOrder: 'desc' }, { id: 'asc' }],
+      orderBy: [{ matchdayOrder: 'asc' }],
     })
   }
 

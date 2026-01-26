@@ -1,29 +1,34 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Loader2, AlertCircle, CheckCircle, Users } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle, Users, ArrowRight, ArrowLeft } from 'lucide-react'
 import { ClubService } from '@/services/club.service'
 import { SeasonService } from '@/services/season.service'
 import { CompetitionTypeService } from '@/services/competition-type.service'
 import CompetitionService from '@/services/competition.service'
+import { BracketEditorContainer } from '../_components/bracket-editor'
 import type { Club, Season } from '@/types'
+import type { EmptyBracketStructure, AvailableTeam, BracketTeamPlacement } from '@/types/bracket-editor'
 
 export const Route = createFileRoute('/management/fixtures/cup/cindor/')({
   component: CindorCupWizard,
 })
 
+type WizardStep = 'preview' | 'place-teams' | 'success'
+
 function CindorCupWizard() {
   const navigate = useNavigate()
+  const [step, setStep] = useState<WizardStep>('preview')
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
 
   const [clubs, setClubs] = useState<Club[]>([])
   const [activeSeason, setActiveSeason] = useState<Season | null>(null)
   const [cindorTypeId, setCindorTypeId] = useState<string | null>(null)
+  const [bracketStructure, setBracketStructure] = useState<EmptyBracketStructure | null>(null)
 
   useEffect(() => {
     loadData()
@@ -66,9 +71,59 @@ function CindorCupWizard() {
     }
   }
 
-  const handleCreate = async () => {
-    if (!activeSeason || !cindorTypeId || clubs.length < 2) {
-      setError('Faltan datos para crear la copa')
+  // Calcular info del bracket
+  const bracketInfo = useMemo(() => {
+    const teamCount = clubs.length
+    if (teamCount < 2) return null
+
+    let bracketSize = 2
+    while (bracketSize < teamCount) {
+      bracketSize *= 2
+    }
+    const byeCount = bracketSize - teamCount
+    const byesUpper = Math.ceil(byeCount / 2)
+    const byesLower = Math.floor(byeCount / 2)
+
+    return {
+      teamCount,
+      bracketSize,
+      byeCount,
+      byesUpper,
+      byesLower,
+      firstRoundMatches: bracketSize / 2,
+    }
+  }, [clubs.length])
+
+  const handleContinueToPlacement = async () => {
+    if (!bracketInfo || clubs.length < 2) {
+      setError('Se necesitan al menos 2 equipos')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Obtener estructura del bracket desde el backend
+      const structure = await CompetitionService.getBracketStructure(clubs.length)
+      setBracketStructure(structure)
+      setStep('place-teams')
+    } catch (err) {
+      console.error('Error getting bracket structure:', err)
+      setError('Error al obtener la estructura del bracket')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBackToPreview = () => {
+    setStep('preview')
+    setBracketStructure(null)
+  }
+
+  const handleConfirmPlacements = async (placements: BracketTeamPlacement[]) => {
+    if (!activeSeason || !cindorTypeId) {
+      setError('Datos de temporada o tipo de competicion no disponibles')
       return
     }
 
@@ -76,24 +131,13 @@ function CindorCupWizard() {
       setCreating(true)
       setError(null)
 
-      // Crear la competicion (los fixtures se generan automaticamente en el backend)
-      const competitionRules = {
-        type: 'CINDOR_CUP',
-        activeSeason: activeSeason,
-        competitionCategory: 'KEMPESITA',
-        competitionType: { id: cindorTypeId, name: 'CINDOR_CUP', format: 'CUP', category: 'KEMPESITA' },
-        teamIds: clubs.map((c) => c.id),
-      }
+      await CompetitionService.createCindor({
+        seasonId: activeSeason.id,
+        competitionTypeId: cindorTypeId,
+        teamPlacements: placements,
+      })
 
-      const competitionResponse = await CompetitionService.createCompetition(competitionRules)
-      console.log('Competition response:', competitionResponse)
-
-      if (!competitionResponse.competitions || competitionResponse.competitions.length === 0) {
-        console.error('Empty competitions response:', competitionResponse)
-        throw new Error('No se pudo crear la competicion')
-      }
-
-      setSuccess(true)
+      setStep('success')
     } catch (err) {
       console.error('Error creating Copa Cindor:', err)
       setError(err instanceof Error ? err.message : 'Error al crear la Copa Cindor')
@@ -102,9 +146,17 @@ function CindorCupWizard() {
     }
   }
 
+  // Convertir clubs a AvailableTeam
+  const availableTeams: AvailableTeam[] = clubs.map((c) => ({
+    id: c.id,
+    name: c.name,
+    logo: c.logo || null,
+    isAssigned: false,
+  }))
+
   if (loading) {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-6xl">
         <Card>
           <CardContent className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -115,14 +167,16 @@ function CindorCupWizard() {
     )
   }
 
-  if (success) {
+  // Pantalla de exito
+  if (step === 'success') {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Copa Cindor creada exitosamente</AlertTitle>
           <AlertDescription className="text-green-700">
-            Se ha creado la Copa Cindor con {clubs.length} equipos participantes.
+            Se ha creado la Copa Cindor con {clubs.length} equipos participantes. Los brackets se han generado
+            correctamente con distribucion balanceada de BYEs.
           </AlertDescription>
         </Alert>
         <div className="mt-6 flex gap-4">
@@ -135,6 +189,42 @@ function CindorCupWizard() {
     )
   }
 
+  // Paso 2: Posicionar equipos en el bracket
+  if (step === 'place-teams' && bracketStructure) {
+    return (
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={handleBackToPreview} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver al resumen
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">Copa Cindor - Posicionar Equipos</h1>
+          <p className="text-muted-foreground">
+            Arrastra los equipos a las posiciones del bracket. Los BYEs estan distribuidos balanceadamente (
+            {bracketInfo?.byesUpper} arriba, {bracketInfo?.byesLower} abajo).
+          </p>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <BracketEditorContainer
+          structure={bracketStructure}
+          teams={availableTeams}
+          onConfirm={handleConfirmPlacements}
+          onCancel={handleBackToPreview}
+          isSubmitting={creating}
+        />
+      </div>
+    )
+  }
+
+  // Paso 1: Preview de la copa
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-8">
@@ -185,37 +275,44 @@ function CindorCupWizard() {
         </Card>
 
         {/* Resumen del bracket */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Resumen del Bracket</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p className="text-sm">
-              <strong>Total de equipos:</strong> {clubs.length}
-            </p>
-            <p className="text-sm">
-              <strong>Formato:</strong> Eliminacion directa
-            </p>
-            <p className="text-sm">
-              <strong>Categoria:</strong> Kempesitas
-            </p>
-          </CardContent>
-        </Card>
+        {bracketInfo && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Estructura del Bracket</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm">
+                <strong>Total de equipos:</strong> {bracketInfo.teamCount}
+              </p>
+              <p className="text-sm">
+                <strong>Tamaño del bracket:</strong> {bracketInfo.bracketSize}
+              </p>
+              <p className="text-sm">
+                <strong>BYEs necesarios:</strong> {bracketInfo.byeCount}
+                {bracketInfo.byeCount > 0 && (
+                  <span className="text-muted-foreground ml-2">
+                    ({bracketInfo.byesUpper} en llave superior, {bracketInfo.byesLower} en llave inferior)
+                  </span>
+                )}
+              </p>
+              <p className="text-sm">
+                <strong>Partidos en primera ronda:</strong> {bracketInfo.firstRoundMatches}
+              </p>
+              <p className="text-sm">
+                <strong>Categoria:</strong> Kempesitas
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Botones de accion */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 justify-end">
           <Button variant="outline" onClick={() => navigate({ to: '/management/fixtures/cup' })}>
             Cancelar
           </Button>
-          <Button onClick={handleCreate} disabled={creating || clubs.length < 2}>
-            {creating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creando...
-              </>
-            ) : (
-              'Crear Copa Cindor'
-            )}
+          <Button onClick={handleContinueToPlacement} disabled={clubs.length < 2}>
+            Continuar a Posicionamiento
+            <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </div>
