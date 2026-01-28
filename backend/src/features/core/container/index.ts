@@ -40,6 +40,13 @@ import { StandingsController } from '@/features/seasons/standings.controller'
 import { SalaryRateRepository } from '@/features/salary-rates/salary-rates.repository'
 import { SalaryRateController } from '@/features/salary-rates/salary-rates.controller'
 import { SalaryRateService } from '@/features/salary-rates/salary-rates.service'
+import { StorageRepository } from '@/features/storage/storage.repository'
+import { StorageService } from '@/features/storage/storage.service'
+import { StorageController } from '@/features/storage/storage.controller'
+import { SupabaseProvider } from '@/features/storage/providers/supabase.provider'
+import { NewsRepository } from '@/features/news/news.repository'
+import { NewsService } from '@/features/news/news.service'
+import { NewsController } from '@/features/news/news.controller'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -59,6 +66,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     seasonRepository: asClass(SeasonRepository).singleton(),
     salaryRateRepository: asClass(SalaryRateRepository).singleton(),
     myAccountRepository: asClass(MyAccountRepository).singleton(),
+    storageRepository: asClass(StorageRepository).singleton(),
+    newsRepository: asClass(NewsRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(MyAccountController).singleton(),
@@ -72,6 +81,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     seasonController: asClass(SeasonController).singleton(),
     standingsController: asClass(StandingsController).singleton(),
     salaryRateController: asClass(SalaryRateController).singleton(),
+    storageController: asClass(StorageController).singleton(),
+    newsController: asClass(NewsController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -85,8 +96,11 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     seasonService: asClass(SeasonService).singleton(),
     standingsService: asClass(StandingsService).singleton(),
     salaryRateService: asClass(SalaryRateService).singleton(),
+    storageService: asClass(StorageService).singleton(),
+    newsService: asClass(NewsService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
+    supabaseProvider: asClass(SupabaseProvider).singleton(),
 
     jwtService: asValue(fastify.jwt),
     fastify: asValue(fastify),

@@ -5,15 +5,28 @@ import { parseDateFromDDMMYYYY } from '@/features/utils/date'
 import { CreatePlayerInput, CreateBasicPlayerInput } from '@/types'
 import { validateNumber, validateBoolean, validateString } from '@/features/utils/validation'
 import { PlayerErrors } from '@/features/players/players.errors'
+import { StorageService } from '@/features/storage/storage.service'
 
 export class PlayerService {
   private playerRepository: IPlayerRespository
+  private storageService: StorageService
 
-  constructor({ playerRepository }: { playerRepository: IPlayerRespository }) {
+  constructor({
+    playerRepository,
+    storageService,
+  }: {
+    playerRepository: IPlayerRespository
+    storageService: StorageService
+  }) {
     this.playerRepository = playerRepository
+    this.storageService = storageService
   }
 
-  async createPlayer(input: CreateBasicPlayerInput) {
+  async createPlayer(
+    input: CreateBasicPlayerInput & {
+      avatarFile?: { buffer: Buffer; filename: string; mimetype: string }
+    },
+  ) {
     // Validación de birthdate
     const birthdateAsDate =
       typeof input.birthdate === 'string' ? parseDateFromDDMMYYYY(input.birthdate) : input.birthdate
@@ -37,6 +50,17 @@ export class PlayerService {
       transfermarktId: input.transfermarktId ?? null,
       isKempesita: false,
       isActive: true,
+    }
+
+    // Subir avatar si se proporciona
+    if (input.avatarFile) {
+      const uploadResult = await this.storageService.uploadImage({
+        file: input.avatarFile.buffer,
+        fileName: input.avatarFile.filename,
+        mimeType: input.avatarFile.mimetype,
+        entityType: 'PLAYER',
+      })
+      playerData.avatar = uploadResult.publicUrl
     }
 
     // Solo agregar clubs si se proporcionan (y no son strings vacíos)
@@ -67,11 +91,31 @@ export class PlayerService {
     return this.playerRepository.findAll()
   }
 
-  async updatePlayer(id: string, data: Partial<Player>) {
+  async updatePlayer(
+    id: string,
+    data: Partial<Player> & {
+      avatarFile?: { buffer: Buffer; filename: string; mimetype: string }
+    },
+  ) {
     const playerFound = await this.playerRepository.findOneById(id)
 
     if (!playerFound) {
       throw new PlayerErrors.NotFound(`Player with id ${id} not found`)
+    }
+
+    let updateData = { ...data }
+
+    // Subir nuevo avatar si se proporciona
+    if ((updateData as any).avatarFile) {
+      const uploadResult = await this.storageService.uploadImage({
+        file: (updateData as any).avatarFile.buffer,
+        fileName: (updateData as any).avatarFile.filename,
+        mimeType: (updateData as any).avatarFile.mimetype,
+        entityType: 'PLAYER',
+        entityId: id,
+      })
+      updateData.avatar = uploadResult.publicUrl
+      delete (updateData as any).avatarFile
     }
 
     // Validar actualClubId si viene en el update
@@ -166,7 +210,7 @@ export class PlayerService {
       }
     } catch (error) {
       throw new PlayerErrors.Database(
-        error instanceof Error ? error.message : 'Failed to save players to database'
+        error instanceof Error ? error.message : 'Failed to save players to database',
       )
     }
   }

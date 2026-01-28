@@ -16,7 +16,7 @@ export function sendSuccess<T>(reply: FastifyReply, data: T, message?: string, s
 export function sendCreated<T>(
   reply: FastifyReply,
   data: T,
-  message: string = 'Resource created successfully'
+  message: string = 'Resource created successfully',
 ) {
   return sendSuccess(reply, data, message, 201)
 }
@@ -27,7 +27,7 @@ export function sendError(
   message: string,
   statusCode: number = 400,
   details?: any,
-  path?: string
+  path?: string,
 ) {
   const response: ErrorResponseDTO = {
     error,
@@ -48,7 +48,7 @@ export function sendNotFound(reply: FastifyReply, resource: string = 'Resource',
 export function sendValidationError(
   reply: FastifyReply,
   details: any,
-  message: string = 'Validation failed'
+  message: string = 'Validation failed',
 ) {
   return sendError(reply, 'VALIDATION_ERROR', message, 400, details)
 }
@@ -57,10 +57,18 @@ export function sendUnauthorized(reply: FastifyReply, message: string = 'Unautho
   return sendError(reply, 'UNAUTHORIZED', message, 401)
 }
 
+export function sendForbidden(reply: FastifyReply, message: string = 'Access forbidden') {
+  return sendError(reply, 'FORBIDDEN', message, 403)
+}
+
+export function sendBadRequest(reply: FastifyReply, message: string = 'Bad request') {
+  return sendError(reply, 'BAD_REQUEST', message, 400)
+}
+
 export function sendInternalError(
   reply: FastifyReply,
   message: string = 'Internal server error',
-  details?: any
+  details?: any,
 ) {
   return sendError(reply, 'INTERNAL_ERROR', message, 500, details)
 }
@@ -78,7 +86,7 @@ export function sendPaginated<T>(
     total: number
     totalPages: number
   },
-  message?: string
+  message?: string,
 ) {
   const response: PaginatedResponse<T> = {
     data,
@@ -127,6 +135,8 @@ export const Response = {
   notFound: sendNotFound,
   validation: sendValidationError,
   unauthorized: sendUnauthorized,
+  forbidden: sendForbidden,
+  badRequest: sendBadRequest,
   internal: sendInternalError,
   noContent: sendNoContent,
   paginated: sendPaginated,

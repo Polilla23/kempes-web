@@ -19,6 +19,7 @@ model User {
   resetPasswordToken String? @unique  @map("reset_password_token")
   resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
   club     Club?
+  news     News[]
 
   @@map("users")
 }
@@ -60,6 +61,7 @@ model Player {
   transfermarktId String?  @map("transfermarkt_id")  @default("null")
   isKempesita   Boolean @map("is_kempesita")  @default(false)
   isActive      Boolean @map("is_active") @default(true)
+  avatar        String?  @map("avatar_url")
   events        Event[]
   playerSeasonStats PlayerSeasonStats[]
   matchCovids   MatchCovid[]
@@ -119,6 +121,7 @@ model CompetitionType {
   hierarchy      Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
   name          CompetitionName @unique // "Liga A", "Copa Kempes"          
   format        CompetitionFormat // Es una LIGA o una COPA
+  trophyImage   String?  @map("trophy_image_url")
   competitions  Competition[]
 }
 
@@ -203,6 +206,44 @@ model Event {
   @@index([matchId])
 }
 
+model StorageFile {
+  id           String     @id @default(uuid())
+  fileName     String     @map("file_name")
+  originalName String     @map("original_name")
+  fileSize     Int        @map("file_size")
+  mimeType     String     @map("mime_type")
+  bucket       String
+  path         String
+  publicUrl    String     @map("public_url")
+  entityType   EntityType @map("entity_type")
+  entityId     String?    @map("entity_id")
+  uploadedBy   String?    @map("uploaded_by")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  isActive     Boolean    @default(true) @map("is_active")
+  
+  @@index([entityType, entityId])
+  @@index([bucket])
+  @@map("storage_files")
+}
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  content     String   @db.Text
+  authorId    String   @map("author_id")
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  images      String[]
+  tags        String[]
+  isPublished Boolean  @default(true) @map("is_published")
+  publishedAt DateTime @default(now()) @map("published_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([authorId])
+  @@map("news")
+}
+
 // ENUMS AND TYPES
 
 enum RoleType {
@@ -274,6 +315,14 @@ enum EventTypeName {
   RED_CARD          // Tarjeta Roja 🟥
   INJURY            // Lesión 🤕
   MVP               // MVP 🌟
+}
+
+enum EntityType {
+  CLUB
+  PLAYER
+  TROPHY
+  NEWS
+  GENERAL
 }
 
 enum MovementType {
