@@ -32,4 +32,20 @@ export const competitionRoutes = async (fastify: FastifyInstance) => {
     schema: competitionsSchemas.delete,
     handler: competitionController.delete.bind(competitionController),
   })
+
+  // Nuevos endpoints para bracket editor
+  fastify.get('/bracket-structure', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.getBracketStructure.bind(competitionController),
+  })
+
+  fastify.post('/supercup', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.createSupercup.bind(competitionController),
+  })
+
+  fastify.post('/cindor', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.createCindor.bind(competitionController),
+  })
 }

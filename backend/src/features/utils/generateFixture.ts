@@ -352,6 +352,154 @@ export interface DirectKnockoutResult {
 }
 
 /**
+ * Slot en el bracket para asignación de equipos
+ */
+export interface BracketSlot {
+  id: string                 // Ej: "QF_1_home", "QF_2_away"
+  round: KnockoutRound
+  position: number           // Posición del partido en la ronda (1-indexed)
+  side: 'home' | 'away'
+  isBye: boolean             // True si este slot debe quedar vacío (BYE)
+}
+
+/**
+ * Estructura vacía del bracket (para frontend)
+ */
+export interface EmptyBracketStructure {
+  bracketSize: number
+  totalTeams: number
+  byeCount: number
+  firstRound: KnockoutRound
+  rounds: { round: KnockoutRound; matchCount: number }[]
+  slots: BracketSlot[]       // Solo slots de primera ronda donde se asignan equipos
+  byePositions: number[]     // Posiciones de partidos con BYE (1-indexed)
+}
+
+/**
+ * Placement de un equipo en un slot del bracket
+ */
+export interface BracketTeamPlacement {
+  slotId: string
+  teamId: string
+}
+
+/**
+ * Distribuye los BYEs de forma balanceada entre llave superior e inferior
+ *
+ * Para un bracket, la "llave superior" son los primeros matchCount/2 partidos
+ * y la "llave inferior" son los últimos matchCount/2 partidos.
+ *
+ * Los BYEs se distribuyen equitativamente:
+ * - Si hay 2 BYEs: 1 arriba, 1 abajo
+ * - Si hay 6 BYEs: 3 arriba, 3 abajo
+ * - Si hay 5 BYEs: 3 arriba, 2 abajo (o viceversa)
+ *
+ * Dentro de cada mitad, los BYEs se colocan al final para que los equipos
+ * con BYE avancen a semifinales en posiciones predecibles.
+ *
+ * @param matchCount - Cantidad de partidos en la primera ronda
+ * @param byeCount - Cantidad de BYEs a distribuir
+ * @returns Array de posiciones de partidos que son BYEs (1-indexed)
+ */
+export function distributeByesBalanced(matchCount: number, byeCount: number): number[] {
+  if (byeCount === 0) return []
+  if (byeCount >= matchCount) {
+    // Todos son BYEs
+    return Array.from({ length: matchCount }, (_, i) => i + 1)
+  }
+
+  const halfMatches = matchCount / 2
+  const byesInUpperHalf = Math.ceil(byeCount / 2)
+  const byesInLowerHalf = Math.floor(byeCount / 2)
+
+  const byePositions: number[] = []
+
+  // BYEs en llave superior: posiciones al final de la primera mitad
+  // Ej: si hay 4 partidos arriba y 1 BYE, el BYE va en posición 2 (partido 2)
+  // Para que el ganador de QF1 se cruce con el BYE en SF1
+  for (let i = 0; i < byesInUpperHalf; i++) {
+    byePositions.push(halfMatches - i)
+  }
+
+  // BYEs en llave inferior: posiciones al inicio de la segunda mitad
+  // Ej: si hay 4 partidos abajo y 1 BYE, el BYE va en posición 3 (partido 3)
+  // Para que el BYE se cruce con el ganador de QF4 en SF2
+  for (let i = 0; i < byesInLowerHalf; i++) {
+    byePositions.push(halfMatches + 1 + i)
+  }
+
+  return byePositions.sort((a, b) => a - b)
+}
+
+/**
+ * Genera la estructura vacía del bracket sin asignar equipos
+ * Usado para mostrar el bracket editable en el frontend
+ *
+ * @param teamCount - Cantidad de equipos participantes
+ * @returns Estructura del bracket con slots para asignar equipos
+ */
+export function generateEmptyBracketStructure(teamCount: number): EmptyBracketStructure {
+  const { byeCount, bracketSize, firstRound } = calculateBracketStructure(teamCount)
+
+  const roundOrder: KnockoutRound[] = [
+    KnockoutRound.ROUND_OF_64,
+    KnockoutRound.ROUND_OF_32,
+    KnockoutRound.ROUND_OF_16,
+    KnockoutRound.QUARTERFINAL,
+    KnockoutRound.SEMIFINAL,
+    KnockoutRound.FINAL,
+  ]
+
+  const startIndex = roundOrder.indexOf(firstRound)
+  const matchesInFirstRound = bracketSize / 2
+
+  // Distribuir BYEs balanceadamente
+  const byePositions = distributeByesBalanced(matchesInFirstRound, byeCount)
+
+  // Generar info de rondas
+  const rounds: { round: KnockoutRound; matchCount: number }[] = []
+  let matchCount = matchesInFirstRound
+  for (let i = startIndex; i < roundOrder.length; i++) {
+    rounds.push({ round: roundOrder[i], matchCount })
+    matchCount = Math.ceil(matchCount / 2)
+  }
+
+  // Generar slots de primera ronda (donde se asignan equipos)
+  const slots: BracketSlot[] = []
+  for (let position = 1; position <= matchesInFirstRound; position++) {
+    const isByePosition = byePositions.includes(position)
+
+    // En posiciones de BYE, solo el lado "home" tiene equipo
+    // El lado "away" queda marcado como BYE (vacío)
+    slots.push({
+      id: `${firstRound}_${position}_home`,
+      round: firstRound,
+      position,
+      side: 'home',
+      isBye: false, // El home siempre tiene equipo
+    })
+
+    slots.push({
+      id: `${firstRound}_${position}_away`,
+      round: firstRound,
+      position,
+      side: 'away',
+      isBye: isByePosition, // En BYE, el away está vacío
+    })
+  }
+
+  return {
+    bracketSize,
+    totalTeams: teamCount,
+    byeCount,
+    firstRound,
+    rounds,
+    slots,
+    byePositions,
+  }
+}
+
+/**
  * Genera bracket de eliminación directa con equipos asignados directamente
  * Usado para Copa Cindor (Kempesitas) y Supercopa
  *
@@ -361,18 +509,23 @@ export interface DirectKnockoutResult {
  * 2. Crear los matches de rondas siguientes con sourceMatchId apuntando a la ronda anterior
  * 3. Para BYEs: asignar el equipo directamente al match de la siguiente ronda
  *
+ * Los BYEs se distribuyen balanceadamente entre llave superior e inferior.
+ *
  * @param competitionId - ID de la competición
- * @param teamIds - Array de IDs de equipos participantes
+ * @param teamIds - Array de IDs de equipos participantes (en el orden deseado, o se shufflea)
+ * @param teamPlacements - Opcional: posicionamiento manual de equipos por slot
  * @returns Estructura del bracket con metadata para linking
  */
 export function generateDirectKnockoutBracket(
   competitionId: string,
-  teamIds: string[]
+  teamIds: string[],
+  teamPlacements?: BracketTeamPlacement[]
 ): DirectKnockoutResult {
   const { byeCount, bracketSize, firstRound } = calculateBracketStructure(teamIds.length)
+  const matchesInFirstRound = bracketSize / 2
 
-  // Shuffle teams para sorteo aleatorio
-  const shuffledTeams = [...teamIds].sort(() => Math.random() - 0.5)
+  // Distribuir BYEs balanceadamente
+  const byePositions = distributeByesBalanced(matchesInFirstRound, byeCount)
 
   // Definir las rondas en orden
   const roundOrder: KnockoutRound[] = [
@@ -385,22 +538,36 @@ export function generateDirectKnockoutBracket(
   ]
 
   const startIndex = roundOrder.indexOf(firstRound)
-  let matchdayOrder = 1
-  let matchesInRound = bracketSize / 2
+  let roundNumber = 1  // Para calcular matchdayOrder que codifica ronda + posición
+  let matchesInRound = matchesInFirstRound
 
-  // Equipos que pasan directo (byes) van al inicio
-  // Equipos que juegan primera ronda van después
-  const teamsWithByes: (string | null)[] = []
+  // Construir mapa de posicionamiento de equipos
+  // Si hay placements manuales, usarlos; sino, asignar automáticamente
+  const slotToTeam = new Map<string, string>()
 
-  // Primero asignamos los byes (slots vacíos para equipos que pasan directo)
-  for (let i = 0; i < byeCount; i++) {
-    teamsWithByes.push(shuffledTeams[i]) // Equipos con bye
-    teamsWithByes.push(null) // Slot vacío (el rival es null)
-  }
+  if (teamPlacements && teamPlacements.length > 0) {
+    // Usar posicionamiento manual del frontend
+    for (const placement of teamPlacements) {
+      slotToTeam.set(placement.slotId, placement.teamId)
+    }
+  } else {
+    // Asignación automática: shufflear y asignar a slots no-BYE
+    const shuffledTeams = [...teamIds].sort(() => Math.random() - 0.5)
+    let teamIndex = 0
 
-  // Luego los equipos que juegan primera ronda
-  for (let i = byeCount; i < shuffledTeams.length; i++) {
-    teamsWithByes.push(shuffledTeams[i])
+    for (let position = 1; position <= matchesInFirstRound; position++) {
+      const isByePosition = byePositions.includes(position)
+
+      // Home siempre tiene equipo
+      const homeSlotId = `${firstRound}_${position}_home`
+      slotToTeam.set(homeSlotId, shuffledTeams[teamIndex++])
+
+      // Away solo tiene equipo si no es BYE
+      if (!isByePosition) {
+        const awaySlotId = `${firstRound}_${position}_away`
+        slotToTeam.set(awaySlotId, shuffledTeams[teamIndex++])
+      }
+    }
   }
 
   // Track matches by round for linking
@@ -414,63 +581,63 @@ export function generateDirectKnockoutBracket(
     for (let matchNum = 0; matchNum < matchesInRound; matchNum++) {
       const position = matchNum + 1  // 1-indexed
 
+      // matchdayOrder codifica ronda + posición: (roundNumber * 100) + position
+      // Ej: QF1=101, QF2=102, SF1=201, Final=301
+      const matchdayOrder = roundNumber * 100 + position
+
       if (roundIdx === startIndex) {
-        // Primera ronda - asignar equipos directamente
-        const homeIdx = matchNum * 2
-        const awayIdx = matchNum * 2 + 1
+        // Primera ronda - asignar equipos desde slots
+        const isByePosition = byePositions.includes(position)
+        const homeSlotId = `${firstRound}_${position}_home`
+        const awaySlotId = `${firstRound}_${position}_away`
 
-        const homeTeamId = teamsWithByes[homeIdx]
-        const awayTeamId = teamsWithByes[awayIdx]
+        const homeTeamId = slotToTeam.get(homeSlotId)
+        const awayTeamId = isByePosition ? null : slotToTeam.get(awaySlotId)
 
-        // Si uno de los dos es null (bye)
-        if (homeTeamId === null || awayTeamId === null) {
-          const byeTeamId = homeTeamId || awayTeamId
-          if (byeTeamId) {
-            // Crear "partido fantasma" donde el equipo ya está clasificado
-            roundMatches.push({
-              match: {
-                competition: { connect: { id: competitionId } },
-                matchdayOrder,
-                stage: CompetitionStage.KNOCKOUT,
-                knockoutRound: currentRound,
-                status: MatchStatus.FINALIZADO, // Ya está "jugado" (bye)
-                homeClub: { connect: { id: byeTeamId } },
-                awayClub: undefined,
-                homePlaceholder: 'BYE',
-                awayPlaceholder: 'BYE',
-                homeClubGoals: 3, // Victoria por defecto
-                awayClubGoals: 0,
-              },
-              round: currentRound,
-              position,
-              isBye: true,
-              byeTeamId,
-            })
-          }
-          continue
+        if (isByePosition && homeTeamId) {
+          // Partido con BYE - el equipo home pasa directo
+          roundMatches.push({
+            match: {
+              competition: { connect: { id: competitionId } },
+              matchdayOrder,
+              stage: CompetitionStage.KNOCKOUT,
+              knockoutRound: currentRound,
+              status: MatchStatus.FINALIZADO, // Ya está "jugado" (bye)
+              homeClub: { connect: { id: homeTeamId } },
+              awayClub: undefined,
+              homePlaceholder: null,
+              awayPlaceholder: 'BYE',
+              homeClubGoals: 3, // Victoria por defecto
+              awayClubGoals: 0,
+            },
+            round: currentRound,
+            position,
+            isBye: true,
+            byeTeamId: homeTeamId,
+          })
+        } else if (homeTeamId && awayTeamId) {
+          // Partido normal (sin bye)
+          roundMatches.push({
+            match: {
+              competition: { connect: { id: competitionId } },
+              matchdayOrder,
+              stage: CompetitionStage.KNOCKOUT,
+              knockoutRound: currentRound,
+              status: MatchStatus.PENDIENTE,
+              homeClub: { connect: { id: homeTeamId } },
+              awayClub: { connect: { id: awayTeamId } },
+            },
+            round: currentRound,
+            position,
+            isBye: false,
+          })
         }
-
-        // Partido normal (sin bye)
-        roundMatches.push({
-          match: {
-            competition: { connect: { id: competitionId } },
-            matchdayOrder,
-            stage: CompetitionStage.KNOCKOUT,
-            knockoutRound: currentRound,
-            status: MatchStatus.PENDIENTE,
-            homeClub: { connect: { id: homeTeamId } },
-            awayClub: { connect: { id: awayTeamId } },
-          },
-          round: currentRound,
-          position,
-          isBye: false,
-        })
       } else {
         // Rondas siguientes - placeholders (se actualizarán con sourceMatchId en el service)
         const prevRound = roundOrder[roundIdx - 1]
         const prevRoundName = getShortRoundName(prevRound)
-        const homePlaceholder = `W_${prevRoundName}_${matchNum * 2 + 1}`
-        const awayPlaceholder = `W_${prevRoundName}_${matchNum * 2 + 2}`
+        const homePlaceholder = `W_${prevRoundName}_${position * 2 - 1}`
+        const awayPlaceholder = `W_${prevRoundName}_${position * 2}`
 
         roundMatches.push({
           match: {
@@ -492,7 +659,7 @@ export function generateDirectKnockoutBracket(
     }
 
     matchesByRound.set(currentRound, roundMatches)
-    matchdayOrder++
+    roundNumber++
     matchesInRound = Math.ceil(matchesInRound / 2)
   }
 

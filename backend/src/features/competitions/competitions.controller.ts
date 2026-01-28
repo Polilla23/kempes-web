@@ -4,6 +4,7 @@ import { CompetitionMapper, Response } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
 import { KempesCupRules, LeaguesRules, CompetitionRules } from '@/types'
 import { CompetitionDTO } from '@/types'
+import { BracketTeamPlacement } from '@/features/utils/generateFixture'
 
 export class CompetitionController {
   private competitionService: CompetitionService
@@ -204,6 +205,198 @@ export class CompetitionController {
         'Error while updating the competition',
         500,
         error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  /**
+   * Obtiene la estructura vacía de un bracket para mostrar en el frontend
+   * GET /competitions/bracket-structure?teamCount=6
+   */
+  async getBracketStructure(
+    req: FastifyRequest<{ Querystring: { teamCount: string } }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const teamCount = parseInt(req.query.teamCount, 10)
+
+      if (isNaN(teamCount) || teamCount < 2 || teamCount > 64) {
+        return Response.validation(reply, 'teamCount must be a number between 2 and 64', 'Invalid team count')
+      }
+
+      const structure = this.competitionService.getBracketStructure(teamCount)
+      return Response.success(reply, structure, 'Bracket structure generated successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'GENERATION_ERROR',
+        'Error generating bracket structure',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  /**
+   * Crea una Supercopa con posicionamiento manual de equipos
+   * POST /competitions/supercup
+   */
+  async createSupercup(
+    req: FastifyRequest<{
+      Body: {
+        seasonId: string
+        competitionTypeId: string
+        teamPlacements: BracketTeamPlacement[]
+      }
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const { seasonId, competitionTypeId, teamPlacements } = req.body
+
+      const validSeasonId = Validator.uuid(seasonId)
+      const validCompetitionTypeId = Validator.uuid(competitionTypeId)
+
+      if (!teamPlacements || !Array.isArray(teamPlacements)) {
+        return Response.validation(reply, 'teamPlacements is required and must be an array', 'Invalid input')
+      }
+
+      const result = await this.competitionService.createSupercupWithPlacements({
+        seasonId: validSeasonId,
+        competitionTypeId: validCompetitionTypeId,
+        teamPlacements,
+      })
+
+      // Enriquecer y mapear respuesta
+      const enrichedCompetitions = await Promise.all(
+        result.competitions.map(async (comp) => {
+          const competitionType = await this.competitionService['competitionTypeRepository'].findOneById(
+            comp.competitionTypeId
+          )
+          return {
+            competition: comp,
+            competitionTypeData: competitionType
+              ? {
+                  id: competitionType.id,
+                  name: competitionType.name.toString(),
+                  category: competitionType.category?.toString() || 'MIXED',
+                  format: competitionType.format.toString(),
+                  hierarchy: competitionType.hierarchy,
+                }
+              : null,
+          }
+        })
+      )
+
+      const competitionDTOs = enrichedCompetitions.map((enriched) =>
+        CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData || {
+          id: enriched.competition.competitionTypeId,
+          name: 'SUPER_CUP',
+          category: 'MIXED',
+          format: 'CUP',
+          hierarchy: 1,
+        })
+      )
+
+      const responseData = {
+        competitions: competitionDTOs,
+        fixtures: result.fixtures.map((f) => ({
+          competitionId: f.competition.id,
+          competitionName: f.competition.name,
+          matchesCreated: f.matchesCreated,
+          totalMatches: f.matches.length,
+        })),
+      }
+
+      return Response.created(reply, responseData, 'Supercup created successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'CREATION_ERROR',
+        error instanceof Error ? error.message : 'Error creating Supercup',
+        500
+      )
+    }
+  }
+
+  /**
+   * Crea una Copa Cindor con posicionamiento manual de equipos
+   * POST /competitions/cindor
+   */
+  async createCindor(
+    req: FastifyRequest<{
+      Body: {
+        seasonId: string
+        competitionTypeId: string
+        teamPlacements: BracketTeamPlacement[]
+      }
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const { seasonId, competitionTypeId, teamPlacements } = req.body
+
+      const validSeasonId = Validator.uuid(seasonId)
+      const validCompetitionTypeId = Validator.uuid(competitionTypeId)
+
+      if (!teamPlacements || !Array.isArray(teamPlacements)) {
+        return Response.validation(reply, 'teamPlacements is required and must be an array', 'Invalid input')
+      }
+
+      const result = await this.competitionService.createCindorWithPlacements({
+        seasonId: validSeasonId,
+        competitionTypeId: validCompetitionTypeId,
+        teamPlacements,
+      })
+
+      // Enriquecer y mapear respuesta
+      const enrichedCompetitions = await Promise.all(
+        result.competitions.map(async (comp) => {
+          const competitionType = await this.competitionService['competitionTypeRepository'].findOneById(
+            comp.competitionTypeId
+          )
+          return {
+            competition: comp,
+            competitionTypeData: competitionType
+              ? {
+                  id: competitionType.id,
+                  name: competitionType.name.toString(),
+                  category: competitionType.category?.toString() || 'KEMPESITA',
+                  format: competitionType.format.toString(),
+                  hierarchy: competitionType.hierarchy,
+                }
+              : null,
+          }
+        })
+      )
+
+      const competitionDTOs = enrichedCompetitions.map((enriched) =>
+        CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData || {
+          id: enriched.competition.competitionTypeId,
+          name: 'CINDOR_CUP',
+          category: 'KEMPESITA',
+          format: 'CUP',
+          hierarchy: 1,
+        })
+      )
+
+      const responseData = {
+        competitions: competitionDTOs,
+        fixtures: result.fixtures.map((f) => ({
+          competitionId: f.competition.id,
+          competitionName: f.competition.name,
+          matchesCreated: f.matchesCreated,
+          totalMatches: f.matches.length,
+        })),
+      }
+
+      return Response.created(reply, responseData, 'Copa Cindor created successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'CREATION_ERROR',
+        error instanceof Error ? error.message : 'Error creating Copa Cindor',
+        500
       )
     }
   }
