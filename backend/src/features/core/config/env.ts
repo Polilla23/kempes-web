@@ -42,6 +42,18 @@ const envSchema = z.object({
     .int()
     .positive()
     .default(5 * 1024 * 1024), // 5MB por defecto
+
+  // Supabase Storage
+  SUPABASE_URL: z.string().url('SUPABASE_URL debe ser una URL válida'),
+  SUPABASE_ANON_KEY: z.string().min(1, 'SUPABASE_ANON_KEY es requerido'),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY es requerido'),
+
+  // Storage buckets
+  STORAGE_BUCKET_CLUBS: z.string().default('club-logos'),
+  STORAGE_BUCKET_PLAYERS: z.string().default('player-avatars'),
+  STORAGE_BUCKET_TROPHIES: z.string().default('trophy-images'),
+  STORAGE_BUCKET_NEWS: z.string().default('news-images'),
+  STORAGE_BUCKET_GENERAL: z.string().default('general-assets'),
 })
 
 /**

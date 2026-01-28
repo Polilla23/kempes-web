@@ -3,6 +3,7 @@ import { IPlayerRespository } from '../interface/IPlayerRepository'
 import { PlayerErrors } from '../players.errors'
 import { Player } from '@prisma/client'
 import { CreateBasicPlayerInput } from '@/types'
+import { StorageService } from '@/features/storage/storage.service'
 
 // Mock del repositorio
 const mockPlayerRepository: jest.Mocked<IPlayerRespository> = {
@@ -14,6 +15,13 @@ const mockPlayerRepository: jest.Mocked<IPlayerRespository> = {
   deleteOneById: jest.fn(),
 }
 
+const mockStorageService: jest.Mocked<StorageService> = {
+  uploadImage: jest.fn(),
+  deleteImage: jest.fn(),
+  getFileMetadata: jest.fn(),
+  replaceImage: jest.fn(),
+} as any
+
 describe('PlayerService', () => {
   let playerService: PlayerService
 
@@ -22,7 +30,10 @@ describe('PlayerService', () => {
     jest.clearAllMocks()
 
     // Crear una nueva instancia del servicio con el mock
-    playerService = new PlayerService({ playerRepository: mockPlayerRepository })
+    playerService = new PlayerService({
+      playerRepository: mockPlayerRepository,
+      storageService: mockStorageService,
+    })
   })
 
   describe('createPlayer', () => {
@@ -47,6 +58,7 @@ describe('PlayerService', () => {
         transfermarktId: null,
         isKempesita: false,
         isActive: true,
+        avatar: null,
       }
 
       mockPlayerRepository.save.mockResolvedValue(expectedPlayer)
@@ -96,6 +108,7 @@ describe('PlayerService', () => {
         transfermarktId: '8198',
         isKempesita: false,
         isActive: true,
+        avatar: null,
       }
 
       mockPlayerRepository.save.mockResolvedValue(expectedPlayer)
@@ -137,6 +150,7 @@ describe('PlayerService', () => {
           transfermarktId: null,
           isKempesita: false,
           isActive: true,
+          avatar: null,
         },
       ]
 
@@ -170,6 +184,7 @@ describe('PlayerService', () => {
         transfermarktId: null,
         isKempesita: false,
         isActive: true,
+        avatar: null,
       }
 
       const updatedPlayer = { ...existingPlayer, overall: 95 }
@@ -210,24 +225,30 @@ describe('PlayerService', () => {
         birthdate: new Date('1987-06-24'),
         actualClubId: 'club-1',
         ownerClubId: 'null',
-        overall: 93,
+        overall: 95,
         salary: 100000,
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
         isActive: true,
+        avatar: null,
+      }
+
+      const deletedPlayerResult: Player = {
+        ...deletedPlayer,
+        isActive: false,
       }
 
       mockPlayerRepository.findOneById.mockResolvedValue(deletedPlayer)
-      mockPlayerRepository.deleteOneById.mockResolvedValue(deletedPlayer)
+      mockPlayerRepository.updateOneById.mockResolvedValue(deletedPlayerResult)
 
       // Act
       const result = await playerService.deletePlayer(playerId)
 
       // Assert
-      expect(result).toEqual(deletedPlayer)
+      expect(result).toEqual(deletedPlayerResult)
       expect(mockPlayerRepository.findOneById).toHaveBeenCalledWith(playerId)
-      expect(mockPlayerRepository.deleteOneById).toHaveBeenCalledWith(playerId)
+      expect(mockPlayerRepository.updateOneById).toHaveBeenCalledWith(playerId, { isActive: false })
     })
   })
 
@@ -288,6 +309,123 @@ Lionel;Messi;fecha-invalida;club-123;90`
 
       // Act & Assert
       await expect(playerService.processCSVFile(invalidCSV)).rejects.toThrow(PlayerErrors.CSV)
+    })
+  })
+
+  describe('createPlayer con avatar file', () => {
+    it('debería subir avatar y crear jugador con la URL', async () => {
+      const input: CreateBasicPlayerInput & { avatarFile?: any } = {
+        name: 'Lionel',
+        lastName: 'Messi',
+        birthdate: new Date('1987-06-24'),
+        avatarFile: {
+          buffer: Buffer.from('fake-image'),
+          filename: 'avatar.png',
+          mimetype: 'image/png',
+        },
+      }
+
+      const uploadedFile = {
+        id: 'file-123',
+        publicUrl: 'https://storage.supabase.co/player-avatars/avatar.png',
+        fileName: 'avatar.png',
+        originalName: 'avatar.png',
+        fileSize: 1024,
+        mimeType: 'image/png',
+        bucket: 'player-avatars',
+        path: 'avatar.png',
+        entityType: 'PLAYER' as any,
+        entityId: undefined,
+      }
+
+      const expectedPlayer: Player = {
+        id: '123',
+        name: 'Lionel',
+        lastName: 'Messi',
+        birthdate: new Date('1987-06-24'),
+        actualClubId: 'null',
+        ownerClubId: 'null',
+        overall: 50,
+        salary: 100000,
+        sofifaId: null,
+        transfermarktId: null,
+        isKempesita: false,
+        isActive: true,
+        avatar: uploadedFile.publicUrl,
+      }
+
+      mockStorageService.uploadImage.mockResolvedValue(uploadedFile)
+      mockPlayerRepository.save.mockResolvedValue(expectedPlayer)
+
+      const result = await playerService.createPlayer(input)
+
+      expect(mockStorageService.uploadImage).toHaveBeenCalledWith({
+        file: input.avatarFile.buffer,
+        fileName: input.avatarFile.filename,
+        mimeType: input.avatarFile.mimetype,
+        entityType: 'PLAYER',
+      })
+      expect(result.avatar).toBe(uploadedFile.publicUrl)
+    })
+  })
+
+  describe('updatePlayer con avatar file', () => {
+    it('debería subir nuevo avatar y actualizar jugador', async () => {
+      const playerId = '123'
+      const existingPlayer: Player = {
+        id: playerId,
+        name: 'Lionel',
+        lastName: 'Messi',
+        birthdate: new Date('1987-06-24'),
+        actualClubId: 'null',
+        ownerClubId: 'null',
+        overall: 95,
+        salary: 1000000,
+        sofifaId: null,
+        transfermarktId: null,
+        isKempesita: false,
+        isActive: true,
+        avatar: 'old-avatar.png',
+      }
+
+      const avatarFile = {
+        buffer: Buffer.from('new-image'),
+        filename: 'new-avatar.png',
+        mimetype: 'image/png',
+      }
+
+      const uploadedFile = {
+        id: 'file-456',
+        publicUrl: 'https://storage.supabase.co/player-avatars/new-avatar.png',
+        fileName: 'new-avatar.png',
+        originalName: 'new-avatar.png',
+        fileSize: 2048,
+        mimeType: 'image/png',
+        bucket: 'player-avatars',
+        path: 'new-avatar.png',
+        entityType: 'PLAYER' as any,
+        entityId: playerId,
+      }
+
+      const updatedPlayer: Player = {
+        ...existingPlayer,
+        avatar: uploadedFile.publicUrl,
+      }
+
+      mockPlayerRepository.findOneById.mockResolvedValue(existingPlayer)
+      mockStorageService.uploadImage.mockResolvedValue(uploadedFile)
+      mockPlayerRepository.updateOneById.mockResolvedValue(updatedPlayer)
+
+      const result = await playerService.updatePlayer(playerId, { avatarFile } as any)
+
+      expect(mockStorageService.uploadImage).toHaveBeenCalledWith({
+        file: avatarFile.buffer,
+        fileName: avatarFile.filename,
+        mimeType: avatarFile.mimetype,
+        entityType: 'PLAYER',
+        entityId: playerId,
+      })
+      expect(result.avatar).toBe(uploadedFile.publicUrl)
     })
   })
 })
