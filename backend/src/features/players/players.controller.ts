@@ -3,7 +3,7 @@ import { FastifyRequest, FastifyReply } from 'fastify'
 import { PlayerService } from '@/features/players/players.service'
 import { PlayerMapper, Response, ValidationError } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
-import { PlayerDTO, CreateBasicPlayerInput } from '@/types'
+import { CreateBasicPlayerInput } from '@/types'
 
 export class PlayerController {
   private playerService: PlayerService
@@ -13,8 +13,17 @@ export class PlayerController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const { name, lastName, birthdate, actualClubId, ownerClubId, overall, salary, sofifaId, transfermarktId } =
-      req.body as CreateBasicPlayerInput
+    const {
+      name,
+      lastName,
+      birthdate,
+      actualClubId,
+      ownerClubId,
+      overall,
+      salary,
+      sofifaId,
+      transfermarktId,
+    } = req.body as CreateBasicPlayerInput
 
     // Validación - si falla, lanza error y el errorHandler lo maneja
     const validatedData: CreateBasicPlayerInput = {
@@ -102,7 +111,7 @@ export class PlayerController {
     return Response.success(
       reply,
       { message: 'Players processed and saved successfully' },
-      'CSV processed successfully'
+      'CSV processed successfully',
     )
   }
 }

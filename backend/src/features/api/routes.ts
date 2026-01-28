@@ -11,6 +11,8 @@ import { eventTypeRoutes } from '@/features/event-types/event-types.routes'
 import { seasonRoutes } from '@/features/seasons/seasons.routes'
 import { standingsRoutes } from '@/features/seasons/standings.routes'
 import { salaryRateRoutes } from '@/features/salary-rates/salary-rates.routes'
+import { storageRoutes } from '@/features/storage/storage.routes'
+import { newsRoutes } from '@/features/news/news.routes'
 
 /**
  * Plugin principal de rutas con prefijo /api/v1
@@ -31,6 +33,8 @@ export default async function (app: FastifyInstance) {
       instance.register(seasonRoutes, { prefix: '/seasons' })
       instance.register(standingsRoutes, { prefix: '/standings' })
       instance.register(salaryRateRoutes, { prefix: '/salary-rates' })
+      instance.register(storageRoutes, { prefix: '/storage' })
+      instance.register(newsRoutes, { prefix: '/news' })
 
       instance.get('/health', async () => ({ status: 'ok', timestamp: new Date() }))
 
