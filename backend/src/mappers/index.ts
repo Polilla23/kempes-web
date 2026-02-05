@@ -10,3 +10,9 @@ export { EventMapper } from './event.mapper'
 export { EventTypeMapper } from './event-type.mapper'
 export { SeasonMapper } from './season.mapper'
 export { SalaryRateMapper } from './salary-rate.mapper'
+
+// Transfer and Finance mappers
+export { SeasonHalfMapper } from './season-half.mapper'
+export { TransferWindowMapper } from './transfer-window.mapper'
+export { TransferMapper } from './transfer.mapper'
+export { FinanceMapper } from './finance.mapper'

@@ -1,0 +1,341 @@
+{
+  "title": "Transfer Management",
+  "center": {
+    "title": "Transfer Center",
+    "subtitle": "Managing the future of {{clubName}}",
+    "tabs": {
+      "new": "New Transfer",
+      "pending": "Pending Confirmations",
+      "history": "My Transfers"
+    }
+  },
+  "wizard": {
+    "title": "New Transfer",
+    "steps": {
+      "type": {
+        "label": "Type",
+        "description": "Select the transfer type"
+      },
+      "players": {
+        "label": "Players",
+        "description": "Select the players involved"
+      },
+      "payment": {
+        "label": "Payment",
+        "description": "Define the amount and payment method"
+      },
+      "installments": {
+        "label": "Installments",
+        "description": "Configure payment installments"
+      },
+      "preview": {
+        "label": "Confirm",
+        "description": "Review and confirm the transfer"
+      },
+      "typeAndClubs": {
+        "label": "Type & Clubs",
+        "description": "Select the transfer type and clubs involved"
+      },
+      "details": {
+        "label": "Details",
+        "description": "Select players and configure payments"
+      },
+      "summary": {
+        "label": "Summary",
+        "description": "Review and confirm the transfer"
+      }
+    },
+    "buttons": {
+      "next": "Next",
+      "back": "Back",
+      "confirm": "Confirm Transfer"
+    }
+  },
+  "typeCards": {
+    "purchase": {
+      "title": "Purchase",
+      "description": "Buy a player from another club"
+    },
+    "sale": {
+      "title": "Sale",
+      "description": "Sell a player to another club"
+    },
+    "loanIn": {
+      "title": "Loan In",
+      "description": "Receive a player on loan"
+    },
+    "loanOut": {
+      "title": "Loan Out",
+      "description": "Send a player on loan"
+    },
+    "auction": {
+      "title": "Auction",
+      "description": "Participate in an auction"
+    },
+    "freeAgent": {
+      "title": "Free Agent",
+      "description": "Sign a free agent"
+    },
+    "inactive": {
+      "title": "Mark Inactive",
+      "description": "Deactivate a player"
+    }
+  },
+  "clubsInvolved": {
+    "title": "Clubs Involved",
+    "sellerClub": "Selling Club",
+    "buyerClub": "Buying Club",
+    "yourClub": "Your Club"
+  },
+  "periodSelector": {
+    "title": "Period",
+    "start": "Start",
+    "mid": "Mid",
+    "end": "End"
+  },
+  "playersPanel": {
+    "toSell": "Players to Sell",
+    "asPayment": "Players as Part of Payment",
+    "searchPlayer": "Search player..."
+  },
+  "paymentModal": {
+    "title": "Configure Payment",
+    "value": "Value",
+    "paymentType": "Payment Type",
+    "total": "Total",
+    "installments": "Installments",
+    "generate": "Generate",
+    "sum": "Sum",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "balance": {
+    "selling": "Selling",
+    "receiving": "Receiving",
+    "balance": "Balance"
+  },
+  "playerSelection": {
+    "yourClub": "Your Club",
+    "otherClub": "Other Club",
+    "selectClub": "Select club",
+    "playersToGive": "Players you give",
+    "playersToReceive": "Players you receive",
+    "mainPlayer": "Main player",
+    "asPayment": "As part of payment",
+    "valuation": "Valuation",
+    "noPlayers": "No available players",
+    "searchPlaceholder": "Search player..."
+  },
+  "payment": {
+    "totalAmount": "Total Amount",
+    "paymentMethod": "Payment Method",
+    "singlePayment": "Single Payment",
+    "installments": "Installments",
+    "numberOfInstallments": "Number of Installments",
+    "maxInstallments": "Maximum 6 installments",
+    "generateInstallments": "Generate Installments"
+  },
+  "installmentsEditor": {
+    "title": "Configure Installments",
+    "installmentNumber": "Installment #{{number}}",
+    "amount": "Amount",
+    "dueDate": "Due Date",
+    "selectDueDate": "Select due date",
+    "addInstallment": "Add Installment",
+    "removeInstallment": "Remove",
+    "totalSum": "Total Sum",
+    "expected": "Total",
+    "amountMismatch": "The sum of installments must equal the total amount",
+    "validSum": "Sum matches the total amount",
+    "maxReached": "Maximum installments reached"
+  },
+  "preview": {
+    "title": "Transfer Summary",
+    "type": "Type",
+    "status": "Status",
+    "from": "From",
+    "to": "To",
+    "giving": "Players Transferred",
+    "receiving": "Players as Payment",
+    "paymentSchedule": "Payment Schedule",
+    "notes": "Notes",
+    "notesPlaceholder": "Add additional notes...",
+    "confirmButton": "Confirm Transfer",
+    "pendingApproval": "This transfer will require approval from the other club before being executed.",
+    "noPlayersGiven": "No players",
+    "noPlayersReceived": "No players"
+  },
+  "pending": {
+    "title": "Pending Approval",
+    "subtitle": "Transfers requiring your approval",
+    "empty": "No pending transfers to confirm",
+    "emptyDescription": "Transfers from Uynose will appear here",
+    "approve": "Approve",
+    "reject": "Reject",
+    "details": "View Details",
+    "approveSuccess": "Transfer approved successfully",
+    "approveError": "Error approving transfer",
+    "rejectSuccess": "Transfer rejected successfully",
+    "rejectError": "Error rejecting transfer",
+    "confirmApprove": "Approve this transfer?",
+    "confirmReject": "Reject this transfer?",
+    "approveDescription": "The player will be moved and the transfer will be executed",
+    "rejectDescription": "The transfer will be cancelled"
+  },
+  "history": {
+    "title": "Transfer History",
+    "subtitle": "Club history",
+    "empty": "No recorded movements",
+    "emptyDescription": "Transfers from {{clubName}} will appear here",
+    "filters": {
+      "all": "All",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    }
+  },
+  "loanDetails": {
+    "title": "Loan Details",
+    "duration": "Duration",
+    "durationHelp": "Number of half-seasons",
+    "fee": "Loan fee",
+    "salaryPercentage": "Salary percentage",
+    "salaryHelp": "Percentage of salary paid by receiving club",
+    "halves": "half-seasons"
+  },
+  "create": {
+    "title": "New Transfer",
+    "description": "Register a new player transfer",
+    "button": "New Transfer",
+    "success": "Transfer created successfully",
+    "error": "Error creating transfer"
+  },
+  "edit": {
+    "title": "Edit",
+    "description": "Modify transfer details",
+    "success": "Transfer updated successfully",
+    "error": "Error updating transfer"
+  },
+  "delete": {
+    "title": "Delete Transfer",
+    "description": "Are you sure you want to delete this transfer?",
+    "success": "Transfer deleted successfully",
+    "error": "Error deleting transfer"
+  },
+  "complete": {
+    "title": "Complete Transfer",
+    "success": "Transfer completed successfully",
+    "error": "Error completing transfer"
+  },
+  "cancel": {
+    "title": "Cancel Transfer",
+    "success": "Transfer cancelled successfully",
+    "error": "Error cancelling transfer"
+  },
+  "types": {
+    "PURCHASE": "Purchase",
+    "SALE": "Sale",
+    "LOAN_IN": "Loan In",
+    "LOAN_OUT": "Loan Out",
+    "AUCTION": "Auction",
+    "FREE_AGENT": "Free Agent",
+    "INACTIVE_STATUS": "Inactive Status",
+    "RETURN_FROM_LOAN": "Return from Loan"
+  },
+  "status": {
+    "PENDING": "Pending",
+    "ACTIVE": "Active",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled",
+    "PARTIALLY_PAID": "Partially Paid"
+  },
+  "fields": {
+    "player": "Player",
+    "fromClub": "From Club",
+    "toClub": "To Club",
+    "type": "Type",
+    "status": "Status",
+    "totalAmount": "Total Amount",
+    "installments": "Installments",
+    "loanDuration": "Loan Duration",
+    "loanFee": "Loan Fee",
+    "salaryPercentage": "Salary Percentage",
+    "notes": "Notes",
+    "createdAt": "Created At",
+    "completedAt": "Completed At"
+  },
+  "labels": {
+    "selectPlayer": "Select player",
+    "selectClub": "Select club",
+    "selectType": "Select type",
+    "selectStatus": "Select status",
+    "halves": "half-seasons",
+    "installmentNumber": "Installment #{{number}}",
+    "dueDate": "Due Date",
+    "amount": "Amount",
+    "paid": "Paid",
+    "pending": "Pending",
+    "season": "Season"
+  },
+  "placeholders": {
+    "searchPlayer": "Search player...",
+    "notes": "Additional notes..."
+  },
+  "buttons": {
+    "create": "Create Transfer",
+    "createLoan": "Create Loan",
+    "createAuction": "Create Auction",
+    "signFreeAgent": "Sign Free Agent",
+    "markInactive": "Mark Inactive",
+    "complete": "Complete",
+    "cancel": "Reset",
+    "viewDetails": "View Details"
+  },
+  "table": {
+    "player": "Player",
+    "fromTo": "From / To",
+    "amount": "Amount",
+    "type": "Type",
+    "status": "Status",
+    "date": "Date",
+    "actions": "Actions"
+  },
+  "loan": {
+    "title": "New Loan",
+    "duration": "Duration",
+    "fee": "Fee",
+    "salaryShare": "Salary Share",
+    "receiverPays": "Receiver club pays"
+  },
+  "auction": {
+    "title": "New Auction",
+    "price": "Auction Price"
+  },
+  "freeAgent": {
+    "title": "Sign Free Agent",
+    "signingFee": "Signing Fee"
+  },
+  "inactive": {
+    "title": "Mark as Inactive",
+    "description": "The player will continue paying salary but won't count in the active roster"
+  },
+  "validation": {
+    "playerRequired": "Player is required",
+    "clubRequired": "Club is required",
+    "amountRequired": "Amount is required",
+    "amountPositive": "Amount must be greater than 0",
+    "installmentsMin": "Installments must be at least 1",
+    "installmentsMax": "Installments cannot be more than 6",
+    "installmentsSumMismatch": "The sum of installments must equal the total amount",
+    "durationRequired": "Duration is required",
+    "durationMin": "Duration must be at least 1 half-season",
+    "selectTransferType": "You must select a transfer type",
+    "selectMainPlayer": "You must select at least one player to transfer",
+    "selectOtherClub": "You must select the other club"
+  },
+  "messages": {
+    "noTransfers": "No transfers registered",
+    "noActiveLoans": "No active loans",
+    "windowClosed": "Transfer window is closed",
+    "rosterLimitExceeded": "Roster limit exceeded"
+  }
+}

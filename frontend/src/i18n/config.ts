@@ -15,6 +15,8 @@ import enSeasons from './locales/en/seasons.json'
 import enSalaryRates from './locales/en/salary-rates.json'
 import enFixtures from './locales/en/fixtures.json'
 import enHome from './locales/en/home.json'
+import enTransfers from './locales/en/transfers.json'
+import enFinances from './locales/en/finances.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -29,6 +31,8 @@ import esSeasons from './locales/es/seasons.json'
 import esSalaryRates from './locales/es/salary-rates.json'
 import esFixtures from './locales/es/fixtures.json'
 import esHome from './locales/es/home.json'
+import esTransfers from './locales/es/transfers.json'
+import esFinances from './locales/es/finances.json'
 
 // Configure i18next
 i18n
@@ -53,6 +57,8 @@ i18n
         salaryRates: enSalaryRates,
         fixtures: enFixtures,
         home: enHome,
+        transfers: enTransfers,
+        finances: enFinances,
       },
       es: {
         common: esCommon,
@@ -67,6 +73,8 @@ i18n
         salaryRates: esSalaryRates,
         fixtures: esFixtures,
         home: esHome,
+        transfers: esTransfers,
+        finances: esFinances,
       },
     },
 
@@ -93,6 +101,8 @@ i18n
       'salaryRates',
       'fixtures',
       'home',
+      'transfers',
+      'finances',
     ],
 
     // Interpolation options

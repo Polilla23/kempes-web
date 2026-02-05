@@ -194,3 +194,198 @@ export type SalaryRateDTO = {
   salary: number
   isActive: boolean
 }
+
+// ============================================
+// TRANSFER AND FINANCE DTOs
+// ============================================
+
+export type SeasonHalfDTO = {
+  id: string
+  seasonId: string
+  seasonNumber: number
+  halfType: string
+  startDate: string | null
+  endDate: string | null
+  isActive: boolean
+}
+
+export type TransferWindowDTO = {
+  id: string
+  seasonHalfId: string
+  seasonHalf: SeasonHalfDTO
+  name: string
+  startDate: string
+  endDate: string
+  status: string
+}
+
+export type TransferDTO = {
+  id: string
+  type: string
+  status: string
+  playerId: string
+  fromClubId: string
+  toClubId: string
+  initiatorClubId: string | null
+  transferWindowId: string | null
+  seasonHalfId: string
+  totalAmount: number
+  numberOfInstallments: number
+  loanDurationHalves: number | null
+  returnSeasonHalfId: string | null
+  loanFee: number | null
+  loanSalaryPercentage: number | null
+  notes: string | null
+  createdAt: Date
+  completedAt: Date | null
+  player?: {
+    id: string
+    name: string
+    lastName: string
+    overall: number | null
+    position?: string
+    isKempesita?: boolean
+  }
+  fromClub?: {
+    id: string
+    name: string
+    shortName?: string
+    logo: string | null
+  }
+  toClub?: {
+    id: string
+    name: string
+    shortName?: string
+    logo: string | null
+  }
+  initiatorClub?: {
+    id: string
+    name: string
+    shortName?: string
+    logo: string | null
+  }
+  seasonHalf?: {
+    id: string
+    halfType: string
+    seasonId: string
+  }
+  transferWindow?: {
+    id: string
+    name: string
+    status: string
+  }
+  installments?: TransferInstallmentDTO[]
+  playersAsPayment?: TransferPlayerPaymentDTO[]
+}
+
+export type TransferPlayerPaymentDTO = {
+  id: string
+  transferId: string
+  playerId: string
+  valuationAmount: number
+  player?: {
+    id: string
+    firstName?: string
+    lastName: string
+    overall: number | null
+    position?: string
+  }
+}
+
+export type TransferInstallmentDTO = {
+  id: string
+  transferId: string
+  installmentNumber: number
+  amount: number
+  dueSeasonHalfId: string
+  status: string
+  paidAt: Date | null
+  dueSeasonHalf?: {
+    id: string
+    halfType: string
+    seasonId: string
+  }
+}
+
+export type FinancialTransactionDTO = {
+  id: string
+  clubId: string
+  type: string
+  amount: number
+  description: string
+  transferId: string | null
+  installmentId: string | null
+  seasonHalfId: string
+  createdAt: Date
+  club?: {
+    id: string
+    name: string
+    shortName?: string
+    logo: string | null
+  }
+  seasonHalf?: {
+    id: string
+    halfType: string
+    seasonId: string
+    seasonNumber?: number
+  }
+}
+
+export type ClubSeasonBalanceDTO = {
+  id: string
+  clubId: string
+  seasonHalfId: string
+  startingBalance: number
+  totalIncome: number
+  totalExpenses: number
+  endingBalance: number
+  totalSalaries: number
+  club?: {
+    id: string
+    name: string
+    shortName?: string
+    logo: string | null
+  }
+  seasonHalf?: {
+    id: string
+    halfType: string
+    seasonId: string
+    seasonNumber?: number
+  }
+}
+
+export type CompetitionPrizeDTO = {
+  id: string
+  competitionTypeId: string
+  position: number
+  prizeAmount: number
+  description: string | null
+  competitionType?: {
+    id: string
+    name: string
+  }
+}
+
+export type FinancialReportDTO = {
+  club: {
+    id: string
+    name: string
+  }
+  currentBalance: number
+  seasonSummary: {
+    totalIncome: number
+    totalExpenses: number
+    netChange: number
+  }
+  transferActivity: {
+    playersBought: number
+    playersSold: number
+    playersLoanedIn: number
+    playersLoanedOut: number
+    totalSpentOnTransfers: number
+    totalReceivedFromSales: number
+  }
+  salaryBill: number
+  pendingInstallmentsAmount: number
+  pendingInstallmentsCount: number
+}

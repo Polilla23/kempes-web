@@ -1,0 +1,145 @@
+{
+  "title": "Financial Management",
+  "dashboard": {
+    "title": "Financial Dashboard",
+    "currentBalance": "Current Balance",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "totalSalaries": "Total Salaries",
+    "netChange": "Net Change"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "create": {
+      "title": "New Transaction",
+      "success": "Transaction created successfully",
+      "error": "Error creating transaction"
+    },
+    "noTransactions": "No transactions registered"
+  },
+  "transactionTypes": {
+    "TRANSFER_INCOME": "Transfer Income",
+    "TRANSFER_EXPENSE": "Transfer Expense",
+    "LOAN_FEE_INCOME": "Loan Fee Income",
+    "LOAN_FEE_EXPENSE": "Loan Fee Expense",
+    "PRIZE_INCOME": "Prize",
+    "FINE_EXPENSE": "Fine",
+    "SALARY_EXPENSE": "Salaries",
+    "BONUS_INCOME": "Bonus",
+    "AUCTION_INCOME": "Auction Income",
+    "AUCTION_EXPENSE": "Auction Expense",
+    "PLAYER_SWAP_CREDIT": "Player Received",
+    "PLAYER_SWAP_DEBIT": "Player Given"
+  },
+  "balances": {
+    "title": "Balances",
+    "history": "Balance History",
+    "initialize": {
+      "title": "Initialize Balance",
+      "success": "Balance initialized successfully",
+      "error": "Error initializing balance"
+    },
+    "startingBalance": "Starting Balance",
+    "endingBalance": "Ending Balance"
+  },
+  "prizes": {
+    "title": "Competition Prizes",
+    "create": {
+      "title": "New Prize",
+      "description": "Configure a new competition prize",
+      "success": "Prize created successfully",
+      "error": "Error creating prize"
+    },
+    "edit": {
+      "title": "Edit Prize",
+      "success": "Prize updated successfully",
+      "error": "Error updating prize"
+    },
+    "delete": {
+      "title": "Delete Prize",
+      "description": "Are you sure you want to delete this prize?",
+      "success": "Prize deleted successfully",
+      "error": "Error deleting prize"
+    },
+    "award": {
+      "title": "Award Prize",
+      "success": "Prize awarded successfully",
+      "error": "Error awarding prize"
+    },
+    "position": "Position",
+    "amount": "Amount"
+  },
+  "fines": {
+    "title": "Fines",
+    "create": {
+      "title": "Record Fine",
+      "success": "Fine recorded successfully",
+      "error": "Error recording fine"
+    }
+  },
+  "bonuses": {
+    "title": "Bonuses",
+    "create": {
+      "title": "Record Bonus",
+      "success": "Bonus recorded successfully",
+      "error": "Error recording bonus"
+    }
+  },
+  "fields": {
+    "club": "Club",
+    "type": "Type",
+    "amount": "Amount",
+    "description": "Description",
+    "date": "Date",
+    "seasonHalf": "Season Half",
+    "competitionType": "Competition Type",
+    "position": "Position"
+  },
+  "labels": {
+    "selectClub": "Select club",
+    "selectType": "Select type",
+    "selectCompetition": "Select competition",
+    "income": "Income",
+    "expense": "Expense",
+    "firstHalf": "First Half",
+    "secondHalf": "Second Half"
+  },
+  "placeholders": {
+    "description": "Transaction description...",
+    "amount": "0"
+  },
+  "buttons": {
+    "createTransaction": "New Transaction",
+    "createPrize": "New Prize",
+    "awardPrize": "Award Prize",
+    "recordFine": "Record Fine",
+    "recordBonus": "Record Bonus",
+    "viewReport": "View Report"
+  },
+  "table": {
+    "date": "Date",
+    "description": "Description",
+    "type": "Type",
+    "amount": "Amount",
+    "club": "Club",
+    "actions": "Actions"
+  },
+  "report": {
+    "title": "Financial Report",
+    "summary": "Summary",
+    "transactionBreakdown": "Transaction Breakdown",
+    "totalTransactions": "Total Transactions"
+  },
+  "validation": {
+    "clubRequired": "Club is required",
+    "amountRequired": "Amount is required",
+    "amountPositive": "Amount must be greater than 0",
+    "descriptionRequired": "Description is required",
+    "positionRequired": "Position is required",
+    "positionPositive": "Position must be greater than 0"
+  },
+  "messages": {
+    "noBalanceFound": "No balance found for this club",
+    "balanceInitialized": "Balance initialized successfully"
+  }
+}
