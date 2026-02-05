@@ -47,6 +47,18 @@ import { SupabaseProvider } from '@/features/storage/providers/supabase.provider
 import { NewsRepository } from '@/features/news/news.repository'
 import { NewsService } from '@/features/news/news.service'
 import { NewsController } from '@/features/news/news.controller'
+import { SeasonHalfRepository } from '@/features/season-halves/season-halves.repository'
+import { SeasonHalfController } from '@/features/season-halves/season-halves.controller'
+import { SeasonHalfService } from '@/features/season-halves/season-halves.service'
+import { TransferWindowRepository } from '@/features/transfer-windows/transfer-windows.repository'
+import { TransferWindowController } from '@/features/transfer-windows/transfer-windows.controller'
+import { TransferWindowService } from '@/features/transfer-windows/transfer-windows.service'
+import { TransferRepository } from '@/features/transfers/transfers.repository'
+import { TransferController } from '@/features/transfers/transfers.controller'
+import { TransferService } from '@/features/transfers/transfers.service'
+import { FinanceRepository } from '@/features/finances/finances.repository'
+import { FinanceController } from '@/features/finances/finances.controller'
+import { FinanceService } from '@/features/finances/finances.service'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -65,6 +77,10 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     eventTypeRepository: asClass(EventTypeRepository).singleton(),
     seasonRepository: asClass(SeasonRepository).singleton(),
     salaryRateRepository: asClass(SalaryRateRepository).singleton(),
+    seasonHalfRepository: asClass(SeasonHalfRepository).singleton(),
+    transferWindowRepository: asClass(TransferWindowRepository).singleton(),
+    transferRepository: asClass(TransferRepository).singleton(),
+    financeRepository: asClass(FinanceRepository).singleton(),
     myAccountRepository: asClass(MyAccountRepository).singleton(),
     storageRepository: asClass(StorageRepository).singleton(),
     newsRepository: asClass(NewsRepository).singleton(),
@@ -83,6 +99,10 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     salaryRateController: asClass(SalaryRateController).singleton(),
     storageController: asClass(StorageController).singleton(),
     newsController: asClass(NewsController).singleton(),
+    seasonHalfController: asClass(SeasonHalfController).singleton(),
+    transferWindowController: asClass(TransferWindowController).singleton(),
+    transferController: asClass(TransferController).singleton(),
+    financeController: asClass(FinanceController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -98,6 +118,10 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     salaryRateService: asClass(SalaryRateService).singleton(),
     storageService: asClass(StorageService).singleton(),
     newsService: asClass(NewsService).singleton(),
+    seasonHalfService: asClass(SeasonHalfService).singleton(),
+    transferWindowService: asClass(TransferWindowService).singleton(),
+    transferService: asClass(TransferService).singleton(),
+    financeService: asClass(FinanceService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
     supabaseProvider: asClass(SupabaseProvider).singleton(),

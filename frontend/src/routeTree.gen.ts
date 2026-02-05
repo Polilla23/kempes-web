@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SubmitResultIndexRouteImport } from './routes/submit-result/index'
+import { Route as TransfersIndexRouteImport } from './routes/transfers/index'
 import { Route as StandingsIndexRouteImport } from './routes/standings/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
 import { Route as FixturesIndexRouteImport } from './routes/fixtures/index'
@@ -53,6 +54,10 @@ const IndexRoute = IndexRouteImport.update({
 const SubmitResultIndexRoute = SubmitResultIndexRouteImport.update({
   id: '/submit-result/',
   path: '/submit-result/',
+} as any)
+const TransfersIndexRoute = TransfersIndexRouteImport.update({
+  id: '/transfers/',
+  path: '/transfers/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StandingsIndexRoute = StandingsIndexRouteImport.update({
@@ -245,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/myaccount': typeof MyaccountIndexRoute
   '/standings': typeof StandingsIndexRoute
   '/submit-result': typeof SubmitResultIndexRoute
+  '/transfers': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
@@ -282,6 +288,7 @@ export interface FileRoutesByTo {
   '/myaccount': typeof MyaccountIndexRoute
   '/standings': typeof StandingsIndexRoute
   '/submit-result': typeof SubmitResultIndexRoute
+  '/transfers': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
@@ -320,6 +327,7 @@ export interface FileRoutesById {
   '/myaccount/': typeof MyaccountIndexRoute
   '/standings/': typeof StandingsIndexRoute
   '/submit-result/': typeof SubmitResultIndexRoute
+  '/transfers/': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
@@ -359,6 +367,7 @@ export interface FileRouteTypes {
     | '/myaccount'
     | '/standings'
     | '/submit-result'
+    | '/transfers'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/myaccount'
     | '/standings'
     | '/submit-result'
+    | '/transfers'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/myaccount/'
     | '/standings/'
     | '/submit-result/'
+    | '/transfers/'
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
@@ -471,6 +482,7 @@ export interface RootRouteChildren {
   MyaccountIndexRoute: typeof MyaccountIndexRoute
   StandingsIndexRoute: typeof StandingsIndexRoute
   SubmitResultIndexRoute: typeof SubmitResultIndexRoute
+  TransfersIndexRoute: typeof TransfersIndexRoute
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
   ClubUpdateIdRoute: typeof ClubUpdateIdRoute
@@ -512,6 +524,11 @@ declare module '@tanstack/react-router' {
       path: '/submit-result'
       fullPath: '/submit-result'
       preLoaderRoute: typeof SubmitResultIndexRouteImport
+    '/transfers/': {
+      id: '/transfers/'
+      path: '/transfers'
+      fullPath: '/transfers'
+      preLoaderRoute: typeof TransfersIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/standings/': {
@@ -759,6 +776,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyaccountIndexRoute: MyaccountIndexRoute,
   StandingsIndexRoute: StandingsIndexRoute,
   SubmitResultIndexRoute: SubmitResultIndexRoute,
+  TransfersIndexRoute: TransfersIndexRoute,
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,
   ClubUpdateIdRoute: ClubUpdateIdRoute,
@@ -791,3 +809,4 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+}

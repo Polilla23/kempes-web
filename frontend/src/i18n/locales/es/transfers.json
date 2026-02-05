@@ -1,0 +1,341 @@
+{
+  "title": "Gestión de Transferencias",
+  "center": {
+    "title": "Centro de Transferencias",
+    "subtitle": "Gestionando el futuro de {{clubName}}",
+    "tabs": {
+      "new": "Nueva Transferencia",
+      "pending": "Confirmaciones Pendientes",
+      "history": "Mis Transferencias"
+    }
+  },
+  "wizard": {
+    "title": "Nueva Transferencia",
+    "steps": {
+      "type": {
+        "label": "Tipo",
+        "description": "Selecciona el tipo de transferencia"
+      },
+      "players": {
+        "label": "Jugadores",
+        "description": "Selecciona los jugadores involucrados"
+      },
+      "payment": {
+        "label": "Pago",
+        "description": "Define el monto y forma de pago"
+      },
+      "installments": {
+        "label": "Cuotas",
+        "description": "Configura las cuotas de pago"
+      },
+      "preview": {
+        "label": "Confirmar",
+        "description": "Revisa y confirma la transferencia"
+      },
+      "typeAndClubs": {
+        "label": "Tipo y Equipos",
+        "description": "Selecciona el tipo de transferencia y los clubes involucrados"
+      },
+      "details": {
+        "label": "Detalles",
+        "description": "Selecciona jugadores y configura los pagos"
+      },
+      "summary": {
+        "label": "Resumen",
+        "description": "Revisa y confirma la transferencia"
+      }
+    },
+    "buttons": {
+      "next": "Siguiente",
+      "back": "Anterior",
+      "confirm": "Confirmar Transferencia"
+    }
+  },
+  "typeCards": {
+    "purchase": {
+      "title": "Compra",
+      "description": "Comprar un jugador de otro club"
+    },
+    "sale": {
+      "title": "Venta",
+      "description": "Vender un jugador a otro club"
+    },
+    "loanIn": {
+      "title": "Préstamo Recibido",
+      "description": "Recibir un jugador en préstamo"
+    },
+    "loanOut": {
+      "title": "Préstamo Cedido",
+      "description": "Ceder un jugador en préstamo"
+    },
+    "auction": {
+      "title": "Subasta",
+      "description": "Participar en una subasta"
+    },
+    "freeAgent": {
+      "title": "Agente Libre",
+      "description": "Fichar un jugador libre"
+    },
+    "inactive": {
+      "title": "Marcar Inactivo",
+      "description": "Dar de baja a un jugador"
+    }
+  },
+  "clubsInvolved": {
+    "title": "Equipos Involucrados",
+    "sellerClub": "Equipo Vendedor",
+    "buyerClub": "Equipo Comprador",
+    "yourClub": "Tu Club"
+  },
+  "periodSelector": {
+    "title": "Periodo",
+    "start": "Inicio",
+    "mid": "Mitad",
+    "end": "Final"
+  },
+  "playersPanel": {
+    "toSell": "Jugadores a Vender",
+    "asPayment": "Jugadores como Parte de Pago",
+    "searchPlayer": "Buscar jugador..."
+  },
+  "paymentModal": {
+    "title": "Configurar Pago",
+    "value": "Valor",
+    "paymentType": "Forma de Pago",
+    "total": "Total",
+    "installments": "Cuotas",
+    "generate": "Generar",
+    "sum": "Suma",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "balance": {
+    "selling": "Vendo",
+    "receiving": "Recibo",
+    "balance": "Balance"
+  },
+  "playerSelection": {
+    "yourClub": "Tu Club",
+    "otherClub": "Otro Club",
+    "selectClub": "Seleccionar club",
+    "playersToGive": "Jugadores que das",
+    "playersToReceive": "Jugadores que recibes",
+    "mainPlayer": "Jugador principal",
+    "asPayment": "Como parte del pago",
+    "valuation": "Valoración",
+    "noPlayers": "No hay jugadores disponibles",
+    "searchPlaceholder": "Buscar jugador..."
+  },
+  "payment": {
+    "totalAmount": "Monto Total",
+    "paymentMethod": "Forma de Pago",
+    "singlePayment": "Pago Único",
+    "installments": "En Cuotas",
+    "numberOfInstallments": "Número de Cuotas",
+    "maxInstallments": "Máximo 6 cuotas",
+    "generateInstallments": "Generar Cuotas"
+  },
+  "installmentsEditor": {
+    "title": "Configurar Cuotas",
+    "installmentNumber": "Cuota #{{number}}",
+    "amount": "Monto",
+    "dueDate": "Vencimiento",
+    "selectDueDate": "Seleccionar vencimiento",
+    "addInstallment": "Agregar Cuota",
+    "removeInstallment": "Eliminar",
+    "totalSum": "Suma Total",
+    "expected": "Total",
+    "amountMismatch": "La suma de las cuotas debe ser igual al monto total",
+    "validSum": "La suma coincide con el monto total",
+    "maxReached": "Máximo de cuotas alcanzado"
+  },
+  "preview": {
+    "title": "Resumen de Transferencia",
+    "type": "Tipo",
+    "status": "Estado",
+    "from": "De",
+    "to": "A",
+    "giving": "Jugadores Transferidos",
+    "receiving": "Jugadores como Pago",
+    "paymentSchedule": "Cronograma de Pagos",
+    "notes": "Notas",
+    "notesPlaceholder": "Agregar notas adicionales...",
+    "confirmButton": "Confirmar Transferencia",
+    "pendingApproval": "Esta transferencia requerirá la aprobación del otro club antes de ejecutarse.",
+    "noPlayersGiven": "Sin jugadores",
+    "noPlayersReceived": "Sin jugadores"
+  },
+  "pending": {
+    "title": "Pendiente de Aprobación",
+    "subtitle": "Transferencias que requieren tu aprobación",
+    "empty": "No tienes transferencias pendientes de confirmar",
+    "emptyDescription": "Las transferencias de Uynose aparecerán aquí",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "details": "Ver Detalles",
+    "approveSuccess": "Transferencia aprobada exitosamente",
+    "approveError": "Error al aprobar la transferencia",
+    "rejectSuccess": "Transferencia rechazada exitosamente",
+    "rejectError": "Error al rechazar la transferencia",
+    "confirmApprove": "¿Aprobar esta transferencia?",
+    "confirmReject": "¿Rechazar esta transferencia?",
+    "approveDescription": "El jugador será movido y la transferencia se ejecutará",
+    "rejectDescription": "La transferencia será cancelada"
+  },
+  "history": {
+    "title": "Historial de Transferencias",
+    "subtitle": "Historial del club",
+    "empty": "Sin movimientos registrados",
+    "emptyDescription": "Las transferencias de {{clubName}} aparecerán aquí",
+    "filters": {
+      "all": "Todas",
+      "incoming": "Entrantes",
+      "outgoing": "Salientes"
+    }
+  },
+  "loanDetails": {
+    "title": "Detalles del Préstamo",
+    "duration": "Duración",
+    "durationHelp": "Cantidad de medias temporadas",
+    "fee": "Cargo por préstamo",
+    "salaryPercentage": "Porcentaje de salario",
+    "salaryHelp": "Porcentaje del salario que paga el club receptor",
+    "halves": "medias temporadas"
+  },
+  "create": {
+    "title": "Nueva Transferencia",
+    "description": "Registrar una nueva transferencia de jugador",
+    "button": "Nueva Transferencia",
+    "success": "Transferencia creada exitosamente",
+    "error": "Error al crear la transferencia"
+  },
+  "edit": {
+    "title": "Editar",
+    "description": "Modificar los detalles de la transferencia",
+    "success": "Transferencia actualizada exitosamente",
+    "error": "Error al actualizar la transferencia"
+  },
+  "delete": {
+    "title": "Eliminar Transferencia",
+    "description": "¿Estás seguro de que deseas eliminar esta transferencia?",
+    "success": "Transferencia eliminada exitosamente",
+    "error": "Error al eliminar la transferencia"
+  },
+  "complete": {
+    "title": "Completar Transferencia",
+    "success": "Transferencia completada exitosamente",
+    "error": "Error al completar la transferencia"
+  },
+  "cancel": {
+    "title": "Cancelar Transferencia",
+    "success": "Transferencia cancelada exitosamente",
+    "error": "Error al cancelar la transferencia"
+  },
+  "types": {
+    "PURCHASE": "Compra",
+    "SALE": "Venta",
+    "LOAN_IN": "Préstamo recibido",
+    "LOAN_OUT": "Préstamo cedido",
+    "AUCTION": "Subasta",
+    "FREE_AGENT": "Agente libre",
+    "INACTIVE_STATUS": "Pase inactivo",
+    "RETURN_FROM_LOAN": "Retorno de préstamo"
+  },
+  "status": {
+    "PENDING": "Pendiente",
+    "ACTIVE": "Activo",
+    "COMPLETED": "Completada",
+    "CANCELLED": "Cancelada",
+    "PARTIALLY_PAID": "Parcialmente pagada"
+  },
+  "fields": {
+    "player": "Jugador",
+    "fromClub": "Club origen",
+    "toClub": "Club destino",
+    "type": "Tipo",
+    "status": "Estado",
+    "totalAmount": "Monto total",
+    "installments": "Cuotas",
+    "loanDuration": "Duración del préstamo",
+    "loanFee": "Cargo por préstamo",
+    "salaryPercentage": "Porcentaje de salario",
+    "notes": "Notas",
+    "createdAt": "Fecha de creación",
+    "completedAt": "Fecha de completado"
+  },
+  "labels": {
+    "selectPlayer": "Seleccionar jugador",
+    "selectClub": "Seleccionar club",
+    "selectType": "Seleccionar tipo",
+    "selectStatus": "Seleccionar estado",
+    "halves": "medias temporadas",
+    "installmentNumber": "Cuota #{{number}}",
+    "dueDate": "Vencimiento",
+    "amount": "Monto",
+    "paid": "Pagada",
+    "pending": "Pendiente",
+    "season": "Temporada"
+  },
+  "placeholders": {
+    "searchPlayer": "Buscar jugador...",
+    "notes": "Notas adicionales..."
+  },
+  "buttons": {
+    "create": "Crear Transferencia",
+    "createLoan": "Crear Préstamo",
+    "createAuction": "Crear Subasta",
+    "signFreeAgent": "Fichar Agente Libre",
+    "markInactive": "Marcar Inactivo",
+    "complete": "Completar",
+    "cancel": "Reiniciar",
+    "viewDetails": "Ver Detalles"
+  },
+  "table": {
+    "player": "Jugador",
+    "fromTo": "De / A",
+    "amount": "Monto",
+    "type": "Tipo",
+    "status": "Estado",
+    "date": "Fecha",
+    "actions": "Acciones"
+  },
+  "loan": {
+    "title": "Nuevo Préstamo",
+    "duration": "Duración",
+    "fee": "Cargo",
+    "salaryShare": "Reparto de salario",
+    "receiverPays": "El club receptor paga"
+  },
+  "auction": {
+    "title": "Nueva Subasta",
+    "price": "Precio de subasta"
+  },
+  "freeAgent": {
+    "title": "Fichar Agente Libre",
+    "signingFee": "Prima de fichaje"
+  },
+  "inactive": {
+    "title": "Marcar como Inactivo",
+    "description": "El jugador seguirá pagando salario pero no contará en la plantilla activa"
+  },
+  "validation": {
+    "playerRequired": "El jugador es requerido",
+    "clubRequired": "El club es requerido",
+    "amountRequired": "El monto es requerido",
+    "amountPositive": "El monto debe ser mayor a 0",
+    "installmentsMin": "Las cuotas deben ser al menos 1",
+    "installmentsMax": "Las cuotas no pueden ser más de 6",
+    "installmentsSumMismatch": "La suma de las cuotas debe ser igual al monto total",
+    "durationRequired": "La duración es requerida",
+    "durationMin": "La duración debe ser al menos 1 media temporada",
+    "selectTransferType": "Debes seleccionar un tipo de transferencia",
+    "selectMainPlayer": "Debes seleccionar al menos un jugador para transferir",
+    "selectOtherClub": "Debes seleccionar el otro club"
+  },
+  "messages": {
+    "noTransfers": "No hay transferencias registradas",
+    "noActiveLoans": "No hay préstamos activos",
+    "windowClosed": "La ventana de transferencias está cerrada",
+    "rosterLimitExceeded": "Se ha excedido el límite de plantilla"
+  }
+}

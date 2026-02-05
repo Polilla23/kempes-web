@@ -17,6 +17,8 @@ import enFixtures from './locales/en/fixtures.json'
 import enHome from './locales/en/home.json'
 import enBracketEditor from './locales/en/bracket-editor.json'
 import enSubmitResult from './locales/en/submit-result.json'
+import enTransfers from './locales/en/transfers.json'
+import enFinances from './locales/en/finances.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -33,6 +35,8 @@ import esFixtures from './locales/es/fixtures.json'
 import esHome from './locales/es/home.json'
 import esBracketEditor from './locales/es/bracket-editor.json'
 import esSubmitResult from './locales/es/submit-result.json'
+import esTransfers from './locales/es/transfers.json'
+import esFinances from './locales/es/finances.json'
 
 // Configure i18next
 i18n
@@ -59,6 +63,8 @@ i18n
         home: enHome,
         bracketEditor: enBracketEditor,
         submitResult: enSubmitResult,
+        transfers: enTransfers,
+        finances: enFinances,
       },
       es: {
         common: esCommon,
@@ -75,6 +81,8 @@ i18n
         home: esHome,
         bracketEditor: esBracketEditor,
         submitResult: esSubmitResult,
+        transfers: esTransfers,
+        finances: esFinances,
       },
     },
 
@@ -103,6 +111,8 @@ i18n
       'home',
       'bracketEditor',
       'submitResult',
+      'transfers',
+      'finances',
     ],
 
     // Interpolation options

@@ -13,6 +13,10 @@ import { standingsRoutes } from '@/features/seasons/standings.routes'
 import { salaryRateRoutes } from '@/features/salary-rates/salary-rates.routes'
 import { storageRoutes } from '@/features/storage/storage.routes'
 import { newsRoutes } from '@/features/news/news.routes'
+import { seasonHalfRoutes } from '@/features/season-halves/season-halves.routes'
+import { transferWindowRoutes } from '@/features/transfer-windows/transfer-windows.routes'
+import { transferRoutes } from '@/features/transfers/transfers.routes'
+import { financeRoutes } from '@/features/finances/finances.routes'
 
 /**
  * Plugin principal de rutas con prefijo /api/v1
@@ -35,6 +39,10 @@ export default async function (app: FastifyInstance) {
       instance.register(salaryRateRoutes, { prefix: '/salary-rates' })
       instance.register(storageRoutes, { prefix: '/storage' })
       instance.register(newsRoutes, { prefix: '/news' })
+      instance.register(seasonHalfRoutes, { prefix: '/season-halves' })
+      instance.register(transferWindowRoutes, { prefix: '/transfer-windows' })
+      instance.register(transferRoutes, { prefix: '/transfers' })
+      instance.register(financeRoutes, { prefix: '/finances' })
 
       instance.get('/health', async () => ({ status: 'ok', timestamp: new Date() }))
 
