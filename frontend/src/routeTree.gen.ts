@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+<<<<<<< HEAD
 import { Route as SubmitResultIndexRouteImport } from './routes/submit-result/index'
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
 import { Route as TransfersIndexRouteImport } from './routes/transfers/index'
 import { Route as StandingsIndexRouteImport } from './routes/standings/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
@@ -51,10 +54,13 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+<<<<<<< HEAD
 const SubmitResultIndexRoute = SubmitResultIndexRouteImport.update({
   id: '/submit-result/',
   path: '/submit-result/',
 } as any)
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
 const TransfersIndexRoute = TransfersIndexRouteImport.update({
   id: '/transfers/',
   path: '/transfers/',
@@ -249,7 +255,10 @@ export interface FileRoutesByFullPath {
   '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/standings': typeof StandingsIndexRoute
+<<<<<<< HEAD
   '/submit-result': typeof SubmitResultIndexRoute
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
   '/transfers': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
@@ -287,7 +296,10 @@ export interface FileRoutesByTo {
   '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/standings': typeof StandingsIndexRoute
+<<<<<<< HEAD
   '/submit-result': typeof SubmitResultIndexRoute
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
   '/transfers': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
@@ -326,7 +338,10 @@ export interface FileRoutesById {
   '/fixtures/': typeof FixturesIndexRoute
   '/myaccount/': typeof MyaccountIndexRoute
   '/standings/': typeof StandingsIndexRoute
+<<<<<<< HEAD
   '/submit-result/': typeof SubmitResultIndexRoute
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
   '/transfers/': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
@@ -366,7 +381,10 @@ export interface FileRouteTypes {
     | '/fixtures'
     | '/myaccount'
     | '/standings'
+<<<<<<< HEAD
     | '/submit-result'
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
     | '/transfers'
     | '/club/delete/$id'
     | '/club/findOne/$id'
@@ -404,7 +422,10 @@ export interface FileRouteTypes {
     | '/fixtures'
     | '/myaccount'
     | '/standings'
+<<<<<<< HEAD
     | '/submit-result'
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
     | '/transfers'
     | '/club/delete/$id'
     | '/club/findOne/$id'
@@ -442,7 +463,10 @@ export interface FileRouteTypes {
     | '/fixtures/'
     | '/myaccount/'
     | '/standings/'
+<<<<<<< HEAD
     | '/submit-result/'
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
     | '/transfers/'
     | '/club/delete/$id'
     | '/club/findOne/$id'
@@ -481,7 +505,10 @@ export interface RootRouteChildren {
   FixturesIndexRoute: typeof FixturesIndexRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
   StandingsIndexRoute: typeof StandingsIndexRoute
+<<<<<<< HEAD
   SubmitResultIndexRoute: typeof SubmitResultIndexRoute
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
   TransfersIndexRoute: typeof TransfersIndexRoute
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
@@ -519,11 +546,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+<<<<<<< HEAD
     '/submit-result/': {
       id: '/submit-result/'
       path: '/submit-result'
       fullPath: '/submit-result'
       preLoaderRoute: typeof SubmitResultIndexRouteImport
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
     '/transfers/': {
       id: '/transfers/'
       path: '/transfers'
@@ -775,7 +805,10 @@ const rootRouteChildren: RootRouteChildren = {
   FixturesIndexRoute: FixturesIndexRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
   StandingsIndexRoute: StandingsIndexRoute,
+<<<<<<< HEAD
   SubmitResultIndexRoute: SubmitResultIndexRoute,
+=======
+>>>>>>> f129129e099849525877b379b8f74448bef10357
   TransfersIndexRoute: TransfersIndexRoute,
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,
