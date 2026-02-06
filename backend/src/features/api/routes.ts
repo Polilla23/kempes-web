@@ -11,11 +11,8 @@ import { eventTypeRoutes } from '@/features/event-types/event-types.routes'
 import { seasonRoutes } from '@/features/seasons/seasons.routes'
 import { standingsRoutes } from '@/features/seasons/standings.routes'
 import { salaryRateRoutes } from '@/features/salary-rates/salary-rates.routes'
-<<<<<<< HEAD
 import { storageRoutes } from '@/features/storage/storage.routes'
 import { newsRoutes } from '@/features/news/news.routes'
-=======
->>>>>>> f129129e099849525877b379b8f74448bef10357
 import { seasonHalfRoutes } from '@/features/season-halves/season-halves.routes'
 import { transferWindowRoutes } from '@/features/transfer-windows/transfer-windows.routes'
 import { transferRoutes } from '@/features/transfers/transfers.routes'
@@ -40,11 +37,8 @@ export default async function (app: FastifyInstance) {
       instance.register(seasonRoutes, { prefix: '/seasons' })
       instance.register(standingsRoutes, { prefix: '/standings' })
       instance.register(salaryRateRoutes, { prefix: '/salary-rates' })
-<<<<<<< HEAD
       instance.register(storageRoutes, { prefix: '/storage' })
       instance.register(newsRoutes, { prefix: '/news' })
-=======
->>>>>>> f129129e099849525877b379b8f74448bef10357
       instance.register(seasonHalfRoutes, { prefix: '/season-halves' })
       instance.register(transferWindowRoutes, { prefix: '/transfer-windows' })
       instance.register(transferRoutes, { prefix: '/transfers' })

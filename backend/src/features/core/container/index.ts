@@ -40,7 +40,6 @@ import { StandingsController } from '@/features/seasons/standings.controller'
 import { SalaryRateRepository } from '@/features/salary-rates/salary-rates.repository'
 import { SalaryRateController } from '@/features/salary-rates/salary-rates.controller'
 import { SalaryRateService } from '@/features/salary-rates/salary-rates.service'
-<<<<<<< HEAD
 import { StorageRepository } from '@/features/storage/storage.repository'
 import { StorageService } from '@/features/storage/storage.service'
 import { StorageController } from '@/features/storage/storage.controller'
@@ -48,8 +47,6 @@ import { SupabaseProvider } from '@/features/storage/providers/supabase.provider
 import { NewsRepository } from '@/features/news/news.repository'
 import { NewsService } from '@/features/news/news.service'
 import { NewsController } from '@/features/news/news.controller'
-=======
->>>>>>> f129129e099849525877b379b8f74448bef10357
 import { SeasonHalfRepository } from '@/features/season-halves/season-halves.repository'
 import { SeasonHalfController } from '@/features/season-halves/season-halves.controller'
 import { SeasonHalfService } from '@/features/season-halves/season-halves.service'
@@ -100,11 +97,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     seasonController: asClass(SeasonController).singleton(),
     standingsController: asClass(StandingsController).singleton(),
     salaryRateController: asClass(SalaryRateController).singleton(),
-<<<<<<< HEAD
     storageController: asClass(StorageController).singleton(),
     newsController: asClass(NewsController).singleton(),
-=======
->>>>>>> f129129e099849525877b379b8f74448bef10357
     seasonHalfController: asClass(SeasonHalfController).singleton(),
     transferWindowController: asClass(TransferWindowController).singleton(),
     transferController: asClass(TransferController).singleton(),
@@ -122,11 +116,8 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     seasonService: asClass(SeasonService).singleton(),
     standingsService: asClass(StandingsService).singleton(),
     salaryRateService: asClass(SalaryRateService).singleton(),
-<<<<<<< HEAD
     storageService: asClass(StorageService).singleton(),
     newsService: asClass(NewsService).singleton(),
-=======
->>>>>>> f129129e099849525877b379b8f74448bef10357
     seasonHalfService: asClass(SeasonHalfService).singleton(),
     transferWindowService: asClass(TransferWindowService).singleton(),
     transferService: asClass(TransferService).singleton(),
