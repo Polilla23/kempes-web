@@ -1,0 +1,145 @@
+{
+  "title": "Gestión Financiera",
+  "dashboard": {
+    "title": "Dashboard Financiero",
+    "currentBalance": "Balance Actual",
+    "totalIncome": "Ingresos Totales",
+    "totalExpenses": "Gastos Totales",
+    "totalSalaries": "Salarios Totales",
+    "netChange": "Cambio Neto"
+  },
+  "transactions": {
+    "title": "Transacciones",
+    "create": {
+      "title": "Nueva Transacción",
+      "success": "Transacción creada exitosamente",
+      "error": "Error al crear la transacción"
+    },
+    "noTransactions": "No hay transacciones registradas"
+  },
+  "transactionTypes": {
+    "TRANSFER_INCOME": "Ingreso por venta",
+    "TRANSFER_EXPENSE": "Gasto por compra",
+    "LOAN_FEE_INCOME": "Ingreso por préstamo",
+    "LOAN_FEE_EXPENSE": "Gasto por préstamo",
+    "PRIZE_INCOME": "Premio",
+    "FINE_EXPENSE": "Multa",
+    "SALARY_EXPENSE": "Salarios",
+    "BONUS_INCOME": "Bono",
+    "AUCTION_INCOME": "Ingreso subasta",
+    "AUCTION_EXPENSE": "Gasto subasta",
+    "PLAYER_SWAP_CREDIT": "Jugador recibido",
+    "PLAYER_SWAP_DEBIT": "Jugador cedido"
+  },
+  "balances": {
+    "title": "Balances",
+    "history": "Historial de Balances",
+    "initialize": {
+      "title": "Inicializar Balance",
+      "success": "Balance inicializado exitosamente",
+      "error": "Error al inicializar el balance"
+    },
+    "startingBalance": "Balance Inicial",
+    "endingBalance": "Balance Final"
+  },
+  "prizes": {
+    "title": "Premios de Competición",
+    "create": {
+      "title": "Nuevo Premio",
+      "description": "Configurar un nuevo premio de competición",
+      "success": "Premio creado exitosamente",
+      "error": "Error al crear el premio"
+    },
+    "edit": {
+      "title": "Editar Premio",
+      "success": "Premio actualizado exitosamente",
+      "error": "Error al actualizar el premio"
+    },
+    "delete": {
+      "title": "Eliminar Premio",
+      "description": "¿Estás seguro de que deseas eliminar este premio?",
+      "success": "Premio eliminado exitosamente",
+      "error": "Error al eliminar el premio"
+    },
+    "award": {
+      "title": "Otorgar Premio",
+      "success": "Premio otorgado exitosamente",
+      "error": "Error al otorgar el premio"
+    },
+    "position": "Posición",
+    "amount": "Monto"
+  },
+  "fines": {
+    "title": "Multas",
+    "create": {
+      "title": "Registrar Multa",
+      "success": "Multa registrada exitosamente",
+      "error": "Error al registrar la multa"
+    }
+  },
+  "bonuses": {
+    "title": "Bonos",
+    "create": {
+      "title": "Registrar Bono",
+      "success": "Bono registrado exitosamente",
+      "error": "Error al registrar el bono"
+    }
+  },
+  "fields": {
+    "club": "Club",
+    "type": "Tipo",
+    "amount": "Monto",
+    "description": "Descripción",
+    "date": "Fecha",
+    "seasonHalf": "Media Temporada",
+    "competitionType": "Tipo de Competición",
+    "position": "Posición"
+  },
+  "labels": {
+    "selectClub": "Seleccionar club",
+    "selectType": "Seleccionar tipo",
+    "selectCompetition": "Seleccionar competición",
+    "income": "Ingreso",
+    "expense": "Gasto",
+    "firstHalf": "Primera mitad",
+    "secondHalf": "Segunda mitad"
+  },
+  "placeholders": {
+    "description": "Descripción de la transacción...",
+    "amount": "0"
+  },
+  "buttons": {
+    "createTransaction": "Nueva Transacción",
+    "createPrize": "Nuevo Premio",
+    "awardPrize": "Otorgar Premio",
+    "recordFine": "Registrar Multa",
+    "recordBonus": "Registrar Bono",
+    "viewReport": "Ver Reporte"
+  },
+  "table": {
+    "date": "Fecha",
+    "description": "Descripción",
+    "type": "Tipo",
+    "amount": "Monto",
+    "club": "Club",
+    "actions": "Acciones"
+  },
+  "report": {
+    "title": "Reporte Financiero",
+    "summary": "Resumen",
+    "transactionBreakdown": "Desglose de Transacciones",
+    "totalTransactions": "Total de Transacciones"
+  },
+  "validation": {
+    "clubRequired": "El club es requerido",
+    "amountRequired": "El monto es requerido",
+    "amountPositive": "El monto debe ser mayor a 0",
+    "descriptionRequired": "La descripción es requerida",
+    "positionRequired": "La posición es requerida",
+    "positionPositive": "La posición debe ser mayor a 0"
+  },
+  "messages": {
+    "noBalanceFound": "No se encontró balance para este club",
+    "balanceInitialized": "Balance inicializado correctamente"
+  }
+}

@@ -38,9 +38,17 @@ model Club {
   awayMatches       Match[]            @relation("AwayMatches")
   competitions      Competition[]      @relation("CompetitionTeams")
   seasonTransitions SeasonTransition[]
-  clubHistory       ClubHistory[]
-  coefKempes        CoefKempes[]
-  matchCovids       MatchCovid[]
+  clubHistory   ClubHistory[]
+  coefKempes    CoefKempes[]
+  matchCovids   MatchCovid[]
+
+  // Transfer and finance relations
+  transfersFrom         Transfer[]  @relation("TransferFromClub")
+  transfersTo           Transfer[]  @relation("TransferToClub")
+  transfersInitiated    Transfer[]  @relation("TransferInitiator")
+  financialTransactions FinancialTransaction[]
+  seasonBalances        ClubSeasonBalance[]
+  playerSeasonHalfClubs PlayerSeasonHalfClub[]
 
   @@index([userId])
   @@map("clubs")
@@ -64,7 +72,12 @@ model Player {
   avatar            String?             @map("avatar_url")
   events            Event[]
   playerSeasonStats PlayerSeasonStats[]
-  matchCovids       MatchCovid[]
+  matchCovids   MatchCovid[]
+
+  // Transfer relations
+  transfers             Transfer[]
+  transferPayments      TransferPlayerPayment[]
+  playerSeasonHalfClubs PlayerSeasonHalfClub[]
 
   @@map("players")
 }
@@ -87,7 +100,10 @@ model Season {
   seasonTransitions SeasonTransition[]
   clubHistory       ClubHistory[]
   playerSeasonStats PlayerSeasonStats[]
-  coefKempes        CoefKempes[]
+  coefKempes    CoefKempes[]
+
+  // Season halves relation
+  seasonHalves  SeasonHalf[]
 }
 
 model Competition {
@@ -119,10 +135,13 @@ model CompetitionType {
   id           String              @id @default(uuid())
   category     CompetitionCategory // "SENIOR" o "KEMPESITA"
   hierarchy    Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
-  name         CompetitionName     @unique // "Liga A", "Copa Kempes"          
+  name         CompetitionName     @unique // "Liga A", "Copa Kempes"
   format       CompetitionFormat // Es una LIGA o una COPA
   trophyImage  String?             @map("trophy_image_url")
   competitions Competition[]
+
+  // Prize configuration relation
+  prizes        CompetitionPrize[]
 }
 
 model Match {
@@ -346,6 +365,61 @@ enum CupPhase {
 }
 
 // ============================================
+// TRANSFER AND FINANCE ENUMS
+// ============================================
+
+enum TransferType {
+  PURCHASE          // Compra a otro club
+  SALE              // Venta a otro club
+  LOAN_IN           // Préstamo recibido
+  LOAN_OUT          // Préstamo cedido
+  AUCTION           // Subasta forzada
+  FREE_AGENT        // Pase Libre (club FREE)
+  INACTIVE_STATUS   // Pase Inactivo (jugador inactivo)
+  RETURN_FROM_LOAN  // Retorno de préstamo (automático)
+}
+
+enum TransferStatus {
+  PENDING           // Pendiente de aprobación
+  ACTIVE            // Activo (préstamos vigentes)
+  COMPLETED         // Completada
+  CANCELLED         // Cancelada
+  PARTIALLY_PAID    // Con cuotas pendientes
+}
+
+enum InstallmentStatus {
+  PENDING           // No vencida
+  DUE               // Actualmente vencida
+  PAID              // Pagada
+  OVERDUE           // Vencida sin pagar
+}
+
+enum TransactionType {
+  TRANSFER_INCOME       // Ingreso por venta
+  TRANSFER_EXPENSE      // Gasto por compra
+  LOAN_FEE_INCOME       // Cargo préstamo recibido
+  LOAN_FEE_EXPENSE      // Cargo préstamo pagado
+  PRIZE_INCOME          // Premio competición
+  FINE_EXPENSE          // Multa
+  SALARY_EXPENSE        // Salarios
+  BONUS_INCOME          // Bono cumplimiento
+  AUCTION_INCOME        // Ingreso subasta
+  AUCTION_EXPENSE       // Gasto subasta
+  PLAYER_SWAP_CREDIT    // Jugador recibido como pago
+  PLAYER_SWAP_DEBIT     // Jugador dado como pago
+}
+
+enum SeasonHalfType {
+  FIRST_HALF        // Primera mitad
+  SECOND_HALF       // Segunda mitad
+}
+
+enum TransferWindowStatus {
+  OPEN
+  CLOSED
+}
+
+// ============================================
 // HISTORICAL AND MOVEMENT TRACKING MODELS
 // ============================================
 
@@ -418,18 +492,233 @@ model PlayerSeasonStats {
 }
 
 model CoefKempes {
-  id       String          @id @default(uuid())
-  clubId   String
-  seasonId String
-  points   Float
-  cupPhase CupPhase // Fase máxima alcanzada
-  cupName  CompetitionName // KEMPES_CUP, GOLD_CUP, SILVER_CUP
+  id            String  @id @default(uuid())
+  clubId        String
+  seasonId      String
+  points        Float
+  cupPhase      CupPhase // Fase máxima alcanzada
+  cupName       CompetitionName // KEMPES_CUP, GOLD_CUP, SILVER_CUP
 
-  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  club          Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
   @@unique([clubId, seasonId, cupName])
   @@index([clubId])
   @@index([seasonId])
   @@map("coef_kempes")
+}
+
+// ============================================
+// SEASON HALF AND TRANSFER WINDOW MODELS
+// ============================================
+
+model SeasonHalf {
+  id            String           @id @default(uuid())
+  seasonId      String           @map("season_id")
+  halfType      SeasonHalfType   @map("half_type")
+  startDate     DateTime?        @map("start_date")
+  endDate       DateTime?        @map("end_date")
+  isActive      Boolean          @default(false) @map("is_active")
+
+  season        Season           @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  // Relaciones
+  transferWindows       TransferWindow[]
+  transfers             Transfer[]         @relation("TransferSeasonHalf")
+  transfersLoanReturn   Transfer[]         @relation("LoanReturnSeasonHalf")
+  installments          TransferInstallment[]
+  balances              ClubSeasonBalance[]
+  playerSeasonHalfClubs PlayerSeasonHalfClub[]
+  financialTransactions FinancialTransaction[]
+
+  @@unique([seasonId, halfType])
+  @@index([seasonId])
+  @@index([isActive])
+  @@map("season_halves")
+}
+
+model TransferWindow {
+  id              String               @id @default(uuid())
+  seasonHalfId    String               @map("season_half_id")
+  name            String               // "Mercado Invierno T7", "Mercado Verano T7"
+  startDate       DateTime             @map("start_date")
+  endDate         DateTime             @map("end_date")
+  status          TransferWindowStatus @default(CLOSED)
+
+  seasonHalf      SeasonHalf           @relation(fields: [seasonHalfId], references: [id], onDelete: Cascade)
+  transfers       Transfer[]
+
+  @@index([seasonHalfId])
+  @@index([status])
+  @@map("transfer_windows")
+}
+
+// ============================================
+// TRANSFER AND PAYMENT MODELS
+// ============================================
+
+model Transfer {
+  id                    String          @id @default(uuid())
+  type                  TransferType
+  status                TransferStatus  @default(PENDING)
+  playerId              String          @map("player_id")
+  fromClubId            String          @map("from_club_id")
+  toClubId              String          @map("to_club_id")
+  initiatorClubId       String?         @map("initiator_club_id")
+  transferWindowId      String?         @map("transfer_window_id")
+  seasonHalfId          String          @map("season_half_id")
+
+  // Detalles financieros
+  totalAmount           Float           @default(0) @map("total_amount")
+  numberOfInstallments  Int             @default(1) @map("number_of_installments")
+
+  // Campos específicos préstamos
+  loanDurationHalves    Int?            @map("loan_duration_halves")
+  returnSeasonHalfId    String?         @map("return_season_half_id")
+  loanFee               Float?          @map("loan_fee")
+  // Porcentaje de salario que paga el club receptor (para préstamos)
+  // 100 = club receptor paga todo, 50 = cada club paga mitad, 0 = dueño paga todo
+  loanSalaryPercentage  Int?            @default(100) @map("loan_salary_percentage")
+
+  notes                 String?
+  createdAt             DateTime        @default(now()) @map("created_at")
+  completedAt           DateTime?       @map("completed_at")
+
+  // Relaciones
+  player                Player          @relation(fields: [playerId], references: [id])
+  fromClub              Club            @relation("TransferFromClub", fields: [fromClubId], references: [id])
+  toClub                Club            @relation("TransferToClub", fields: [toClubId], references: [id])
+  initiatorClub         Club?           @relation("TransferInitiator", fields: [initiatorClubId], references: [id])
+  transferWindow        TransferWindow? @relation(fields: [transferWindowId], references: [id])
+  seasonHalf            SeasonHalf      @relation("TransferSeasonHalf", fields: [seasonHalfId], references: [id])
+  returnSeasonHalf      SeasonHalf?     @relation("LoanReturnSeasonHalf", fields: [returnSeasonHalfId], references: [id])
+
+  installments          TransferInstallment[]
+  playersAsPayment      TransferPlayerPayment[]
+  transactions          FinancialTransaction[]
+
+  @@index([playerId])
+  @@index([fromClubId])
+  @@index([toClubId])
+  @@index([initiatorClubId])
+  @@index([transferWindowId])
+  @@index([seasonHalfId])
+  @@index([status])
+  @@index([type])
+  @@map("transfers")
+}
+
+model TransferInstallment {
+  id                String            @id @default(uuid())
+  transferId        String            @map("transfer_id")
+  installmentNumber Int               @map("installment_number")
+  amount            Float
+  dueSeasonHalfId   String            @map("due_season_half_id")
+  status            InstallmentStatus @default(PENDING)
+  paidAt            DateTime?         @map("paid_at")
+
+  transfer          Transfer          @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  dueSeasonHalf     SeasonHalf        @relation(fields: [dueSeasonHalfId], references: [id])
+  transaction       FinancialTransaction?
+
+  @@unique([transferId, installmentNumber])
+  @@index([transferId])
+  @@index([dueSeasonHalfId])
+  @@index([status])
+  @@map("transfer_installments")
+}
+
+model TransferPlayerPayment {
+  id              String    @id @default(uuid())
+  transferId      String    @map("transfer_id")
+  playerId        String    @map("player_id")
+  valuationAmount Float     @map("valuation_amount")
+
+  transfer        Transfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  player          Player    @relation(fields: [playerId], references: [id])
+
+  @@unique([transferId, playerId])
+  @@index([transferId])
+  @@index([playerId])
+  @@map("transfer_player_payments")
+}
+
+// ============================================
+// FINANCIAL TRACKING MODELS
+// ============================================
+
+model FinancialTransaction {
+  id                  String          @id @default(uuid())
+  clubId              String          @map("club_id")
+  type                TransactionType
+  amount              Float           // Positivo = ingreso, Negativo = gasto
+  description         String
+  transferId          String?         @map("transfer_id")
+  installmentId       String?         @unique @map("installment_id")
+  seasonHalfId        String          @map("season_half_id")
+  createdAt           DateTime        @default(now()) @map("created_at")
+
+  club                Club            @relation(fields: [clubId], references: [id])
+  transfer            Transfer?       @relation(fields: [transferId], references: [id])
+  installment         TransferInstallment? @relation(fields: [installmentId], references: [id])
+  seasonHalf          SeasonHalf      @relation(fields: [seasonHalfId], references: [id])
+
+  @@index([clubId])
+  @@index([transferId])
+  @@index([seasonHalfId])
+  @@index([type])
+  @@map("financial_transactions")
+}
+
+model ClubSeasonBalance {
+  id              String      @id @default(uuid())
+  clubId          String      @map("club_id")
+  seasonHalfId    String      @map("season_half_id")
+  startingBalance Float       @default(0) @map("starting_balance")
+  totalIncome     Float       @default(0) @map("total_income")
+  totalExpenses   Float       @default(0) @map("total_expenses")
+  endingBalance   Float       @default(0) @map("ending_balance")
+  totalSalaries   Float       @default(0) @map("total_salaries")
+
+  club            Club        @relation(fields: [clubId], references: [id])
+  seasonHalf      SeasonHalf  @relation(fields: [seasonHalfId], references: [id])
+
+  @@unique([clubId, seasonHalfId])
+  @@index([clubId])
+  @@index([seasonHalfId])
+  @@map("club_season_balances")
+}
+
+model CompetitionPrize {
+  id                String          @id @default(uuid())
+  competitionTypeId String          @map("competition_type_id")
+  position          Int             // 1°, 2°, 3°...
+  prizeAmount       Float           @map("prize_amount")
+  description       String?         // "Campeón Liga A", "Subcampeón"
+
+  competitionType   CompetitionType @relation(fields: [competitionTypeId], references: [id])
+
+  @@unique([competitionTypeId, position])
+  @@index([competitionTypeId])
+  @@map("competition_prizes")
+}
+
+// Tracking de dónde jugó cada jugador por media temporada (para calcular salarios)
+model PlayerSeasonHalfClub {
+  id               String      @id @default(uuid())
+  playerId         String      @map("player_id")
+  seasonHalfId     String      @map("season_half_id")
+  clubId           String      @map("club_id")
+  salaryPaid       Float       @map("salary_paid")        // Salario pagado por este club esta media
+  salaryPercentage Int         @default(100) @map("salary_percentage") // % del salario que pagó
+
+  player           Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  seasonHalf       SeasonHalf  @relation(fields: [seasonHalfId], references: [id], onDelete: Cascade)
+  club             Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, seasonHalfId, clubId])
+  @@index([playerId])
+  @@index([seasonHalfId])
+  @@index([clubId])
+  @@map("player_season_half_clubs")
 }
