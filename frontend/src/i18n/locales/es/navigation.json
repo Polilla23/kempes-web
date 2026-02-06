@@ -8,7 +8,8 @@
     "standings": "Posiciones",
     "fixture": "Fixture",
     "statistics": "Estadísticas",
-    "transfers": "Transferencias"
+    "transfers": "Transferencias",
+    "submitResult": "Subir Resultado"
   },
   "management": {
     "title": "Gestión y Administración",

@@ -13,6 +13,10 @@ export const clubRoutes = async (fastify: FastifyInstance) => {
   schema: clubsSchemas.findAll,
     handler: clubController.findAll.bind(clubController),
   })
+  fastify.get('/:clubId/players', {
+    preHandler: [fastify.authenticate],
+    handler: clubController.getClubPlayers.bind(clubController),
+  })
   fastify.get('/:id', {
     preHandler: [fastify.authenticate],
   schema: clubsSchemas.findOne,

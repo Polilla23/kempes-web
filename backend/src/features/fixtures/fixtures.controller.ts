@@ -4,6 +4,15 @@ import { StandingsService } from '@/features/seasons/standings.service'
 import { Response } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
 import { MatchMapper } from '@/mappers'
+import {
+  MatchNotFoundError,
+  MatchAlreadyFinalizedError,
+  MatchNotAssignedError,
+  KnockoutMatchDrawError,
+  UserNotClubOwnerError,
+  GoalEventsMismatchError,
+  MvpRequiredError,
+} from '@/features/fixtures/fixtures.errors'
 
 export class FixtureController {
   private fixtureService: FixtureService
@@ -262,6 +271,95 @@ export class FixtureController {
         reply,
         'GENERATION_ERROR',
         'Failed to generate Copa Oro and Copa Plata',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  // ===================== SUBMIT RESULT =====================
+
+  /**
+   * Get pending matches for the authenticated user's club
+   */
+  async getMyPendingMatches(req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = (req as any).user.id
+      const result = await this.fixtureService.getMyPendingMatches(userId)
+      return Response.success(reply, result, 'Pending matches fetched successfully')
+    } catch (error: any) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Failed to retrieve pending matches',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  /**
+   * Submit a match result with events and MVP
+   */
+  async submitResult(
+    req: FastifyRequest<{
+      Params: { matchId: string }
+      Body: {
+        homeClubGoals: number
+        awayClubGoals: number
+        homeEvents: Array<{ typeId: string; playerId: string; quantity: number }>
+        awayEvents: Array<{ typeId: string; playerId: string; quantity: number }>
+        mvpPlayerId: string
+        screenshotUrl?: string
+      }
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const { matchId } = req.params
+      const { homeClubGoals, awayClubGoals, homeEvents, awayEvents, mvpPlayerId, screenshotUrl } = req.body
+      const userId = (req as any).user.id
+
+      const validatedMatchId = Validator.uuid(matchId)
+
+      const result = await this.fixtureService.submitResult({
+        matchId: validatedMatchId,
+        homeClubGoals: Number(homeClubGoals),
+        awayClubGoals: Number(awayClubGoals),
+        homeEvents: homeEvents || [],
+        awayEvents: awayEvents || [],
+        mvpPlayerId,
+        userId,
+        screenshotUrl,
+      })
+
+      return Response.success(reply, result, 'Result submitted successfully')
+    } catch (error: any) {
+      if (error instanceof MatchNotFoundError) {
+        return Response.notFound(reply, 'Match', req.params.matchId)
+      }
+      if (error instanceof MatchAlreadyFinalizedError) {
+        return Response.error(reply, 'MATCH_ALREADY_FINALIZED', error.message, 400)
+      }
+      if (error instanceof MatchNotAssignedError) {
+        return Response.error(reply, 'MATCH_NOT_ASSIGNED', error.message, 400)
+      }
+      if (error instanceof UserNotClubOwnerError) {
+        return Response.error(reply, 'UNAUTHORIZED', error.message, 403)
+      }
+      if (error instanceof KnockoutMatchDrawError) {
+        return Response.error(reply, 'KNOCKOUT_DRAW', error.message, 400)
+      }
+      if (error instanceof GoalEventsMismatchError) {
+        return Response.error(reply, 'GOALS_MISMATCH', error.message, 400)
+      }
+      if (error instanceof MvpRequiredError) {
+        return Response.error(reply, 'MVP_REQUIRED', error.message, 400)
+      }
+      return Response.error(
+        reply,
+        'SUBMIT_RESULT_ERROR',
+        'Failed to submit result',
         500,
         error instanceof Error ? error.message : error
       )

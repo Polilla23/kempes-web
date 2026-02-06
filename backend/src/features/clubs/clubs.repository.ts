@@ -57,4 +57,20 @@ export class ClubRepository implements IClubRepository {
       },
     })
   }
+
+  async getActivePlayers(clubId: string) {
+    return await this.prisma.player.findMany({
+      where: {
+        actualClubId: clubId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        lastName: true,
+        overall: true,
+      },
+      orderBy: [{ lastName: 'asc' }, { name: 'asc' }],
+    })
+  }
 }

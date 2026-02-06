@@ -1,0 +1,55 @@
+{
+  "title": "Submit Result",
+  "subtitle": "Select the match and submit the result",
+  "pendingMatches": {
+    "title": "Your Pending Matches",
+    "subtitle": "All competitions",
+    "empty": "You have no pending matches",
+    "selected": "Selected"
+  },
+  "form": {
+    "title": "Register Result",
+    "local": "Home",
+    "visitante": "Away",
+    "vs": "VS"
+  },
+  "events": {
+    "title": "Match Events",
+    "homeTitle": "Events for {{teamName}}",
+    "awayTitle": "Events for {{teamName}}",
+    "addEvent": "Add Event",
+    "removeEvent": "Remove",
+    "eventType": "Event type",
+    "player": "Player",
+    "quantity": "Quantity",
+    "selectType": "Select type...",
+    "selectPlayer": "Search player...",
+    "noPlayers": "No players found",
+    "goalsMismatch": "Goals for {{teamName}} ({{goalEvents}}) don't match the score ({{score}})"
+  },
+  "mvp": {
+    "title": "Match MVP",
+    "description": "Select the most valuable player of the match (required)",
+    "selectPlayer": "Search MVP player...",
+    "required": "You must select an MVP"
+  },
+  "screenshot": {
+    "title": "Screenshot (optional)",
+    "dragText": "Drag your screenshot here",
+    "clickText": "or click to select",
+    "fileTypes": "PNG, JPG up to 5MB",
+    "selected": "File selected: {{fileName}}"
+  },
+  "warning": {
+    "title": "Important",
+    "message": "The result must be verified with the screenshot. Fraudulent results will be penalized."
+  },
+  "submit": "Submit Result",
+  "submitting": "Submitting...",
+  "success": "Result submitted successfully!",
+  "error": "Error submitting the result",
+  "selectMatch": {
+    "title": "Select a match",
+    "description": "Choose one of your pending matches from the list to submit the result"
+  }
+}

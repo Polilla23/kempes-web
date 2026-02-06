@@ -9,156 +9,156 @@ datasource db {
 }
 
 model User {
-  id       String    @id @default(uuid())
-  email    String    @unique
-  password String
-  role     RoleType? @default(USER)
-  isVerified Boolean @default(false)  @map("is_verified")
-  verificationToken String? @unique   @map("verification_token")
-  verificationTokenExpires DateTime?  @map("verification_token_expires")
-  resetPasswordToken String? @unique  @map("reset_password_token")
+  id                        String    @id @default(uuid())
+  email                     String    @unique
+  password                  String
+  role                      RoleType? @default(USER)
+  isVerified                Boolean   @default(false) @map("is_verified")
+  verificationToken         String?   @unique @map("verification_token")
+  verificationTokenExpires  DateTime? @map("verification_token_expires")
+  resetPasswordToken        String?   @unique @map("reset_password_token")
   resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
-  club     Club?
-  news     News[]
+  club                      Club?
+  news                      News[]
 
   @@map("users")
 }
 
 model Club {
-  id     String @id @default(uuid())
-  name   String @unique
-  logo   String?
-  userId String? @unique @map("user_id")
-  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  playerOwner Player[]  @relation("OwnerClub")
-  playerNow   Player[]  @relation("ActualClub")
-  isActive Boolean @default(true) @map("is_active")
+  id          String   @id @default(uuid())
+  name        String   @unique
+  logo        String?
+  userId      String?  @unique @map("user_id")
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerOwner Player[] @relation("OwnerClub")
+  playerNow   Player[] @relation("ActualClub")
+  isActive    Boolean  @default(true) @map("is_active")
 
-  homeMatches Match[] @relation("HomeMatches")
-  awayMatches Match[] @relation("AwayMatches")
-  competitions  Competition[] @relation("CompetitionTeams")
+  homeMatches       Match[]            @relation("HomeMatches")
+  awayMatches       Match[]            @relation("AwayMatches")
+  competitions      Competition[]      @relation("CompetitionTeams")
   seasonTransitions SeasonTransition[]
-  clubHistory   ClubHistory[]
-  coefKempes    CoefKempes[]
-  matchCovids   MatchCovid[]
+  clubHistory       ClubHistory[]
+  coefKempes        CoefKempes[]
+  matchCovids       MatchCovid[]
 
   @@index([userId])
   @@map("clubs")
 }
 
 model Player {
-  id            String  @id @default(uuid())
-  name          String
-  lastName      String  @map("last_name")
-  birthdate     DateTime
-  actualClubId  String  @map("actual_club_id") @default("null")
-  ownerClubId   String  @map("owner_club_id") @default("null")
-  actualClub    Club    @relation("ActualClub", fields: [actualClubId], references: [id])
-  ownerClub     Club    @relation("OwnerClub", fields: [ownerClubId], references: [id])
-  overall       Int?  @default(0)
-  salary        Float   @default(100.000)
-  sofifaId      String?  @map("sofifa_id") @default("null")
-  transfermarktId String?  @map("transfermarkt_id")  @default("null")
-  isKempesita   Boolean @map("is_kempesita")  @default(false)
-  isActive      Boolean @map("is_active") @default(true)
-  avatar        String?  @map("avatar_url")
-  events        Event[]
+  id                String              @id @default(uuid())
+  name              String
+  lastName          String              @map("last_name")
+  birthdate         DateTime
+  actualClubId      String              @default("null") @map("actual_club_id")
+  ownerClubId       String              @default("null") @map("owner_club_id")
+  actualClub        Club                @relation("ActualClub", fields: [actualClubId], references: [id])
+  ownerClub         Club                @relation("OwnerClub", fields: [ownerClubId], references: [id])
+  overall           Int?                @default(0)
+  salary            Float               @default(100.000)
+  sofifaId          String?             @default("null") @map("sofifa_id")
+  transfermarktId   String?             @default("null") @map("transfermarkt_id")
+  isKempesita       Boolean             @default(false) @map("is_kempesita")
+  isActive          Boolean             @default(true) @map("is_active")
+  avatar            String?             @map("avatar_url")
+  events            Event[]
   playerSeasonStats PlayerSeasonStats[]
-  matchCovids   MatchCovid[]
+  matchCovids       MatchCovid[]
 
   @@map("players")
 }
 
 model SalaryRate {
   id         String  @id @default(uuid())
-  minOverall Int     @map("min_overall")  // Media mínima
-  maxOverall Int     @map("max_overall")  // Media máxima
-  salary     Float   // Salario correspondiente
+  minOverall Int     @map("min_overall") // Media mínima
+  maxOverall Int     @map("max_overall") // Media máxima
+  salary     Float // Salario correspondiente
   isActive   Boolean @default(true) @map("is_active")
 
   @@map("salary_rates")
 }
 
 model Season {
-  id            String  @id @default(uuid())
-  number        Int @unique
-  isActive      Boolean @default(false)
-  competitions  Competition[]
+  id                String              @id @default(uuid())
+  number            Int                 @unique
+  isActive          Boolean             @default(false)
+  competitions      Competition[]
   seasonTransitions SeasonTransition[]
-  clubHistory   ClubHistory[]
+  clubHistory       ClubHistory[]
   playerSeasonStats PlayerSeasonStats[]
-  coefKempes    CoefKempes[]
+  coefKempes        CoefKempes[]
 }
 
 model Competition {
-  id            String  @id @default(uuid())
-  name          String  // Nombre constuido, ej: "Liga A Mayores - T7", "Copa de Oro - T10"
-  system        CompetitionStage // Sitema de juego de ESTA instancia/fase
-  seasonId      String
-  isActive      Boolean @default(true)
-  competitionTypeId String
+  id                  String           @id @default(uuid())
+  name                String // Nombre constuido, ej: "Liga A Mayores - T7", "Copa de Oro - T10"
+  system              CompetitionStage // Sitema de juego de ESTA instancia/fase
+  seasonId            String
+  isActive            Boolean          @default(true)
+  competitionTypeId   String
   // Para conectar fases (ej. Copa de Oro es hija de Copa Kempes)
-  parentCompetitionId String? @unique
-  parentCompetition Competition?  @relation("CompetitionPhases", fields: [parentCompetitionId], references: [id])
-  childCompetition  Competition?  @relation("CompetitionPhases")
+  parentCompetitionId String?          @unique
+  parentCompetition   Competition?     @relation("CompetitionPhases", fields: [parentCompetitionId], references: [id])
+  childCompetition    Competition?     @relation("CompetitionPhases")
   // El cerebro de la flexibilidad: Aquí guardamos las reglas específicas.
-  rules         Json
+  rules               Json
 
-  season        Season  @relation(fields: [seasonId], references: [id])
-  competitionType CompetitionType @relation(fields: [competitionTypeId], references:[id])
-  teams         Club[]  @relation("CompetitionTeams")
-  matches       Match[]
-  
-  seasonTransitionsFrom SeasonTransition[] @relation("FromCompetition")
-  seasonTransitionsTo SeasonTransition[] @relation("ToCompetition")
-  clubHistory   ClubHistory[]
-  playerSeasonStats PlayerSeasonStats[]
+  season          Season          @relation(fields: [seasonId], references: [id])
+  competitionType CompetitionType @relation(fields: [competitionTypeId], references: [id])
+  teams           Club[]          @relation("CompetitionTeams")
+  matches         Match[]
+
+  seasonTransitionsFrom SeasonTransition[]  @relation("FromCompetition")
+  seasonTransitionsTo   SeasonTransition[]  @relation("ToCompetition")
+  clubHistory           ClubHistory[]
+  playerSeasonStats     PlayerSeasonStats[]
 }
 
 model CompetitionType {
-  id            String  @id @default(uuid())
-  category      CompetitionCategory // "SENIOR" o "KEMPESITA"
-  hierarchy      Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
-  name          CompetitionName @unique // "Liga A", "Copa Kempes"          
-  format        CompetitionFormat // Es una LIGA o una COPA
-  trophyImage   String?  @map("trophy_image_url")
-  competitions  Competition[]
+  id           String              @id @default(uuid())
+  category     CompetitionCategory // "SENIOR" o "KEMPESITA"
+  hierarchy    Int // 1, 2, 3... para ordenar las ligas (Liga A = 1, Liga B = 2...)
+  name         CompetitionName     @unique // "Liga A", "Copa Kempes"          
+  format       CompetitionFormat // Es una LIGA o una COPA
+  trophyImage  String?             @map("trophy_image_url")
+  competitions Competition[]
 }
 
 model Match {
-  id            String  @id @default(uuid())
+  id            String           @id @default(uuid())
   matchdayOrder Int // Fecha 1, 2... o número de orden
-  status        MatchStatus @default(PENDIENTE)
+  status        MatchStatus      @default(PENDIENTE)
   stage         CompetitionStage // "ROUND_ROBIN" o "KNOCKOUT"
 
   // Ronda explícita para eliminatorias. NULL para ligas/grupos.
   knockoutRound KnockoutRound? @map("knockout_round")
 
-  homeClubId    String?
-  awayClubId    String?
+  homeClubId      String?
+  awayClubId      String?
   homePlaceholder String?
   awayPlaceholder String?
-  homeClubGoals Int @default(0)
-  awayClubGoals Int @default(0)
-  competitionId String
-  events       Event[]
+  homeClubGoals   Int     @default(0)
+  awayClubGoals   Int     @default(0)
+  competitionId   String
+  events          Event[]
 
-  homeSourceMatchId String? @map("home_source_match_id")
-  awaySourceMatchId String? @map("away_source_match_id")
+  homeSourceMatchId  String? @map("home_source_match_id")
+  awaySourceMatchId  String? @map("away_source_match_id")
   homeSourcePosition String? @map("home_source_position") // "WINNER" or "LOSER"
   awaySourcePosition String? @map("away_source_position") // "WINNER" or "LOSER"
 
-  competition   Competition @relation(fields: [competitionId], references: [id])
-  homeClub      Club? @relation("HomeMatches", fields: [homeClubId], references: [id])
-  awayClub      Club? @relation("AwayMatches", fields: [awayClubId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id])
+  homeClub    Club?       @relation("HomeMatches", fields: [homeClubId], references: [id])
+  awayClub    Club?       @relation("AwayMatches", fields: [awayClubId], references: [id])
 
-  homeSourceMatch Match? @relation("HomeSourceMatch", fields: [homeSourceMatchId], references: [id])
+  homeSourceMatch Match?  @relation("HomeSourceMatch", fields: [homeSourceMatchId], references: [id])
   homeNextMatches Match[] @relation("HomeSourceMatch")
 
-  awaySourceMatch Match? @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id])
+  awaySourceMatch  Match?  @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id])
   dependentMatches Match[] @relation("AwaySourceMatch")
-  
-  covidPlayers  MatchCovid[]
+
+  covidPlayers MatchCovid[]
 
   @@index([competitionId])
   @@index([homeSourceMatchId])
@@ -167,15 +167,15 @@ model Match {
 }
 
 model MatchCovid {
-  id        String  @id @default(uuid())
-  matchId   String
-  playerId  String
-  clubId    String  // Equipo del jugador en este partido (home o away)
-  
-  match     Match   @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  player    Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  club      Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  
+  id       String @id @default(uuid())
+  matchId  String
+  playerId String
+  clubId   String // Equipo del jugador en este partido (home o away)
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
   @@unique([matchId, playerId])
   @@index([matchId])
   @@index([playerId])
@@ -184,23 +184,24 @@ model MatchCovid {
 
 model EventType {
   id          String        @id @default(uuid())
-  name        EventTypeName @unique        // Enum: GOAL, YELLOW_CARD, RED_CARD, INJURY, MVP
+  name        EventTypeName @unique // Enum: GOAL, YELLOW_CARD, RED_CARD, INJURY, MVP
   displayName String        @map("display_name") // Nombre para mostrar: "Gol", "Tarjeta Amarilla", etc.
   icon        String?       @default("⚽") // Emoji o clase de icono
   isActive    Boolean       @default(true) @map("is_active")
   events      Event[]
-  
+
   @@map("event_types")
 }
-model Event {
-  id        String   @id @default(uuid())
-  typeId    String
-  playerId  String
-  matchId   String
 
-  player    Player @relation(fields: [playerId], references: [id])
-  match     Match  @relation(fields: [matchId], references: [id])
-  type      EventType @relation(fields: [typeId], references: [id])
+model Event {
+  id       String @id @default(uuid())
+  typeId   String
+  playerId String
+  matchId  String
+
+  player Player    @relation(fields: [playerId], references: [id])
+  match  Match     @relation(fields: [matchId], references: [id])
+  type   EventType @relation(fields: [typeId], references: [id])
 
   @@index([playerId])
   @@index([matchId])
@@ -221,7 +222,7 @@ model StorageFile {
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
   isActive     Boolean    @default(true) @map("is_active")
-  
+
   @@index([entityType, entityId])
   @@index([bucket])
   @@map("storage_files")
@@ -239,7 +240,7 @@ model News {
   publishedAt DateTime @default(now()) @map("published_at")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  
+
   @@index([authorId])
   @@map("news")
 }
@@ -277,23 +278,23 @@ enum KnockoutRound {
   FINAL
   THIRD_PLACE
   // Liga - Playoffs para definir campeón
-  LIGUILLA              // Partidos de liguilla (mini liga entre X primeros)
-  TRIANGULAR_SEMI       // Semi del triangular: 3° vs 2°
-  TRIANGULAR_FINAL      // Final del triangular: Ganador vs 1°
+  LIGUILLA // Partidos de liguilla (mini liga entre X primeros)
+  TRIANGULAR_SEMI // Semi del triangular: 3° vs 2°
+  TRIANGULAR_FINAL // Final del triangular: Ganador vs 1°
   // Liga - Playout (pelea por no ir a promoción)
-  PLAYOUT               // Partido de playout (ej: 5to vs 6to)
+  PLAYOUT // Partido de playout (ej: 5to vs 6to)
   // Liga - Promoción (entre divisiones)
-  PROMOTION             // Partido de promoción inter-división
+  PROMOTION // Partido de promoción inter-división
   // Liga - Reducido (última división, para ir a promoción)
-  REDUCIDO_QUARTER      // Cuartos de reducido: 5° vs 6°
-  REDUCIDO_SEMI         // Semi de reducido: Ganador cuartos vs 4°
-  REDUCIDO_FINAL        // Final de reducido: Ganador semi vs 3°
+  REDUCIDO_QUARTER // Cuartos de reducido: 5° vs 6°
+  REDUCIDO_SEMI // Semi de reducido: Ganador cuartos vs 4°
+  REDUCIDO_FINAL // Final de reducido: Ganador semi vs 3°
 }
 
 enum CompetitionCategory {
-  SENIOR    // For "Mayores" competitions
+  SENIOR // For "Mayores" competitions
   KEMPESITA // For "Kempesitas" competitions
-  MIXED     // For mixed competitions like Supercopa (both Mayores and Kempesitas)
+  MIXED // For mixed competitions like Supercopa (both Mayores and Kempesitas)
 }
 
 enum CompetitionName {
@@ -310,11 +311,11 @@ enum CompetitionName {
 }
 
 enum EventTypeName {
-  GOAL              // Gol ⚽
-  YELLOW_CARD       // Tarjeta Amarilla 🟨
-  RED_CARD          // Tarjeta Roja 🟥
-  INJURY            // Lesión 🤕
-  MVP               // MVP 🌟
+  GOAL // Gol ⚽
+  YELLOW_CARD // Tarjeta Amarilla 🟨
+  RED_CARD // Tarjeta Roja 🟥
+  INJURY // Lesión 🤕
+  MVP // MVP 🌟
 }
 
 enum EntityType {
@@ -355,14 +356,14 @@ model SeasonTransition {
   fromCompetitionId String
   toCompetitionId   String?
   movementType      MovementType
-  reason            String?      // "Campeón", "Posición 1", "Reducido", etc.
-  finalPosition     Int?         // Posición final en la competición anterior
-  
-  season            Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  club              Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  fromCompetition   Competition  @relation("FromCompetition", fields: [fromCompetitionId], references: [id], onDelete: Cascade)
-  toCompetition     Competition? @relation("ToCompetition", fields: [toCompetitionId], references: [id], onDelete: Cascade)
-  
+  reason            String? // "Campeón", "Posición 1", "Reducido", etc.
+  finalPosition     Int? // Posición final en la competición anterior
+
+  season          Season       @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  club            Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  fromCompetition Competition  @relation("FromCompetition", fields: [fromCompetitionId], references: [id], onDelete: Cascade)
+  toCompetition   Competition? @relation("ToCompetition", fields: [toCompetitionId], references: [id], onDelete: Cascade)
+
   @@unique([seasonId, clubId])
   @@index([clubId])
   @@index([seasonId])
@@ -370,24 +371,24 @@ model SeasonTransition {
 }
 
 model ClubHistory {
-  id              String      @id @default(uuid())
-  clubId          String
-  seasonId        String
-  competitionId   String
-  finalPosition   Int
-  points          Int
-  played          Int
-  won             Int
-  drawn           Int
-  lost            Int
-  goalsFor        Int         @map("goals_for")
-  goalsAgainst    Int         @map("goals_against")
-  movement        MovementType?
-  
-  club            Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  season          Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  competition     Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  
+  id            String        @id @default(uuid())
+  clubId        String
+  seasonId      String
+  competitionId String
+  finalPosition Int
+  points        Int
+  played        Int
+  won           Int
+  drawn         Int
+  lost          Int
+  goalsFor      Int           @map("goals_for")
+  goalsAgainst  Int           @map("goals_against")
+  movement      MovementType?
+
+  club        Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season      Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
   @@unique([clubId, seasonId, competitionId])
   @@index([clubId])
   @@index([seasonId])
@@ -395,21 +396,21 @@ model ClubHistory {
 }
 
 model PlayerSeasonStats {
-  id              String      @id @default(uuid())
-  playerId        String
-  seasonId        String
-  competitionId   String
-  appearances     Int         @default(0)
-  goals           Int         @default(0)
-  assists         Int         @default(0)
-  yellowCards     Int         @default(0) @map("yellow_cards")
-  redCards        Int         @default(0) @map("red_cards")
-  mvps            Int         @default(0)
-  
-  player          Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  season          Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  competition     Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  
+  id            String @id @default(uuid())
+  playerId      String
+  seasonId      String
+  competitionId String
+  appearances   Int    @default(0)
+  goals         Int    @default(0)
+  assists       Int    @default(0)
+  yellowCards   Int    @default(0) @map("yellow_cards")
+  redCards      Int    @default(0) @map("red_cards")
+  mvps          Int    @default(0)
+
+  player      Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season      Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
   @@unique([playerId, seasonId, competitionId])
   @@index([playerId])
   @@index([seasonId])
@@ -417,16 +418,16 @@ model PlayerSeasonStats {
 }
 
 model CoefKempes {
-  id            String  @id @default(uuid())
-  clubId        String
-  seasonId      String
-  points        Float
-  cupPhase      CupPhase // Fase máxima alcanzada
-  cupName       CompetitionName // KEMPES_CUP, GOLD_CUP, SILVER_CUP
-  
-  club          Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  season        Season  @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  
+  id       String          @id @default(uuid())
+  clubId   String
+  seasonId String
+  points   Float
+  cupPhase CupPhase // Fase máxima alcanzada
+  cupName  CompetitionName // KEMPES_CUP, GOLD_CUP, SILVER_CUP
+
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
   @@unique([clubId, seasonId, cupName])
   @@index([clubId])
   @@index([seasonId])

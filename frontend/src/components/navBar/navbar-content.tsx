@@ -14,6 +14,7 @@ import {
   Zap,
   ListTree,
   Award,
+  Upload,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -35,6 +36,7 @@ const navItems = [
   { key: 'home', icon: House, to: '/' },
   { key: 'standings', icon: ListOrdered, to: '/standings' },
   { key: 'fixture', icon: CalendarRange, to: '/fixtures' },
+  { key: 'submitResult', icon: Upload, to: '/submit-result' },
   { key: 'statistics', icon: ChartColumn, to: '/stats' },
   { key: 'transfers', icon: ArrowLeftRight, to: '/transfers' },
 ]

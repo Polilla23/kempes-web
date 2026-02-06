@@ -13,6 +13,7 @@ const mockClubRepository: jest.Mocked<IClubRepository> = {
   findOneByUserId: jest.fn(),
   updateOneById: jest.fn(),
   deleteOneById: jest.fn(),
+  getActivePlayers: jest.fn(),
 }
 
 const mockStorageService: jest.Mocked<StorageService> = {
