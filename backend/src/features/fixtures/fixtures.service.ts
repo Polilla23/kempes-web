@@ -21,7 +21,11 @@ import {
   MatchAlreadyFinalizedError,
   MatchNotAssignedError,
   MatchNotFoundError,
+  UserNotClubOwnerError,
+  GoalEventsMismatchError,
+  MvpRequiredError,
 } from '@/features/fixtures/fixtures.errors'
+import { SubmitResultInput } from '@/types'
 
 // Type for bracket input from admin
 type BracketInput = {
@@ -686,6 +690,199 @@ export class FixtureService {
       matchId,
       homeTeamCovids,
       awayTeamCovids
+    }
+  }
+
+  // ===================== SUBMIT RESULT =====================
+
+  /**
+   * Get pending matches for the authenticated user's club
+   */
+  async getMyPendingMatches(userId: string) {
+    const club = await this.fixtureRepository.findClubByUserId(userId)
+    if (!club) {
+      return []
+    }
+
+    const matches = await this.fixtureRepository.findPendingMatchesByClubId(club.id)
+
+    return matches.map((match: any) => ({
+      id: match.id,
+      matchdayOrder: match.matchdayOrder,
+      status: match.status,
+      stage: match.stage,
+      knockoutRound: match.knockoutRound,
+      homeClub: {
+        id: match.homeClub.id,
+        name: match.homeClub.name,
+        logo: match.homeClub.logo,
+      },
+      awayClub: {
+        id: match.awayClub.id,
+        name: match.awayClub.name,
+        logo: match.awayClub.logo,
+      },
+      competition: {
+        id: match.competition.id,
+        name: match.competition.name,
+        competitionType: {
+          id: match.competition.competitionType.id,
+          name: match.competition.competitionType.name,
+          category: match.competition.competitionType.category,
+          format: match.competition.competitionType.format,
+          hierarchy: match.competition.competitionType.hierarchy,
+        },
+      },
+      isUserHome: match.homeClubId === club.id,
+    }))
+  }
+
+  /**
+   * Submit a match result with events, MVP, and auto-propagate knockout dependencies.
+   * Everything runs in a single transaction.
+   */
+  async submitResult(input: SubmitResultInput) {
+    const match = await this.fixtureRepository.findById(input.matchId)
+    if (!match) {
+      throw new MatchNotFoundError()
+    }
+
+    if (match.status === MatchStatus.FINALIZADO) {
+      throw new MatchAlreadyFinalizedError()
+    }
+
+    if (!match.homeClubId || !match.awayClubId) {
+      throw new MatchNotAssignedError()
+    }
+
+    // Verify user owns one of the clubs
+    const userClub = await this.fixtureRepository.findClubByUserId(input.userId)
+    if (!userClub || (userClub.id !== match.homeClubId && userClub.id !== match.awayClubId)) {
+      throw new UserNotClubOwnerError()
+    }
+
+    // Knockout matches cannot draw
+    if (match.stage === CompetitionStage.KNOCKOUT && input.homeClubGoals === input.awayClubGoals) {
+      throw new KnockoutMatchDrawError()
+    }
+
+    // MVP is required
+    if (!input.mvpPlayerId) {
+      throw new MvpRequiredError()
+    }
+
+    // Validate goal events match scores
+    const goalEventType = await this.prisma.eventType.findFirst({ where: { name: 'GOAL' } })
+    if (goalEventType) {
+      const homeGoalSum = input.homeEvents
+        .filter((e) => e.typeId === goalEventType.id)
+        .reduce((sum, e) => sum + e.quantity, 0)
+      const awayGoalSum = input.awayEvents
+        .filter((e) => e.typeId === goalEventType.id)
+        .reduce((sum, e) => sum + e.quantity, 0)
+
+      if (homeGoalSum !== input.homeClubGoals) {
+        throw new GoalEventsMismatchError('home', input.homeClubGoals, homeGoalSum)
+      }
+      if (awayGoalSum !== input.awayClubGoals) {
+        throw new GoalEventsMismatchError('away', input.awayClubGoals, awayGoalSum)
+      }
+    }
+
+    // Get MVP event type
+    const mvpEventType = await this.prisma.eventType.findFirst({ where: { name: 'MVP' } })
+
+    // Execute everything in a transaction
+    const updatedMatch = await this.prisma.$transaction(async (tx) => {
+      // 1. Update match status and scores
+      const updated = await tx.match.update({
+        where: { id: input.matchId },
+        data: {
+          homeClubGoals: input.homeClubGoals,
+          awayClubGoals: input.awayClubGoals,
+          status: MatchStatus.FINALIZADO,
+        },
+        include: {
+          homeClub: true,
+          awayClub: true,
+          competition: true,
+        },
+      })
+
+      // 2. Create home events (expand quantity into individual records)
+      for (const event of input.homeEvents) {
+        for (let i = 0; i < event.quantity; i++) {
+          await tx.event.create({
+            data: {
+              type: { connect: { id: event.typeId } },
+              player: { connect: { id: event.playerId } },
+              match: { connect: { id: input.matchId } },
+            },
+          })
+        }
+      }
+
+      // 3. Create away events
+      for (const event of input.awayEvents) {
+        for (let i = 0; i < event.quantity; i++) {
+          await tx.event.create({
+            data: {
+              type: { connect: { id: event.typeId } },
+              player: { connect: { id: event.playerId } },
+              match: { connect: { id: input.matchId } },
+            },
+          })
+        }
+      }
+
+      // 4. Create MVP event
+      if (mvpEventType) {
+        await tx.event.create({
+          data: {
+            type: { connect: { id: mvpEventType.id } },
+            player: { connect: { id: input.mvpPlayerId } },
+            match: { connect: { id: input.matchId } },
+          },
+        })
+      }
+
+      return updated
+    }, { timeout: 30000 })
+
+    // 5. Post-transaction: propagate knockout dependencies (same logic as finishMatch)
+    const winnerId = input.homeClubGoals > input.awayClubGoals ? match.homeClubId : match.awayClubId
+    const loserId = input.homeClubGoals > input.awayClubGoals ? match.awayClubId : match.homeClubId
+
+    const dependentMatches = await this.fixtureRepository.findMatchesDependingOn(input.matchId)
+    let dependentMatchesUpdated = 0
+
+    for (const nextMatch of dependentMatches) {
+      const updateData: Prisma.MatchUpdateInput = {}
+
+      if (nextMatch.homeSourceMatchId === input.matchId) {
+        updateData.homeClub = {
+          connect: { id: nextMatch.homeSourcePosition === 'WINNER' ? winnerId : loserId },
+        }
+        updateData.homePlaceholder = null
+      }
+
+      if (nextMatch.awaySourceMatchId === input.matchId) {
+        updateData.awayClub = {
+          connect: { id: nextMatch.awaySourcePosition === 'WINNER' ? winnerId : loserId },
+        }
+        updateData.awayPlaceholder = null
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await this.fixtureRepository.updateMatch(nextMatch.id, updateData)
+        dependentMatchesUpdated++
+      }
+    }
+
+    return {
+      success: true,
+      match: updatedMatch,
+      dependentMatchesUpdated,
     }
   }
 

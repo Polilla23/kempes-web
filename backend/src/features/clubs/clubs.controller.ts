@@ -117,6 +117,28 @@ export class ClubController {
     }
   }
 
+  async getClubPlayers(req: FastifyRequest<{ Params: { clubId: string } }>, reply: FastifyReply) {
+    const { clubId } = req.params
+
+    try {
+      const validId = Validator.uuid(clubId)
+      const players = await this.clubService.getClubPlayers(validId)
+
+      return Response.success(reply, players, 'Club players fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', clubId)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching club players',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
   async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
 

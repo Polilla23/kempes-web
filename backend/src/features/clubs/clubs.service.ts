@@ -122,4 +122,14 @@ export class ClubService {
 
     return await this.clubRepository.updateOneById(id, { isActive: false })
   }
+
+  async getClubPlayers(clubId: string) {
+    const clubFound = await this.clubRepository.findOneById(clubId)
+
+    if (!clubFound) {
+      throw new ClubNotFoundError()
+    }
+
+    return await this.clubRepository.getActivePlayers(clubId)
+  }
 }

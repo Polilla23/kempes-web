@@ -1,4 +1,4 @@
-import { PrismaClient, Match, CompetitionStage, Prisma } from '@prisma/client'
+import { PrismaClient, Match, CompetitionStage, MatchStatus, Prisma } from '@prisma/client'
 import { IFixtureRepository } from '@/features/fixtures/interface/IFixtureRepository'
 
 export class FixtureRepository implements IFixtureRepository {
@@ -213,6 +213,41 @@ export class FixtureRepository implements IFixtureRepository {
         player: true,
         club: true
       }
+    })
+  }
+
+  // ===================== SUBMIT RESULT METHODS =====================
+
+  async findPendingMatchesByClubId(clubId: string) {
+    return await this.prisma.match.findMany({
+      where: {
+        status: MatchStatus.PENDIENTE,
+        homeClubId: { not: null },
+        awayClubId: { not: null },
+        OR: [
+          { homeClubId: clubId },
+          { awayClubId: clubId },
+        ],
+      },
+      include: {
+        homeClub: true,
+        awayClub: true,
+        competition: {
+          include: {
+            competitionType: true,
+          },
+        },
+      },
+      orderBy: [
+        { competition: { competitionType: { hierarchy: 'asc' } } },
+        { matchdayOrder: 'asc' },
+      ],
+    })
+  }
+
+  async findClubByUserId(userId: string) {
+    return await this.prisma.club.findFirst({
+      where: { userId },
     })
   }
 }

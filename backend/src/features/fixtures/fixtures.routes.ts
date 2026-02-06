@@ -4,6 +4,12 @@ import { fixturesSchemas } from '@/features/fixtures/fixtures.schemas'
 export const fixtureRoutes = async (fastify: FastifyInstance) => {
   const fixtureController = fastify.container.resolve('fixtureController')
 
+  // GET /fixtures/my-pending - Partidos pendientes del usuario autenticado
+  fastify.get('/my-pending', {
+    preHandler: [fastify.authenticate],
+    handler: fixtureController.getMyPendingMatches.bind(fixtureController),
+  })
+
   // POST /fixtures/direct-knockout - Para Copa Cindor y Supercopa (eliminación directa con equipos asignados)
   fastify.post('/direct-knockout', {
     preHandler: [fastify.authenticate],
@@ -28,6 +34,12 @@ export const fixtureRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/', {
     preHandler: [fastify.authenticate],
     handler: fixtureController.getMatchesWithFilters.bind(fixtureController),
+  })
+
+  // POST /fixtures/:matchId/submit-result - Subir resultado de un partido
+  fastify.post('/:matchId/submit-result', {
+    preHandler: [fastify.authenticate],
+    handler: fixtureController.submitResult.bind(fixtureController),
   })
 
   // GET /fixtures/:matchId/covids

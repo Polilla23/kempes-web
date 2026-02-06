@@ -16,6 +16,7 @@ import enSalaryRates from './locales/en/salary-rates.json'
 import enFixtures from './locales/en/fixtures.json'
 import enHome from './locales/en/home.json'
 import enBracketEditor from './locales/en/bracket-editor.json'
+import enSubmitResult from './locales/en/submit-result.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -31,6 +32,7 @@ import esSalaryRates from './locales/es/salary-rates.json'
 import esFixtures from './locales/es/fixtures.json'
 import esHome from './locales/es/home.json'
 import esBracketEditor from './locales/es/bracket-editor.json'
+import esSubmitResult from './locales/es/submit-result.json'
 
 // Configure i18next
 i18n
@@ -56,6 +58,7 @@ i18n
         fixtures: enFixtures,
         home: enHome,
         bracketEditor: enBracketEditor,
+        submitResult: enSubmitResult,
       },
       es: {
         common: esCommon,
@@ -71,6 +74,7 @@ i18n
         fixtures: esFixtures,
         home: esHome,
         bracketEditor: esBracketEditor,
+        submitResult: esSubmitResult,
       },
     },
 
@@ -98,6 +102,7 @@ i18n
       'fixtures',
       'home',
       'bracketEditor',
+      'submitResult',
     ],
 
     // Interpolation options

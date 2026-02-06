@@ -84,6 +84,22 @@ class FormSchemas {
     number: z.coerce.number().min(1, 'Season number must be at least 1'),
     isActive: z.boolean(),
   })
+
+  static SubmitResultEventSchema = z.object({
+    typeId: z.string().min(1, 'Event type is required'),
+    playerId: z.string().min(1, 'Player is required'),
+    quantity: z.number().min(1).max(20),
+  })
+
+  static SubmitResultSchema = z.object({
+    matchId: z.string().uuid(),
+    homeClubGoals: z.number().min(0),
+    awayClubGoals: z.number().min(0),
+    homeEvents: z.array(FormSchemas.SubmitResultEventSchema),
+    awayEvents: z.array(FormSchemas.SubmitResultEventSchema),
+    mvpPlayerId: z.string().min(1, 'MVP is required'),
+    screenshotUrl: z.string().optional(),
+  })
 }
 
 export default FormSchemas

@@ -8,7 +8,8 @@
     "standings": "Standings",
     "fixture": "Fixture",
     "statistics": "Statistics",
-    "transfers": "Transfers"
+    "transfers": "Transfers",
+    "submitResult": "Submit Result"
   },
   "management": {
     "title": "Management & Administration",

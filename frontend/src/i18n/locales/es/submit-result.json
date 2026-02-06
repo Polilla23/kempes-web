@@ -1,0 +1,55 @@
+{
+  "title": "Subir Resultado",
+  "subtitle": "Selecciona el partido y sube el resultado",
+  "pendingMatches": {
+    "title": "Tus Partidos Pendientes",
+    "subtitle": "Todas las competencias",
+    "empty": "No tienes partidos pendientes",
+    "selected": "Seleccionado"
+  },
+  "form": {
+    "title": "Registrar Resultado",
+    "local": "Local",
+    "visitante": "Visitante",
+    "vs": "VS"
+  },
+  "events": {
+    "title": "Eventos del Partido",
+    "homeTitle": "Eventos de {{teamName}}",
+    "awayTitle": "Eventos de {{teamName}}",
+    "addEvent": "Agregar Evento",
+    "removeEvent": "Quitar",
+    "eventType": "Tipo de evento",
+    "player": "Jugador",
+    "quantity": "Cantidad",
+    "selectType": "Seleccionar tipo...",
+    "selectPlayer": "Buscar jugador...",
+    "noPlayers": "No se encontraron jugadores",
+    "goalsMismatch": "Los goles de {{teamName}} ({{goalEvents}}) no coinciden con el marcador ({{score}})"
+  },
+  "mvp": {
+    "title": "MVP del Partido",
+    "description": "Selecciona el jugador más valioso del partido (obligatorio)",
+    "selectPlayer": "Buscar jugador MVP...",
+    "required": "Debes seleccionar un MVP"
+  },
+  "screenshot": {
+    "title": "Captura de pantalla (opcional)",
+    "dragText": "Arrastra tu captura aquí",
+    "clickText": "o haz clic para seleccionar",
+    "fileTypes": "PNG, JPG hasta 5MB",
+    "selected": "Archivo seleccionado: {{fileName}}"
+  },
+  "warning": {
+    "title": "Importante",
+    "message": "El resultado debe ser verificado con la captura de pantalla. Resultados fraudulentos serán penalizados."
+  },
+  "submit": "Subir Resultado",
+  "submitting": "Enviando...",
+  "success": "¡Resultado subido exitosamente!",
+  "error": "Error al subir el resultado",
+  "selectMatch": {
+    "title": "Selecciona un partido",
+    "description": "Elige uno de tus partidos pendientes de la lista para subir el resultado"
+  }
+}

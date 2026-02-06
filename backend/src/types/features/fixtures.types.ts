@@ -38,3 +38,20 @@ export type BracketClub = {
   sourceClubPosition?: 'WINNER' | 'LOSER'
   groupReference?: string
 }
+
+export type SubmitResultEventInput = {
+  typeId: string
+  playerId: string
+  quantity: number
+}
+
+export type SubmitResultInput = {
+  matchId: string
+  homeClubGoals: number
+  awayClubGoals: number
+  homeEvents: SubmitResultEventInput[]
+  awayEvents: SubmitResultEventInput[]
+  mvpPlayerId: string
+  userId: string
+  screenshotUrl?: string
+}
