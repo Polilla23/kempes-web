@@ -6,20 +6,30 @@ import { CreatePlayerInput, CreateBasicPlayerInput } from '@/types'
 import { validateNumber, validateBoolean, validateString } from '@/features/utils/validation'
 import { PlayerErrors } from '@/features/players/players.errors'
 import { StorageService } from '@/features/storage/storage.service'
+import { SalaryRateService } from '@/features/salary-rates/salary-rates.service'
+import { KempesitaConfigService } from '@/features/kempesita-config/kempesita-config.service'
 
 export class PlayerService {
   private playerRepository: IPlayerRespository
   private storageService: StorageService
+  private salaryRateService: SalaryRateService
+  private kempesitaConfigService: KempesitaConfigService
 
   constructor({
     playerRepository,
     storageService,
+    salaryRateService,
+    kempesitaConfigService,
   }: {
     playerRepository: IPlayerRespository
     storageService: StorageService
+    salaryRateService: SalaryRateService
+    kempesitaConfigService: KempesitaConfigService
   }) {
     this.playerRepository = playerRepository
     this.storageService = storageService
+    this.salaryRateService = salaryRateService
+    this.kempesitaConfigService = kempesitaConfigService
   }
 
   async createPlayer(
@@ -39,16 +49,21 @@ export class PlayerService {
       })
     }
 
+    // Auto-calcular salary e isKempesita
+    const overallValue = input.overall ?? 50
+    const resolvedSalary = await this.resolveSalary(overallValue)
+    const resolvedIsKempesita = await this.resolveIsKempesita(birthdateAsDate)
+
     // Crear objeto completo con valores por defecto solo si no vienen
     const playerData: any = {
       name: input.name,
       lastName: input.lastName,
       birthdate: birthdateAsDate,
-      overall: input.overall ?? 50,
-      salary: input.salary ?? 100000,
+      overall: overallValue,
+      salary: resolvedSalary,
       sofifaId: input.sofifaId ?? null,
       transfermarktId: input.transfermarktId ?? null,
-      isKempesita: false,
+      isKempesita: resolvedIsKempesita,
       isActive: true,
     }
 
@@ -180,6 +195,10 @@ export class PlayerService {
       throw new PlayerErrors.CSV('CSV file is empty')
     }
 
+    if (records.length > 60) {
+      throw new PlayerErrors.CSV('CSV file exceeds maximum of 60 players per upload')
+    }
+
     const validPlayers: CreatePlayerInput[] = []
     const errors: Array<{ row: number; error: string }> = []
 
@@ -200,9 +219,18 @@ export class PlayerService {
       throw new PlayerErrors.CSV(`Found ${errors.length} validation error(s) in CSV`, errors)
     }
 
+    // Auto-calcular salary e isKempesita para cada jugador
+    const playersWithAutoFields = await Promise.all(
+      validPlayers.map(async (player) => ({
+        ...player,
+        salary: await this.resolveSalary(player.overall),
+        isKempesita: await this.resolveIsKempesita(player.birthdate),
+      })),
+    )
+
     // Guardar todos los jugadores válidos
     try {
-      const result = await this.playerRepository.saveMany(validPlayers)
+      const result = await this.playerRepository.saveMany(playersWithAutoFields)
       return {
         success: true,
         message: `Successfully created ${result.count} player(s)`,
@@ -212,6 +240,28 @@ export class PlayerService {
       throw new PlayerErrors.Database(
         error instanceof Error ? error.message : 'Failed to save players to database',
       )
+    }
+  }
+
+  private async resolveSalary(overall: number): Promise<number> {
+    try {
+      const rates = await this.salaryRateService.findAllSalaryRates()
+      const matchingRate = rates?.find(
+        (rate) => overall >= rate.minOverall && overall <= rate.maxOverall,
+      )
+      return matchingRate ? matchingRate.salary : 100000
+    } catch {
+      return 100000
+    }
+  }
+
+  private async resolveIsKempesita(birthdate: Date): Promise<boolean> {
+    try {
+      const config = await this.kempesitaConfigService.getActiveConfig()
+      if (!config) return false
+      return birthdate.getFullYear() >= config.maxBirthYear
+    } catch {
+      return false
     }
   }
 
@@ -247,10 +297,8 @@ export class PlayerService {
       actualClubId: record.actualClubId || '',
       ownerClubId: record.ownerClubId || record.actualClubId || '',
       overall: validateNumber(record.overall, 0, 99),
-      salary: validateNumber(record.salary, 0),
       sofifaId: validateString(record.sofifaId || ''),
       transfermarktId: validateString(record.transfermarktId || ''),
-      isKempesita: validateBoolean(record.isKempesita),
       isActive: validateBoolean(record.isActive),
     }
   }

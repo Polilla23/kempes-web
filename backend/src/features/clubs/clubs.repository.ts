@@ -39,6 +39,13 @@ export class ClubRepository implements IClubRepository {
     return await this.prisma.club.create({ data })
   }
 
+  async saveMany(data: Prisma.ClubCreateManyInput[]): Promise<Prisma.BatchPayload> {
+    return await this.prisma.club.createMany({
+      data,
+      skipDuplicates: true,
+    })
+  }
+
   async deleteOneById(id: Prisma.ClubWhereUniqueInput['id']) {
     return await this.prisma.club.delete({ where: { id } })
   }

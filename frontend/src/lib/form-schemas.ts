@@ -33,10 +33,8 @@ class FormSchemas {
     ownerClubId: z.string().min(1, { message: 'Owner club is required.' }),
     actualClubId: z.string().optional(),
     overall: z.coerce.number().min(0).max(99),
-    salary: z.coerce.number().min(0),
     sofifaId: z.string().optional(),
     transfermarktId: z.string().optional(),
-    isKempesita: z.boolean(),
     isActive: z.boolean(),
   })
   static ClubSchema = z.object({

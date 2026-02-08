@@ -48,5 +48,17 @@
     "search": "Search",
     "actions": "Actions",
     "noRates": "No rates found"
+  },
+  "kempesita": {
+    "title": "Kempesita Config",
+    "description": "Players born in this year or later are considered kempesitas",
+    "maxBirthYear": "Max Birth Year",
+    "currentYear": "Current Max Kempesita Year (players older than this year are not kempesitas)",
+    "placeholder": "e.g: 2005",
+    "save": "Save",
+    "saving": "Saving...",
+    "success": "Config saved successfully!",
+    "error": "Failed to save config",
+    "notConfigured": "Not configured"
   }
 }

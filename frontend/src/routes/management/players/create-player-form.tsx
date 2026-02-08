@@ -4,7 +4,7 @@ import type { RegisterPlayerFormData, Club } from '@/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import z from 'zod'
-import { CalendarIcon, Loader2, Plus } from 'lucide-react'
+import { CalendarIcon, Loader2, Plus, Download } from 'lucide-react'
 import {
   Form,
   FormControl,
@@ -48,6 +48,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isLoadingClubs, setIsLoadingClubs] = useState(true)
   const [isLoadingDialog, setIsLoadingDialog] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [Open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof FormSchemas.PlayerSchema>>({
@@ -59,10 +60,8 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
       ownerClubId: '',
       actualClubId: '',
       overall: 0,
-      salary: 100000,
       sofifaId: '',
       transfermarktId: '',
-      isKempesita: false,
       isActive: true,
     },
   })
@@ -103,10 +102,8 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
         ownerClubId: values.ownerClubId === 'none' ? '' : values.ownerClubId,
         actualClubId: values.actualClubId === 'none' ? '' : values.actualClubId,
         overall: values.overall,
-        salary: values.salary,
         sofifaId: values.sofifaId || '',
         transfermarktId: values.transfermarktId || '',
-        isKempesita: values.isKempesita,
         isActive: values.isActive,
       }
 
@@ -118,6 +115,34 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
       console.error('Error creating player:', error)
       toast.error(error instanceof Error ? error.message : t('create.error'))
     }
+  }
+
+  const handleBulkCreate = async () => {
+    if (!selectedFile) return
+    try {
+      setIsUploading(true)
+      await PlayerService.bulkCreatePlayer(selectedFile)
+      toast.success(t('csv.success'))
+      setSelectedFile(null)
+      setOpen(false)
+      fetchPlayers()
+    } catch (error: any) {
+      console.error('Error creating players from CSV:', error)
+      toast.error(error instanceof Error ? error.message : t('csv.error'))
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleDownloadExampleCSV = () => {
+    const csvContent = 'name;lastName;birthdate;actualClubId;ownerClubId;overall;sofifaId;transfermarktId;isActive\nJuan;Perez;15/03/1995;club-uuid-here;club-uuid-here;75;;;true\nCarlos;Lopez;22/08/1998;club-uuid-here;;60;;;true'
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'players_example.csv'
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -225,35 +250,19 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         </FormItem>
                       )}
                     />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="overall"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">{t('labels.overall')}</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="0" className="h-11" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="salary"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">{t('labels.salary')}</FormLabel>
-                            <FormControl>
-                              <Input type="number" placeholder="0" className="h-11" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="overall"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-medium">{t('labels.overall')}</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" className="h-11" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
@@ -370,27 +379,6 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                     <div className="col-span-6">
                       <FormField
                         control={form.control}
-                        name="isKempesita"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>{t('labels.isKempesita')}</FormLabel>
-                              <FormDescription>
-                                {t('descriptions.isKempesita')}
-                              </FormDescription>
-                              <FormMessage />
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="col-span-6">
-                      <FormField
-                        control={form.control}
                         name="isActive"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
@@ -449,13 +437,19 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         <li>ownerClubId (optional)</li>
                         <li>actualClubId (optional)</li>
                         <li>overall (0-99)</li>
-                        <li>salary (number)</li>
                         <li>sofifaId (optional)</li>
                         <li>transfermarktId (optional)</li>
-                        <li>isKempesita (true/false)</li>
                         <li>isActive (true/false)</li>
                       </ul>
+                      <p className="text-sm text-blue-700 mt-2 font-medium">
+                        {t('csv.maxPlayers')}
+                      </p>
                     </div>
+
+                    <Button variant="outline" onClick={handleDownloadExampleCSV} type="button" className="w-full">
+                      <Download className="mr-2 h-4 w-4" />
+                      {t('csv.downloadExample')}
+                    </Button>
 
                     <InputFile onFileChange={setSelectedFile} accept=".csv" />
 
@@ -475,20 +469,20 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                     <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                       {t('buttons.back')}
                     </Button>
-                    {/* <Button 
-                            onClick={handleBulkCreate}
-                            disabled={!selectedFile || isUploading}
-                            className="bg-cyan-600 hover:bg-cyan-700"
-                            >
-                            {isUploading ? (
-                              <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Creating Players...
-                                </>
-                            ) : (
-                              "Create Players from CSV"
-                            )}
-                        </Button> */}
+                    <Button
+                      onClick={handleBulkCreate}
+                      disabled={!selectedFile || isUploading}
+                      className="bg-cyan-600 hover:bg-cyan-700"
+                    >
+                      {isUploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t('csv.creating')}
+                        </>
+                      ) : (
+                        t('csv.submit')
+                      )}
+                    </Button>
                   </div>
                 </div>
               </TabsContent>

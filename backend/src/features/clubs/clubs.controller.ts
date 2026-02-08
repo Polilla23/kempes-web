@@ -1,7 +1,7 @@
 import { Club } from '@prisma/client'
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { ClubService } from '@/features/clubs/clubs.service'
-import { ClubMapper, Response } from '@/features/core'
+import { ClubMapper, Response, ValidationError } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
 import { ClubDTO } from '@/types'
 
@@ -137,6 +137,23 @@ export class ClubController {
         error instanceof Error ? error.message : error
       )
     }
+  }
+
+  async uploadCSVFile(req: FastifyRequest, reply: FastifyReply) {
+    const data = await (req as any).file()
+
+    if (!data) {
+      throw new ValidationError('File is required', { field: 'file' })
+    }
+
+    const csvContent = await data.toBuffer()
+    await this.clubService.processCSVFile(csvContent.toString('utf-8'))
+
+    return Response.success(
+      reply,
+      { message: 'Clubs processed and saved successfully' },
+      'CSV processed successfully',
+    )
   }
 
   async delete(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {

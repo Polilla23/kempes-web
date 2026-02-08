@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DataTable } from '@/components/table/data-table'
 import { createColumnHelper } from '@tanstack/react-table'
-import type { SalaryRate } from '@/types'
+import type { SalaryRate, KempesitaConfig } from '@/types'
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { SalaryRateService } from '@/services/salary-rate.service'
 import { toast } from 'sonner'
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Ellipsis, Pencil, Search, Trash2 } from 'lucide-react'
+import { Ellipsis, Loader2, Pencil, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,6 +33,11 @@ function SalaryRateManagement() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedSalaryRate, setSelectedSalaryRate] = useState<SalaryRate | null>(null)
 
+  // Kempesita config state
+  const [kempesitaConfig, setKempesitaConfig] = useState<KempesitaConfig | null>(null)
+  const [maxBirthYearInput, setMaxBirthYearInput] = useState('')
+  const [isSavingConfig, setIsSavingConfig] = useState(false)
+
   const fetchSalaryRates = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -47,9 +52,22 @@ function SalaryRateManagement() {
     }
   }, [t])
 
+  const fetchKempesitaConfig = useCallback(async () => {
+    try {
+      const config = await SalaryRateService.getKempesitaConfig()
+      setKempesitaConfig(config)
+      if (config) {
+        setMaxBirthYearInput(config.maxBirthYear.toString())
+      }
+    } catch (error) {
+      console.error('Error fetching kempesita config:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchSalaryRates()
-  }, [fetchSalaryRates])
+    fetchKempesitaConfig()
+  }, [fetchSalaryRates, fetchKempesitaConfig])
 
   // Debounce search term
   useEffect(() => {
@@ -89,6 +107,23 @@ function SalaryRateManagement() {
   const handleEditClose = useCallback(() => {
     setSelectedSalaryRate(null)
   }, [])
+
+  const handleSaveKempesitaConfig = async () => {
+    const year = parseInt(maxBirthYearInput, 10)
+    if (isNaN(year) || year < 1900 || year > 2100) return
+
+    try {
+      setIsSavingConfig(true)
+      const config = await SalaryRateService.upsertKempesitaConfig(year)
+      setKempesitaConfig(config)
+      toast.success(t('kempesita.success'))
+    } catch (error) {
+      console.error('Error saving kempesita config:', error)
+      toast.error(t('kempesita.error'))
+    } finally {
+      setIsSavingConfig(false)
+    }
+  }
 
   const columnHelper = createColumnHelper<SalaryRate>()
 
@@ -150,38 +185,87 @@ function SalaryRateManagement() {
 
   return (
     <div className="flex items-center justify-center w-full">
-      <div className="flex flex-col items-center gap-2 h-full max-w-3/4 w-full">
-        <h1 className="text-2xl font-bold mb-10 mt-8">{t('title')}</h1>
-      <div className="flex justify-between gap-3 mb-4 w-full relative">
-        <Label htmlFor="search" className="sr-only">
-          {t('table.search')}
-        </Label>
-        <Input
-          id="search"
-          type="text"
-          placeholder={`${t('table.search')}...`}
-          className="pl-8"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
-        <CreateSalaryRateForm
-          onSuccess={() => {
-            fetchSalaryRates()
-          }}
-        />
-      </div>
-      <DataTable<SalaryRate, any> columns={columns} data={filteredSalaryRates} />
-      {selectedSalaryRate && (
-        <EditSalaryRateForm
-          salaryRate={selectedSalaryRate}
-          onSuccess={() => {
-            fetchSalaryRates()
-            handleEditClose()
-          }}
-          onClose={handleEditClose}
-        />
-      )}
+      <div className="flex gap-6 h-full w-full max-w-[90%] mt-8">
+        {/* Columna izquierda: Tabla de salary rates */}
+        <div className="flex flex-col items-center gap-2 flex-1">
+          <h1 className="text-2xl font-bold mb-10">{t('title')}</h1>
+          <div className="flex justify-between gap-3 mb-4 w-full relative">
+            <Label htmlFor="search" className="sr-only">
+              {t('table.search')}
+            </Label>
+            <Input
+              id="search"
+              type="text"
+              placeholder={`${t('table.search')}...`}
+              className="pl-8"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+            <CreateSalaryRateForm
+              onSuccess={() => {
+                fetchSalaryRates()
+              }}
+            />
+          </div>
+          <DataTable<SalaryRate, any> columns={columns} data={filteredSalaryRates} />
+          {selectedSalaryRate && (
+            <EditSalaryRateForm
+              salaryRate={selectedSalaryRate}
+              onSuccess={() => {
+                fetchSalaryRates()
+                handleEditClose()
+              }}
+              onClose={handleEditClose}
+            />
+          )}
+        </div>
+
+        {/* Columna derecha: Panel Kempesita Config */}
+        <div className="w-72 shrink-0">
+          <div className="border rounded-lg p-4 space-y-4 mt-[4.5rem]">
+            <h2 className="text-lg font-semibold">{t('kempesita.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('kempesita.description')}</p>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxBirthYear">{t('kempesita.maxBirthYear')}</Label>
+              <Input
+                id="maxBirthYear"
+                type="number"
+                placeholder={t('kempesita.placeholder')}
+                value={maxBirthYearInput}
+                onChange={(e) => setMaxBirthYearInput(e.target.value)}
+                min={1900}
+                max={2100}
+              />
+            </div>
+
+            {kempesitaConfig && (
+              <p className="text-sm text-muted-foreground">
+                {t('kempesita.currentYear')}: <span className="font-medium">{kempesitaConfig.maxBirthYear}</span>
+              </p>
+            )}
+
+            {!kempesitaConfig && (
+              <p className="text-sm text-muted-foreground italic">{t('kempesita.notConfigured')}</p>
+            )}
+
+            <Button
+              onClick={handleSaveKempesitaConfig}
+              disabled={isSavingConfig || !maxBirthYearInput}
+              className="w-full"
+            >
+              {isSavingConfig ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t('kempesita.saving')}
+                </>
+              ) : (
+                t('kempesita.save')
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )

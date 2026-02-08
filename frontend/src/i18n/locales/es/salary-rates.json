@@ -48,5 +48,17 @@
     "search": "Buscar",
     "actions": "Acciones",
     "noRates": "No se encontraron tarifas"
+  },
+  "kempesita": {
+    "title": "Configuracion Kempesita",
+    "description": "Jugadores nacidos en este año o posterior son considerados kempesitas",
+    "maxBirthYear": "Año Máximo de Nacimiento",
+    "currentYear": "Actual Año Máximo Kempesita (los mayores a este año dejan de serlo)",
+    "placeholder": "Ej: 2005",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "success": "Configuracion guardada exitosamente!",
+    "error": "Error al guardar configuracion",
+    "notConfigured": "Sin configurar"
   }
 }

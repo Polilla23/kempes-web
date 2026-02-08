@@ -20,7 +20,6 @@ export class PlayerController {
       actualClubId,
       ownerClubId,
       overall,
-      salary,
       sofifaId,
       transfermarktId,
     } = req.body as CreateBasicPlayerInput
@@ -29,11 +28,10 @@ export class PlayerController {
     const validatedData: CreateBasicPlayerInput = {
       name: Validator.string(name, 1, 100),
       lastName: Validator.string(lastName, 1, 100),
-      birthdate: new Date(birthdate),
+      birthdate,
       ...(actualClubId && { actualClubId: Validator.uuid(actualClubId) }),
       ...(ownerClubId && { ownerClubId: Validator.uuid(ownerClubId) }),
       ...(overall !== undefined && { overall: Validator.number(overall, 0, 100) }),
-      ...(salary !== undefined && { salary: Validator.number(salary, 0) }),
       ...(sofifaId && { sofifaId: Validator.string(sofifaId, 1, 50) }),
       ...(transfermarktId && { transfermarktId: Validator.string(transfermarktId, 1, 50) }),
     }
@@ -65,7 +63,7 @@ export class PlayerController {
       ...data,
       ...(data.name && { name: Validator.string(data.name, 1, 100) }),
       ...(data.lastName && { lastName: Validator.string(data.lastName, 1, 100) }),
-      ...(data.birthdate && { birthdate: new Date(data.birthdate as any) }),
+      ...(data.birthdate && { birthdate: data.birthdate }),
       ...(data.actualClubId && { actualClubId: Validator.uuid(data.actualClubId) }),
       ...(data.overall !== undefined && { overall: Validator.number(data.overall, 0, 100) }),
     }

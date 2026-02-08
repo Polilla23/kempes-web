@@ -11,10 +11,8 @@ export const playersSchemas = {
         actualClubId: { type: 'string', format: 'uuid' },
         ownerClubId: { type: 'string', format: 'uuid' },
         overall: { type: 'number', minimum: 0, maximum: 99 },
-        salary: { type: 'number' },
         sofifaId: { type: 'string' },
         transfermarktId: { type: 'string' },
-        isKempesita: { type: 'boolean' },
         isActive: { type: 'boolean' },
       },
       required: ['name', 'lastName', 'birthdate', 'actualClubId', 'overall'],
@@ -131,10 +129,8 @@ export const playersSchemas = {
         actualClubId: { type: 'string' },
         ownerClubId: { type: 'string' },
         overall: { type: 'number' },
-        salary: { type: 'number' },
         sofifaId: { type: 'string' },
         transfermarktId: { type: 'string' },
-        isKempesita: { type: 'boolean' },
         isActive: { type: 'boolean' },
       },
       additionalProperties: false,
@@ -205,17 +201,6 @@ export const playersSchemas = {
     description: 'Upload and process CSV file for bulk player creation using file upload.',
     tags: ['Players'],
     consumes: ['multipart/form-data'],
-    body: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'CSV file to upload',
-        },
-      },
-      required: ['file'],
-    },
     response: {
       200: {
         description: 'Players processed and saved successfully.',

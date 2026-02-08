@@ -103,9 +103,15 @@
   "csv": {
     "title": "Create Multiple Players",
     "formatTitle": "CSV Format Requirements",
-    "formatDescription": "Your CSV file should contain the following columns:",
+    "formatDescription": "Your CSV file should contain the following columns (semicolon-separated):",
     "selectedFile": "Selected file:",
-    "size": "Size:"
+    "size": "Size:",
+    "downloadExample": "Download Example CSV",
+    "maxPlayers": "Maximum 60 players per upload",
+    "submit": "Create Players from CSV",
+    "creating": "Creating Players...",
+    "success": "Players created successfully!",
+    "error": "Failed to create players from CSV"
   },
   "table": {
     "search": "Search",
@@ -113,6 +119,8 @@
     "noPlayers": "No players found",
     "noClub": "No Club",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No"
   }
 }

@@ -55,10 +55,8 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
       ownerClubId: player.ownerClubId || '',
       actualClubId: player.actualClubId || '',
       overall: player.overall || 0,
-      salary: player.salary || 100000,
       sofifaId: player.sofifaId || '',
       transfermarktId: player.transfermarktId || '',
-      isKempesita: player.isKempesita || false,
       isActive: player.isActive ?? true,
     },
   })
@@ -73,10 +71,8 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
         ownerClubId: player.ownerClubId || '',
         actualClubId: player.actualClubId || '',
         overall: player.overall || 0,
-        salary: player.salary || 100000,
         sofifaId: player.sofifaId || '',
         transfermarktId: player.transfermarktId || '',
-        isKempesita: player.isKempesita || false,
         isActive: player.isActive ?? true,
       })
     }
@@ -94,10 +90,8 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
         actualClubId:
           values.actualClubId === 'none' || values.actualClubId === '' ? undefined : values.actualClubId,
         overall: values.overall,
-        salary: values.salary,
         sofifaId: values.sofifaId || '',
         transfermarktId: values.transfermarktId || '',
-        isKempesita: values.isKempesita,
         isActive: values.isActive,
       }
 
@@ -212,35 +206,19 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="overall"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">{t('labels.overall')}</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" className="h-11" min={0} max={99} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="salary"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">{t('labels.salary')}</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="0" className="h-11" min={0} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="overall"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium">{t('labels.overall')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0" className="h-11" min={0} max={99} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -331,24 +309,6 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="isKempesita"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>{t('labels.isKempesita')}</FormLabel>
-                    <FormDescription>
-                      {t('descriptions.isKempesita')}
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}

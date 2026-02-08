@@ -4,6 +4,8 @@ import { PlayerErrors } from '../players.errors'
 import { Player } from '@prisma/client'
 import { CreateBasicPlayerInput } from '@/types'
 import { StorageService } from '@/features/storage/storage.service'
+import { SalaryRateService } from '@/features/salary-rates/salary-rates.service'
+import { KempesitaConfigService } from '@/features/kempesita-config/kempesita-config.service'
 
 // Mock del repositorio
 const mockPlayerRepository: jest.Mocked<IPlayerRespository> = {
@@ -22,6 +24,14 @@ const mockStorageService: jest.Mocked<StorageService> = {
   replaceImage: jest.fn(),
 } as any
 
+const mockSalaryRateService: jest.Mocked<SalaryRateService> = {
+  findAllSalaryRates: jest.fn().mockResolvedValue([]),
+} as any
+
+const mockKempesitaConfigService: jest.Mocked<KempesitaConfigService> = {
+  getActiveConfig: jest.fn().mockResolvedValue(null),
+} as any
+
 describe('PlayerService', () => {
   let playerService: PlayerService
 
@@ -33,6 +43,8 @@ describe('PlayerService', () => {
     playerService = new PlayerService({
       playerRepository: mockPlayerRepository,
       storageService: mockStorageService,
+      salaryRateService: mockSalaryRateService,
+      kempesitaConfigService: mockKempesitaConfigService,
     })
   })
 
@@ -89,7 +101,6 @@ describe('PlayerService', () => {
         lastName: 'Ronaldo',
         birthdate: new Date('1985-02-05'),
         overall: 91,
-        salary: 500000,
         sofifaId: '20801',
         transfermarktId: '8198',
         actualClubId: 'club-123',
@@ -103,7 +114,7 @@ describe('PlayerService', () => {
         actualClubId: 'club-123',
         ownerClubId: 'null',
         overall: 91,
-        salary: 500000,
+        salary: 100000,
         sofifaId: '20801',
         transfermarktId: '8198',
         isKempesita: false,
@@ -123,7 +134,7 @@ describe('PlayerService', () => {
         lastName: 'Ronaldo',
         birthdate: expect.any(Date),
         overall: 91,
-        salary: 500000,
+        salary: 100000,
         sofifaId: '20801',
         transfermarktId: '8198',
         isKempesita: false,

@@ -46,6 +46,19 @@ export class ClubService {
         }
     }
 
+    // Agregar multiples clubes al mismo tiempo
+    static async bulkCreateClub(file: File): Promise<ClubResponse> {
+        try {
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const response = await api.post<{ data: any; message: string }>('/api/v1/clubs/bulk', formData)
+            return { message: response.data?.message || 'Clubs created successfully' }
+        } catch (error) {
+            throw new Error(error instanceof Error ? error.message : 'Error creating clubs from CSV')
+        }
+    }
+
     // Eliminar un club
     static async deleteClub(id: string): Promise<ClubResponse> {
         try {
