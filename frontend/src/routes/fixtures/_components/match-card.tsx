@@ -19,17 +19,28 @@ function getEventIcon(type: MatchEvent['type']): string {
   switch (type) {
     case 'goal':
       return '⚽'
-    case 'own-goal':
-      return '⚽🔴'
     case 'yellow':
       return '🟨'
     case 'red':
       return '🟥'
-    case 'assist':
-      return '👟'
+    case 'injury':
+      return '🤕'
+    case 'mvp':
+      return '🌟'
     default:
       return '📋'
   }
+}
+
+function groupEvents(events: MatchEvent[]) {
+  const grouped = new Map<string, { type: MatchEvent['type']; player: string; count: number }>()
+  events.forEach((e) => {
+    const key = `${e.type}-${e.player}`
+    const existing = grouped.get(key)
+    if (existing) existing.count++
+    else grouped.set(key, { type: e.type, player: e.player, count: 1 })
+  })
+  return Array.from(grouped.values())
 }
 
 export function MatchCard({ match }: MatchCardProps) {
@@ -40,7 +51,7 @@ export function MatchCard({ match }: MatchCardProps) {
     <div>
       <div
         className={cn(
-          'px-4 py-3 hover:bg-secondary/30 transition-colors flex items-center gap-4',
+          'px-4 py-3 min-h-[52px] hover:bg-secondary/30 transition-colors flex items-center gap-4',
           hasEvents && 'cursor-pointer'
         )}
         onClick={() => hasEvents && setIsExpanded(!isExpanded)}
@@ -59,7 +70,7 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         {/* Round/Matchday */}
-        <div className="w-20 flex-shrink-0">
+        <div className="w-32 flex-shrink-0">
           <span className="text-xs text-muted-foreground">
             {match.knockoutRound
               ? getRoundLabel(match.knockoutRound)
@@ -133,21 +144,17 @@ export function MatchCard({ match }: MatchCardProps) {
                 {match.homeClub?.name}
               </p>
               <div className="space-y-1">
-                {match.events
-                  ?.filter((e) => e.team === 'home')
-                  .sort((a, b) => a.minute - b.minute)
-                  .map((event, idx) => (
+                {groupEvents(match.events?.filter((e) => e.team === 'home') || []).map(
+                  (grouped, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground w-8">{event.minute}'</span>
-                      <span>{getEventIcon(event.type)}</span>
-                      <span className="text-foreground">{event.player}</span>
-                      {event.assist && (
-                        <span className="text-muted-foreground text-xs">
-                          (Asist: {event.assist})
-                        </span>
+                      <span>{getEventIcon(grouped.type)}</span>
+                      {grouped.count > 1 && (
+                        <span className="text-muted-foreground font-medium">x{grouped.count}</span>
                       )}
+                      <span className="text-foreground">{grouped.player}</span>
                     </div>
-                  ))}
+                  )
+                )}
                 {match.events?.filter((e) => e.team === 'home').length === 0 && (
                   <p className="text-xs text-muted-foreground">Sin eventos</p>
                 )}
@@ -163,21 +170,17 @@ export function MatchCard({ match }: MatchCardProps) {
                 {match.awayClub?.name}
               </p>
               <div className="space-y-1">
-                {match.events
-                  ?.filter((e) => e.team === 'away')
-                  .sort((a, b) => a.minute - b.minute)
-                  .map((event, idx) => (
+                {groupEvents(match.events?.filter((e) => e.team === 'away') || []).map(
+                  (grouped, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-sm">
-                      <span className="text-muted-foreground w-8">{event.minute}'</span>
-                      <span>{getEventIcon(event.type)}</span>
-                      <span className="text-foreground">{event.player}</span>
-                      {event.assist && (
-                        <span className="text-muted-foreground text-xs">
-                          (Asist: {event.assist})
-                        </span>
+                      <span>{getEventIcon(grouped.type)}</span>
+                      {grouped.count > 1 && (
+                        <span className="text-muted-foreground font-medium">x{grouped.count}</span>
                       )}
+                      <span className="text-foreground">{grouped.player}</span>
                     </div>
-                  ))}
+                  )
+                )}
                 {match.events?.filter((e) => e.team === 'away').length === 0 && (
                   <p className="text-xs text-muted-foreground">Sin eventos</p>
                 )}

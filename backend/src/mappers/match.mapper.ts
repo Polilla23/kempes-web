@@ -1,7 +1,16 @@
 // Crea un mapper para transformar entidades Match a DTOs para no exponer info sensible
 
-import { Match, Club, Competition, CompetitionType } from '@prisma/client'
+import { Match, Club, Competition, CompetitionType, Event, Player, EventType } from '@prisma/client'
 import { MatchDTO, MatchListDTO, MatchDetailedDTO, PaginatedResponse } from '@/types'
+
+// Mapeo de EventTypeName del backend a tipo simplificado del frontend
+const EVENT_TYPE_MAP: Record<string, string> = {
+  GOAL: 'goal',
+  YELLOW_CARD: 'yellow',
+  RED_CARD: 'red',
+  INJURY: 'injury',
+  MVP: 'mvp',
+}
 
 // Tipo para match con competition incluida
 type MatchWithCompetition = Match & {
@@ -10,6 +19,10 @@ type MatchWithCompetition = Match & {
   competition: Competition & {
     competitionType: CompetitionType
   }
+  events?: (Event & {
+    player: Player
+    type: EventType
+  })[]
 }
 
 export class MatchMapper {
@@ -126,7 +139,7 @@ export class MatchMapper {
 
   // Match con información de competencia para filtrado en frontend
   static toDetailedDTO(match: MatchWithCompetition): MatchDetailedDTO {
-    return {
+    const dto: MatchDetailedDTO = {
       ...this.toDTO(match),
       competition: {
         id: match.competition.id,
@@ -140,6 +153,16 @@ export class MatchMapper {
         },
       },
     }
+
+    if (match.events && match.events.length > 0) {
+      dto.events = match.events.map((event) => ({
+        type: EVENT_TYPE_MAP[event.type.name] || event.type.name.toLowerCase(),
+        player: event.player.name,
+        team: (event.player.actualClubId === match.homeClubId ? 'home' : 'away') as 'home' | 'away',
+      }))
+    }
+
+    return dto
   }
 
   static toDetailedDTOArray(matches: MatchWithCompetition[]): MatchDetailedDTO[] {

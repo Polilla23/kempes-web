@@ -57,7 +57,7 @@ export function FixturesListView({ groupedMatches }: FixturesListViewProps) {
   return (
     <div className="space-y-6">
       {Object.entries(paginatedGroups).map(([competitionId, { name, matches }]) => (
-        <Card key={competitionId} className="bg-card border-border overflow-hidden">
+        <Card key={competitionId} className="bg-card border-border overflow-hidden py-0 gap-0">
           {/* Competition Header */}
           <div className="bg-primary/10 px-4 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-3">

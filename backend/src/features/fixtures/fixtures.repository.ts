@@ -126,6 +126,12 @@ export class FixtureRepository implements IFixtureRepository {
             season: true
           }
         },
+        events: {
+          include: {
+            player: true,
+            type: true,
+          }
+        },
       },
       orderBy: [
         { competition: { competitionType: { hierarchy: 'asc' } } },
