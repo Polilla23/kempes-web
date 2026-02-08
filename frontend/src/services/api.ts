@@ -91,6 +91,12 @@ export const api = {
     })
   },
 
+  put: <T>(endpoint: string, data?: any) =>
+    apiRequest<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+
   patch: <T>(endpoint: string, data?: any) =>
     apiRequest<T>(endpoint, {
       method: 'PATCH',

@@ -1,8 +1,10 @@
+import { parse } from 'csv-parse/sync'
 import { Prisma } from '@prisma/client'
 import { IClubRepository } from '@/features/clubs/interfaces/IClubRepository'
 import { CreateClubInput } from '@/types'
-import { ClubNotFoundError, ClubAlreadyExistsError } from '@/features/clubs/clubs.errors'
+import { ClubNotFoundError, ClubAlreadyExistsError, ClubErrors } from '@/features/clubs/clubs.errors'
 import { StorageService } from '@/features/storage/storage.service'
+import { validateString, validateBoolean } from '@/features/utils/validation'
 
 export class ClubService {
   private clubRepository: IClubRepository
@@ -131,5 +133,80 @@ export class ClubService {
     }
 
     return await this.clubRepository.getActivePlayers(clubId)
+  }
+
+  async processCSVFile(csvContent: string) {
+    const cleanCsvContent = csvContent.replace(/^\uFEFF/, '')
+
+    let records: any[]
+    try {
+      records = parse(cleanCsvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        delimiter: ';',
+      })
+    } catch (error) {
+      throw new ClubErrors.CSV('Invalid CSV format', [
+        { row: 0, error: error instanceof Error ? error.message : 'Failed to parse CSV' },
+      ])
+    }
+
+    if (records.length === 0) {
+      throw new ClubErrors.CSV('CSV file is empty')
+    }
+
+    if (records.length > 40) {
+      throw new ClubErrors.CSV('CSV file exceeds maximum of 40 clubs per upload')
+    }
+
+    const validClubs: Prisma.ClubCreateManyInput[] = []
+    const errors: Array<{ row: number; error: string }> = []
+
+    records.forEach((record: any, index: number) => {
+      try {
+        const clubData = this.transformCSVRecord(record)
+        validClubs.push(clubData)
+      } catch (error) {
+        errors.push({
+          row: index + 2,
+          error: error instanceof Error ? error.message : 'Invalid data',
+        })
+      }
+    })
+
+    if (errors.length > 0) {
+      throw new ClubErrors.CSV(`Found ${errors.length} validation error(s) in CSV`, errors)
+    }
+
+    try {
+      const result = await this.clubRepository.saveMany(validClubs)
+      return {
+        success: true,
+        message: `Successfully created ${result.count} club(s)`,
+        count: result.count,
+      }
+    } catch (error) {
+      throw new ClubErrors.Database(
+        error instanceof Error ? error.message : 'Failed to save clubs to database',
+      )
+    }
+  }
+
+  private transformCSVRecord(record: any): Prisma.ClubCreateManyInput {
+    const requiredFields = ['name']
+    const missingFields = requiredFields.filter((field) => !record[field])
+
+    if (missingFields.length > 0) {
+      throw new ClubErrors.Validation(`Missing required fields: ${missingFields.join(', ')}`, {
+        missingFields,
+        record,
+      })
+    }
+
+    return {
+      name: validateString(record.name, 1, 100),
+      isActive: record.isActive !== undefined ? validateBoolean(record.isActive) : true,
+    }
   }
 }

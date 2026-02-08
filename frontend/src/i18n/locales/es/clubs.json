@@ -47,6 +47,23 @@
     "update": "Guardar Cambios",
     "cancel": "Cancelar"
   },
+  "tabs": {
+    "single": "Un Club",
+    "multiple": "Multiples Clubes"
+  },
+  "csv": {
+    "title": "Crear Multiples Clubes",
+    "formatTitle": "Requisitos del Formato CSV",
+    "formatDescription": "Tu archivo CSV debe contener las siguientes columnas (separadas por punto y coma):",
+    "selectedFile": "Archivo seleccionado:",
+    "size": "Tamaño:",
+    "downloadExample": "Descargar CSV de ejemplo",
+    "maxClubs": "Maximo 40 clubes por carga",
+    "submit": "Crear Clubes desde CSV",
+    "creating": "Creando Clubes...",
+    "success": "¡Clubes creados exitosamente!",
+    "error": "Error al crear clubes desde CSV"
+  },
   "table": {
     "search": "Buscar",
     "actions": "Acciones",

@@ -17,6 +17,7 @@ import { seasonHalfRoutes } from '@/features/season-halves/season-halves.routes'
 import { transferWindowRoutes } from '@/features/transfer-windows/transfer-windows.routes'
 import { transferRoutes } from '@/features/transfers/transfers.routes'
 import { financeRoutes } from '@/features/finances/finances.routes'
+import { kempesitaConfigRoutes } from '@/features/kempesita-config/kempesita-config.routes'
 
 /**
  * Plugin principal de rutas con prefijo /api/v1
@@ -43,6 +44,7 @@ export default async function (app: FastifyInstance) {
       instance.register(transferWindowRoutes, { prefix: '/transfer-windows' })
       instance.register(transferRoutes, { prefix: '/transfers' })
       instance.register(financeRoutes, { prefix: '/finances' })
+      instance.register(kempesitaConfigRoutes, { prefix: '/kempesita-config' })
 
       instance.get('/health', async () => ({ status: 'ok', timestamp: new Date() }))
 

@@ -59,6 +59,9 @@ import { TransferService } from '@/features/transfers/transfers.service'
 import { FinanceRepository } from '@/features/finances/finances.repository'
 import { FinanceController } from '@/features/finances/finances.controller'
 import { FinanceService } from '@/features/finances/finances.service'
+import { KempesitaConfigRepository } from '@/features/kempesita-config/kempesita-config.repository'
+import { KempesitaConfigController } from '@/features/kempesita-config/kempesita-config.controller'
+import { KempesitaConfigService } from '@/features/kempesita-config/kempesita-config.service'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -84,6 +87,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     myAccountRepository: asClass(MyAccountRepository).singleton(),
     storageRepository: asClass(StorageRepository).singleton(),
     newsRepository: asClass(NewsRepository).singleton(),
+    kempesitaConfigRepository: asClass(KempesitaConfigRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(MyAccountController).singleton(),
@@ -103,6 +107,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     transferWindowController: asClass(TransferWindowController).singleton(),
     transferController: asClass(TransferController).singleton(),
     financeController: asClass(FinanceController).singleton(),
+    kempesitaConfigController: asClass(KempesitaConfigController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -122,6 +127,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     transferWindowService: asClass(TransferWindowService).singleton(),
     transferService: asClass(TransferService).singleton(),
     financeService: asClass(FinanceService).singleton(),
+    kempesitaConfigService: asClass(KempesitaConfigService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
     supabaseProvider: asClass(SupabaseProvider).singleton(),

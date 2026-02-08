@@ -155,6 +155,28 @@ export const clubsSchemas = {
       },
     },
   },
+  bulkCreate: {
+    description: 'Upload and process CSV file for bulk club creation.',
+    tags: ['Clubs'],
+    consumes: ['multipart/form-data'],
+    response: {
+      200: {
+        description: 'Clubs processed and saved successfully.',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+        },
+      },
+      400: {
+        description: 'Error while processing clubs.',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+    },
+  },
   delete: {
     description: 'Soft delete a club by ID (sets isActive to false).',
     tags: ['Clubs'],

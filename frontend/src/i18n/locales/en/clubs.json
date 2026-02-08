@@ -47,6 +47,23 @@
     "update": "Save Changes",
     "cancel": "Cancel"
   },
+  "tabs": {
+    "single": "One Club",
+    "multiple": "Multiple Clubs"
+  },
+  "csv": {
+    "title": "Create Multiple Clubs",
+    "formatTitle": "CSV Format Requirements",
+    "formatDescription": "Your CSV file should contain the following columns (semicolon-separated):",
+    "selectedFile": "Selected file:",
+    "size": "Size:",
+    "downloadExample": "Download Example CSV",
+    "maxClubs": "Maximum 40 clubs per upload",
+    "submit": "Create Clubs from CSV",
+    "creating": "Creating Clubs...",
+    "success": "Clubs created successfully!",
+    "error": "Failed to create clubs from CSV"
+  },
   "table": {
     "search": "Search",
     "actions": "Actions",

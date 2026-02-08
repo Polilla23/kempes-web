@@ -16,7 +16,9 @@
       "Bash(npm ls:*)",
       "Bash(npx ts-node:*)",
       "Bash(node:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(tasklist:*)",
+      "Bash(curl:*)"
     ]
   }
 }

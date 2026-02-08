@@ -118,11 +118,20 @@ export interface RegisterPlayerFormData {
   ownerClubId: string
   actualClubId?: string | null
   overall: number
-  salary: number | 100000
   sofifaId?: string | null
   transfermarktId?: string | null
-  isKempesita: boolean
   isActive: boolean
+}
+
+export interface KempesitaConfig {
+  id: string
+  maxBirthYear: number
+  isActive: boolean
+}
+
+export interface KempesitaConfigResponse {
+  data: KempesitaConfig | null
+  message?: string
 }
 
 export interface AuthResponse {

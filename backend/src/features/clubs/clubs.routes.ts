@@ -8,6 +8,11 @@ export const clubRoutes = async (fastify: FastifyInstance) => {
   schema: clubsSchemas.create,
     handler: clubController.create.bind(clubController),
   })
+  fastify.post('/bulk', {
+    preHandler: [fastify.authenticate],
+    schema: clubsSchemas.bulkCreate,
+    handler: clubController.uploadCSVFile.bind(clubController),
+  })
   fastify.get('/', {
     preHandler: [fastify.authenticate],
   schema: clubsSchemas.findAll,

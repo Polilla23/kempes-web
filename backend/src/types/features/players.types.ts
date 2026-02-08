@@ -5,10 +5,8 @@ export type CreatePlayerInput = {
   actualClubId: string
   ownerClubId: string
   overall: number
-  salary: number
   sofifaId: string
   transfermarktId: string
-  isKempesita: boolean
   isActive: boolean
 }
 
@@ -19,7 +17,6 @@ export type CreateBasicPlayerInput = {
   actualClubId?: string
   ownerClubId?: string
   overall?: number
-  salary?: number
   sofifaId?: string
   transfermarktId?: string
 }

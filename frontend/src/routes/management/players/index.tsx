@@ -203,6 +203,16 @@ function PlayerManagement() {
           </div>
         )
       }),
+      columnHelper.accessor('isKempesita', {
+        header: (info) => <DefaultHeader info={info} name={t('fields.isKempesita')} type="boolean" />,
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center">
+            <Badge variant={row.original.isKempesita ? "default" : "secondary"}>
+              {row.original.isKempesita ? t('table.yes') : t('table.no')}
+            </Badge>
+          </div>
+        )
+      }),
       columnHelper.accessor('ownerClub', {
         header: (info) => <DefaultHeader info={info} name={t('fields.ownerClub')} type="string" />,
         // cell: (info) => info.getValue(),

@@ -103,9 +103,15 @@
   "csv": {
     "title": "Crear Múltiples Jugadores",
     "formatTitle": "Requisitos del Formato CSV",
-    "formatDescription": "Tu archivo CSV debe contener las siguientes columnas:",
+    "formatDescription": "Tu archivo CSV debe contener las siguientes columnas (separadas por punto y coma):",
     "selectedFile": "Archivo seleccionado:",
-    "size": "Tamaño:"
+    "size": "Tamaño:",
+    "downloadExample": "Descargar CSV de ejemplo",
+    "maxPlayers": "Maximo 60 jugadores por carga",
+    "submit": "Crear Jugadores desde CSV",
+    "creating": "Creando Jugadores...",
+    "success": "¡Jugadores creados exitosamente!",
+    "error": "Error al crear jugadores desde CSV"
   },
   "table": {
     "search": "Buscar",
@@ -113,6 +119,8 @@
     "noPlayers": "No se encontraron jugadores",
     "noClub": "Sin Club",
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "yes": "Sí",
+    "no": "No"
   }
 }

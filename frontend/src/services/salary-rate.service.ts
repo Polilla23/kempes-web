@@ -1,5 +1,5 @@
 import api from './api'
-import type { RegisterSalaryRateFormData, SalaryRateResponse, SalaryRatesResponse, SalaryRate } from '@/types'
+import type { RegisterSalaryRateFormData, SalaryRateResponse, SalaryRatesResponse, SalaryRate, KempesitaConfig } from '@/types'
 
 export class SalaryRateService {
     // Crear un nuevo salary rate
@@ -49,6 +49,26 @@ export class SalaryRateService {
             return { salaryRate: response.data?.data, message: response.data?.message || 'Salary rate deleted successfully' }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error deleting salary rate')
+        }
+    }
+
+    // Obtener configuracion kempesita activa
+    static async getKempesitaConfig(): Promise<KempesitaConfig | null> {
+        try {
+            const response = await api.get<{ data: KempesitaConfig | null }>('/api/v1/kempesita-config')
+            return response.data?.data || null
+        } catch (error) {
+            throw new Error(error instanceof Error ? error.message : 'Error fetching kempesita config')
+        }
+    }
+
+    // Crear o actualizar configuracion kempesita
+    static async upsertKempesitaConfig(maxBirthYear: number): Promise<KempesitaConfig> {
+        try {
+            const response = await api.put<{ data: KempesitaConfig; message: string }>('/api/v1/kempesita-config', { maxBirthYear })
+            return response.data?.data
+        } catch (error) {
+            throw new Error(error instanceof Error ? error.message : 'Error saving kempesita config')
         }
     }
 }
