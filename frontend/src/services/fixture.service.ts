@@ -220,4 +220,9 @@ export interface MatchDetailedDTO {
       hierarchy: number
     }
   }
+  events?: Array<{
+    type: string
+    player: string
+    team: 'home' | 'away'
+  }>
 }

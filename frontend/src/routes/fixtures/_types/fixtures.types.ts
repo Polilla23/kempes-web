@@ -56,11 +56,9 @@ export interface Match extends MatchDetailedDTO {
 
 // Evento de partido
 export interface MatchEvent {
-  type: 'goal' | 'yellow' | 'red' | 'own-goal' | 'assist'
-  minute: number
+  type: 'goal' | 'yellow' | 'red' | 'injury' | 'mvp'
   player: string
   team: 'home' | 'away'
-  assist?: string
 }
 
 // Bracket match con winner calculado

@@ -101,6 +101,11 @@ export type MatchDetailedDTO = MatchDTO & {
       hierarchy: number
     }
   }
+  events?: Array<{
+    type: string
+    player: string
+    team: 'home' | 'away'
+  }>
 }
 
 export type MatchListDTO = {
