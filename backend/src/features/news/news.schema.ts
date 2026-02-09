@@ -130,4 +130,31 @@ export const newsSchemas = {
       },
     },
   },
+  toggleLike: {
+    description: 'Toggle like on a news article',
+    tags: ['News'],
+    params: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+      },
+      required: ['id'],
+    },
+    response: {
+      200: {
+        description: 'Like toggled successfully',
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          data: {
+            type: 'object',
+            properties: {
+              liked: { type: 'boolean' },
+              likesCount: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+  },
 }

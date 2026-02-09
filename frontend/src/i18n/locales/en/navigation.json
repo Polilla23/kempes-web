@@ -5,6 +5,7 @@
   "menu": {
     "title": "Navigation",
     "home": "Home",
+    "news": "News",
     "standings": "Standings",
     "fixture": "Fixture",
     "statistics": "Statistics",

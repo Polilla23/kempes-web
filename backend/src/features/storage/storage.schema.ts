@@ -3,18 +3,8 @@ export const storageSchemas = {
     description: 'Upload a file to Supabase Storage',
     tags: ['Storage'],
     consumes: ['multipart/form-data'],
-    body: {
-      type: 'object',
-      required: ['file', 'entityType'],
-      properties: {
-        file: { type: 'string', format: 'binary' },
-        entityType: {
-          type: 'string',
-          enum: ['CLUB', 'PLAYER', 'TROPHY', 'NEWS', 'GENERAL'],
-        },
-        entityId: { type: 'string' },
-      },
-    },
+    // Note: Body validation is skipped for multipart/form-data
+    // Validation is done manually in the controller
     response: {
       201: {
         description: 'File uploaded successfully',
@@ -28,6 +18,14 @@ export const storageSchemas = {
               publicUrl: { type: 'string' },
             },
           },
+        },
+      },
+      400: {
+        description: 'Bad request',
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          message: { type: 'string' },
         },
       },
     },

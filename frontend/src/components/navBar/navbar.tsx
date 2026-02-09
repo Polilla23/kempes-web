@@ -13,7 +13,7 @@ export const Navbar = () => {
         </div>
         <NavbarFooter />
       </SidebarContent>
-      <SidebarRail className="select-none" />
+      <SidebarRail className="select-none after:bg-transparent hover:after:bg-primary/30 after:transition-colors after:duration-200" />
     </Sidebar>
   )
 }

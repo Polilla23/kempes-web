@@ -62,6 +62,9 @@ import { FinanceService } from '@/features/finances/finances.service'
 import { KempesitaConfigRepository } from '@/features/kempesita-config/kempesita-config.repository'
 import { KempesitaConfigController } from '@/features/kempesita-config/kempesita-config.controller'
 import { KempesitaConfigService } from '@/features/kempesita-config/kempesita-config.service'
+import { CommentRepository } from '@/features/comments/comments.repository'
+import { CommentService } from '@/features/comments/comments.service'
+import { CommentController } from '@/features/comments/comments.controller'
 
 export function createDepencyContainer(fastify: FastifyInstance) {
   const prisma = new PrismaClient()
@@ -88,6 +91,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     storageRepository: asClass(StorageRepository).singleton(),
     newsRepository: asClass(NewsRepository).singleton(),
     kempesitaConfigRepository: asClass(KempesitaConfigRepository).singleton(),
+    commentRepository: asClass(CommentRepository).singleton(),
 
     userController: asClass(UserController).singleton(),
     myAccountController: asClass(MyAccountController).singleton(),
@@ -108,6 +112,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     transferController: asClass(TransferController).singleton(),
     financeController: asClass(FinanceController).singleton(),
     kempesitaConfigController: asClass(KempesitaConfigController).singleton(),
+    commentController: asClass(CommentController).singleton(),
 
     userService: asClass(UserService).singleton(),
     myAccountService: asClass(MyAccountService).singleton(),
@@ -128,6 +133,7 @@ export function createDepencyContainer(fastify: FastifyInstance) {
     transferService: asClass(TransferService).singleton(),
     financeService: asClass(FinanceService).singleton(),
     kempesitaConfigService: asClass(KempesitaConfigService).singleton(),
+    commentService: asClass(CommentService).singleton(),
 
     emailService: asClass(EmailService).singleton(),
     supabaseProvider: asClass(SupabaseProvider).singleton(),

@@ -6,7 +6,6 @@
       "Bash(npx tsc:*)",
       "Bash(./node_modules/.bin/tsc:*)",
       "Bash(npm run build:*)",
-      "Bash(ls -la \"C:\\\\Users\\\\Leand\\\\kempes-web\\\\frontend\\\\src\\\\i18n\\\\locales\"\" 2>/dev/null || echo \"Directorio no encontrado \")",
       "Bash(find:*)",
       "Bash(npm install:*)",
       "Bash(npm run:*)",
@@ -18,7 +17,9 @@
       "Bash(node:*)",
       "Bash(echo:*)",
       "Bash(tasklist:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

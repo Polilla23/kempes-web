@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { StorageService } from './storage.service'
 import { Response } from '@/features/core'
+import { env } from '@/features/core/config/env'
 import { EntityType } from '@prisma/client'
 import { MultipartFile } from '@fastify/multipart'
 
@@ -20,10 +21,13 @@ export class StorageController {
       }
 
       const fileBuffer = await data.toBuffer()
-      const { entityType, entityId } = req.body as {
-        entityType: EntityType
-        entityId?: string
-      }
+
+      // With @fastify/multipart, form fields are in data.fields, not req.body
+      const entityTypeField = data.fields.entityType as { value: string } | undefined
+      const entityIdField = data.fields.entityId as { value: string } | undefined
+
+      const entityType = entityTypeField?.value as EntityType | undefined
+      const entityId = entityIdField?.value
 
       if (!entityType) {
         return Response.badRequest(reply, 'Entity type is required')
@@ -46,9 +50,13 @@ export class StorageController {
       if (error.name === 'FileSizeExceededError') {
         return Response.badRequest(reply, error.message)
       }
+      if (error.statusCode === 413 || error.code === 'FST_REQ_FILE_TOO_LARGE') {
+        return Response.badRequest(reply, `File size exceeds maximum allowed (${env.MAX_FILE_SIZE} bytes)`)
+      }
       if (error.name === 'UploadFailedError') {
         return Response.internal(reply, error.message)
       }
+      console.error('[StorageController] Unhandled upload error:', error)
       return Response.internal(reply, 'Failed to upload file')
     }
   }

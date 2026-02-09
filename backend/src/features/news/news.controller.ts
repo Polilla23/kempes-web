@@ -36,7 +36,14 @@ export class NewsController {
     try {
       const { id } = req.params
 
-      const news = await this.newsService.getNewsById(id)
+      // Soft-auth: try to extract userId from JWT if present
+      let userId: string | undefined
+      try {
+        await req.jwtVerify()
+        userId = (req.user as any)?.id
+      } catch {}
+
+      const news = await this.newsService.getNewsById(id, userId)
 
       return Response.success(reply, news)
     } catch (error: any) {
@@ -63,7 +70,14 @@ export class NewsController {
         limit: query.limit ? parseInt(query.limit) : 10,
       }
 
-      const result = await this.newsService.getAllNews(filters, pagination)
+      // Soft-auth: try to extract userId from JWT if present
+      let userId: string | undefined
+      try {
+        await req.jwtVerify()
+        userId = (req.user as any)?.id
+      } catch {}
+
+      const result = await this.newsService.getAllNews(filters, pagination, userId)
 
       return Response.success(reply, result)
     } catch (error: any) {
@@ -150,6 +164,26 @@ export class NewsController {
       const news = await this.newsService.removeImageFromNews(id, imageUrl)
 
       return Response.success(reply, news, 'Image removed successfully')
+    } catch (error: any) {
+      if (error.name === 'NewsNotFoundError') {
+        return Response.notFound(reply, error.message)
+      }
+      return Response.internal(reply, error.message)
+    }
+  }
+
+  async toggleLike(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    try {
+      const { id } = req.params
+      const userId = (req.user as any)?.id
+
+      if (!userId) {
+        return Response.unauthorized(reply, 'User not authenticated')
+      }
+
+      const result = await this.newsService.toggleLike(id, userId)
+
+      return Response.success(reply, result)
     } catch (error: any) {
       if (error.name === 'NewsNotFoundError') {
         return Response.notFound(reply, error.message)

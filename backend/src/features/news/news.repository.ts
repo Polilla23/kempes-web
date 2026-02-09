@@ -8,33 +8,33 @@ export class NewsRepository implements INewsRepository {
     this.prisma = prisma
   }
 
+  private getInclude(userId?: string) {
+    return {
+      author: {
+        select: {
+          id: true,
+          email: true,
+          role: true,
+        },
+      },
+      _count: {
+        select: { comments: true, likes: true },
+      },
+      ...(userId ? { likes: { where: { userId }, select: { id: true } } } : {}),
+    }
+  }
+
   async create(data: Prisma.NewsCreateInput): Promise<News> {
     return await this.prisma.news.create({
       data,
-      include: {
-        author: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
+      include: this.getInclude(),
     })
   }
 
-  async findById(id: string): Promise<News | null> {
+  async findById(id: string, userId?: string): Promise<News | null> {
     return await this.prisma.news.findUnique({
       where: { id },
-      include: {
-        author: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
+      include: this.getInclude(userId),
     })
   }
 
@@ -43,21 +43,14 @@ export class NewsRepository implements INewsRepository {
     skip?: number
     take?: number
     orderBy?: Prisma.NewsOrderByWithRelationInput
+    userId?: string
   }): Promise<News[]> {
     return await this.prisma.news.findMany({
       where: params?.where,
       skip: params?.skip,
       take: params?.take,
       orderBy: params?.orderBy ?? { publishedAt: 'desc' },
-      include: {
-        author: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
+      include: this.getInclude(params?.userId),
     })
   }
 
@@ -69,19 +62,36 @@ export class NewsRepository implements INewsRepository {
     return await this.prisma.news.update({
       where: { id },
       data,
-      include: {
-        author: {
-          select: {
-            id: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
+      include: this.getInclude(),
     })
   }
 
   async deleteOneById(id: string): Promise<void> {
     await this.prisma.news.delete({ where: { id } })
+  }
+
+  async findLike(userId: string, newsId: string): Promise<{ id: string } | null> {
+    return await this.prisma.newsLike.findUnique({
+      where: { userId_newsId: { userId, newsId } },
+      select: { id: true },
+    })
+  }
+
+  async createLike(userId: string, newsId: string): Promise<void> {
+    await this.prisma.newsLike.create({
+      data: { userId, newsId },
+    })
+  }
+
+  async deleteLike(userId: string, newsId: string): Promise<void> {
+    await this.prisma.newsLike.delete({
+      where: { userId_newsId: { userId, newsId } },
+    })
+  }
+
+  async countLikes(newsId: string): Promise<number> {
+    return await this.prisma.newsLike.count({
+      where: { newsId },
+    })
   }
 }

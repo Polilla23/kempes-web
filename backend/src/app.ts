@@ -84,7 +84,11 @@ app.register(fastifyCors, {
 });
 
 // FastifyMultipart para manejo de archivos
-app.register(fastifyMultipart);
+app.register(fastifyMultipart, {
+	limits: {
+		fileSize: env.MAX_FILE_SIZE,
+	},
+});
 
 // Rate Limiter
 app.register(async function (fastify) {
