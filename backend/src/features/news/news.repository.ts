@@ -19,6 +19,9 @@ export class NewsRepository implements INewsRepository {
             role: true,
           },
         },
+        _count: {
+          select: { comments: true },
+        },
       },
     })
   }
@@ -33,6 +36,9 @@ export class NewsRepository implements INewsRepository {
             email: true,
             role: true,
           },
+        },
+        _count: {
+          select: { comments: true },
         },
       },
     })
@@ -57,6 +63,9 @@ export class NewsRepository implements INewsRepository {
             role: true,
           },
         },
+        _count: {
+          select: { comments: true },
+        },
       },
     })
   }
@@ -76,6 +85,9 @@ export class NewsRepository implements INewsRepository {
             email: true,
             role: true,
           },
+        },
+        _count: {
+          select: { comments: true },
         },
       },
     })

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -116,5 +117,20 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Hide scrollbar in sidebar */
+  [data-sidebar='content'] {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  [data-sidebar='content']::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .font-newspaper {
+    font-family: 'Playfair Display', 'Times New Roman', Georgia, serif;
   }
 }

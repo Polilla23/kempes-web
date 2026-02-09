@@ -291,14 +291,27 @@ export function CreateNewsContent() {
                   )}
 
                   {images.length > 0 && (
-                    <div className={cn(
-                      "grid gap-2 rounded-lg overflow-hidden",
-                      images.length === 1 && "grid-cols-1",
-                      images.length >= 2 && "grid-cols-2"
-                    )}>
-                      {images.map((_, i) => (
-                        <div key={i} className="aspect-video bg-muted rounded-lg" />
-                      ))}
+                    <div className="space-y-2">
+                      <div className={cn(
+                        "grid gap-2 rounded-lg overflow-hidden",
+                        images.length === 1 && "grid-cols-1",
+                        images.length >= 2 && "grid-cols-2"
+                      )}>
+                        {images.map((_, i) => (
+                          <div
+                            key={i}
+                            className="aspect-video bg-muted rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center gap-2"
+                          >
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground font-medium">
+                              Imagen {i + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        (Las imágenes se mostrarán al publicar)
+                      </p>
                     </div>
                   )}
                 </CardContent>

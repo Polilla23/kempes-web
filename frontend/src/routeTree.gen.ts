@@ -13,11 +13,14 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TransfersIndexRouteImport } from './routes/transfers/index'
 import { Route as SubmitResultIndexRouteImport } from './routes/submit-result/index'
 import { Route as StandingsIndexRouteImport } from './routes/standings/index'
+import { Route as NewsIndexRouteImport } from './routes/news/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
 import { Route as FixturesIndexRouteImport } from './routes/fixtures/index'
 import { Route as ConfigurationIndexRouteImport } from './routes/configuration/index'
 import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
+import { Route as NewsCreateRouteImport } from './routes/news/create'
+import { Route as NewsIdRouteImport } from './routes/news/$id'
 import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
@@ -66,6 +69,11 @@ const StandingsIndexRoute = StandingsIndexRouteImport.update({
   path: '/standings/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsIndexRoute = NewsIndexRouteImport.update({
+  id: '/news/',
+  path: '/news/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyaccountIndexRoute = MyaccountIndexRouteImport.update({
   id: '/myaccount/',
   path: '/myaccount/',
@@ -89,6 +97,16 @@ const PlayerFindAllRoute = PlayerFindAllRouteImport.update({
 const PlayerCreateRoute = PlayerCreateRouteImport.update({
   id: '/player/create',
   path: '/player/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsCreateRoute = NewsCreateRouteImport.update({
+  id: '/news/create',
+  path: '/news/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewsIdRoute = NewsIdRouteImport.update({
+  id: '/news/$id',
+  path: '/news/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClubFindAllRoute = ClubFindAllRouteImport.update({
@@ -244,11 +262,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
+  '/news/$id': typeof NewsIdRoute
+  '/news/create': typeof NewsCreateRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration': typeof ConfigurationIndexRoute
   '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
+  '/news': typeof NewsIndexRoute
   '/standings': typeof StandingsIndexRoute
   '/submit-result': typeof SubmitResultIndexRoute
   '/transfers': typeof TransfersIndexRoute
@@ -282,11 +303,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
+  '/news/$id': typeof NewsIdRoute
+  '/news/create': typeof NewsCreateRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration': typeof ConfigurationIndexRoute
   '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
+  '/news': typeof NewsIndexRoute
   '/standings': typeof StandingsIndexRoute
   '/submit-result': typeof SubmitResultIndexRoute
   '/transfers': typeof TransfersIndexRoute
@@ -321,11 +345,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/club/create': typeof ClubCreateRoute
   '/club/findAll': typeof ClubFindAllRoute
+  '/news/$id': typeof NewsIdRoute
+  '/news/create': typeof NewsCreateRoute
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration/': typeof ConfigurationIndexRoute
   '/fixtures/': typeof FixturesIndexRoute
   '/myaccount/': typeof MyaccountIndexRoute
+  '/news/': typeof NewsIndexRoute
   '/standings/': typeof StandingsIndexRoute
   '/submit-result/': typeof SubmitResultIndexRoute
   '/transfers/': typeof TransfersIndexRoute
@@ -361,11 +388,14 @@ export interface FileRouteTypes {
     | '/'
     | '/club/create'
     | '/club/findAll'
+    | '/news/$id'
+    | '/news/create'
     | '/player/create'
     | '/player/findAll'
     | '/configuration'
     | '/fixtures'
     | '/myaccount'
+    | '/news'
     | '/standings'
     | '/submit-result'
     | '/transfers'
@@ -399,11 +429,14 @@ export interface FileRouteTypes {
     | '/'
     | '/club/create'
     | '/club/findAll'
+    | '/news/$id'
+    | '/news/create'
     | '/player/create'
     | '/player/findAll'
     | '/configuration'
     | '/fixtures'
     | '/myaccount'
+    | '/news'
     | '/standings'
     | '/submit-result'
     | '/transfers'
@@ -437,11 +470,14 @@ export interface FileRouteTypes {
     | '/'
     | '/club/create'
     | '/club/findAll'
+    | '/news/$id'
+    | '/news/create'
     | '/player/create'
     | '/player/findAll'
     | '/configuration/'
     | '/fixtures/'
     | '/myaccount/'
+    | '/news/'
     | '/standings/'
     | '/submit-result/'
     | '/transfers/'
@@ -476,11 +512,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClubCreateRoute: typeof ClubCreateRoute
   ClubFindAllRoute: typeof ClubFindAllRoute
+  NewsIdRoute: typeof NewsIdRoute
+  NewsCreateRoute: typeof NewsCreateRoute
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
   ConfigurationIndexRoute: typeof ConfigurationIndexRoute
   FixturesIndexRoute: typeof FixturesIndexRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
+  NewsIndexRoute: typeof NewsIndexRoute
   StandingsIndexRoute: typeof StandingsIndexRoute
   SubmitResultIndexRoute: typeof SubmitResultIndexRoute
   TransfersIndexRoute: typeof TransfersIndexRoute
@@ -541,6 +580,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StandingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news/': {
+      id: '/news/'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/myaccount/': {
       id: '/myaccount/'
       path: '/myaccount'
@@ -574,6 +620,20 @@ declare module '@tanstack/react-router' {
       path: '/player/create'
       fullPath: '/player/create'
       preLoaderRoute: typeof PlayerCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news/create': {
+      id: '/news/create'
+      path: '/news/create'
+      fullPath: '/news/create'
+      preLoaderRoute: typeof NewsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/news/$id': {
+      id: '/news/$id'
+      path: '/news/$id'
+      fullPath: '/news/$id'
+      preLoaderRoute: typeof NewsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/club/findAll': {
@@ -772,11 +832,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClubCreateRoute: ClubCreateRoute,
   ClubFindAllRoute: ClubFindAllRoute,
+  NewsIdRoute: NewsIdRoute,
+  NewsCreateRoute: NewsCreateRoute,
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
   ConfigurationIndexRoute: ConfigurationIndexRoute,
   FixturesIndexRoute: FixturesIndexRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
+  NewsIndexRoute: NewsIndexRoute,
   StandingsIndexRoute: StandingsIndexRoute,
   SubmitResultIndexRoute: SubmitResultIndexRoute,
   TransfersIndexRoute: TransfersIndexRoute,

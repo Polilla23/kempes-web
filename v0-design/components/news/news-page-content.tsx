@@ -6,17 +6,19 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Textarea } from "@/components/ui/textarea"
-import { 
-  MessageCircle, 
-  Heart, 
-  Share2, 
-  MoreHorizontal, 
+import {
+  MessageCircle,
+  Heart,
+  Share2,
+  MoreHorizontal,
   Send,
   ChevronDown,
   ChevronUp,
   Clock,
   PenSquare,
-  Filter
+  Filter,
+  Check,
+  Copy
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -138,10 +140,32 @@ function NewsPostCard({ post }: { post: NewsPost }) {
   const [newComment, setNewComment] = useState("")
   const [isLiked, setIsLiked] = useState(post.liked)
   const [likesCount, setLikesCount] = useState(post.likes)
+  const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
 
   const handleLike = () => {
     setIsLiked(!isLiked)
     setLikesCount(isLiked ? likesCount - 1 : likesCount + 1)
+  }
+
+  const handleShare = async () => {
+    const shareData = {
+      title: post.title || 'Noticia de Kempes Master League',
+      text: post.content.substring(0, 100) + '...',
+      url: `${window.location.origin}/news/${post.id}`
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(shareData.url)
+        setShareStatus('copied')
+        setTimeout(() => setShareStatus('idle'), 2000)
+      }
+    } catch (error) {
+      // User cancelled share or error occurred
+      console.log('Share cancelled or failed')
+    }
   }
 
   return (
@@ -218,8 +242,23 @@ function NewsPostCard({ post }: { post: NewsPost }) {
               <span className="text-sm">{post.comments.length}</span>
             </Button>
           </div>
-          <Button variant="ghost" size="sm" className="gap-2 h-8">
-            <Share2 className="w-4 h-4" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("gap-2 h-8", shareStatus === 'copied' && "text-green-500")}
+            onClick={handleShare}
+          >
+            {shareStatus === 'copied' ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="text-sm">Copiado</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                <span className="text-sm hidden sm:inline">Compartir</span>
+              </>
+            )}
           </Button>
         </div>
 
@@ -278,7 +317,7 @@ function NewsPostCard({ post }: { post: NewsPost }) {
         )}
 
         {/* Comment Input */}
-        <div className="p-4 pt-0 flex gap-3 border-t border-border mt-0">
+        <div className="p-4 pt-4 flex gap-3 border-t border-border">
           <Avatar className="w-8 h-8">
             <AvatarFallback className="bg-primary/10 text-primary text-xs">TU</AvatarFallback>
           </Avatar>
@@ -308,11 +347,36 @@ export function NewsPageContent() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
+      {/* Banner THE KEMPES TIMES */}
+      <div className="mb-8 py-6 px-4 bg-card border border-border rounded-lg">
+        <div className="flex items-center justify-center gap-4">
+          <img
+            src="/images/80.png"
+            alt="Kempes Logo"
+            className="w-12 h-12 object-contain"
+          />
+          <div className="text-center">
+            <h1 className="font-newspaper text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+              THE KEMPES TIMES
+            </h1>
+            <div className="w-full h-0.5 bg-foreground mt-1" />
+          </div>
+          <img
+            src="/images/80.png"
+            alt="Kempes Logo"
+            className="w-12 h-12 object-contain"
+          />
+        </div>
+        <p className="text-center text-sm text-muted-foreground mt-2">
+          Lo último de la comunidad KML
+        </p>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Noticias</h1>
-          <p className="text-sm text-muted-foreground">Lo último de la comunidad KML</p>
+          <p className="text-sm text-muted-foreground">Todas las publicaciones</p>
         </div>
         <Button asChild>
           <Link href="/news/create">

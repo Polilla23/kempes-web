@@ -36,7 +36,7 @@ export class NewsService {
   async getAllNews(
     filters?: NewsFilterInput,
     pagination?: PaginationInput,
-  ): Promise<{ news: News[]; total: number; page: number; totalPages: number }> {
+  ): Promise<{ data: News[]; total: number; page: number; limit: number; totalPages: number }> {
     const page = pagination?.page ?? 1
     const limit = pagination?.limit ?? 10
     const skip = (page - 1) * limit
@@ -76,9 +76,10 @@ export class NewsService {
     ])
 
     return {
-      news,
+      data: news,
       total,
       page,
+      limit,
       totalPages: Math.ceil(total / limit),
     }
   }

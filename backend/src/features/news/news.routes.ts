@@ -1,8 +1,10 @@
 import { FastifyInstance } from 'fastify'
 import { newsSchemas } from './news.schema'
+import { commentSchemas } from '@/features/comments/comments.schema'
 
 export const newsRoutes = async (fastify: FastifyInstance) => {
   const newsController = (fastify as any).container.resolve('newsController')
+  const commentController = (fastify as any).container.resolve('commentController')
 
   // Public routes (no authentication needed for reading published news)
   fastify.get('/', {
@@ -44,5 +46,23 @@ export const newsRoutes = async (fastify: FastifyInstance) => {
     preHandler: [fastify.authenticate],
     schema: newsSchemas.removeImage,
     handler: newsController.removeImage.bind(newsController),
+  })
+
+  // Comment routes
+  fastify.get('/:id/comments', {
+    schema: commentSchemas.getByNewsId,
+    handler: commentController.getByNewsId.bind(commentController),
+  })
+
+  fastify.post('/:id/comments', {
+    preHandler: [fastify.authenticate],
+    schema: commentSchemas.create,
+    handler: commentController.create.bind(commentController),
+  })
+
+  fastify.delete('/:id/comments/:commentId', {
+    preHandler: [fastify.authenticate],
+    schema: commentSchemas.delete,
+    handler: commentController.delete.bind(commentController),
   })
 }

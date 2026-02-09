@@ -156,7 +156,7 @@ describe('NewsService', () => {
 
       const result = await newsService.getAllNews(undefined, { page: 1, limit: 10 })
 
-      expect(result.news).toEqual(mockNewsList)
+      expect(result.data).toEqual(mockNewsList)
       expect(result.total).toBe(2)
       expect(result.page).toBe(1)
       expect(result.totalPages).toBe(1)
@@ -183,7 +183,7 @@ describe('NewsService', () => {
 
       const result = await newsService.getAllNews({ search: 'Partido' }, { page: 1, limit: 10 })
 
-      expect(result.news).toEqual(mockNewsList)
+      expect(result.data).toEqual(mockNewsList)
       expect(mockNewsRepository.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
