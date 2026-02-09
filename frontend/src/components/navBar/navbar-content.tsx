@@ -15,6 +15,7 @@ import {
   ListTree,
   Award,
   Upload,
+  Newspaper,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -34,6 +35,7 @@ import { useTranslation } from 'react-i18next'
 
 const navItems = [
   { key: 'home', icon: House, to: '/' },
+  { key: 'news', icon: Newspaper, to: '/news' },
   { key: 'standings', icon: ListOrdered, to: '/standings' },
   { key: 'fixture', icon: CalendarRange, to: '/fixtures' },
   { key: 'submitResult', icon: Upload, to: '/submit-result' },

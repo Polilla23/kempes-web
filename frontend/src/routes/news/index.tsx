@@ -3,10 +3,12 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { PenSquare, Filter, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import { checkAuth } from '@/services/auth-guard'
-import { NewsBanner, NewsPostCard, type NewsPost } from '@/components/news'
+import { NewsBanner, NewsPostCard, NewsPostCardSkeleton, type NewsPost } from '@/components/news'
 import NewsService from '@/services/news.service'
 import { newsToPost } from '@/lib/news-utils'
+import { useUser } from '@/context/UserContext'
 
 export const Route = createFileRoute('/news/')({
   beforeLoad: async ({ location }) => {
@@ -18,6 +20,8 @@ export const Route = createFileRoute('/news/')({
 const filterTags = ['Todas', 'Anuncio Oficial', 'Transferencia', 'Resultado', 'Copa Kempes', 'Recordatorio']
 
 function NewsPage() {
+  const { t } = useTranslation('news')
+  const { id: currentUserId, role: currentUserRole } = useUser()
   const [activeFilter, setActiveFilter] = useState('Todas')
   const [posts, setPosts] = useState<NewsPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -48,6 +52,10 @@ function NewsPage() {
     fetchNews(1, activeFilter).finally(() => setIsLoading(false))
   }, [activeFilter])
 
+  const handlePostDelete = (postId: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId))
+  }
+
   const handleLoadMore = async () => {
     const nextPage = page + 1
     setIsLoadingMore(true)
@@ -66,13 +74,13 @@ function NewsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Noticias</h2>
-            <p className="text-sm text-muted-foreground">Todas las publicaciones</p>
+            <h2 className="text-2xl font-bold text-foreground">{t('feed.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('feed.subtitle')}</p>
           </div>
           <Button asChild>
-            <Link to="/news/create">
+            <Link to="/news/create" search={{ edit: undefined }}>
               <PenSquare className="w-4 h-4 mr-2" />
-              Subir noticia
+              {t('feed.uploadButton')}
             </Link>
           </Button>
         </div>
@@ -88,24 +96,32 @@ function NewsPage() {
               className={cn('shrink-0', activeFilter !== tag && 'bg-transparent')}
               onClick={() => setActiveFilter(tag)}
             >
-              {tag}
+              {t(`tags.${tag}` as never)}
             </Button>
           ))}
         </div>
 
         {/* Feed */}
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <NewsPostCardSkeleton key={i} />
+            ))}
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No hay noticias para mostrar</p>
+            <p className="text-muted-foreground">{t('feed.noNews')}</p>
           </div>
         ) : (
           <div className="space-y-4">
             {posts.map((post) => (
-              <NewsPostCard key={post.id} post={post} />
+              <NewsPostCard
+                key={post.id}
+                post={post}
+                currentUserId={currentUserId}
+                currentUserRole={currentUserRole}
+                onDelete={handlePostDelete}
+              />
             ))}
           </div>
         )}
@@ -121,10 +137,10 @@ function NewsPage() {
             {isLoadingMore ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Cargando...
+                {t('feed.loading')}
               </>
             ) : (
-              'Cargar más publicaciones'
+              t('feed.loadMore')
             )}
           </Button>
         )}

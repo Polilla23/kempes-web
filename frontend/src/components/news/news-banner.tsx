@@ -1,21 +1,22 @@
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface NewsBannerProps {
   className?: string
 }
 
 export function NewsBanner({ className }: NewsBannerProps) {
+  const { t } = useTranslation('news')
   return (
     <div className={cn('relative overflow-hidden', className)}>
       {/* Soccer field background */}
       <div
-        className="absolute inset-0 bg-cover bg-center max-h-60"
+        className="absolute inset-0 max-h-60"
         style={{
-          backgroundImage:
-            'url("https://media.istockphoto.com/id/472347896/es/foto/rayado-campo-de-f%C3%BAtbol.jpg?s=612x612&w=0&k=20&c=0SIlq453FrVIypqDXiMhLM7bigTa3y_CE3pMwFrYs9g=")',
+          background: 'linear-gradient(135deg, #0a4d2c 0%, #166534 30%, #15803d 50%, #166534 70%, #0a4d2c 100%)',
         }}
       />
-      <div className="absolute inset-0 bg-black/60 max-h-60" />
+      <div className="absolute inset-0 bg-black/40 max-h-60" />
 
       <div className="relative flex flex-col items-center py-5 sm:py-6 px-4 justify-center">
         {/* Decorative top rule */}
@@ -46,7 +47,7 @@ export function NewsBanner({ className }: NewsBannerProps) {
 
         {/* Subtitle */}
         <p className="text-xs sm:text-sm text-white/80 italic tracking-widest uppercase">
-          Lo último en la Kempes Master League
+          {t('banner.subtitle')}
         </p>
 
         {/* Decorative bottom rule */}

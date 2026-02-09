@@ -18,9 +18,10 @@ model User {
   verificationTokenExpires  DateTime? @map("verification_token_expires")
   resetPasswordToken        String?   @unique @map("reset_password_token")
   resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
-  club     Club?
-  news     News[]
-  comments Comment[]
+  club      Club?
+  news      News[]
+  comments  Comment[]
+  newsLikes NewsLike[]
 
   @@map("users")
 }
@@ -271,10 +272,25 @@ model News {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   comments    Comment[]
-
+  likes       NewsLike[]
 
   @@index([authorId])
   @@map("news")
+}
+
+model NewsLike {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  newsId    String   @map("news_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  news News @relation(fields: [newsId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, newsId])
+  @@index([newsId])
+  @@index([userId])
+  @@map("news_likes")
 }
 
 model Comment {

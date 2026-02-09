@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { createPortal } from 'react-dom'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +17,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   MessageCircle,
   Heart,
@@ -29,12 +37,19 @@ import {
   Clock,
   Check,
   Trash2,
+  Pencil,
   Loader2,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNewsContent } from '@/lib/format-content'
 import { getTimeAgo } from '@/lib/news-utils'
+import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n/config'
+import { toast } from 'sonner'
 import CommentService, { type CommentData } from '@/services/comment.service'
+import NewsService from '@/services/news.service'
 
 export interface Comment {
   id: string
@@ -49,6 +64,7 @@ export interface Comment {
 export interface NewsPost {
   id: string
   author: string
+  authorId?: string
   authorAvatar?: string
   authorRole: 'admin' | 'manager' | 'user'
   title?: string
@@ -56,6 +72,7 @@ export interface NewsPost {
   images: string[]
   tags: string[]
   timeAgo: string
+  createdAt?: string
   likes: number
   comments: Comment[]
   commentsCount?: number
@@ -81,8 +98,9 @@ const roleColors: Record<string, string> = {
 function commentDataToComment(data: CommentData): Comment {
   return {
     id: data.id,
-    author: data.author?.email?.split('@')[0] || 'Anónimo',
+    author: data.author?.username || data.author?.email?.split('@')[0] || i18n.t('news:card.anonymous'),
     authorId: data.authorId,
+    authorAvatar: data.author?.avatar,
     content: data.content,
     timeAgo: getTimeAgo(data.createdAt),
     likes: 0,
@@ -91,105 +109,298 @@ function commentDataToComment(data: CommentData): Comment {
 
 function ImageGallery({ images }: { images: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+
+  const goToPrevious = useCallback(
+    (e?: React.MouseEvent | KeyboardEvent) => {
+      e?.stopPropagation?.()
+      setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+    },
+    [images.length],
+  )
+
+  const goToNext = useCallback(
+    (e?: React.MouseEvent | KeyboardEvent) => {
+      e?.stopPropagation?.()
+      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+    },
+    [images.length],
+  )
+
+  // Keyboard navigation + body scroll lock for lightbox
+  useEffect(() => {
+    if (!lightboxOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxOpen(false)
+      if (e.key === 'ArrowLeft') goToPrevious(e)
+      if (e.key === 'ArrowRight') goToNext(e)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [lightboxOpen, goToPrevious, goToNext])
+
+  // Prefetch adjacent images when lightbox is open
+  useEffect(() => {
+    if (!lightboxOpen || images.length <= 1) return
+    const prefetch = (index: number) => {
+      const img = new Image()
+      img.src = images[index]
+    }
+    if (currentIndex < images.length - 1) prefetch(currentIndex + 1)
+    if (currentIndex > 0) prefetch(currentIndex - 1)
+  }, [lightboxOpen, currentIndex, images])
 
   if (images.length === 0) return null
 
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
-  }
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
-  }
-
   return (
-    <div className="relative group">
-      <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-        <img
-          src={images[currentIndex] || '/placeholder.svg'}
-          alt={`Imagen ${currentIndex + 1}`}
-          className="w-full h-full object-cover"
-        />
+    <>
+      <div className="relative group">
+        <div
+          className="aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer"
+          onClick={() => setLightboxOpen(true)}
+        >
+          <img
+            src={images[currentIndex] || '/placeholder.svg'}
+            alt={i18n.t('news:card.image', { index: currentIndex + 1 })}
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+        {images.length > 1 && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => { e.stopPropagation(); goToPrevious() }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => { e.stopPropagation(); goToNext() }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+              {images.map((_, index) => (
+                <button
+                  key={index}
+                  className={cn(
+                    'w-2 h-2 rounded-full transition-all',
+                    index === currentIndex ? 'bg-white w-4' : 'bg-white/50 hover:bg-white/75',
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCurrentIndex(index)
+                  }}
+                />
+              ))}
+            </div>
+
+            <div className="absolute top-3 right-3 bg-background/80 rounded-md px-2 py-1 text-xs font-medium">
+              {currentIndex + 1}/{images.length}
+            </div>
+          </>
+        )}
       </div>
 
-      {images.length > 1 && (
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={goToPrevious}
+      {/* Fullscreen Lightbox */}
+      {lightboxOpen &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-label={i18n.t('news:card.lightboxLabel')}
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            onClick={() => setLightboxOpen(false)}
           >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={goToNext}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+            {/* Close button */}
+            <button
+              aria-label={i18n.t('news:card.lightboxClose')}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                className={cn(
-                  'w-2 h-2 rounded-full transition-all',
-                  index === currentIndex ? 'bg-white w-4' : 'bg-white/50 hover:bg-white/75',
-                )}
-                onClick={() => setCurrentIndex(index)}
-              />
-            ))}
-          </div>
+            {/* Counter */}
+            {images.length > 1 && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-white/70 text-sm font-medium">
+                {currentIndex + 1} / {images.length}
+              </div>
+            )}
 
-          <div className="absolute top-3 right-3 bg-background/80 rounded-md px-2 py-1 text-xs font-medium">
-            {currentIndex + 1}/{images.length}
+            {/* Image */}
+            <img
+              src={images[currentIndex]}
+              alt={i18n.t('news:card.image', { index: currentIndex + 1 })}
+              className="max-w-[95vw] max-h-[90vh] object-contain select-none"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Navigation arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  aria-label={i18n.t('news:card.lightboxPrev')}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  onClick={(e) => { e.stopPropagation(); goToPrevious() }}
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  aria-label={i18n.t('news:card.lightboxNext')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  onClick={(e) => { e.stopPropagation(); goToNext() }}
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+
+            {/* Dots */}
+            {images.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                {images.map((_, index) => (
+                  <button
+                    key={index}
+                    className={cn(
+                      'w-2.5 h-2.5 rounded-full transition-all',
+                      index === currentIndex ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60',
+                    )}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setCurrentIndex(index)
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
+    </>
+  )
+}
+
+export function NewsPostCardSkeleton() {
+  return (
+    <Card className="bg-card border-border overflow-hidden">
+      <CardContent className="p-0">
+        <div className="p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+            <div className="h-3 w-16 bg-muted animate-pulse rounded" />
           </div>
-        </>
-      )}
-    </div>
+        </div>
+        <div className="px-4 pb-2">
+          <div className="h-5 w-3/4 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="px-4 pb-3 space-y-2">
+          <div className="h-3 w-full bg-muted animate-pulse rounded" />
+          <div className="h-3 w-full bg-muted animate-pulse rounded" />
+          <div className="h-3 w-2/3 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="px-4 pb-3">
+          <div className="aspect-video bg-muted animate-pulse rounded-lg" />
+        </div>
+        <div className="px-4 py-3 border-t border-border flex items-center gap-4">
+          <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+          <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
 interface NewsPostCardProps {
   post: NewsPost
+  currentUserId?: string | null
+  currentUserRole?: string | null
+  onDelete?: (postId: string) => void
 }
 
-export function NewsPostCard({ post }: NewsPostCardProps) {
+export function NewsPostCard({ post, currentUserId, currentUserRole, onDelete }: NewsPostCardProps) {
+  const { t } = useTranslation('news')
+  const navigate = useNavigate()
   const [showComments, setShowComments] = useState(false)
   const [newComment, setNewComment] = useState('')
   const [isLiked, setIsLiked] = useState(post.liked)
   const [likesCount, setLikesCount] = useState(post.likes)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isLikingState, setIsLikingState] = useState(false)
+  const isLiking = useRef(false)
+  const shareTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Cleanup share timeout on unmount
+  useEffect(() => {
+    const ref = shareTimeoutRef
+    return () => {
+      if (ref.current) clearTimeout(ref.current)
+    }
+  }, [])
+
+  const canManagePost = currentUserId && (currentUserId === post.authorId || currentUserRole === 'ADMIN')
 
   // Comment state
   const [comments, setComments] = useState<Comment[]>([])
   const [totalComments, setTotalComments] = useState(post.commentsCount ?? 0)
   const [isLoadingComments, setIsLoadingComments] = useState(false)
   const [commentsLoaded, setCommentsLoaded] = useState(false)
+  const [commentsPage, setCommentsPage] = useState(1)
+  const [commentsTotalPages, setCommentsTotalPages] = useState(1)
+  const [isLoadingMoreComments, setIsLoadingMoreComments] = useState(false)
   const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
     if (!showComments || commentsLoaded) return
     let cancelled = false
     setIsLoadingComments(true)
-    CommentService.getByNewsId(post.id)
+    CommentService.getByNewsId(post.id, 1, 10)
       .then((result) => {
         if (cancelled) return
         setComments(result.data.map(commentDataToComment))
         setTotalComments(result.total)
+        setCommentsPage(result.page)
+        setCommentsTotalPages(result.totalPages)
         setCommentsLoaded(true)
       })
-      .catch((error) => {
-        if (!cancelled) console.error('Error fetching comments:', error)
+      .catch(() => {
+        if (!cancelled) toast.error(i18n.t('news:card.commentsLoadError'))
       })
       .finally(() => {
         if (!cancelled) setIsLoadingComments(false)
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [showComments, commentsLoaded, post.id])
+
+  const handleLoadMoreComments = async () => {
+    if (isLoadingMoreComments || commentsPage >= commentsTotalPages) return
+    setIsLoadingMoreComments(true)
+    try {
+      const nextPage = commentsPage + 1
+      const result = await CommentService.getByNewsId(post.id, nextPage, 10)
+      setComments((prev) => [...prev, ...result.data.map(commentDataToComment)])
+      setCommentsPage(result.page)
+      setCommentsTotalPages(result.totalPages)
+    } catch {
+      toast.error(i18n.t('news:card.commentsLoadError'))
+    } finally {
+      setIsLoadingMoreComments(false)
+    }
+  }
 
   const handleSendComment = async () => {
     if (!newComment.trim() || isSending) return
@@ -202,8 +413,8 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
       setNewComment('')
       setShowComments(true)
       setCommentsLoaded(true)
-    } catch (error) {
-      console.error('Error creating comment:', error)
+    } catch {
+      toast.error(t('card.commentSendError'))
     } finally {
       setIsSending(false)
     }
@@ -214,19 +425,51 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
       await CommentService.delete(post.id, commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
       setTotalComments((prev) => prev - 1)
-    } catch (error) {
-      console.error('Error deleting comment:', error)
+    } catch {
+      toast.error(t('card.commentDeleteError'))
     }
   }
 
-  const handleLike = () => {
-    setIsLiked(!isLiked)
-    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1)
+  const handleLike = async () => {
+    if (isLiking.current) return
+    isLiking.current = true
+    setIsLikingState(true)
+
+    const prevLiked = isLiked
+    const prevCount = likesCount
+
+    // Optimistic update
+    setIsLiked(!prevLiked)
+    setLikesCount(prevLiked ? prevCount - 1 : prevCount + 1)
+
+    try {
+      const result = await NewsService.toggleLike(post.id)
+      setIsLiked(result.liked)
+      setLikesCount(result.likesCount)
+    } catch {
+      // Rollback on error
+      setIsLiked(prevLiked)
+      setLikesCount(prevCount)
+      toast.error(t('card.likeError'))
+    } finally {
+      isLiking.current = false
+      setIsLikingState(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    try {
+      await NewsService.delete(post.id)
+      toast.success(t('card.deleteSuccess'))
+      onDelete?.(post.id)
+    } catch {
+      toast.error(t('card.deleteError'))
+    }
   }
 
   const handleShare = async () => {
     const shareData = {
-      title: post.title || 'Noticia de Kempes Master League',
+      title: post.title || t('card.shareTitle'),
       text: post.content.substring(0, 100) + '...',
       url: `${window.location.origin}/news/${post.id}`,
     }
@@ -237,15 +480,23 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
       } else {
         await navigator.clipboard.writeText(shareData.url)
         setShareStatus('copied')
-        setTimeout(() => setShareStatus('idle'), 2000)
+        if (shareTimeoutRef.current) clearTimeout(shareTimeoutRef.current)
+        shareTimeoutRef.current = setTimeout(() => setShareStatus('idle'), 2000)
       }
     } catch (error) {
       console.log('Share cancelled or failed', error)
     }
   }
 
+  const [isExpanded, setIsExpanded] = useState(false)
+  const contentTruncateLength = 500
+
   const renderContent = () => {
-    let html = formatNewsContent(post.content)
+    const displayContent = !isExpanded && post.content.length > contentTruncateLength
+      ? post.content.slice(0, contentTruncateLength) + '...'
+      : post.content
+
+    let html = formatNewsContent(displayContent)
 
     if (post.clubMentions && post.clubMentions.length > 0) {
       post.clubMentions.forEach((club) => {
@@ -257,21 +508,28 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
     }
 
     return (
-      <div
-        className="text-foreground whitespace-pre-wrap"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <>
+        <div className="text-foreground whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: html }} />
+        {post.content.length > contentTruncateLength && (
+          <button
+            className="text-primary text-sm font-medium mt-1 hover:underline"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {isExpanded ? t('card.showLess') : t('card.showMore')}
+          </button>
+        )}
+      </>
     )
   }
 
   const commentInput = (
     <div className="flex gap-3">
       <Avatar className="w-8 h-8">
-        <AvatarFallback className="bg-primary/10 text-primary text-xs">TU</AvatarFallback>
+        <AvatarFallback className="bg-primary/10 text-primary text-xs">{t('card.youInitials')}</AvatarFallback>
       </Avatar>
       <div className="flex-1 flex gap-2">
         <Textarea
-          placeholder="Escribe un comentario..."
+          placeholder={t('card.commentPlaceholder')}
           className="min-h-[40px] h-10 resize-none text-sm"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -313,22 +571,74 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
                   variant="outline"
                   className={cn('text-[10px] px-1.5 py-0', roleColors[post.authorRole])}
                 >
-                  {post.authorRole === 'admin'
-                    ? 'Admin'
-                    : post.authorRole === 'manager'
-                      ? 'Manager'
-                      : 'Usuario'}
+                  {t(`card.roles.${post.authorRole}`)}
                 </Badge>
               </div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>{post.timeAgo}</span>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span>{post.timeAgo}</span>
+                  </div>
+                </TooltipTrigger>
+                {post.createdAt && (
+                  <TooltipContent>
+                    {new Date(post.createdAt).toLocaleDateString(i18n.language, {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </TooltipContent>
+                )}
+              </Tooltip>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
+          {canManagePost && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate({ to: '/news/create', search: { edit: post.id } })}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  {t('card.edit')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {t('card.delete')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* AlertDialog outside dropdown to avoid Radix focus conflicts */}
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('card.deletePostTitle')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('card.deletePostDescription')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t('card.cancel')}</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                  {t('card.delete')}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
 
         {/* Post Title */}
@@ -371,6 +681,7 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
               size="sm"
               className={cn('gap-2 h-8', isLiked && 'text-red-500')}
               onClick={handleLike}
+              disabled={isLikingState}
             >
               <Heart className={cn('w-4 h-4', isLiked && 'fill-current')} />
               <span className="text-sm">{likesCount}</span>
@@ -394,12 +705,12 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
             {shareStatus === 'copied' ? (
               <>
                 <Check className="w-4 h-4" />
-                <span className="text-sm">Copiado</span>
+                <span className="text-sm hidden sm:inline">{t('card.copied')}</span>
               </>
             ) : (
               <>
                 <Share2 className="w-4 h-4" />
-                <span className="text-sm hidden sm:inline">Compartir</span>
+                <span className="text-sm hidden sm:inline">{t('card.share')}</span>
               </>
             )}
           </Button>
@@ -416,12 +727,12 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
               {showComments ? (
                 <>
                   <ChevronUp className="w-4 h-4 mr-2" />
-                  Ocultar comentarios
+                  {t('card.hideComments')}
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-4 h-4 mr-2" />
-                  Ver {totalComments} comentario{totalComments > 1 ? 's' : ''}
+                  {t('card.viewComments', { count: totalComments })}
                 </>
               )}
             </Button>
@@ -445,12 +756,8 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
                         <div className="bg-muted/50 rounded-lg p-3">
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm text-foreground">
-                                {comment.author}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {comment.timeAgo}
-                              </span>
+                              <span className="font-medium text-sm text-foreground">{comment.author}</span>
+                              <span className="text-xs text-muted-foreground">{comment.timeAgo}</span>
                             </div>
                             {comment.authorId && (
                               <AlertDialog>
@@ -466,19 +773,19 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
                                       </Button>
                                     </AlertDialogTrigger>
                                   </TooltipTrigger>
-                                  <TooltipContent>Eliminar comentario</TooltipContent>
+                                  <TooltipContent>{t('card.deleteCommentTooltip')}</TooltipContent>
                                 </Tooltip>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Eliminar comentario</AlertDialogTitle>
+                                    <AlertDialogTitle>{t('card.deleteCommentTitle')}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Esta acción no se puede deshacer. El comentario será eliminado permanentemente.
+                                      {t('card.deleteCommentDescription')}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogCancel>{t('card.cancel')}</AlertDialogCancel>
                                     <AlertDialogAction onClick={() => handleDeleteComment(comment.id)}>
-                                      Eliminar
+                                      {t('card.delete')}
                                     </AlertDialogAction>
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -490,6 +797,22 @@ export function NewsPostCard({ post }: NewsPostCardProps) {
                       </div>
                     </div>
                   ))
+                )}
+
+                {/* Load more comments */}
+                {commentsPage < commentsTotalPages && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-muted-foreground"
+                    onClick={handleLoadMoreComments}
+                    disabled={isLoadingMoreComments}
+                  >
+                    {isLoadingMoreComments ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : null}
+                    {t('card.loadMoreComments')}
+                  </Button>
                 )}
 
                 {/* New Comment Input */}

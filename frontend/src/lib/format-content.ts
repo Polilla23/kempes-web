@@ -7,8 +7,17 @@
  *
  * Retorna un string HTML para usar con dangerouslySetInnerHTML.
  */
-export function formatNewsContent(text: string): string {
+function escapeHtml(text: string): string {
   return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+export function formatNewsContent(text: string): string {
+  return escapeHtml(text)
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
     .replace(/_(.*?)_/g, '<em>$1</em>')

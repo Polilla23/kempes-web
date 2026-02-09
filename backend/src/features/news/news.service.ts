@@ -23,8 +23,8 @@ export class NewsService {
     })
   }
 
-  async getNewsById(id: string): Promise<News> {
-    const news = await this.newsRepository.findById(id)
+  async getNewsById(id: string, userId?: string): Promise<News> {
+    const news = await this.newsRepository.findById(id, userId)
 
     if (!news) {
       throw new NewsNotFoundError()
@@ -36,6 +36,7 @@ export class NewsService {
   async getAllNews(
     filters?: NewsFilterInput,
     pagination?: PaginationInput,
+    userId?: string,
   ): Promise<{ data: News[]; total: number; page: number; limit: number; totalPages: number }> {
     const page = pagination?.page ?? 1
     const limit = pagination?.limit ?? 10
@@ -71,6 +72,7 @@ export class NewsService {
         skip,
         take: limit,
         orderBy: { publishedAt: 'desc' },
+        userId,
       }),
       this.newsRepository.count(where),
     ])
@@ -120,6 +122,29 @@ export class NewsService {
     }
 
     await this.newsRepository.deleteOneById(id)
+  }
+
+  async toggleLike(newsId: string, userId: string): Promise<{ liked: boolean; likesCount: number }> {
+    const news = await this.newsRepository.findById(newsId)
+
+    if (!news) {
+      throw new NewsNotFoundError()
+    }
+
+    const existingLike = await this.newsRepository.findLike(userId, newsId)
+
+    if (existingLike) {
+      await this.newsRepository.deleteLike(userId, newsId)
+    } else {
+      await this.newsRepository.createLike(userId, newsId)
+    }
+
+    const likesCount = await this.newsRepository.countLikes(newsId)
+
+    return {
+      liked: !existingLike,
+      likesCount,
+    }
   }
 
   async addImageToNews(newsId: string, imageUrl: string): Promise<News> {

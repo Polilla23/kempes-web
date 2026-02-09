@@ -4,6 +4,8 @@ export interface CommentAuthor {
   id: string
   email: string
   role: string
+  username?: string
+  avatar?: string
 }
 
 export interface CommentData {

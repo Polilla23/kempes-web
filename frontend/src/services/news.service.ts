@@ -5,6 +5,8 @@ export interface NewsAuthor {
   id: string
   email: string
   role: string
+  username?: string
+  avatar?: string
 }
 
 export interface News {
@@ -20,7 +22,9 @@ export interface News {
   updatedAt: string
   _count?: {
     comments: number
+    likes: number
   }
+  likes?: { id: string }[]
 }
 
 export interface CreateNewsInput {
@@ -146,6 +150,16 @@ class NewsService {
    */
   static async removeImage(newsId: string, imageUrl: string): Promise<News> {
     const response = await api.delete<ApiDataResponse<News>>(`/api/v1/news/${newsId}/images`, { imageUrl })
+    return response.data!.data
+  }
+
+  /**
+   * Toggle like on a news post
+   */
+  static async toggleLike(newsId: string): Promise<{ liked: boolean; likesCount: number }> {
+    const response = await api.post<ApiDataResponse<{ liked: boolean; likesCount: number }>>(
+      `/api/v1/news/${newsId}/like`,
+    )
     return response.data!.data
   }
 

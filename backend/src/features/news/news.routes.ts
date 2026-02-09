@@ -48,6 +48,12 @@ export const newsRoutes = async (fastify: FastifyInstance) => {
     handler: newsController.removeImage.bind(newsController),
   })
 
+  fastify.post('/:id/like', {
+    preHandler: [fastify.authenticate],
+    schema: newsSchemas.toggleLike,
+    handler: newsController.toggleLike.bind(newsController),
+  })
+
   // Comment routes
   fastify.get('/:id/comments', {
     schema: commentSchemas.getByNewsId,
