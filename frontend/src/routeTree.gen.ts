@@ -32,6 +32,7 @@ import { Route as ManagementClubsIndexRouteImport } from './routes/management/cl
 import { Route as ConfigurationSeasonsIndexRouteImport } from './routes/configuration/seasons/index'
 import { Route as ConfigurationEventTypesIndexRouteImport } from './routes/configuration/event-types/index'
 import { Route as ConfigurationCompetitionTypesIndexRouteImport } from './routes/configuration/competition-types/index'
+import { Route as AuthRegisterIndexRouteImport } from './routes/_auth/register/index'
 import { Route as AuthLoginIndexRouteImport } from './routes/_auth/login/index'
 import { Route as AuthForgotPasswordIndexRouteImport } from './routes/_auth/forgot-password/index'
 import { Route as PlayerUpdateIdRouteImport } from './routes/player/update.$id'
@@ -169,6 +170,11 @@ const ConfigurationCompetitionTypesIndexRoute =
     path: '/configuration/competition-types/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthRegisterIndexRoute = AuthRegisterIndexRouteImport.update({
+  id: '/_auth/register/',
+  path: '/register/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLoginIndexRoute = AuthLoginIndexRouteImport.update({
   id: '/_auth/login/',
   path: '/login/',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/player/update/$id': typeof PlayerUpdateIdRoute
   '/forgot-password': typeof AuthForgotPasswordIndexRoute
   '/login': typeof AuthLoginIndexRoute
+  '/register': typeof AuthRegisterIndexRoute
   '/configuration/competition-types': typeof ConfigurationCompetitionTypesIndexRoute
   '/configuration/event-types': typeof ConfigurationEventTypesIndexRoute
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByTo {
   '/player/update/$id': typeof PlayerUpdateIdRoute
   '/forgot-password': typeof AuthForgotPasswordIndexRoute
   '/login': typeof AuthLoginIndexRoute
+  '/register': typeof AuthRegisterIndexRoute
   '/configuration/competition-types': typeof ConfigurationCompetitionTypesIndexRoute
   '/configuration/event-types': typeof ConfigurationEventTypesIndexRoute
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
@@ -364,6 +372,7 @@ export interface FileRoutesById {
   '/player/update/$id': typeof PlayerUpdateIdRoute
   '/_auth/forgot-password/': typeof AuthForgotPasswordIndexRoute
   '/_auth/login/': typeof AuthLoginIndexRoute
+  '/_auth/register/': typeof AuthRegisterIndexRoute
   '/configuration/competition-types/': typeof ConfigurationCompetitionTypesIndexRoute
   '/configuration/event-types/': typeof ConfigurationEventTypesIndexRoute
   '/configuration/seasons/': typeof ConfigurationSeasonsIndexRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/player/update/$id'
     | '/forgot-password'
     | '/login'
+    | '/register'
     | '/configuration/competition-types'
     | '/configuration/event-types'
     | '/configuration/seasons'
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/player/update/$id'
     | '/forgot-password'
     | '/login'
+    | '/register'
     | '/configuration/competition-types'
     | '/configuration/event-types'
     | '/configuration/seasons'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/player/update/$id'
     | '/_auth/forgot-password/'
     | '/_auth/login/'
+    | '/_auth/register/'
     | '/configuration/competition-types/'
     | '/configuration/event-types/'
     | '/configuration/seasons/'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   PlayerUpdateIdRoute: typeof PlayerUpdateIdRoute
   AuthForgotPasswordIndexRoute: typeof AuthForgotPasswordIndexRoute
   AuthLoginIndexRoute: typeof AuthLoginIndexRoute
+  AuthRegisterIndexRoute: typeof AuthRegisterIndexRoute
   ConfigurationCompetitionTypesIndexRoute: typeof ConfigurationCompetitionTypesIndexRoute
   ConfigurationEventTypesIndexRoute: typeof ConfigurationEventTypesIndexRoute
   ConfigurationSeasonsIndexRoute: typeof ConfigurationSeasonsIndexRoute
@@ -713,6 +726,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConfigurationCompetitionTypesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/register/': {
+      id: '/_auth/register/'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_auth/login/': {
       id: '/_auth/login/'
       path: '/login'
@@ -851,6 +871,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlayerUpdateIdRoute: PlayerUpdateIdRoute,
   AuthForgotPasswordIndexRoute: AuthForgotPasswordIndexRoute,
   AuthLoginIndexRoute: AuthLoginIndexRoute,
+  AuthRegisterIndexRoute: AuthRegisterIndexRoute,
   ConfigurationCompetitionTypesIndexRoute:
     ConfigurationCompetitionTypesIndexRoute,
   ConfigurationEventTypesIndexRoute: ConfigurationEventTypesIndexRoute,

@@ -97,6 +97,18 @@ class AuthService {
     }
   }
 
+  // Obtener clubs disponibles para registro (publico, sin auth)
+  static async getAvailableClubs(): Promise<{ id: string; name: string; logo: string | null }[]> {
+    try {
+      const response = await api.get<{ data: { id: string; name: string; logo: string | null }[] }>(
+        '/api/v1/clubs/available'
+      )
+      return response.data?.data || []
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error fetching available clubs')
+    }
+  }
+
   // Obtener perfil del usuario autenticado
   static async getProfile(): Promise<{ id: string; role: 'ADMIN' | 'USER' } | null> {
     try {

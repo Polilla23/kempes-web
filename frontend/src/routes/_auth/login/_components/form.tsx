@@ -116,6 +116,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, verificationStatus, err
             t('login.button')
           )}
         </Button>
+        <div className="text-center text-sm mt-4">
+          <span className="text-muted-foreground select-none">{t('login.noAccount')} </span>
+          <a
+            href="/register"
+            className="text-cyan-600 hover:text-cyan-700 font-medium transition-colors duration-200 select-none"
+          >
+            {t('login.registerLink')}
+          </a>
+        </div>
       </form>
     </Form>
   )

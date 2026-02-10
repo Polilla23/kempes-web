@@ -8,8 +8,9 @@ export const usersSchemas = {
         email: { type: 'string', format: 'email' },
         password: { type: 'string', minLength: 8 },
         role: { type: 'string', enum: ['ADMIN', 'USER'] },
+        clubId: { type: 'string', format: 'uuid' },
       },
-      required: ['email', 'password'],
+      required: ['email', 'password', 'clubId'],
     },
     response: {
       201: {

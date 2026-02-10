@@ -41,6 +41,26 @@ export class ClubController {
     }
   }
 
+  async findAvailable(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const clubs = await this.clubService.findAvailableClubs()
+
+      if (clubs.length === 0) {
+        return Response.success(reply, [], 'No available clubs found')
+      }
+
+      return Response.success(reply, clubs, 'Available clubs fetched successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching available clubs',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
   async findAll(_req: FastifyRequest, reply: FastifyReply) {
     try {
       const clubs = await this.clubService.findAllClubs()

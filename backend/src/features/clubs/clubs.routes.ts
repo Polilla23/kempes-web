@@ -13,6 +13,11 @@ export const clubRoutes = async (fastify: FastifyInstance) => {
     schema: clubsSchemas.bulkCreate,
     handler: clubController.uploadCSVFile.bind(clubController),
   })
+  // Public endpoint - no auth required (for registration page)
+  fastify.get('/available', {
+    schema: clubsSchemas.findAvailable,
+    handler: clubController.findAvailable.bind(clubController),
+  })
   fastify.get('/', {
     preHandler: [fastify.authenticate],
   schema: clubsSchemas.findAll,
