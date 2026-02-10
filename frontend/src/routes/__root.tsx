@@ -37,6 +37,7 @@ function AppContent() {
   // Check if current route is an auth route
   const isAuthRoute =
     location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/register') ||
     location.pathname.startsWith('/forgot-password') ||
     location.pathname.startsWith('/reset-password') ||
     location.pathname.startsWith('/verify-email')

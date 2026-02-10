@@ -29,6 +29,36 @@ export const clubsSchemas = {
       },
     },
   },
+  findAvailable: {
+    description: 'Fetch all active clubs without an owner (available for registration).',
+    tags: ['Clubs'],
+    response: {
+      200: {
+        description: 'List of available clubs',
+        type: 'object',
+        properties: {
+          data: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                logo: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+      500: {
+        description: 'Error while fetching available clubs.',
+        properties: {
+          message: { type: 'string' },
+          error: { type: 'string' },
+        },
+      },
+    },
+  },
   findAll: {
     description: 'Fetch all clubs.',
     tags: ['Clubs'],

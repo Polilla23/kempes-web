@@ -50,11 +50,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // Only redirect if not already on auth route AND not in the middle of navigation
       const currentPath = location.pathname
       
-      const isAuthRoute = 
+      const isAuthRoute =
         currentPath.startsWith('/login') ||
         currentPath.startsWith('/forgot-password') ||
         currentPath.startsWith('/reset-password') ||
-        currentPath.startsWith('/verify-email')
+        currentPath.startsWith('/verify-email') ||
+        currentPath.startsWith('/register')
       
       if (!isAuthRoute) {
         // Small delay to avoid race condition with login redirect
@@ -76,7 +77,18 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setUnauthorizedCallback(() => {
       setId(null)
       setRole(null)
-      router.navigate({ to: '/login' })
+
+      const currentPath = window.location.pathname
+      const isAuthRoute =
+        currentPath.startsWith('/login') ||
+        currentPath.startsWith('/forgot-password') ||
+        currentPath.startsWith('/reset-password') ||
+        currentPath.startsWith('/verify-email') ||
+        currentPath.startsWith('/register')
+
+      if (!isAuthRoute) {
+        router.navigate({ to: '/login' })
+      }
     })
   }, [router])
 
@@ -92,7 +104,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       currentPath.startsWith('/login') ||
       currentPath.startsWith('/forgot-password') ||
       currentPath.startsWith('/reset-password') ||
-      currentPath.startsWith('/verify-email')
+      currentPath.startsWith('/verify-email') ||
+      currentPath.startsWith('/register')
     ) {
       return
     }

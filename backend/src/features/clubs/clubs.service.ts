@@ -25,6 +25,10 @@ export class ClubService {
     return await this.clubRepository.findAll()
   }
 
+  async findAvailableClubs() {
+    return await this.clubRepository.findAvailableClubs()
+  }
+
   async findClub(id: string) {
     const clubFound = await this.clubRepository.findOneById(id)
 

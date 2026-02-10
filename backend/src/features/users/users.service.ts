@@ -10,6 +10,7 @@ import {
   EmailNotVerifiedError,
 } from '@/features/core/email/email.errors'
 import { IUserRepository } from '@/features/users/interface/IUserRepository'
+import { IClubRepository } from '@/features/clubs/interfaces/IClubRepository'
 import { UserAlreadyExistsError, UserNotFoundError } from '@/features/users/users.errors'
 import { CreateUserInput } from '@/types'
 import {
@@ -21,28 +22,44 @@ import {
 
 export class UserService {
   private userRepository: IUserRepository
+  private clubRepository: IClubRepository
   private emailService: EmailService
   private jwtService: JWT
 
   constructor({
     userRepository,
+    clubRepository,
     emailService,
     jwtService,
   }: {
     userRepository: IUserRepository
+    clubRepository: IClubRepository
     emailService: EmailService
     jwtService: JWT
   }) {
     this.userRepository = userRepository
+    this.clubRepository = clubRepository
     this.emailService = emailService
     this.jwtService = jwtService
   }
 
-  async registerUser({ email, password, role }: CreateUserInput) {
+  async registerUser({ email, password, role, clubId }: CreateUserInput) {
     const existingUser = await this.userRepository.findOneByEmail(email)
 
     if (existingUser) {
       throw new UserAlreadyExistsError()
+    }
+
+    // Validate club exists and is available
+    const club = await this.clubRepository.findOneById(clubId)
+    if (!club) {
+      throw new Error('Club not found')
+    }
+    if (club.userId) {
+      throw new Error('Club already has an owner')
+    }
+    if (!club.isActive) {
+      throw new Error('Club is not active')
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -58,11 +75,20 @@ export class UserService {
       verificationTokenExpires,
     })
 
+    // Assign club to user immediately
+    await this.clubRepository.updateOneById(clubId, {
+      user: { connect: { id: newUser.id } },
+    })
+
     const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
 
     try {
       await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
     } catch (e) {
+      // Rollback: remove club assignment and delete user
+      await this.clubRepository.updateOneById(clubId, {
+        user: { disconnect: true },
+      })
       await this.userRepository.deleteOneById(newUser.id)
       throw new EmailSendError()
     }

@@ -19,7 +19,9 @@
       "Bash(tasklist:*)",
       "Bash(curl:*)",
       "Bash(dir:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npx tsr generate:*)",
+      "Bash(npx @tanstack/router-plugin generate:*)"
     ]
   }
 }

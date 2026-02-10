@@ -13,16 +13,18 @@ export class UserController {
   }
 
   async register(req: FastifyRequest, reply: FastifyReply) {
-    const { email, password, role } = req.body as {
+    const { email, password, role, clubId } = req.body as {
       email: string
       password: string
       role?: 'admin' | 'user'
+      clubId: string
     }
 
     try {
       const validatedData = {
         email: Validator.email(email),
         password: Validator.string(password, 8, 100),
+        clubId: Validator.uuid(clubId),
         ...(role && { role: role as RoleType }),
       }
 

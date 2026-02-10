@@ -86,7 +86,7 @@ export interface LoginFormData {
 export interface RegisterUserFormData {
   email: string
   password: string
-  role?: 'ADMIN' | 'USER'
+  clubId: string
 }
 
 export interface ResetPasswordFormData {
