@@ -7,6 +7,7 @@ export interface IUserRepository {
   findOneByVerificationToken(token: Prisma.UserWhereUniqueInput['verificationToken']): Promise <User | null>
   verifyUser(id: Prisma.UserWhereUniqueInput['id']): Promise<User>
   findOneByResetPasswordToken(token: Prisma.UserWhereUniqueInput['resetPasswordToken']): Promise<User | null>
+  findOneByUsername(username: string): Promise<User | null>
   updateOneById(id: Prisma.UserWhereUniqueInput['id'], data: Prisma.UserUpdateInput): Promise<User>
   deleteOneById(id: Prisma.UserWhereUniqueInput['id']): Promise<User>
   save(data: Prisma.UserCreateInput): Promise<User>

@@ -97,11 +97,19 @@ export const api = {
       body: data ? JSON.stringify(data) : undefined,
     }),
 
-  patch: <T>(endpoint: string, data?: any) =>
-    apiRequest<T>(endpoint, {
+  patch: <T>(endpoint: string, data?: any) => {
+    if (data instanceof FormData) {
+      return apiRequest<T>(endpoint, {
+        method: 'PATCH',
+        body: data,
+      })
+    }
+
+    return apiRequest<T>(endpoint, {
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
-    }),
+    })
+  },
 
   delete: <T>(endpoint: string, data?: any) =>
     apiRequest<T>(endpoint, {

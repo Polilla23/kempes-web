@@ -11,3 +11,10 @@ export class UserNotFoundError extends Error {
     this.name = 'UserNotFoundError'
   }
 }
+
+export class UsernameAlreadyTakenError extends Error {
+  constructor(message = 'Username is already taken.') {
+    super(message)
+    this.name = 'UsernameAlreadyTakenError'
+  }
+}

@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarRail } from '@/components/ui/sidebar'
+import { Sidebar, SidebarContent, SidebarFooter, SidebarRail } from '@/components/ui/sidebar'
 import NavbarHeader from './navbar-header'
 import NavbarContent from './navbar-content'
 import NavbarFooter from './navbar-footer'
@@ -7,12 +7,12 @@ export const Navbar = () => {
   return (
     <Sidebar collapsible="icon">
       <NavbarHeader />
-      <SidebarContent className="flex flex-col justify-between h-full">
-        <div>
-          <NavbarContent />
-        </div>
-        <NavbarFooter />
+      <SidebarContent>
+        <NavbarContent />
       </SidebarContent>
+      <SidebarFooter>
+        <NavbarFooter />
+      </SidebarFooter>
       <SidebarRail className="select-none after:bg-transparent hover:after:bg-primary/30 after:transition-colors after:duration-200" />
     </Sidebar>
   )

@@ -39,6 +39,19 @@
     "noResults": "Sin resultados.",
     "loading": "Cargando datos..."
   },
+  "profile": {
+    "title": "Configuración de Perfil",
+    "username": "Nombre de usuario",
+    "email": "Email",
+    "changeAvatar": "Cambiar Avatar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "updateSuccess": "Perfil actualizado exitosamente",
+    "updateError": "Error al actualizar el perfil",
+    "usernameTaken": "El nombre de usuario ya está en uso",
+    "noUsername": "Sin nombre de usuario"
+  },
   "table": {
     "rowsPerPage": "Filas por página",
     "pageInfo": "Página {{current}} de {{total}}",

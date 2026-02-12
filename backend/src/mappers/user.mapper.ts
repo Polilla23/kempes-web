@@ -8,7 +8,8 @@ export class UserMapper {
     return {
       id: user.id,
       email: user.email,
-      name: undefined,
+      username: user.username ?? null,
+      avatar: user.avatar ?? null,
       role: user.role?.toString() || 'USER',
       isVerified: user.isVerified,
       club: user.club ? {
@@ -22,7 +23,8 @@ export class UserMapper {
     return {
       id: user.id,
       email: user.email,
-      name: undefined,
+      username: user.username ?? null,
+      avatar: user.avatar ?? null,
       role: user.role?.toString() || 'USER',
       createdAt: new Date().toISOString(),
     }

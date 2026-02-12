@@ -30,5 +30,11 @@
     "title": "Crear Fixtures",
     "createLeague": "Crear Liga",
     "createCup": "Crear Copa"
+  },
+  "userMenu": {
+    "profileSettings": "Configuración de Perfil",
+    "language": "Idioma",
+    "theme": "Tema",
+    "logout": "Cerrar sesión"
   }
 }

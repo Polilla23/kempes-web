@@ -12,6 +12,8 @@ model User {
   id                        String    @id @default(uuid())
   email                     String    @unique
   password                  String
+  username                  String?   @unique
+  avatar                    String?   @map("avatar_url")
   role                      RoleType? @default(USER)
   isVerified                Boolean   @default(false) @map("is_verified")
   verificationToken         String?   @unique @map("verification_token")
@@ -387,6 +389,7 @@ enum EntityType {
   TROPHY
   NEWS
   GENERAL
+  USER
 }
 
 enum MovementType {

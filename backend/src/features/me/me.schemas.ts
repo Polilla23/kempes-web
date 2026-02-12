@@ -30,11 +30,11 @@ export const myAccountSchemas = {
     skipSanitization: true,
   },
   getBasicUserData: {
-    description: 'Get basic user ID and role',
+    description: 'Get user profile data (id, role, email, username, avatar)',
     tags: ['Account'],
     response: {
       200: {
-        description: 'Basic user data retrieved successfully',
+        description: 'User profile data retrieved successfully',
         type: 'object',
         properties: {
           data: {
@@ -42,8 +42,43 @@ export const myAccountSchemas = {
             properties: {
               id: { type: 'string' },
               role: { type: 'string' },
+              email: { type: 'string' },
+              username: { type: 'string', nullable: true },
+              avatar: { type: 'string', nullable: true },
             },
           },
+        },
+      },
+    },
+    skipSanitization: true,
+  },
+  updateProfile: {
+    description: 'Update authenticated user profile (username, avatar)',
+    tags: ['Account'],
+    consumes: ['multipart/form-data', 'application/json'],
+    response: {
+      200: {
+        description: 'Profile updated successfully',
+        type: 'object',
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              email: { type: 'string' },
+              username: { type: 'string', nullable: true },
+              avatar: { type: 'string', nullable: true },
+              role: { type: 'string' },
+              createdAt: { type: 'string' },
+            },
+          },
+        },
+      },
+      400: {
+        description: 'Bad request',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
         },
       },
     },

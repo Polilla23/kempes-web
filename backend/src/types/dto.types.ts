@@ -3,7 +3,8 @@
 export type UserPublicDTO = {
   id: string
   email: string
-  name?: string
+  username: string | null
+  avatar: string | null
   role: string
   isVerified: boolean
   club: {
@@ -15,7 +16,8 @@ export type UserPublicDTO = {
 export type UserProfileDTO = {
   id: string
   email: string
-  name?: string
+  username: string | null
+  avatar: string | null
   role: string
   createdAt: string
 }

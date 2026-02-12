@@ -1,26 +1,31 @@
 import { UserRepository } from '@/features/users/users.repository'
-import { UserNotFoundError } from '@/features/users/users.errors'
+import { UserNotFoundError, UsernameAlreadyTakenError } from '@/features/users/users.errors'
 import { MyAccountRepository } from '@/features/me/me.repository'
 import { StandingsService } from '@/features/seasons/standings.service'
-import { User } from '@prisma/client'
+import { StorageService } from '@/features/storage/storage.service'
+import { User, EntityType, Prisma } from '@prisma/client'
 
 export class MyAccountService {
   private userRepository: UserRepository
   private myAccountRepository: MyAccountRepository
   private standingsService: StandingsService
+  private storageService: StorageService
 
   constructor({
     userRepository,
     myAccountRepository,
     standingsService,
+    storageService,
   }: {
     userRepository: UserRepository
     myAccountRepository: MyAccountRepository
     standingsService: StandingsService
+    storageService: StorageService
   }) {
     this.userRepository = userRepository
     this.myAccountRepository = myAccountRepository
     this.standingsService = standingsService
+    this.storageService = storageService
   }
 
   async getUserData(id: string): Promise<User> {
@@ -221,6 +226,49 @@ export class MyAccountService {
    */
   async getSeasonStats() {
     return await this.myAccountRepository.getSeasonStats()
+  }
+
+  async updateProfile(userId: string, data: {
+    username?: string
+    avatarFile?: { buffer: Buffer; filename: string; mimetype: string }
+  }): Promise<User> {
+    const user = await this.userRepository.findOneById(userId)
+    if (!user) {
+      throw new UserNotFoundError()
+    }
+
+    const updateData: Prisma.UserUpdateInput = {}
+
+    if (data.username !== undefined) {
+      const trimmed = data.username.trim()
+      if (trimmed.length > 0) {
+        const existing = await this.userRepository.findOneByUsername(trimmed)
+        if (existing && existing.id !== userId) {
+          throw new UsernameAlreadyTakenError()
+        }
+        updateData.username = trimmed
+      } else {
+        updateData.username = null
+      }
+    }
+
+    if (data.avatarFile) {
+      const fileMetadata = await this.storageService.uploadImage({
+        file: data.avatarFile.buffer,
+        fileName: data.avatarFile.filename,
+        mimeType: data.avatarFile.mimetype,
+        entityType: EntityType.USER,
+        entityId: userId,
+        uploadedBy: userId,
+      })
+      updateData.avatar = fileMetadata.publicUrl
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return user
+    }
+
+    return await this.userRepository.updateOneById(userId, updateData)
   }
 
   /**

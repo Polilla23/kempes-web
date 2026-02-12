@@ -10,6 +10,18 @@ export class MyAccountController {
     this.myAccountService = myAccountService
   }
 
+  async getUserFullProfile(userId: string) {
+    const validatedUserId = Validator.uuid(userId)
+    const userData = await this.myAccountService.getUserData(validatedUserId)
+    return {
+      id: userData.id,
+      role: userData.role,
+      email: userData.email,
+      username: userData.username ?? null,
+      avatar: userData.avatar ?? null,
+    }
+  }
+
   async getUserData(req: FastifyRequest, reply: FastifyReply) {
     const userId = (req.user as { id: string }).id
 
@@ -146,6 +158,55 @@ export class MyAccountController {
         reply,
         'FETCH_ERROR',
         'Error while fetching season stats',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async updateProfile(req: FastifyRequest, reply: FastifyReply) {
+    const userId = (req.user as { id: string }).id
+
+    try {
+      const validatedUserId = Validator.uuid(userId)
+
+      let username: string | undefined
+      let avatarFile: { buffer: Buffer; filename: string; mimetype: string } | undefined
+
+      if (req.isMultipart()) {
+        const data = await req.file()
+        if (data) {
+          avatarFile = {
+            buffer: await data.toBuffer(),
+            filename: data.filename,
+            mimetype: data.mimetype,
+          }
+          const usernameField = data.fields.username as { value: string } | undefined
+          username = usernameField?.value
+        }
+      } else {
+        const body = req.body as { username?: string }
+        username = body.username
+      }
+
+      const updatedUser = await this.myAccountService.updateProfile(validatedUserId, {
+        username,
+        avatarFile,
+      })
+
+      const userDTO = UserMapper.toProfileDTO(updatedUser)
+      return Response.success(reply, userDTO, 'Profile updated successfully')
+    } catch (error: any) {
+      if (error.name === 'UsernameAlreadyTakenError') {
+        return Response.badRequest(reply, error.message)
+      }
+      if (error.name === 'InvalidFileTypeError' || error.name === 'FileSizeExceededError') {
+        return Response.badRequest(reply, error.message)
+      }
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while updating profile',
         500,
         error instanceof Error ? error.message : error
       )
