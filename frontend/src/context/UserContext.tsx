@@ -9,6 +9,9 @@ export type UserId = string | null
 type UserContextType = {
   id: UserId
   role: UserRole
+  email: string | null
+  username: string | null
+  avatar: string | null
   loading: boolean
   isAuthenticated: boolean
   refreshUser: () => Promise<void>
@@ -18,6 +21,9 @@ type UserContextType = {
 const UserContext = createContext<UserContextType>({
   id: null,
   role: null,
+  email: null,
+  username: null,
+  avatar: null,
   loading: true,
   isAuthenticated: false,
   refreshUser: async () => {},
@@ -29,6 +35,9 @@ export const useUser = () => useContext(UserContext)
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [id, setId] = useState<UserId>(null)
   const [role, setRole] = useState<UserRole>(null)
+  const [email, setEmail] = useState<string | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
+  const [avatar, setAvatar] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
   const router = useRouter()
@@ -42,21 +51,27 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const user = await AuthService.getProfile()
       setId(user?.id ?? null)
       setRole(user?.role ?? null)
+      setEmail(user?.email ?? null)
+      setUsername(user?.username ?? null)
+      setAvatar(user?.avatar ?? null)
     } catch (error) {
       console.error('[UserContext] Authentication failed:', error)
       setId(null)
       setRole(null)
+      setEmail(null)
+      setUsername(null)
+      setAvatar(null)
 
       // Only redirect if not already on auth route AND not in the middle of navigation
       const currentPath = location.pathname
-      
+
       const isAuthRoute =
         currentPath.startsWith('/login') ||
         currentPath.startsWith('/forgot-password') ||
         currentPath.startsWith('/reset-password') ||
         currentPath.startsWith('/verify-email') ||
         currentPath.startsWith('/register')
-      
+
       if (!isAuthRoute) {
         // Small delay to avoid race condition with login redirect
         setTimeout(() => {
@@ -77,6 +92,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setUnauthorizedCallback(() => {
       setId(null)
       setRole(null)
+      setEmail(null)
+      setUsername(null)
+      setAvatar(null)
 
       const currentPath = window.location.pathname
       const isAuthRoute =
@@ -133,7 +151,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setId(null)
       setRole(null)
-      router.navigate({ to: '/login' }) // Use /login instead of /_auth/login
+      setEmail(null)
+      setUsername(null)
+      setAvatar(null)
+      router.navigate({ to: '/login' })
     }
   }
 
@@ -142,6 +163,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         id,
         role,
+        email,
+        username,
+        avatar,
         loading,
         isAuthenticated,
         refreshUser,

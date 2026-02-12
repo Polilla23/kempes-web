@@ -110,9 +110,23 @@ class AuthService {
   }
 
   // Obtener perfil del usuario autenticado
-  static async getProfile(): Promise<{ id: string; role: 'ADMIN' | 'USER' } | null> {
+  static async getProfile(): Promise<{
+    id: string
+    role: 'ADMIN' | 'USER'
+    email: string
+    username: string | null
+    avatar: string | null
+  } | null> {
     try {
-      const response = await api.get<{ data: { id: string; role: 'ADMIN' | 'USER' } }>('/api/v1/me')
+      const response = await api.get<{
+        data: {
+          id: string
+          role: 'ADMIN' | 'USER'
+          email: string
+          username: string | null
+          avatar: string | null
+        }
+      }>('/api/v1/me')
       return response.data?.data || null
     } catch (error) {
       console.error('[AuthService] Profile fetch error:', error)

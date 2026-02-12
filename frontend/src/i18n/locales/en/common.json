@@ -39,6 +39,19 @@
     "noResults": "No results.",
     "loading": "Loading data..."
   },
+  "profile": {
+    "title": "Profile Settings",
+    "username": "Username",
+    "email": "Email",
+    "changeAvatar": "Change Avatar",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "updateSuccess": "Profile updated successfully",
+    "updateError": "Error updating profile",
+    "usernameTaken": "Username is already taken",
+    "noUsername": "No username"
+  },
   "table": {
     "rowsPerPage": "Rows per page",
     "pageInfo": "Page {{current}} of {{total}}",

@@ -99,6 +99,8 @@ export const usersSchemas = {
               properties: {
                 id: { type: 'string' },
                 email: { type: 'string' },
+                username: { type: 'string', nullable: true },
+                avatar: { type: 'string', nullable: true },
                 role: { type: 'string' },
                 isVerified: { type: 'boolean' },
                 club: { type: 'object', properties: { id: { type: 'string' }, name: { type: 'string' } } },

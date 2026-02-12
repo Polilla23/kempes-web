@@ -60,6 +60,12 @@ export class UserRepository implements IUserRepository {
     })
   }
 
+  async findOneByUsername(username: string) {
+    return await this.prisma.user.findUnique({
+      where: { username },
+    })
+  }
+
   async updateOneById(id: Prisma.UserWhereUniqueInput['id'], data: Prisma.UserUpdateInput) {
     return await this.prisma.user.update({
       where: {

@@ -35,4 +35,5 @@ export const ENTITY_TYPE_BUCKET_MAP: Record<EntityType, string> = {
   TROPHY: 'trophy-images',
   NEWS: 'news-images',
   GENERAL: 'general-assets',
+  USER: 'user-avatars',
 }

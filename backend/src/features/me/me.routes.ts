@@ -6,14 +6,22 @@ import { Response } from '@/features/core'
 export async function myAccountRoutes(fastify: FastifyInstance) {
   const accountController = fastify.container.resolve('myAccountController')
 
-  // Basic user profile endpoint (just id and role for auth checks)
+  // Basic user profile endpoint (returns id, role, email, username, avatar)
   fastify.get('/', {
     preHandler: [fastify.authenticate],
     schema: myAccountSchemas.getBasicUserData,
     handler: async (req, reply) => {
-      const user = req.user as { id: string; role: string }
-      return Response.success(reply, { id: user.id, role: user.role }, 'Profile fetched successfully')
+      const jwtUser = req.user as { id: string; role: string }
+      const userData = await accountController.getUserFullProfile(jwtUser.id)
+      return Response.success(reply, userData, 'Profile fetched successfully')
     },
+  })
+
+  // Update user profile (username, avatar)
+  fastify.patch('/', {
+    preHandler: [fastify.authenticate],
+    schema: myAccountSchemas.updateProfile,
+    handler: accountController.updateProfile.bind(accountController),
   })
 
   // Full user account data endpoint
