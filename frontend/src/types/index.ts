@@ -86,6 +86,7 @@ export interface LoginFormData {
 export interface RegisterUserFormData {
   email: string
   password: string
+  username: string
   clubId: string
 }
 

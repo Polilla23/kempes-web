@@ -42,28 +42,6 @@ class AuthService {
     }
   }
 
-  // Verificar email con token
-  static async verifyEmail(token: string): Promise<AuthResponse> {
-    try {
-      const response = await api.get<{ data?: any; message: string }>(`/api/v1/users/verify-email/${token}`)
-      // Backend devuelve { data: { message }, message, timestamp }
-      return { message: response.data?.message || 'Email verified successfully' }
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Error during email verification')
-    }
-  }
-
-  // Reenviar email de verificación
-  static async resendVerificationEmail(email: string): Promise<AuthResponse> {
-    try {
-      const response = await api.post<{ data?: any; message: string }>('/api/v1/users/resend-verification-email', { email })
-      // Backend devuelve { data: { message }, message, timestamp }
-      return { message: response.data?.message || 'Verification email sent' }
-    } catch (error) {
-      throw new Error(error instanceof Error ? error.message : 'Error resending verification email')
-    }
-  }
-
   // Solicitar reset de contraseña
   static async requestPasswordReset(data: ResetPasswordFormData): Promise<AuthResponse> {
     try {

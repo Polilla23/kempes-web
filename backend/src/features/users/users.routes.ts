@@ -38,17 +38,6 @@ export const userRoutes = async (fastify: FastifyInstance) => {
     handler: userController.delete.bind(userController),
   })
 
-  // Email verification endpoints
-  fastify.get('/verify-email/:token', {
-    schema: usersSchemas.verifyEmail,
-    handler: userController.verifyEmail.bind(userController),
-  })
-
-  fastify.post('/resend-verification-email', {
-    schema: usersSchemas.resendVerificationEmail,
-    handler: userController.resendVerifyEmail.bind(userController),
-  })
-
   // Password reset endpoints
   fastify.post('/request-reset-password', {
     schema: usersSchemas.requestPasswordReset,

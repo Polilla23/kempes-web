@@ -25,3 +25,10 @@ export class SamePasswordError extends Error {
     this.name = 'SamePasswordError'
   }
 }
+
+export class AccountPendingApprovalError extends Error {
+  constructor(message = 'Your account is pending approval by an administrator.') {
+    super(message)
+    this.name = 'AccountPendingApprovalError'
+  }
+}

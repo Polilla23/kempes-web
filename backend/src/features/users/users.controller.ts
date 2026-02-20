@@ -13,9 +13,10 @@ export class UserController {
   }
 
   async register(req: FastifyRequest, reply: FastifyReply) {
-    const { email, password, role, clubId } = req.body as {
+    const { email, password, username, role, clubId } = req.body as {
       email: string
       password: string
+      username: string
       role?: 'admin' | 'user'
       clubId: string
     }
@@ -24,6 +25,7 @@ export class UserController {
       const validatedData = {
         email: Validator.email(email),
         password: Validator.string(password, 8, 100),
+        username: Validator.string(username, 3, 30),
         clubId: Validator.uuid(clubId),
         ...(role && { role: role as RoleType }),
       }
@@ -116,45 +118,6 @@ export class UserController {
         'Error while fetching the users',
         500,
         error instanceof Error ? error.message : error
-      )
-    }
-  }
-
-  async verifyEmail(req: FastifyRequest<{ Params: { token: string } }>, reply: FastifyReply) {
-    const { token } = req.params
-
-    try {
-      const validatedToken = Validator.string(token, 1, 500)
-
-      await this.userService.handleEmailVerification(validatedToken)
-      return Response.success(reply, { message: 'User verified successfully' }, 'User verified successfully')
-    } catch (error) {
-      return Response.validation(
-        reply,
-        error instanceof Error ? error.message : 'Verification failed',
-        'Error while verifying email'
-      )
-    }
-  }
-
-  async resendVerifyEmail(req: FastifyRequest, reply: FastifyReply) {
-    const { email } = req.body as { email: string }
-
-    try {
-      const validatedEmail = Validator.email(email)
-
-      await this.userService.handleResendEmailVerification(validatedEmail)
-
-      return Response.success(
-        reply,
-        { message: 'Verification email resent successfully' },
-        'Verification email resent successfully'
-      )
-    } catch (error) {
-      return Response.validation(
-        reply,
-        error instanceof Error ? error.message : 'Verification failed',
-        'Error while resending verification email'
       )
     }
   }

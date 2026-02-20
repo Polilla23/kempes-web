@@ -12,6 +12,7 @@ class FormSchemas {
   static editUserSchema = z.object({
     email: z.string().email({ message: 'Invalid email address.' }),
     role: z.enum(['USER', 'ADMIN'], { required_error: 'Please select a role.' }),
+    isVerified: z.boolean(),
   })
   static forgotPasswordSchema = z.object({
     email: z.string().email({ message: 'Invalid email address.' }),
@@ -19,6 +20,7 @@ class FormSchemas {
   static publicRegisterSchema = z
     .object({
       email: z.string().email({ message: 'Invalid email address.' }),
+      username: z.string().min(3, { message: 'Username must be at least 3 characters.' }).max(30, { message: 'Username must be at most 30 characters.' }),
       password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
       confirmPassword: z.string().min(8, { message: 'Password confirmation is required.' }),
       clubId: z.string().min(1, { message: 'Club selection is required.' }),
