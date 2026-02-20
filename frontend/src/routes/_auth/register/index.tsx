@@ -44,6 +44,7 @@ function RegisterPage() {
       await AuthService.register({
         email: values.email,
         password: values.password,
+        username: values.username,
         clubId: values.clubId,
       })
       setVerificationStatus('success')

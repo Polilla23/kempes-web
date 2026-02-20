@@ -16,8 +16,6 @@ model User {
   avatar                    String?   @map("avatar_url")
   role                      RoleType? @default(USER)
   isVerified                Boolean   @default(false) @map("is_verified")
-  verificationToken         String?   @unique @map("verification_token")
-  verificationTokenExpires  DateTime? @map("verification_token_expires")
   resetPasswordToken        String?   @unique @map("reset_password_token")
   resetPasswordTokenExpires DateTime? @map("reset_password_token_expires")
   club      Club?

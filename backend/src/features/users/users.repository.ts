@@ -33,25 +33,6 @@ export class UserRepository implements IUserRepository {
     })
   }
 
-  async findOneByVerificationToken(token: Prisma.UserWhereUniqueInput['verificationToken']) {
-    return await this.prisma.user.findUnique({
-      where: {
-        verificationToken: token,
-      },
-    })
-  }
-
-  async verifyUser(id: Prisma.UserWhereUniqueInput['id']) {
-    return await this.prisma.user.update({
-      where: { id },
-      data: {
-        isVerified: true,
-        verificationToken: null,
-        verificationTokenExpires: null,
-      },
-    })
-  }
-
   async findOneByResetPasswordToken(token: Prisma.UserWhereUniqueInput['resetPasswordToken']) {
     return await this.prisma.user.findUnique({
       where: {

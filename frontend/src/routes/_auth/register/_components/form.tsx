@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, ShieldIcon } from 'lucide-react'
+import { EyeIcon, EyeOffIcon, Loader2, LockIcon, MailIcon, ShieldIcon, UserIcon } from 'lucide-react'
 import FormSchemas from '@/lib/form-schemas'
 import { useTranslation } from 'react-i18next'
 
@@ -34,6 +34,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
     resolver: zodResolver(FormSchemas.publicRegisterSchema),
     defaultValues: {
       email: '',
+      username: '',
       password: '',
       confirmPassword: '',
       clubId: '',
@@ -62,6 +63,29 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   <Input
                     type="email"
                     placeholder={t('register.emailPlaceholder')}
+                    className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="select-none">{t('register.username')}</FormLabel>
+              <FormControl>
+                <div className="relative select-none">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
+                    <UserIcon className="size-4 text-gray-400 select-none" />
+                  </div>
+                  <Input
+                    type="text"
+                    placeholder={t('register.usernamePlaceholder')}
                     className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
                     {...field}
                   />

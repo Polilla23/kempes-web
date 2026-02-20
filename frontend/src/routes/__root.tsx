@@ -39,8 +39,7 @@ function AppContent() {
     location.pathname.startsWith('/login') ||
     location.pathname.startsWith('/register') ||
     location.pathname.startsWith('/forgot-password') ||
-    location.pathname.startsWith('/reset-password') ||
-    location.pathname.startsWith('/verify-email')
+    location.pathname.startsWith('/reset-password')
 
   // Render without sidebar for auth routes
   if (isAuthRoute) {

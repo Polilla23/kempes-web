@@ -69,7 +69,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         currentPath.startsWith('/login') ||
         currentPath.startsWith('/forgot-password') ||
         currentPath.startsWith('/reset-password') ||
-        currentPath.startsWith('/verify-email') ||
         currentPath.startsWith('/register')
 
       if (!isAuthRoute) {
@@ -101,7 +100,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         currentPath.startsWith('/login') ||
         currentPath.startsWith('/forgot-password') ||
         currentPath.startsWith('/reset-password') ||
-        currentPath.startsWith('/verify-email') ||
         currentPath.startsWith('/register')
 
       if (!isAuthRoute) {
@@ -122,7 +120,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       currentPath.startsWith('/login') ||
       currentPath.startsWith('/forgot-password') ||
       currentPath.startsWith('/reset-password') ||
-      currentPath.startsWith('/verify-email') ||
       currentPath.startsWith('/register')
     ) {
       return

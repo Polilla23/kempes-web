@@ -7,10 +7,11 @@ export const usersSchemas = {
       properties: {
         email: { type: 'string', format: 'email' },
         password: { type: 'string', minLength: 8 },
+        username: { type: 'string', minLength: 3, maxLength: 30 },
         role: { type: 'string', enum: ['ADMIN', 'USER'] },
         clubId: { type: 'string', format: 'uuid' },
       },
-      required: ['email', 'password', 'clubId'],
+      required: ['email', 'password', 'username', 'clubId'],
     },
     response: {
       201: {
@@ -111,73 +112,6 @@ export const usersSchemas = {
       },
       400: {
         description: 'message while fetching the users.',
-        properties: {
-          message: { type: 'string' },
-        },
-      },
-    },
-  },
-  verifyEmail: {
-    description: 'Verify user email',
-    tags: ['Auth'],
-    params: {
-      type: 'object',
-      required: ['token'],
-      properties: {
-        token: { type: 'string' },
-      },
-    },
-    response: {
-      200: {
-        description: 'Email verified successfully',
-        type: 'object',
-        properties: {
-          message: { type: 'string' },
-        },
-      },
-      400: {
-        description: 'Bad request',
-        properties: {
-          message: { type: 'string' },
-        },
-      },
-      500: {
-        description: 'Failed to verify email',
-        type: 'object',
-        properties: {
-          message: { type: 'string' },
-        },
-      },
-    },
-  },
-  resendVerificationEmail: {
-    description: 'Resend verification email',
-    tags: ['Auth'],
-    body: {
-      type: 'object',
-      required: ['email'],
-      properties: {
-        email: { type: 'string', format: 'email' },
-      },
-    },
-    response: {
-      200: {
-        description: 'Verification email resent successfully',
-        type: 'object',
-        properties: {
-          message: { type: 'string' },
-        },
-      },
-      400: {
-        description: 'Bad request',
-        type: 'object',
-        properties: {
-          message: { type: 'string' },
-        },
-      },
-      500: {
-        description: 'Failed to resend verification email',
-        type: 'object',
         properties: {
           message: { type: 'string' },
         },
@@ -292,6 +226,7 @@ export const usersSchemas = {
         email: { type: 'string' },
         password: { type: 'string' },
         role: { type: 'string', enum: ['ADMIN', 'USER'] },
+        isVerified: { type: 'boolean' },
       },
       additionalProperties: false,
     },

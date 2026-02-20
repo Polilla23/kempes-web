@@ -4,19 +4,14 @@ import crypto from 'crypto'
 import { RoleType } from '@prisma/client'
 import { User } from '@prisma/client'
 import { EmailService } from '@/features/core/email/email.service'
-import {
-  EmailSendError,
-  EmailAlreadyVerifiedError,
-  EmailNotVerifiedError,
-} from '@/features/core/email/email.errors'
 import { IUserRepository } from '@/features/users/interface/IUserRepository'
 import { IClubRepository } from '@/features/clubs/interfaces/IClubRepository'
-import { UserAlreadyExistsError, UserNotFoundError } from '@/features/users/users.errors'
+import { UserAlreadyExistsError, UserNotFoundError, UsernameAlreadyTakenError } from '@/features/users/users.errors'
 import { CreateUserInput } from '@/types'
 import {
   AuthenticationError,
   GenerateTokenError,
-  InvalidTokenError,
+  AccountPendingApprovalError,
   SamePasswordError,
 } from '@/features/users/auth.errors'
 
@@ -43,11 +38,17 @@ export class UserService {
     this.jwtService = jwtService
   }
 
-  async registerUser({ email, password, role, clubId }: CreateUserInput) {
+  async registerUser({ email, password, username, role, clubId }: CreateUserInput) {
     const existingUser = await this.userRepository.findOneByEmail(email)
 
     if (existingUser) {
       throw new UserAlreadyExistsError()
+    }
+
+    // Validate username uniqueness
+    const existingUsername = await this.userRepository.findOneByUsername(username)
+    if (existingUsername) {
+      throw new UsernameAlreadyTakenError()
     }
 
     // Validate club exists and is available
@@ -64,34 +65,17 @@ export class UserService {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const verificationToken = crypto.randomBytes(32).toString('hex')
-    const verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
-
     const newUser = await this.userRepository.save({
       email,
       password: hashedPassword,
+      username,
       role: role?.toUpperCase() as RoleType,
-      verificationToken,
-      verificationTokenExpires,
     })
 
     // Assign club to user immediately
     await this.clubRepository.updateOneById(clubId, {
       user: { connect: { id: newUser.id } },
     })
-
-    const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
-
-    try {
-      await this.emailService.sendVerificationEmail(newUser.email, verificationLink)
-    } catch (e) {
-      // Rollback: remove club assignment and delete user
-      await this.clubRepository.updateOneById(clubId, {
-        user: { disconnect: true },
-      })
-      await this.userRepository.deleteOneById(newUser.id)
-      throw new EmailSendError()
-    }
   }
 
   async loginUser(email: string, password: string) {
@@ -102,7 +86,7 @@ export class UserService {
     }
 
     if (!existingUser.isVerified) {
-      throw new EmailNotVerifiedError()
+      throw new AccountPendingApprovalError()
     }
 
     const matchPw = await bcrypt.compare(password, existingUser.password)
@@ -129,49 +113,6 @@ export class UserService {
     if (!userFound) {
       throw new UserNotFoundError()
     }
-  }
-
-  async handleEmailVerification(token: string): Promise<void> {
-    const userFound = await this.userRepository.findOneByVerificationToken(token)
-    if (
-      !userFound ||
-      !userFound.verificationTokenExpires ||
-      userFound.verificationTokenExpires < new Date()
-    ) {
-      throw new InvalidTokenError()
-    }
-
-    await this.userRepository.verifyUser(userFound.id)
-  }
-
-  async handleResendEmailVerification(email: string): Promise<void> {
-    const userFound = await this.userRepository.findOneByEmail(email)
-
-    if (!userFound) {
-      throw new UserNotFoundError()
-    }
-
-    if (userFound.isVerified) {
-      throw new EmailAlreadyVerifiedError()
-    }
-
-    const now = new Date()
-
-    if (userFound.verificationTokenExpires && userFound.verificationTokenExpires > now) {
-      const timeRemaining = Math.ceil(
-        (userFound.verificationTokenExpires.getTime() - now.getTime()) / (60 * 1000)
-      )
-      throw new Error(`Please wait ${timeRemaining} minutes before requesting another verification email.`)
-    }
-
-    const verificationToken = crypto.randomBytes(20).toString('hex')
-    userFound.verificationToken = verificationToken
-    userFound.verificationTokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 2)
-    await this.userRepository.update(userFound)
-
-    const verificationLink = `${process.env.BACK_URL}/user/verify-email/${verificationToken}`
-
-    await this.emailService.sendVerificationEmail(userFound.email, verificationLink)
   }
 
   async handleRequestPasswordReset(email: string): Promise<void> {

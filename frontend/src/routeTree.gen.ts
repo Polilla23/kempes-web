@@ -41,7 +41,6 @@ import { Route as PlayerDeleteIdRouteImport } from './routes/player/delete.$id'
 import { Route as ClubUpdateIdRouteImport } from './routes/club/update.$id'
 import { Route as ClubFindOneIdRouteImport } from './routes/club/findOne.$id'
 import { Route as ClubDeleteIdRouteImport } from './routes/club/delete.$id'
-import { Route as AuthVerifyEmailIndexTokenRouteImport } from './routes/_auth/verify-email/index.$token'
 import { Route as AuthResetPasswordIndexTokenRouteImport } from './routes/_auth/reset-password/index.$token'
 import { Route as ManagementFixturesLeagueIndexRouteImport } from './routes/management/fixtures/league/index'
 import { Route as ManagementFixturesCupIndexRouteImport } from './routes/management/fixtures/cup/index'
@@ -215,12 +214,6 @@ const ClubDeleteIdRoute = ClubDeleteIdRouteImport.update({
   path: '/club/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyEmailIndexTokenRoute =
-  AuthVerifyEmailIndexTokenRouteImport.update({
-    id: '/_auth/verify-email/index/$token',
-    path: '/verify-email/index/$token',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const AuthResetPasswordIndexTokenRoute =
   AuthResetPasswordIndexTokenRouteImport.update({
     id: '/_auth/reset-password/index/$token',
@@ -300,7 +293,6 @@ export interface FileRoutesByFullPath {
   '/management/fixtures/cup': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
-  '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
   '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
   '/management/fixtures/cup/cindor': typeof ManagementFixturesCupCindorIndexRoute
   '/management/fixtures/cup/kempes': typeof ManagementFixturesCupKempesIndexRoute
@@ -342,7 +334,6 @@ export interface FileRoutesByTo {
   '/management/fixtures/cup': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
-  '/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
   '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
   '/management/fixtures/cup/cindor': typeof ManagementFixturesCupCindorIndexRoute
   '/management/fixtures/cup/kempes': typeof ManagementFixturesCupKempesIndexRoute
@@ -385,7 +376,6 @@ export interface FileRoutesById {
   '/management/fixtures/cup/': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league/': typeof ManagementFixturesLeagueIndexRoute
   '/_auth/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
-  '/_auth/verify-email/index/$token': typeof AuthVerifyEmailIndexTokenRoute
   '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
   '/management/fixtures/cup/cindor/': typeof ManagementFixturesCupCindorIndexRoute
   '/management/fixtures/cup/kempes/': typeof ManagementFixturesCupKempesIndexRoute
@@ -429,7 +419,6 @@ export interface FileRouteTypes {
     | '/management/fixtures/cup'
     | '/management/fixtures/league'
     | '/reset-password/index/$token'
-    | '/verify-email/index/$token'
     | '/management/fixtures/cup/kempes/generate-brackets'
     | '/management/fixtures/cup/cindor'
     | '/management/fixtures/cup/kempes'
@@ -471,7 +460,6 @@ export interface FileRouteTypes {
     | '/management/fixtures/cup'
     | '/management/fixtures/league'
     | '/reset-password/index/$token'
-    | '/verify-email/index/$token'
     | '/management/fixtures/cup/kempes/generate-brackets'
     | '/management/fixtures/cup/cindor'
     | '/management/fixtures/cup/kempes'
@@ -513,7 +501,6 @@ export interface FileRouteTypes {
     | '/management/fixtures/cup/'
     | '/management/fixtures/league/'
     | '/_auth/reset-password/index/$token'
-    | '/_auth/verify-email/index/$token'
     | '/management/fixtures/cup/kempes/generate-brackets'
     | '/management/fixtures/cup/cindor/'
     | '/management/fixtures/cup/kempes/'
@@ -556,7 +543,6 @@ export interface RootRouteChildren {
   ManagementFixturesCupIndexRoute: typeof ManagementFixturesCupIndexRoute
   ManagementFixturesLeagueIndexRoute: typeof ManagementFixturesLeagueIndexRoute
   AuthResetPasswordIndexTokenRoute: typeof AuthResetPasswordIndexTokenRoute
-  AuthVerifyEmailIndexTokenRoute: typeof AuthVerifyEmailIndexTokenRoute
   ManagementFixturesCupKempesGenerateBracketsRoute: typeof ManagementFixturesCupKempesGenerateBracketsRoute
   ManagementFixturesCupCindorIndexRoute: typeof ManagementFixturesCupCindorIndexRoute
   ManagementFixturesCupKempesIndexRoute: typeof ManagementFixturesCupKempesIndexRoute
@@ -789,13 +775,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClubDeleteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_auth/verify-email/index/$token': {
-      id: '/_auth/verify-email/index/$token'
-      path: '/verify-email/index/$token'
-      fullPath: '/verify-email/index/$token'
-      preLoaderRoute: typeof AuthVerifyEmailIndexTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_auth/reset-password/index/$token': {
       id: '/_auth/reset-password/index/$token'
       path: '/reset-password/index/$token'
@@ -885,7 +864,6 @@ const rootRouteChildren: RootRouteChildren = {
   ManagementFixturesCupIndexRoute: ManagementFixturesCupIndexRoute,
   ManagementFixturesLeagueIndexRoute: ManagementFixturesLeagueIndexRoute,
   AuthResetPasswordIndexTokenRoute: AuthResetPasswordIndexTokenRoute,
-  AuthVerifyEmailIndexTokenRoute: AuthVerifyEmailIndexTokenRoute,
   ManagementFixturesCupKempesGenerateBracketsRoute:
     ManagementFixturesCupKempesGenerateBracketsRoute,
   ManagementFixturesCupCindorIndexRoute: ManagementFixturesCupCindorIndexRoute,

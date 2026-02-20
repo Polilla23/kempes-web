@@ -18,6 +18,7 @@ import type { User } from '@/types'
 import { toast } from 'sonner'
 import FormSchemas from '@/lib/form-schemas'
 import UserService from '@/services/user.service'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, MailIcon, UserPlus } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
@@ -37,6 +38,7 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
     defaultValues: {
       email: user.email,
       role: user.role,
+      isVerified: user.isVerified,
     },
   })
 
@@ -106,6 +108,21 @@ function EditUserForm({ user, onSuccess, onClose }: EditUserFormProps) {
                     </SelectContent>
                   </Select>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="isVerified"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel className="select-none cursor-pointer">{t('fields.verified')}</FormLabel>
                 </FormItem>
               )}
             />
