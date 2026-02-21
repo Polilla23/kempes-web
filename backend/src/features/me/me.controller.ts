@@ -174,15 +174,17 @@ export class MyAccountController {
       let avatarFile: { buffer: Buffer; filename: string; mimetype: string } | undefined
 
       if (req.isMultipart()) {
-        const data = await req.file()
-        if (data) {
-          avatarFile = {
-            buffer: await data.toBuffer(),
-            filename: data.filename,
-            mimetype: data.mimetype,
+        const parts = req.parts()
+        for await (const part of parts) {
+          if (part.type === 'file') {
+            avatarFile = {
+              buffer: await part.toBuffer(),
+              filename: part.filename,
+              mimetype: part.mimetype,
+            }
+          } else if (part.fieldname === 'username') {
+            username = part.value as string
           }
-          const usernameField = data.fields.username as { value: string } | undefined
-          username = usernameField?.value
         }
       } else {
         const body = req.body as { username?: string }

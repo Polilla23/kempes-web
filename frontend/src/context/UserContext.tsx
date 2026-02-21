@@ -45,8 +45,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const isAuthenticated = id !== null && role !== null
 
-  const fetchUser = async () => {
-    setLoading(true)
+  const fetchUser = async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     try {
       const user = await AuthService.getProfile()
       setId(user?.id ?? null)
@@ -78,7 +78,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         }, 100)
       }
     } finally {
-      setLoading(false)
+      if (showLoading) setLoading(false)
     }
   }
 
@@ -138,7 +138,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [location.pathname, isAuthenticated, loading, isInitialized, role, router])
 
-  const refreshUser = fetchUser
+  const refreshUser = () => fetchUser(false)
 
   const logout = async () => {
     try {
