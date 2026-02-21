@@ -133,7 +133,11 @@ const NavbarFooter = () => {
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+              <DropdownMenuItem
+                onSelect={() => {
+                  setTimeout(() => setProfileOpen(true), 0)
+                }}
+              >
                 <Settings className="mr-2 size-4" />
                 {t('navigation:userMenu.profileSettings')}
               </DropdownMenuItem>
