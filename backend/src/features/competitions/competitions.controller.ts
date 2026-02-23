@@ -110,11 +110,6 @@ export class CompetitionController {
           return CompetitionMapper.toDTO(enriched.competition, enriched.competitionTypeData)
         })
 
-      // Log the first DTO to verify competitionType is included
-      if (competitionDTOs.length > 0) {
-        console.log('🔍 First competitionDTO being sent:', JSON.stringify(competitionDTOs[0], null, 2))
-      }
-
       return Response.success(reply, competitionDTOs, 'Competitions fetched successfully')
     } catch (error) {
       console.error('Error in findAll competitions:', error)

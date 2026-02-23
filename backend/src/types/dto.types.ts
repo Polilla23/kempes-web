@@ -46,6 +46,8 @@ export type CompetitionDTO = {
   seasonId: string
   competitionTypeId: string
   isActive: boolean
+  system: string
+  parentCompetitionId?: string | null
   competitionType: {
     id: string
     name: string

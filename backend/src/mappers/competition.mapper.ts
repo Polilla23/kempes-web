@@ -20,6 +20,8 @@ export class CompetitionMapper {
       seasonId: competition.seasonId,
       competitionTypeId: competition.competitionTypeId,
       isActive: competition.isActive,
+      system: competition.system,
+      parentCompetitionId: competition.parentCompetitionId || null,
       competitionType: {
         id: competitionTypeData.id,
         name: competitionTypeData.name,

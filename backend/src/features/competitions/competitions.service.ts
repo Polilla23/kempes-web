@@ -146,7 +146,7 @@ export class CompetitionService {
         // Crear todas las competiciones y sus fixtures
         for (const league of leaguesConfig.leagues) {
 
-          // Crear la competición
+          // Crear la competición y conectar equipos
           const competition = await tx.competition.create({
             data: {
               name: `${league.active_league.name} ${leaguesConfig.competitionCategory} - T${leaguesConfig.activeSeason.number}`,
@@ -155,6 +155,9 @@ export class CompetitionService {
               seasonId: leaguesConfig.activeSeason.id,
               isActive: true,
               rules: league as unknown as Prisma.InputJsonValue,
+              teams: {
+                connect: league.clubIds.map((id: string) => ({ id })),
+              },
             },
           })
           createdCompetitions.push(competition)

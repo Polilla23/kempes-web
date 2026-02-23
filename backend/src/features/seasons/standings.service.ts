@@ -55,23 +55,36 @@ export class StandingsService {
 
     // Inicializar estadísticas para cada equipo
     const stats = new Map<string, TeamStanding>()
-    competition.teams.forEach((club) => {
-      stats.set(club.id, {
-        clubId: club.id,
-        clubName: club.name,
-        clubLogo: club.logo || undefined,
-        played: 0,
-        won: 0,
-        drawn: 0,
-        lost: 0,
-        goalsFor: 0,
-        goalsAgainst: 0,
-        goalDifference: 0,
-        points: 0,
-        position: 0,
-        zone: null,
+    const initTeam = (id: string, name: string, logo?: string | null) => {
+      if (!stats.has(id)) {
+        stats.set(id, {
+          clubId: id,
+          clubName: name,
+          clubLogo: logo || undefined,
+          played: 0,
+          won: 0,
+          drawn: 0,
+          lost: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          goalDifference: 0,
+          points: 0,
+          position: 0,
+          zone: null,
+        })
+      }
+    }
+
+    // Primero intentar con teams (relación many-to-many CompetitionTeams)
+    if (competition.teams.length > 0) {
+      competition.teams.forEach((club) => initTeam(club.id, club.name, club.logo))
+    } else {
+      // Fallback: derivar equipos únicos de los matches (para competencias existentes sin teams conectados)
+      competition.matches.forEach((match) => {
+        if (match.homeClub) initTeam(match.homeClub.id, match.homeClub.name, match.homeClub.logo)
+        if (match.awayClub) initTeam(match.awayClub.id, match.awayClub.name, match.awayClub.logo)
       })
-    })
+    }
 
     // Contar partidos completados (finalizados o cancelados)
     const completedMatches = competition.matches.filter(

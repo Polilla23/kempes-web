@@ -1,0 +1,53 @@
+{
+  "title": "Standings",
+  "season": "Season",
+  "seasonLabel": "Season {{number}}",
+  "active": "Current",
+  "filters": {
+    "season": "Season",
+    "mayores": "Seniors",
+    "kempesitas": "Youth",
+    "liga": "League",
+    "copa": "Cup",
+    "selectCompetition": "Select competition",
+    "eliminatoria": "Knockout"
+  },
+  "table": {
+    "position": "#",
+    "team": "Team",
+    "played": "MP",
+    "won": "W",
+    "drawn": "D",
+    "lost": "L",
+    "goalsFor": "GF",
+    "goalsAgainst": "GA",
+    "goalDifference": "GD",
+    "points": "PTS"
+  },
+  "legend": {
+    "champion": "Champion",
+    "promotion": "Direct promotion",
+    "playoff": "Playoff",
+    "relegation": "Relegation",
+    "qualifyGold": "Qualifies to Gold Cup",
+    "qualifySilver": "Qualifies to Silver Cup"
+  },
+  "cupGroups": {
+    "groupStage": "Group Stage",
+    "group": "Group {{name}}",
+    "matchesProgress": "{{played}} of {{total}} matches",
+    "complete": "Complete",
+    "finished": "Finished"
+  },
+  "knockout": {
+    "title": "Knockout stage",
+    "noStandings": "This competition is a knockout stage",
+    "viewBrackets": "There are no standings for this stage. You can view the brackets in Fixtures.",
+    "goToFixtures": "View Fixtures and Brackets"
+  },
+  "empty": {
+    "noCompetitions": "No competitions available",
+    "description": "Standings will appear when there are competitions with matches"
+  },
+  "progress": "{{played}} of {{total}} matches played"
+}

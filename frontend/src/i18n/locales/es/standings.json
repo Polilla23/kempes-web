@@ -1,0 +1,53 @@
+{
+  "title": "Tabla de Posiciones",
+  "season": "Temporada",
+  "seasonLabel": "Temporada {{number}}",
+  "active": "Actual",
+  "filters": {
+    "season": "Temporada",
+    "mayores": "Mayores",
+    "kempesitas": "Kempesitas",
+    "liga": "Liga",
+    "copa": "Copa",
+    "selectCompetition": "Seleccionar competencia",
+    "eliminatoria": "Eliminatoria"
+  },
+  "table": {
+    "position": "#",
+    "team": "Equipo",
+    "played": "PJ",
+    "won": "G",
+    "drawn": "E",
+    "lost": "P",
+    "goalsFor": "GF",
+    "goalsAgainst": "GC",
+    "goalDifference": "DG",
+    "points": "PTS"
+  },
+  "legend": {
+    "champion": "Campeón",
+    "promotion": "Ascenso directo",
+    "playoff": "Playoff",
+    "relegation": "Descenso",
+    "qualifyGold": "Clasifica a Copa de Oro",
+    "qualifySilver": "Clasifica a Copa de Plata"
+  },
+  "cupGroups": {
+    "groupStage": "Fase de Grupos",
+    "group": "Grupo {{name}}",
+    "matchesProgress": "{{played}} de {{total}} partidos",
+    "complete": "Completo",
+    "finished": "Finalizado"
+  },
+  "knockout": {
+    "title": "Fase de eliminación directa",
+    "noStandings": "Esta competencia es de eliminación directa",
+    "viewBrackets": "No hay tabla de posiciones para esta fase. Podés ver los brackets en Fixtures.",
+    "goToFixtures": "Ver Fixtures y Brackets"
+  },
+  "empty": {
+    "noCompetitions": "No hay competiciones disponibles",
+    "description": "Las tablas de posiciones aparecerán cuando haya competiciones con partidos"
+  },
+  "progress": "{{played}} de {{total}} partidos jugados"
+}
