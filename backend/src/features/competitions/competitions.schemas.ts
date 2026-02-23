@@ -407,13 +407,24 @@ export const competitionsSchemas = {
                 startDate: { type: 'string', format: 'date-time', nullable: true },
                 endDate: { type: 'string', format: 'date-time', nullable: true },
                 isActive: { type: 'boolean' },
-                type: {
+                system: { type: 'string' },
+                parentCompetitionId: { type: 'string', nullable: true },
+                competitionTypeId: { type: 'string' },
+                competitionType: {
                   type: 'object',
                   properties: {
                     id: { type: 'string' },
                     name: { type: 'string' },
                     format: { type: 'string' },
                     category: { type: 'string' },
+                    hierarchy: { type: 'number' },
+                  },
+                },
+                _count: {
+                  type: 'object',
+                  properties: {
+                    matches: { type: 'number' },
+                    clubs: { type: 'number' },
                   },
                 },
                 rules: { type: 'object' },
@@ -462,13 +473,24 @@ export const competitionsSchemas = {
               startDate: { type: 'string', format: 'date-time', nullable: true },
               endDate: { type: 'string', format: 'date-time', nullable: true },
               isActive: { type: 'boolean' },
-              type: {
+              system: { type: 'string' },
+              parentCompetitionId: { type: 'string', nullable: true },
+              competitionTypeId: { type: 'string' },
+              competitionType: {
                 type: 'object',
                 properties: {
                   id: { type: 'string' },
                   name: { type: 'string' },
                   format: { type: 'string' },
                   category: { type: 'string' },
+                  hierarchy: { type: 'number' },
+                },
+              },
+              _count: {
+                type: 'object',
+                properties: {
+                  matches: { type: 'number' },
+                  clubs: { type: 'number' },
                 },
               },
               rules: { type: 'object' },

@@ -20,6 +20,7 @@ import enSubmitResult from './locales/en/submit-result.json'
 import enTransfers from './locales/en/transfers.json'
 import enFinances from './locales/en/finances.json'
 import enNews from './locales/en/news.json'
+import enStandings from './locales/en/standings.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -39,6 +40,7 @@ import esSubmitResult from './locales/es/submit-result.json'
 import esTransfers from './locales/es/transfers.json'
 import esFinances from './locales/es/finances.json'
 import esNews from './locales/es/news.json'
+import esStandings from './locales/es/standings.json'
 
 // Configure i18next
 i18n
@@ -68,6 +70,7 @@ i18n
         transfers: enTransfers,
         finances: enFinances,
         news: enNews,
+        standings: enStandings,
       },
       es: {
         common: esCommon,
@@ -87,6 +90,7 @@ i18n
         transfers: esTransfers,
         finances: esFinances,
         news: esNews,
+        standings: esStandings,
       },
     },
 
@@ -118,6 +122,7 @@ i18n
       'transfers',
       'finances',
       'news',
+      'standings',
     ],
 
     // Interpolation options

@@ -38,6 +38,33 @@ export class StandingsController {
   }
 
   /**
+   * GET /standings/competitions/:competitionId/groups
+   * Obtiene la tabla de posiciones por grupos de una copa
+   */
+  async getCupGroupStandings(
+    req: FastifyRequest<{ Params: { competitionId: string } }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const competitionId = Validator.uuid(req.params.competitionId)
+      const groupsStatus = await this.standingsService.getKempesCupGroupsStatus(competitionId)
+
+      return Response.success(reply, groupsStatus, 'Cup group standings fetched successfully')
+    } catch (error: any) {
+      if (error.message.includes('not found')) {
+        return Response.notFound(reply, 'Competition', req.params.competitionId)
+      }
+      return Response.error(
+        reply,
+        'STANDINGS_ERROR',
+        'Error fetching cup group standings',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  /**
    * GET /standings/seasons/:seasonId
    * Obtiene todas las tablas de posiciones de una temporada
    */

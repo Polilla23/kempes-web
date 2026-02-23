@@ -26,12 +26,33 @@ export interface CompetitionStandings {
   matchesTotal: number
 }
 
+export interface CupGroupStandings {
+  groupName: string
+  isComplete: boolean
+  matchesPlayed: number
+  matchesTotal: number
+  standings: TeamStanding[]
+}
+
+export interface CupGroupsStatusResponse {
+  competitionId: string
+  competitionName: string
+  allGroupsComplete: boolean
+  groups: CupGroupStandings[]
+  qualifyToGold: number
+  qualifyToSilver: number
+}
+
 export interface StandingsResponse {
   data: CompetitionStandings
 }
 
 export interface SeasonStandingsResponse {
   data: CompetitionStandings[]
+}
+
+export interface CupGroupStandingsResponse {
+  data: CupGroupsStatusResponse
 }
 
 class StandingsService {
@@ -59,6 +80,17 @@ class StandingsService {
       return response.data ?? { data: [] }
     } catch (error: any) {
       throw new Error(error?.response?.data?.message || error.message || 'Error fetching active season standings')
+    }
+  }
+
+  static async getCupGroupStandings(competitionId: string): Promise<CupGroupStandingsResponse> {
+    try {
+      const response = await api.get<CupGroupStandingsResponse>(
+        `/api/v1/standings/competitions/${competitionId}/groups`
+      )
+      return response.data ?? { data: { competitionId: '', competitionName: '', allGroupsComplete: false, groups: [], qualifyToGold: 0, qualifyToSilver: 0 } }
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error fetching cup group standings')
     }
   }
 }

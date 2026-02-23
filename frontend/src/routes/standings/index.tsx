@@ -1,16 +1,20 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Trophy, Medal, ArrowUp, ArrowDown, Users } from 'lucide-react'
+import { Trophy, Users, GitBranch } from 'lucide-react'
 import { checkAuth } from '@/services/auth-guard'
-import StandingsService, { type CompetitionStandings, type TeamStanding } from '@/services/standings.service'
-import { SeasonService } from '@/services/season.service'
+
+// Hooks locales
+import { useStandingsFilters } from './_hooks/use-standings-filters'
+import { useStandingsData } from './_hooks/use-standings-data'
+
+// Componentes locales
+import { StandingsFilterBar } from './_components/standings-filter-bar'
+import { StandingsTable } from './_components/standings-table'
+import { StandingsCupGroups } from './_components/standings-cup-groups'
+import { StandingsSkeleton } from './_components/standings-skeleton'
+import { StandingsLegend } from './_components/standings-legend'
 
 export const Route = createFileRoute('/standings/')({
   beforeLoad: async ({ location }) => {
@@ -20,303 +24,171 @@ export const Route = createFileRoute('/standings/')({
 })
 
 function StandingsPage() {
-  useTranslation('common') // Hook needed for i18n but t not used yet
-  const [standings, setStandings] = useState<CompetitionStandings[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedCompetition, setSelectedCompetition] = useState<string | null>(null)
+  // Estado de filtros centralizado
+  const {
+    filters,
+    setSelectedSeason,
+    setSelectedCategory,
+    setSelectedType,
+    setSelectedCompetition,
+  } = useStandingsFilters()
 
+  // Datos
+  const {
+    seasons,
+    filteredCompetitions,
+    leagueStandings,
+    cupGroupsData,
+    selectedCompetitionData,
+    isLoadingSeasons,
+    isLoadingCompetitions,
+    isLoadingStandings,
+    activeSeason,
+    currentSeasonNumber,
+  } = useStandingsData(filters)
+
+  // Establecer temporada activa al cargar
   useEffect(() => {
-    loadStandings()
-  }, [])
-
-  const loadStandings = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      // Primero obtener la temporada activa
-      const seasonsResponse = await SeasonService.getSeasons()
-      const activeSeason = seasonsResponse.seasons.find((s) => s.isActive)
-
-      if (!activeSeason) {
-        setError('No hay temporada activa')
-        return
-      }
-
-      // Luego obtener standings de esa temporada
-      const standingsResponse = await StandingsService.getSeasonStandings(activeSeason.id)
-      setStandings(standingsResponse.data)
-
-      // Seleccionar la primera competición por defecto
-      if (standingsResponse.data.length > 0) {
-        setSelectedCompetition(standingsResponse.data[0].competitionId)
-      }
-    } catch (err: any) {
-      console.error('Error loading standings:', err)
-      setError(err.message || 'Error al cargar las posiciones')
-    } finally {
-      setLoading(false)
+    if (activeSeason && !filters.selectedSeason) {
+      setSelectedSeason(activeSeason.id)
     }
-  }
+  }, [activeSeason, filters.selectedSeason, setSelectedSeason])
 
-  const getZoneColor = (zone?: string | null): string => {
-    switch (zone) {
-      case 'champion':
-        return 'bg-yellow-500/20 border-l-4 border-l-yellow-500'
-      case 'promotion':
-        return 'bg-green-500/20 border-l-4 border-l-green-500'
-      case 'playoff':
-      case 'promotion_playoff':
-        return 'bg-blue-500/20 border-l-4 border-l-blue-500'
-      case 'relegation':
-        return 'bg-red-500/20 border-l-4 border-l-red-500'
-      default:
-        return ''
+  // Auto-seleccionar la primera competición disponible cuando cambian los filtros
+  useEffect(() => {
+    if (filteredCompetitions.length > 0 && !filters.selectedCompetition) {
+      setSelectedCompetition(filteredCompetitions[0].id)
     }
-  }
-
-  const getPositionIcon = (position: number, zone?: string | null): React.ReactNode => {
-    if (position === 1 || zone === 'champion') {
-      return <Trophy className="h-4 w-4 text-yellow-500" />
+    // Si la competición seleccionada ya no está en la lista filtrada, resetear
+    if (
+      filters.selectedCompetition &&
+      filteredCompetitions.length > 0 &&
+      !filteredCompetitions.find((c) => c.id === filters.selectedCompetition)
+    ) {
+      setSelectedCompetition(filteredCompetitions[0].id)
     }
-    if (zone === 'promotion') {
-      return <ArrowUp className="h-4 w-4 text-green-500" />
-    }
-    if (zone === 'relegation') {
-      return <ArrowDown className="h-4 w-4 text-red-500" />
-    }
-    if (zone === 'playoff' || zone === 'promotion_playoff') {
-      return <Medal className="h-4 w-4 text-blue-500" />
-    }
-    return <span className="w-4">{position}</span>
-  }
-  
-  // Use the functions to prevent TS errors (they'll be used in rendering later)
-  void getZoneColor
-  void getPositionIcon
+  }, [filteredCompetitions, filters.selectedCompetition, setSelectedCompetition])
 
-  if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-32" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  const isLoading = isLoadingSeasons || isLoadingCompetitions
 
-  if (error) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="border-destructive">
-          <CardContent className="pt-6">
-            <p className="text-center text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Determinar título y subtítulo dinámicos
+  const pageTitle = selectedCompetitionData?.name || 'Tabla de Posiciones'
+  const pageSubtitle = currentSeasonNumber
+    ? `Temporada ${currentSeasonNumber}`
+    : ''
 
-  if (standings.length === 0) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-              <Users className="h-12 w-12 mb-4" />
-              <p className="text-lg">No hay competiciones activas</p>
-              <p className="text-sm">Las tablas de posiciones aparecerán cuando haya partidos</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // Info de progreso para ligas
+  const progressInfo = leagueStandings
+    ? `${leagueStandings.matchesPlayed} de ${leagueStandings.matchesTotal} partidos jugados`
+    : ''
 
-  // selectedStandings will be used when we implement detailed competition view
-  const _selectedStandings = standings.find((s) => s.competitionId === selectedCompetition)
-  void _selectedStandings
+  // Determinar si es knockout (sin tabla de posiciones)
+  const isKnockout =
+    selectedCompetitionData?.format === 'CUP' &&
+    selectedCompetitionData?.system === 'KNOCKOUT'
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Tabla de Posiciones</h1>
-        <p className="text-muted-foreground">
-          Temporada {standings[0]?.seasonNumber || 'actual'}
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="px-[5%] lg:px-[7%] xl:px-[10%] py-8">
+        {/* Page Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">{pageTitle}</h1>
+            <p className="text-muted-foreground mt-1">
+              {pageSubtitle}
+              {progressInfo && ` · ${progressInfo}`}
+              {leagueStandings?.isComplete && (
+                <Badge variant="secondary" className="ml-2">
+                  Finalizado
+                </Badge>
+              )}
+            </p>
+          </div>
+        </div>
 
-      <Tabs
-        value={selectedCompetition || ''}
-        onValueChange={setSelectedCompetition}
-        className="space-y-6"
-      >
-        <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(standings.length, 4)}, 1fr)` }}>
-          {standings.map((competition) => (
-            <TabsTrigger key={competition.competitionId} value={competition.competitionId}>
-              {competition.competitionName.split(' ')[0]} {/* Muestra solo el primer nombre */}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        {/* Filter Bar */}
+        <StandingsFilterBar
+          filters={filters}
+          filteredCompetitions={filteredCompetitions}
+          seasons={seasons}
+          onSeasonChange={setSelectedSeason}
+          onCategoryChange={setSelectedCategory}
+          onTypeChange={setSelectedType}
+          onCompetitionChange={setSelectedCompetition}
+        />
 
-        {standings.map((competition) => (
-          <TabsContent key={competition.competitionId} value={competition.competitionId}>
+        {/* Content */}
+        {isLoading || isLoadingStandings ? (
+          <StandingsSkeleton />
+        ) : !filters.selectedCompetition || filteredCompetitions.length === 0 ? (
+          <EmptyState />
+        ) : isKnockout ? (
+          <KnockoutMessage competitionName={selectedCompetitionData?.name || ''} />
+        ) : leagueStandings ? (
+          <>
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-primary" />
-                      {competition.competitionName}
-                    </CardTitle>
-                    <CardDescription>
-                      {competition.matchesPlayed} de {competition.matchesTotal} partidos jugados
-                      {competition.isComplete && (
-                        <Badge variant="secondary" className="ml-2">
-                          Finalizado
-                        </Badge>
-                      )}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <StandingsTable standings={competition.standings} />
+              <CardContent className="pt-6">
+                <StandingsTable standings={leagueStandings.standings} />
               </CardContent>
             </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
-
-      {/* Leyenda */}
-      <Card className="mt-6">
-        <CardContent className="pt-4">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-500/20 border-l-4 border-l-yellow-500 rounded" />
-              <span>Campeón</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500/20 border-l-4 border-l-green-500 rounded" />
-              <span>Ascenso directo</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500/20 border-l-4 border-l-blue-500 rounded" />
-              <span>Playoff</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-red-500/20 border-l-4 border-l-red-500 rounded" />
-              <span>Descenso</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            <StandingsLegend type="league" />
+          </>
+        ) : cupGroupsData ? (
+          <>
+            <StandingsCupGroups data={cupGroupsData} />
+            <StandingsLegend type="cup-groups" />
+          </>
+        ) : (
+          <EmptyState />
+        )}
+      </div>
     </div>
   )
 }
 
-interface StandingsTableProps {
-  standings: TeamStanding[]
+function EmptyState() {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+          <Users className="h-12 w-12 mb-4" />
+          <p className="text-lg">No hay competiciones disponibles</p>
+          <p className="text-sm">
+            Las tablas de posiciones aparecerán cuando haya competiciones con partidos
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
-function StandingsTable({ standings }: StandingsTableProps) {
-  const getZoneColor = (zone?: string | null) => {
-    switch (zone) {
-      case 'champion':
-        return 'bg-yellow-500/10'
-      case 'promotion':
-        return 'bg-green-500/10'
-      case 'playoff':
-      case 'promotion_playoff':
-        return 'bg-blue-500/10'
-      case 'relegation':
-        return 'bg-red-500/10'
-      default:
-        return ''
-    }
-  }
-
-  const getPositionBadge = (position: number, zone?: string | null) => {
-    if (zone === 'champion') {
-      return <Badge className="bg-yellow-500 hover:bg-yellow-600">{position}</Badge>
-    }
-    if (zone === 'promotion') {
-      return <Badge className="bg-green-500 hover:bg-green-600">{position}</Badge>
-    }
-    if (zone === 'playoff' || zone === 'promotion_playoff') {
-      return <Badge className="bg-blue-500 hover:bg-blue-600">{position}</Badge>
-    }
-    if (zone === 'relegation') {
-      return <Badge className="bg-red-500 hover:bg-red-600">{position}</Badge>
-    }
-    return <Badge variant="outline">{position}</Badge>
-  }
-
+function KnockoutMessage({ competitionName }: { competitionName: string }) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-12 text-center">#</TableHead>
-          <TableHead>Equipo</TableHead>
-          <TableHead className="text-center w-12">PJ</TableHead>
-          <TableHead className="text-center w-12">G</TableHead>
-          <TableHead className="text-center w-12">E</TableHead>
-          <TableHead className="text-center w-12">P</TableHead>
-          <TableHead className="text-center w-16">GF</TableHead>
-          <TableHead className="text-center w-16">GC</TableHead>
-          <TableHead className="text-center w-16">DG</TableHead>
-          <TableHead className="text-center w-16 font-bold">PTS</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {standings.map((team) => (
-          <TableRow key={team.clubId} className={getZoneColor(team.zone)}>
-            <TableCell className="text-center">
-              {getPositionBadge(team.position, team.zone)}
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
-                  {team.clubLogo && <AvatarImage src={team.clubLogo} alt={team.clubName} />}
-                  <AvatarFallback>{team.clubName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="font-medium">{team.clubName}</span>
-              </div>
-            </TableCell>
-            <TableCell className="text-center">{team.played}</TableCell>
-            <TableCell className="text-center text-green-600">{team.won}</TableCell>
-            <TableCell className="text-center text-yellow-600">{team.drawn}</TableCell>
-            <TableCell className="text-center text-red-600">{team.lost}</TableCell>
-            <TableCell className="text-center">{team.goalsFor}</TableCell>
-            <TableCell className="text-center">{team.goalsAgainst}</TableCell>
-            <TableCell className="text-center">
-              <span
-                className={
-                  team.goalDifference > 0
-                    ? 'text-green-600'
-                    : team.goalDifference < 0
-                    ? 'text-red-600'
-                    : ''
-                }
-              >
-                {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-              </span>
-            </TableCell>
-            <TableCell className="text-center font-bold text-lg">{team.points}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <GitBranch className="h-5 w-5 text-primary" />
+          {competitionName}
+        </CardTitle>
+        <CardDescription>Fase de eliminación directa</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+          <Trophy className="h-12 w-12 mb-4" />
+          <p className="text-lg">
+            Esta competencia es de eliminación directa
+          </p>
+          <p className="text-sm mb-4">
+            No hay tabla de posiciones para esta fase. Podés ver los brackets en Fixtures.
+          </p>
+          <Link
+            to="/fixtures"
+            className="text-primary hover:underline font-medium"
+          >
+            Ver Fixtures y Brackets →
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

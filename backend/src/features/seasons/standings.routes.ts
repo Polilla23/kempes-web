@@ -61,6 +61,23 @@ export const standingsRoutes = async (fastify: FastifyInstance) => {
     handler: standingsController.getCompetitionStandings.bind(standingsController),
   })
 
+  // GET /standings/competitions/:competitionId/groups
+  fastify.get('/competitions/:competitionId/groups', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      description: 'Get group stage standings for a cup competition',
+      tags: ['standings'],
+      params: {
+        type: 'object',
+        properties: {
+          competitionId: { type: 'string', format: 'uuid' },
+        },
+        required: ['competitionId'],
+      },
+    },
+    handler: standingsController.getCupGroupStandings.bind(standingsController),
+  })
+
   // GET /standings/seasons/:seasonId
   fastify.get('/seasons/:seasonId', {
     preHandler: [fastify.authenticate],
