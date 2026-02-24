@@ -26,6 +26,7 @@ import {
   MvpRequiredError,
 } from '@/features/fixtures/fixtures.errors'
 import { SubmitResultInput } from '@/types'
+import { StandingsService } from '@/features/seasons/standings.service'
 
 // Type for bracket input from admin
 type BracketInput = {
@@ -49,19 +50,23 @@ export class FixtureService {
   private fixtureRepository: FixtureRepository
   private competitionRepository: CompetitionRepository
   private prisma: PrismaClient
+  private standingsService: StandingsService
 
   constructor({
     fixtureRepository,
     competitionRepository,
     prisma,
+    standingsService,
   }: {
     fixtureRepository: FixtureRepository
     competitionRepository: CompetitionRepository
     prisma: PrismaClient
+    standingsService: StandingsService
   }) {
     this.fixtureRepository = fixtureRepository
     this.competitionRepository = competitionRepository
     this.prisma = prisma
+    this.standingsService = standingsService
   }
 
   // ===================== KNOCKOUT STAGE =====================
@@ -119,7 +124,8 @@ export class FixtureService {
     const updatedMatch = await this.fixtureRepository.updateMatch(input.matchId, {
       homeClubGoals: input.homeClubGoals,
       awayClubGoals: input.awayClubGoals,
-      status: MatchStatus.FINALIZADO, // TODO: Agregar mas detalles (goles, asistencias, tarjetas, etc.)
+      status: MatchStatus.FINALIZADO,
+      resultRecordedAt: new Date(),
     })
 
     const winnerId = input.homeClubGoals > input.awayClubGoals ? match.homeClubId : match.awayClubId
@@ -148,6 +154,11 @@ export class FixtureService {
       const updated = await this.fixtureRepository.updateMatch(nextMatch.id, updateData)
       updates.push(updated)
     }
+
+    // Refresh standings snapshot (fire-and-forget)
+    this.standingsService.refreshStandingsSnapshot(match.competitionId).catch((err) => {
+      console.error('Error refreshing standings snapshot:', err)
+    })
 
     return {
       success: true,
@@ -801,6 +812,7 @@ export class FixtureService {
           homeClubGoals: input.homeClubGoals,
           awayClubGoals: input.awayClubGoals,
           status: MatchStatus.FINALIZADO,
+          resultRecordedAt: new Date(),
         },
         include: {
           homeClub: true,
@@ -878,6 +890,11 @@ export class FixtureService {
         dependentMatchesUpdated++
       }
     }
+
+    // Refresh standings snapshot (fire-and-forget)
+    this.standingsService.refreshStandingsSnapshot(match.competitionId).catch((err) => {
+      console.error('Error refreshing standings snapshot:', err)
+    })
 
     return {
       success: true,

@@ -5,17 +5,34 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Trophy, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { UserLeague } from '@/services/home.service'
+import type { HomeStandings } from '@/services/home.service'
 
 interface UserStandingsSectionProps {
-  userLeague: UserLeague | null
+  homeStandings: HomeStandings | null
   userClubId: string | null
   isLoading: boolean
   className?: string
 }
 
+function getZoneColor(zone?: string | null) {
+  switch (zone) {
+    case 'champion':
+      return 'text-yellow-500'
+    case 'promotion':
+      return 'text-emerald-500'
+    case 'promotion_playoff':
+      return 'text-orange-500'
+    case 'playoff':
+      return 'text-blue-500'
+    case 'relegation':
+      return 'text-destructive'
+    default:
+      return 'text-muted-foreground'
+  }
+}
+
 export function UserStandingsSection({
-  userLeague,
+  homeStandings,
   userClubId,
   isLoading,
   className,
@@ -46,7 +63,7 @@ export function UserStandingsSection({
     )
   }
 
-  if (!userLeague) {
+  if (!homeStandings) {
     return (
       <Card className={cn('bg-card border-border h-full flex flex-col', className)}>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -75,8 +92,15 @@ export function UserStandingsSection({
             <Trophy className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-foreground">{userLeague.competition.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">{t('standings.subtitle')}</p>
+            <CardTitle className="text-foreground">{homeStandings.competitionName}</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {t('standings.subtitle')}
+              {homeStandings.matchesPlayed > 0 && (
+                <span className="ml-1">
+                  · {homeStandings.matchesPlayed}/{homeStandings.matchesTotal}
+                </span>
+              )}
+            </p>
           </div>
         </div>
         <Button variant="ghost" size="sm" className="text-primary hover:text-primary/90" asChild>
@@ -104,10 +128,8 @@ export function UserStandingsSection({
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {userLeague.standings.map((team, index) => {
+              {homeStandings.standings.map((team) => {
                 const isUserTeam = team.clubId === userClubId
-                const isPromotion = index < 2
-                const isRelegation = index >= userLeague.standings.length - 2
 
                 return (
                   <tr
@@ -118,13 +140,7 @@ export function UserStandingsSection({
                     )}
                   >
                     <td className="py-3 pl-6 pr-3 text-center">
-                      <span
-                        className={cn(
-                          'text-muted-foreground',
-                          isPromotion && 'text-emerald-500',
-                          isRelegation && 'text-destructive'
-                        )}
-                      >
+                      <span className={getZoneColor(team.zone)}>
                         {team.position}
                       </span>
                     </td>
@@ -169,10 +185,18 @@ export function UserStandingsSection({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-6 px-6 py-4 border-t border-border text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-t border-border text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span>Campeón</span>
+          </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-emerald-500" />
             <span>Ascenso</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <span>Playoff</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-destructive" />

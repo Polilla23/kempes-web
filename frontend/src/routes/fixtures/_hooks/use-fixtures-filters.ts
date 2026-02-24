@@ -3,13 +3,11 @@ import type {
   FilterState,
   Category,
   CompetitionTypeFilter,
-  ViewMode,
   MatchStatus,
 } from '../_types/fixtures.types'
 
 export function useFixturesFilters(initialSeason: string = '') {
   const [filters, setFilters] = useState<FilterState>({
-    viewMode: 'list',
     selectedSeason: initialSeason,
     selectedCompetition: 'all',
     selectedCategory: 'mayores',
@@ -58,6 +56,5 @@ export function useFixturesFilters(initialSeason: string = '') {
     setSelectedCategory,
     setSelectedType,
     setSelectedStatus: (v: MatchStatus) => updateFilter('selectedStatus', v),
-    setViewMode: (v: ViewMode) => updateFilter('viewMode', v),
   }
 }

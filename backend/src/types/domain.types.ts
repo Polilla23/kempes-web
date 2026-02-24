@@ -193,7 +193,7 @@ export type TeamStanding = {
   points: number
   position: number
   // Zona de la tabla (para colorear en UI)
-  zone?: 'champion' | 'promotion' | 'playoff' | 'relegation' | 'promotion_playoff' | null
+  zone?: 'champion' | 'promotion' | 'playoff' | 'relegation' | 'promotion_playoff' | 'gold_cup' | 'silver_cup' | null
   [key: string]: unknown    // Index signature para Prisma JSON
 }
 

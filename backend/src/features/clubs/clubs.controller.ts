@@ -159,6 +159,66 @@ export class ClubController {
     }
   }
 
+  async getTitles(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      const titles = await this.clubService.getClubTitles(validId)
+      return Response.success(reply, titles, 'Club titles fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(reply, 'FETCH_ERROR', 'Error while fetching club titles', 500, error instanceof Error ? error.message : error)
+    }
+  }
+
+  async getSquad(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      const squad = await this.clubService.getClubSquad(validId)
+      return Response.success(reply, squad, 'Club squad fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(reply, 'FETCH_ERROR', 'Error while fetching club squad', 500, error instanceof Error ? error.message : error)
+    }
+  }
+
+  async getHistory(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      const history = await this.clubService.getClubHistory(validId)
+      return Response.success(reply, history, 'Club history fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(reply, 'FETCH_ERROR', 'Error while fetching club history', 500, error instanceof Error ? error.message : error)
+    }
+  }
+
+  async getFinances(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+
+    try {
+      const validId = Validator.uuid(id)
+      const finances = await this.clubService.getClubFinances(validId)
+      return Response.success(reply, finances, 'Club finances fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Club', id)
+      }
+      return Response.error(reply, 'FETCH_ERROR', 'Error while fetching club finances', 500, error instanceof Error ? error.message : error)
+    }
+  }
+
   async uploadCSVFile(req: FastifyRequest, reply: FastifyReply) {
     const data = await (req as any).file()
 

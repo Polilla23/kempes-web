@@ -6,7 +6,7 @@ import { useUser } from '@/context/UserContext'
 import HomeService, {
   type SeasonStats,
   type UserClub,
-  type UserLeague,
+  type HomeStandings,
   type RecentMatch,
   type UserMatch,
 } from '@/services/home.service'
@@ -34,7 +34,7 @@ function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [seasonStats, setSeasonStats] = useState<SeasonStats | null>(null)
   const [userClub, setUserClub] = useState<UserClub | null>(null)
-  const [userLeague, setUserLeague] = useState<UserLeague | null>(null)
+  const [homeStandings, setHomeStandings] = useState<HomeStandings | null>(null)
   const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
   const [userMatches, setUserMatches] = useState<UserMatch[]>([])
 
@@ -43,17 +43,17 @@ function HomePage() {
       setIsLoading(true)
       try {
         // Fetch all data in parallel
-        const [statsData, clubData, leagueData, globalMatchesData, userMatchesData] = await Promise.all([
+        const [statsData, clubData, standingsData, globalMatchesData, userMatchesData] = await Promise.all([
           HomeService.getSeasonStats(),
           HomeService.getUserClub(),
-          HomeService.getUserLeague(),
-          HomeService.getRecentMatches(20),
+          HomeService.getHomeStandings(),
+          HomeService.getRecentMatches(10),
           HomeService.getUserRecentMatches(10),
         ])
 
         setSeasonStats(statsData)
         setUserClub(clubData)
-        setUserLeague(leagueData)
+        setHomeStandings(standingsData)
         setRecentMatches(globalMatchesData)
         setUserMatches(userMatchesData)
       } catch (error) {
@@ -81,7 +81,7 @@ function HomePage() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2 flex">
             <UserStandingsSection
-              userLeague={userLeague}
+              homeStandings={homeStandings}
               userClubId={userClub?.id || null}
               isLoading={isLoading}
               className="flex-1"

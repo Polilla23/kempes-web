@@ -105,7 +105,10 @@ export class MyAccountRepository {
           },
         },
       },
-      orderBy: { matchdayOrder: 'desc' },
+      orderBy: [
+        { resultRecordedAt: 'desc' },
+        { matchdayOrder: 'desc' },
+      ],
       take: limit,
     })
   }
@@ -141,19 +144,9 @@ export class MyAccountRepository {
    * Get global recent finished matches (for carousel)
    */
   async getRecentMatches(limit: number = 20): Promise<MatchWithRelations[]> {
-    const activeSeason = await this.prisma.season.findFirst({
-      where: { isActive: true },
-    })
-
-    if (!activeSeason) return []
-
     return await this.prisma.match.findMany({
       where: {
         status: MatchStatus.FINALIZADO,
-        competition: {
-          seasonId: activeSeason.id,
-        },
-        // Excluir partidos BYE (tienen awayClubId null o homePlaceholder/awayPlaceholder es 'BYE')
         homeClubId: { not: null },
         awayClubId: { not: null },
         NOT: {
@@ -176,7 +169,10 @@ export class MyAccountRepository {
           },
         },
       },
-      orderBy: { matchdayOrder: 'desc' },
+      orderBy: [
+        { resultRecordedAt: 'desc' },
+        { matchdayOrder: 'desc' },
+      ],
       take: limit,
     })
   }

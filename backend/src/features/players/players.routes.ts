@@ -19,6 +19,22 @@ export const playerRoutes = async (fastify: FastifyInstance) => {
     handler: playerController.findOne.bind(playerController),
   })
 
+  fastify.get('/:id/career', {
+    handler: playerController.getCareer.bind(playerController),
+  })
+
+  fastify.get('/:id/season-stats', {
+    handler: playerController.getSeasonStats.bind(playerController),
+  })
+
+  fastify.get('/:id/titles', {
+    handler: playerController.getTitles.bind(playerController),
+  })
+
+  fastify.get('/:id/transfers', {
+    handler: playerController.getTransfers.bind(playerController),
+  })
+
   fastify.patch('/:id', {
     schema: playersSchemas.update,
     handler: playerController.update.bind(playerController),

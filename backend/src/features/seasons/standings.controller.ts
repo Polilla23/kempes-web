@@ -20,7 +20,7 @@ export class StandingsController {
   ) {
     try {
       const competitionId = Validator.uuid(req.params.competitionId)
-      const standings = await this.standingsService.calculateStandings(competitionId)
+      const standings = await this.standingsService.getStandingsWithSnapshot(competitionId)
       
       return Response.success(reply, standings, 'Standings fetched successfully')
     } catch (error: any) {
@@ -58,6 +58,30 @@ export class StandingsController {
         reply,
         'STANDINGS_ERROR',
         'Error fetching cup group standings',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  /**
+   * GET /standings/snapshot/home
+   * Obtiene standings de Liga A SENIOR desde el snapshot (lectura rápida)
+   */
+  async getHomeStandings(req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const standings = await this.standingsService.getHomeStandings()
+
+      if (!standings) {
+        return Response.success(reply, null, 'No active league found')
+      }
+
+      return Response.success(reply, standings, 'Home standings fetched successfully')
+    } catch (error: any) {
+      return Response.error(
+        reply,
+        'STANDINGS_ERROR',
+        'Error fetching home standings',
         500,
         error instanceof Error ? error.message : error
       )

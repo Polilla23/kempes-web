@@ -59,6 +59,27 @@ export class ClubService {
         }
     }
 
+    // Profile endpoints
+    static async getClubTitles(id: string) {
+        const response = await api.get<{ data: any }>(`/api/v1/clubs/${id}/titles`)
+        return response.data?.data
+    }
+
+    static async getClubSquad(id: string) {
+        const response = await api.get<{ data: any }>(`/api/v1/clubs/${id}/squad`)
+        return response.data?.data
+    }
+
+    static async getClubHistory(id: string) {
+        const response = await api.get<{ data: any }>(`/api/v1/clubs/${id}/history`)
+        return response.data?.data
+    }
+
+    static async getClubFinances(id: string) {
+        const response = await api.get<{ data: any }>(`/api/v1/clubs/${id}/finances`)
+        return response.data?.data
+    }
+
     // Eliminar un club
     static async deleteClub(id: string): Promise<ClubResponse> {
         try {

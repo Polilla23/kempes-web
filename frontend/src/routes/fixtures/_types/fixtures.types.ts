@@ -3,7 +3,6 @@ import type { MatchDetailedDTO } from '@/services/fixture.service'
 // Categorías de competencias
 export type Category = 'mayores' | 'menores' | 'supercopa'
 export type CompetitionTypeFilter = 'liga' | 'copa'
-export type ViewMode = 'list' | 'bracket'
 export type MatchStatus = 'all' | 'played' | 'pending'
 
 // Mapeo de categorías frontend -> backend
@@ -19,7 +18,7 @@ export const FORMAT_MAP: Record<CompetitionTypeFilter, string> = {
   copa: 'CUP',
 }
 
-// Labels para las rondas de knockout
+// Labels para las rondas de knockout (usado por match-card)
 export const ROUND_LABELS: Record<string, string> = {
   ROUND_OF_64: '64vos de Final',
   ROUND_OF_32: '32vos de Final',
@@ -29,19 +28,8 @@ export const ROUND_LABELS: Record<string, string> = {
   FINAL: 'Final',
 }
 
-// Orden de rondas para bracket
-export const ROUND_ORDER = [
-  'ROUND_OF_64',
-  'ROUND_OF_32',
-  'ROUND_OF_16',
-  'QUARTERFINAL',
-  'SEMIFINAL',
-  'FINAL',
-]
-
 // Estado de filtros
 export interface FilterState {
-  viewMode: ViewMode
   selectedSeason: string
   selectedCompetition: string // 'all' o ID específico
   selectedCategory: Category
@@ -59,18 +47,6 @@ export interface MatchEvent {
   type: 'goal' | 'yellow' | 'red' | 'injury' | 'mvp'
   player: string
   team: 'home' | 'away'
-}
-
-// Bracket match con winner calculado
-export interface BracketMatch extends Match {
-  winner?: 'home' | 'away' | 'draw'
-}
-
-// Ronda de bracket
-export interface BracketRound {
-  name: string
-  roundKey: string
-  matches: BracketMatch[]
 }
 
 // Competencia simplificada para filtros

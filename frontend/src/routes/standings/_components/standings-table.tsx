@@ -18,6 +18,10 @@ function getZoneColor(zone?: string | null) {
       return 'bg-blue-500/10'
     case 'relegation':
       return 'bg-red-500/10'
+    case 'gold_cup':
+      return 'bg-amber-500/10 dark:bg-amber-400/10'
+    case 'silver_cup':
+      return 'bg-slate-400/10 dark:bg-slate-300/10'
     default:
       return ''
   }
@@ -35,6 +39,12 @@ function getPositionBadge(position: number, zone?: string | null) {
   }
   if (zone === 'relegation') {
     return <Badge className="bg-red-500 hover:bg-red-600">{position}</Badge>
+  }
+  if (zone === 'gold_cup') {
+    return <Badge className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600">{position}</Badge>
+  }
+  if (zone === 'silver_cup') {
+    return <Badge className="bg-slate-400 hover:bg-slate-500 dark:bg-slate-400 dark:hover:bg-slate-500">{position}</Badge>
   }
   return <Badge variant="outline">{position}</Badge>
 }

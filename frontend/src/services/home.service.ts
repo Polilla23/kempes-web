@@ -95,6 +95,21 @@ export interface RecentMatch {
   homeClubGoals: number
   awayClubGoals: number
   competition: MatchCompetition
+  resultRecordedAt?: string | null
+}
+
+export interface HomeStandingEntry extends StandingEntry {
+  zone?: 'champion' | 'promotion' | 'promotion_playoff' | 'playoff' | 'relegation' | null
+}
+
+export interface HomeStandings {
+  competitionId: string
+  competitionName: string
+  seasonNumber: number
+  standings: HomeStandingEntry[]
+  isComplete: boolean
+  matchesPlayed: number
+  matchesTotal: number
 }
 
 export interface UserMatch extends RecentMatch {
@@ -165,6 +180,14 @@ class HomeService {
   static async getUserUpcomingMatches(limit: number = 5): Promise<UpcomingMatch[]> {
     const response = await api.get<ApiDataResponse<UpcomingMatch[]>>(`/api/v1/me/matches/upcoming?limit=${limit}`)
     return response.data?.data || []
+  }
+
+  /**
+   * Get Liga A SENIOR standings from snapshot (fast read for home page)
+   */
+  static async getHomeStandings(): Promise<HomeStandings | null> {
+    const response = await api.get<ApiDataResponse<HomeStandings | null>>('/api/v1/standings/snapshot/home')
+    return response.data?.data || null
   }
 
   /**

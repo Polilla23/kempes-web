@@ -7,12 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { List, GitBranch, Users, Trophy, Layers, Calendar } from 'lucide-react'
+import { Users, Trophy, Layers, Calendar } from 'lucide-react'
 import type {
   FilterState,
   Category,
   CompetitionTypeFilter,
-  ViewMode,
   MatchStatus,
   CompetitionOption,
 } from '../_types/fixtures.types'
@@ -27,26 +26,22 @@ interface FixturesFilterBarProps {
   filters: FilterState
   filteredCompetitions: CompetitionOption[]
   seasons: Season[]
-  showBracketOption: boolean
   onSeasonChange: (seasonId: string) => void
   onCategoryChange: (category: Category) => void
   onTypeChange: (type: CompetitionTypeFilter) => void
   onCompetitionChange: (competitionId: string) => void
   onStatusChange: (status: MatchStatus) => void
-  onViewModeChange: (mode: ViewMode) => void
 }
 
 export function FixturesFilterBar({
   filters,
   filteredCompetitions,
   seasons,
-  showBracketOption,
   onSeasonChange,
   onCategoryChange,
   onTypeChange,
   onCompetitionChange,
   onStatusChange,
-  onViewModeChange,
 }: FixturesFilterBarProps) {
   // Para Supercopa, no mostrar tabs de Liga/Copa
   const showTypeFilter = filters.selectedCategory !== 'supercopa'
@@ -166,28 +161,6 @@ export function FixturesFilterBar({
           </SelectContent>
         </Select>
 
-        {/* View Mode Toggle (at the end) */}
-        <div className="flex items-center gap-2 bg-secondary/50 p-1 rounded-lg ml-auto">
-          <Button
-            variant={filters.viewMode === 'list' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('list')}
-            className="gap-2"
-          >
-            <List className="w-4 h-4" />
-            Lista
-          </Button>
-          <Button
-            variant={filters.viewMode === 'bracket' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('bracket')}
-            disabled={!showBracketOption}
-            className="gap-2"
-          >
-            <GitBranch className="w-4 h-4" />
-            Brackets
-          </Button>
-        </div>
       </div>
 
       {/* Active Filter Badge */}
