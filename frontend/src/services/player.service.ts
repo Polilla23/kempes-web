@@ -60,6 +60,27 @@ export class PlayerService {
     }
   }
 
+  // Profile endpoints
+  static async getPlayerCareer(id: string) {
+    const response = await api.get<{ data: any }>(`/api/v1/players/${id}/career`)
+    return response.data?.data
+  }
+
+  static async getPlayerSeasonStats(id: string) {
+    const response = await api.get<{ data: any }>(`/api/v1/players/${id}/season-stats`)
+    return response.data?.data
+  }
+
+  static async getPlayerTitles(id: string) {
+    const response = await api.get<{ data: any }>(`/api/v1/players/${id}/titles`)
+    return response.data?.data
+  }
+
+  static async getPlayerTransfers(id: string) {
+    const response = await api.get<{ data: any }>(`/api/v1/players/${id}/transfers`)
+    return response.data?.data
+  }
+
   static async deletePlayer(id: string): Promise<PlayerResponse> {
     try {
       const response = await api.delete<{ data: Player; message: string }>(`/api/v1/players/${id}`)

@@ -5,13 +5,18 @@ import StandingsService, {
   type CompetitionStandings,
   type CupGroupsStatusResponse,
 } from '@/services/standings.service'
+import { FixtureService } from '@/services/fixture.service'
 import type {
   StandingsFilterState,
   CompetitionOption,
+  BracketMatch,
+  BracketRound,
 } from '../_types/standings.types'
 import {
   CATEGORY_MAP,
   FORMAT_MAP,
+  ROUND_ORDER,
+  ROUND_LABELS,
 } from '../_types/standings.types'
 
 interface Season {
@@ -25,6 +30,7 @@ export function useStandingsData(filters: StandingsFilterState) {
   const [allCompetitions, setAllCompetitions] = useState<CompetitionOption[]>([])
   const [leagueStandings, setLeagueStandings] = useState<CompetitionStandings | null>(null)
   const [cupGroupsData, setCupGroupsData] = useState<CupGroupsStatusResponse | null>(null)
+  const [bracketData, setBracketData] = useState<BracketRound[] | null>(null)
   const [isLoadingSeasons, setIsLoadingSeasons] = useState(true)
   const [isLoadingCompetitions, setIsLoadingCompetitions] = useState(false)
   const [isLoadingStandings, setIsLoadingStandings] = useState(false)
@@ -100,6 +106,7 @@ export function useStandingsData(filters: StandingsFilterState) {
     if (!filters.selectedCompetition) {
       setLeagueStandings(null)
       setCupGroupsData(null)
+      setBracketData(null)
       return
     }
 
@@ -110,6 +117,7 @@ export function useStandingsData(filters: StandingsFilterState) {
       setIsLoadingStandings(true)
       setLeagueStandings(null)
       setCupGroupsData(null)
+      setBracketData(null)
 
       try {
         if (competition.format === 'LEAGUE') {
@@ -121,8 +129,37 @@ export function useStandingsData(filters: StandingsFilterState) {
             // Copa con fase de grupos (Copa Kempes)
             const response = await StandingsService.getCupGroupStandings(competition.id)
             setCupGroupsData(response.data)
+          } else {
+            // KNOCKOUT: cargar bracket
+            const matches = await FixtureService.getKnockoutBracket(competition.id)
+            const knockoutMatches = matches as BracketMatch[]
+
+            // Transformar a BracketRound[]
+            const rounds: Record<string, BracketMatch[]> = {}
+            knockoutMatches.forEach((match) => {
+              const round = match.knockoutRound || 'UNKNOWN'
+              if (!rounds[round]) rounds[round] = []
+
+              let winner: 'home' | 'away' | 'draw' | undefined
+              if (match.status === 'FINALIZADO') {
+                if (match.homeClubGoals > match.awayClubGoals) winner = 'home'
+                else if (match.awayClubGoals > match.homeClubGoals) winner = 'away'
+                else winner = 'draw'
+              }
+
+              rounds[round].push({ ...match, winner })
+            })
+
+            const bracketRounds = ROUND_ORDER
+              .filter((r) => rounds[r] && rounds[r].length > 0)
+              .map((r) => ({
+                name: ROUND_LABELS[r] || r,
+                roundKey: r,
+                matches: rounds[r].sort((a, b) => a.matchdayOrder - b.matchdayOrder),
+              }))
+
+            setBracketData(bracketRounds.length > 0 ? bracketRounds : null)
           }
-          // KNOCKOUT: no cargar nada, se muestra mensaje informativo
         }
       } catch (err) {
         console.error('Error loading standings:', err)
@@ -153,6 +190,7 @@ export function useStandingsData(filters: StandingsFilterState) {
     filteredCompetitions,
     leagueStandings,
     cupGroupsData,
+    bracketData,
     selectedCompetitionData,
     isLoadingSeasons,
     isLoadingCompetitions,

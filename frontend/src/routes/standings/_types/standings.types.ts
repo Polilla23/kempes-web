@@ -1,4 +1,5 @@
 import type { CompetitionStandings, TeamStanding } from '@/services/standings.service'
+import type { MatchDetailedDTO } from '@/services/fixture.service'
 
 // Categorías - sin 'supercopa' porque no tiene tabla de posiciones
 export type Category = 'mayores' | 'menores'
@@ -52,6 +53,49 @@ export interface CupGroupsStatusResponse {
   groups: CupGroupStandings[]
   qualifyToGold: number
   qualifyToSilver: number
+}
+
+// === Tipos de Bracket (knockout) ===
+
+// Labels para las rondas de knockout
+export const ROUND_LABELS: Record<string, string> = {
+  ROUND_OF_64: '64vos de Final',
+  ROUND_OF_32: '32vos de Final',
+  ROUND_OF_16: 'Octavos de Final',
+  QUARTERFINAL: 'Cuartos de Final',
+  SEMIFINAL: 'Semifinales',
+  FINAL: 'Final',
+}
+
+// Orden de rondas para bracket
+export const ROUND_ORDER = [
+  'ROUND_OF_64',
+  'ROUND_OF_32',
+  'ROUND_OF_16',
+  'QUARTERFINAL',
+  'SEMIFINAL',
+  'FINAL',
+]
+
+// Match base extendido
+export interface Match extends MatchDetailedDTO {
+  events?: Array<{
+    type: 'goal' | 'yellow' | 'red' | 'injury' | 'mvp'
+    player: string
+    team: 'home' | 'away'
+  }>
+}
+
+// Bracket match con winner calculado
+export interface BracketMatch extends Match {
+  winner?: 'home' | 'away' | 'draw'
+}
+
+// Ronda de bracket
+export interface BracketRound {
+  name: string
+  roundKey: string
+  matches: BracketMatch[]
 }
 
 // Re-export para conveniencia

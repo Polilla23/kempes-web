@@ -13,7 +13,7 @@ export interface TeamStanding {
   goalDifference: number
   points: number
   position: number
-  zone?: 'champion' | 'promotion' | 'playoff' | 'relegation' | 'promotion_playoff' | null
+  zone?: 'champion' | 'promotion' | 'playoff' | 'relegation' | 'promotion_playoff' | 'gold_cup' | 'silver_cup' | null
 }
 
 export interface CompetitionStandings {

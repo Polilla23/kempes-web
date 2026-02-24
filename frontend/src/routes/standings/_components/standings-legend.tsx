@@ -11,11 +11,11 @@ export function StandingsLegend({ type }: StandingsLegendProps) {
         <CardContent className="pt-4">
           <div className="flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500/20 border-l-4 border-l-green-500 rounded" />
+              <div className="w-4 h-4 bg-amber-500/20 dark:bg-amber-400/20 border-l-4 border-l-amber-600 dark:border-l-amber-500 rounded" />
               <span>Clasifica a Copa de Oro</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500/20 border-l-4 border-l-blue-500 rounded" />
+              <div className="w-4 h-4 bg-slate-400/20 dark:bg-slate-300/20 border-l-4 border-l-slate-400 dark:border-l-slate-400 rounded" />
               <span>Clasifica a Copa de Plata</span>
             </div>
           </div>

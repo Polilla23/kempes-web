@@ -21,7 +21,8 @@
       "Bash(dir:*)",
       "Bash(findstr:*)",
       "Bash(npx tsr generate:*)",
-      "Bash(npx @tanstack/router-plugin generate:*)"
+      "Bash(npx @tanstack/router-plugin generate:*)",
+      "Bash(npx shadcn@latest add:*)"
     ]
   }
 }

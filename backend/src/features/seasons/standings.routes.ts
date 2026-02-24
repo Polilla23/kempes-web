@@ -3,6 +3,16 @@ import { FastifyInstance } from 'fastify'
 export const standingsRoutes = async (fastify: FastifyInstance) => {
   const standingsController = (fastify as any).container.resolve('standingsController')
 
+  // GET /standings/snapshot/home - Liga A SENIOR standings from snapshot
+  fastify.get('/snapshot/home', {
+    preHandler: [fastify.authenticate],
+    schema: {
+      description: 'Get Liga A SENIOR standings from snapshot (fast read for home page)',
+      tags: ['standings'],
+    },
+    handler: standingsController.getHomeStandings.bind(standingsController),
+  })
+
   // GET /standings/competitions/:competitionId
   fastify.get('/competitions/:competitionId', {
     preHandler: [fastify.authenticate],

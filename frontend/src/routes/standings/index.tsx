@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Trophy, Users, GitBranch } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { checkAuth } from '@/services/auth-guard'
 
 // Hooks locales
@@ -15,6 +15,7 @@ import { StandingsTable } from './_components/standings-table'
 import { StandingsCupGroups } from './_components/standings-cup-groups'
 import { StandingsSkeleton } from './_components/standings-skeleton'
 import { StandingsLegend } from './_components/standings-legend'
+import { StandingsBracketView } from './_components/standings-bracket-view'
 
 export const Route = createFileRoute('/standings/')({
   beforeLoad: async ({ location }) => {
@@ -39,6 +40,7 @@ function StandingsPage() {
     filteredCompetitions,
     leagueStandings,
     cupGroupsData,
+    bracketData,
     selectedCompetitionData,
     isLoadingSeasons,
     isLoadingCompetitions,
@@ -123,7 +125,12 @@ function StandingsPage() {
         ) : !filters.selectedCompetition || filteredCompetitions.length === 0 ? (
           <EmptyState />
         ) : isKnockout ? (
-          <KnockoutMessage competitionName={selectedCompetitionData?.name || ''} />
+          <StandingsBracketView
+            bracketData={bracketData ?? []}
+            competitionName={selectedCompetitionData?.name}
+            seasonNumber={currentSeasonNumber}
+            isLoading={isLoadingStandings}
+          />
         ) : leagueStandings ? (
           <>
             <Card>
@@ -162,33 +169,3 @@ function EmptyState() {
   )
 }
 
-function KnockoutMessage({ competitionName }: { competitionName: string }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <GitBranch className="h-5 w-5 text-primary" />
-          {competitionName}
-        </CardTitle>
-        <CardDescription>Fase de eliminación directa</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-          <Trophy className="h-12 w-12 mb-4" />
-          <p className="text-lg">
-            Esta competencia es de eliminación directa
-          </p>
-          <p className="text-sm mb-4">
-            No hay tabla de posiciones para esta fase. Podés ver los brackets en Fixtures.
-          </p>
-          <Link
-            to="/fixtures"
-            className="text-primary hover:underline font-medium"
-          >
-            Ver Fixtures y Brackets →
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}

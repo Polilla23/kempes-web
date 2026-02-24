@@ -1,4 +1,4 @@
-import { PrismaClient, MovementType, CompetitionFormat, MatchStatus, CupPhase, CompetitionStage } from '@prisma/client'
+import { PrismaClient, MovementType, CompetitionFormat, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory } from '@prisma/client'
 import { TeamStanding, CompetitionStandings } from '@/types'
 
 interface LeagueRules {
@@ -146,6 +146,14 @@ export class StandingsService {
     standings.forEach((standing, index) => {
       standing.position = index + 1
     })
+
+    // Asignar zonas para ligas
+    if (competition.competitionType.format === CompetitionFormat.LEAGUE) {
+      const rules = competition.rules as unknown as LeagueRules
+      if (rules) {
+        this.assignZones(standings, rules)
+      }
+    }
 
     // Determinar si la competición está completa
     const isComplete = completedMatches.length === totalMatches && totalMatches > 0
@@ -345,13 +353,15 @@ export class StandingsService {
   }
 
   /**
-   * Guarda las estadísticas de jugadores al finalizar una temporada
+   * Guarda las estadísticas de jugadores al finalizar una temporada.
+   * Agrupa por (playerId, clubId) para soportar transferencias mid-season.
    */
   async savePlayerStats(seasonId: string): Promise<void> {
     const season = await this.prisma.season.findUnique({
       where: { id: seasonId },
       include: {
         competitions: true,
+        seasonHalves: true,
       },
     })
 
@@ -359,8 +369,20 @@ export class StandingsService {
       throw new Error('Season not found')
     }
 
+    // Pre-cargar transferencias de la temporada para determinar club del jugador por fecha
+    const seasonHalfIds = season.seasonHalves.map((sh) => sh.id)
+    const seasonTransfers = seasonHalfIds.length > 0
+      ? await this.prisma.transfer.findMany({
+          where: {
+            seasonHalfId: { in: seasonHalfIds },
+            status: { in: ['COMPLETED', 'ACTIVE'] },
+          },
+          orderBy: { createdAt: 'asc' },
+        })
+      : []
+
     for (const competition of season.competitions) {
-      // Obtener todos los eventos de la competición
+      // Obtener todos los eventos de la competición con datos del match
       const events = await this.prisma.event.findMany({
         where: {
           match: {
@@ -375,8 +397,8 @@ export class StandingsService {
         },
       })
 
-      // Agrupar estadísticas por jugador
-      const playerStats = new Map<
+      // Agrupar estadísticas por (playerId, clubId)
+      const playerClubStats = new Map<
         string,
         {
           appearances: Set<string>
@@ -389,8 +411,22 @@ export class StandingsService {
       >()
 
       events.forEach((event) => {
-        if (!playerStats.has(event.playerId)) {
-          playerStats.set(event.playerId, {
+        const match = event.match
+        if (!match.homeClubId || !match.awayClubId) return
+
+        // Determinar el club del jugador en este partido
+        const clubId = this.determinePlayerClubInMatch(
+          event.playerId,
+          event.player.actualClubId,
+          match.homeClubId,
+          match.awayClubId,
+          seasonTransfers,
+          match.resultRecordedAt
+        )
+
+        const key = `${event.playerId}:${clubId}`
+        if (!playerClubStats.has(key)) {
+          playerClubStats.set(key, {
             appearances: new Set(),
             goals: 0,
             assists: 0,
@@ -400,7 +436,7 @@ export class StandingsService {
           })
         }
 
-        const stats = playerStats.get(event.playerId)!
+        const stats = playerClubStats.get(key)!
         stats.appearances.add(event.matchId)
 
         switch (event.type.name) {
@@ -420,12 +456,14 @@ export class StandingsService {
       })
 
       // Guardar estadísticas en la BD
-      for (const [playerId, stats] of playerStats.entries()) {
+      for (const [key, stats] of playerClubStats.entries()) {
+        const [playerId, clubId] = key.split(':')
         await this.prisma.playerSeasonStats.create({
           data: {
             playerId,
             seasonId,
             competitionId: competition.id,
+            clubId,
             appearances: stats.appearances.size,
             goals: stats.goals,
             assists: stats.assists,
@@ -436,6 +474,77 @@ export class StandingsService {
         })
       }
     }
+  }
+
+  /**
+   * Determina el club de un jugador en un partido específico.
+   * Verifica actualClubId contra los equipos del partido, y si no coincide
+   * (jugador transfirió desde entonces), usa el historial de transferencias.
+   */
+  private determinePlayerClubInMatch(
+    playerId: string,
+    actualClubId: string,
+    homeClubId: string,
+    awayClubId: string,
+    transfers: Array<{ playerId: string; fromClubId: string; toClubId: string; completedAt: Date | null; createdAt: Date }>,
+    matchDate: Date | null
+  ): string {
+    // Caso 1: El club actual del jugador es uno de los equipos del partido
+    if (actualClubId === homeClubId) return homeClubId
+    if (actualClubId === awayClubId) return awayClubId
+
+    // Caso 2: Jugador transfirió — buscar en qué club estaba al momento del partido
+    const playerTransfers = transfers.filter((t) => t.playerId === playerId)
+    if (playerTransfers.length === 0) return actualClubId
+
+    if (matchDate) {
+      // Buscar la transferencia más reciente ANTES del partido
+      const transfersBeforeMatch = playerTransfers
+        .filter((t) => {
+          const transferDate = t.completedAt || t.createdAt
+          return transferDate <= matchDate
+        })
+        .sort((a, b) => {
+          const dateA = a.completedAt || a.createdAt
+          const dateB = b.completedAt || b.createdAt
+          return dateB.getTime() - dateA.getTime()
+        })
+
+      if (transfersBeforeMatch.length > 0) {
+        const lastTransfer = transfersBeforeMatch[0]
+        // Después de esta transferencia, el jugador estaba en toClubId
+        if (lastTransfer.toClubId === homeClubId) return homeClubId
+        if (lastTransfer.toClubId === awayClubId) return awayClubId
+      }
+
+      // Buscar la transferencia más cercana DESPUÉS del partido (el jugador se fue de uno de los clubes)
+      const transfersAfterMatch = playerTransfers
+        .filter((t) => {
+          const transferDate = t.completedAt || t.createdAt
+          return transferDate > matchDate
+        })
+        .sort((a, b) => {
+          const dateA = a.completedAt || a.createdAt
+          const dateB = b.completedAt || b.createdAt
+          return dateA.getTime() - dateB.getTime()
+        })
+
+      if (transfersAfterMatch.length > 0) {
+        const nextTransfer = transfersAfterMatch[0]
+        // Antes de esta transferencia, el jugador estaba en fromClubId
+        if (nextTransfer.fromClubId === homeClubId) return homeClubId
+        if (nextTransfer.fromClubId === awayClubId) return awayClubId
+      }
+    }
+
+    // Fallback: buscar cualquier transferencia que involucre a uno de los clubes del partido
+    for (const t of playerTransfers) {
+      if (t.fromClubId === homeClubId || t.toClubId === homeClubId) return homeClubId
+      if (t.fromClubId === awayClubId || t.toClubId === awayClubId) return awayClubId
+    }
+
+    // Último fallback
+    return actualClubId
   }
 
   /**
@@ -588,12 +697,19 @@ export class StandingsService {
 
       const stats = new Map<string, TeamStanding>()
       teamIds.forEach((clubId) => {
+        // Buscar info del club en teams (relación m2m) o en los matches (fallback)
         const club = competition.teams.find((c) => c.id === clubId)
-        if (club) {
+        const matchClub = !club
+          ? matches.find((m) => m.homeClub?.id === clubId)?.homeClub
+            || matches.find((m) => m.awayClub?.id === clubId)?.awayClub
+          : null
+        const clubInfo = club || matchClub
+
+        if (clubInfo) {
           stats.set(clubId, {
-            clubId: club.id,
-            clubName: club.name,
-            clubLogo: club.logo || undefined,
+            clubId: clubInfo.id,
+            clubName: clubInfo.name,
+            clubLogo: clubInfo.logo || undefined,
             played: 0,
             won: 0,
             drawn: 0,
@@ -662,9 +778,9 @@ export class StandingsService {
         standing.position = index + 1
         // Mark zones based on qualification
         if (index < qualifyToGold) {
-          standing.zone = 'promotion' // Goes to Copa de Oro
+          standing.zone = 'gold_cup' // Clasifica a Copa de Oro
         } else if (index < qualifyToGold + qualifyToSilver) {
-          standing.zone = 'playoff' // Goes to Copa de Plata
+          standing.zone = 'silver_cup' // Clasifica a Copa de Plata
         }
       })
 
@@ -749,6 +865,40 @@ export class StandingsService {
   }
 
   /**
+   * Obtiene standings usando snapshot si existe, con fallback a cálculo on-the-fly.
+   * Para LEAGUE: intenta leer snapshot → si no hay, calcula y guarda snapshot.
+   * Para CUP/otro: calcula directamente (sin snapshot).
+   */
+  async getStandingsWithSnapshot(competitionId: string): Promise<CompetitionStandings> {
+    // Fast path: leer snapshot (solo existe para LEAGUE, creado por refreshStandingsSnapshot)
+    const snapshot = await this.prisma.standingsSnapshot.findUnique({
+      where: { competitionId },
+    })
+
+    if (snapshot) {
+      return snapshot.data as unknown as CompetitionStandings
+    }
+
+    // Slow path: calcular fresh (ya incluye zonas para ligas)
+    const standings = await this.calculateStandings(competitionId)
+
+    // Crear snapshot solo para LEAGUE format (fire-and-forget)
+    const competition = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+      include: { competitionType: true },
+    })
+    if (competition?.competitionType.format === CompetitionFormat.LEAGUE) {
+      this.prisma.standingsSnapshot.upsert({
+        where: { competitionId },
+        create: { competitionId, data: standings as any },
+        update: { data: standings as any },
+      }).catch(() => {})
+    }
+
+    return standings
+  }
+
+  /**
    * Obtiene todas las tablas de posiciones de una temporada
    */
   async getSeasonStandings(seasonId: string): Promise<CompetitionStandings[]> {
@@ -781,10 +931,126 @@ export class StandingsService {
     const allStandings: CompetitionStandings[] = []
     
     for (const competition of season.competitions) {
-      const standings = await this.calculateStandings(competition.id)
+      const standings = await this.getStandingsWithSnapshot(competition.id)
       allStandings.push(standings)
     }
 
     return allStandings
+  }
+
+  // ===================== STANDINGS SNAPSHOT =====================
+
+  /**
+   * Asigna zonas (champion, promotion, relegation, etc.) basado en las reglas de la liga
+   */
+  private assignZones(standings: TeamStanding[], rules: LeagueRules): void {
+    const total = standings.length
+
+    standings.forEach((team, index) => {
+      const position = index + 1 // 1-based
+
+      if (position === 1) {
+        team.zone = 'champion'
+      } else if (rules.directPromotions && position <= rules.directPromotions) {
+        team.zone = 'promotion'
+      } else if (
+        rules.playoffPromotions &&
+        position <= (rules.directPromotions || 0) + rules.playoffPromotions
+      ) {
+        team.zone = 'promotion_playoff'
+      } else if (rules.directRelegations && position > total - rules.directRelegations) {
+        team.zone = 'relegation'
+      } else if (
+        rules.playoffRelegations &&
+        position > total - (rules.directRelegations || 0) - rules.playoffRelegations
+      ) {
+        team.zone = 'playoff'
+      } else {
+        team.zone = null
+      }
+    })
+  }
+
+  /**
+   * Recalcula y guarda el snapshot de standings para una competición
+   * Se llama automáticamente al finalizar un partido
+   */
+  async refreshStandingsSnapshot(competitionId: string): Promise<void> {
+    const competition = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+      include: {
+        competitionType: true,
+      },
+    })
+
+    if (!competition) return
+
+    // Solo hacer snapshot para LEAGUE format
+    if (competition.competitionType.format !== CompetitionFormat.LEAGUE) return
+
+    // Calcular standings (ya incluye zonas para ligas)
+    const standingsData = await this.calculateStandings(competitionId)
+
+    // Upsert snapshot
+    await this.prisma.standingsSnapshot.upsert({
+      where: { competitionId },
+      create: {
+        competitionId,
+        data: standingsData as any,
+      },
+      update: {
+        data: standingsData as any,
+      },
+    })
+  }
+
+  /**
+   * Obtiene standings de Liga A SENIOR de la temporada activa desde el snapshot
+   * Fallback a cálculo on-the-fly si no hay snapshot
+   */
+  async getHomeStandings(): Promise<CompetitionStandings | null> {
+    // Buscar temporada activa
+    const activeSeason = await this.prisma.season.findFirst({
+      where: { isActive: true },
+    })
+
+    if (!activeSeason) return null
+
+    // Buscar Liga A SENIOR
+    const competition = await this.prisma.competition.findFirst({
+      where: {
+        seasonId: activeSeason.id,
+        isActive: true,
+        competitionType: {
+          format: CompetitionFormat.LEAGUE,
+          category: CompetitionCategory.SENIOR,
+          hierarchy: 1,
+        },
+      },
+    })
+
+    if (!competition) return null
+
+    // Intentar leer snapshot (fast path)
+    const snapshot = await this.prisma.standingsSnapshot.findUnique({
+      where: { competitionId: competition.id },
+    })
+
+    if (snapshot) {
+      return snapshot.data as unknown as CompetitionStandings
+    }
+
+    // Fallback: calcular (ya incluye zonas) y guardar snapshot
+    const standingsData = await this.calculateStandings(competition.id)
+
+    // Guardar para la próxima vez (ignorar error de unique constraint por race condition)
+    await this.prisma.standingsSnapshot.create({
+      data: {
+        competitionId: competition.id,
+        data: standingsData as any,
+      },
+    }).catch(() => {})
+
+    return standingsData
   }
 }

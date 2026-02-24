@@ -170,6 +170,30 @@ export class PlayerService {
     return playerFound
   }
 
+  async getPlayerCareer(playerId: string) {
+    const player = await this.playerRepository.findOneById(playerId)
+    if (!player) throw new PlayerErrors.NotFound(`Player with id ${playerId} not found`)
+    return await this.playerRepository.findCareer(playerId)
+  }
+
+  async getPlayerSeasonStats(playerId: string) {
+    const player = await this.playerRepository.findOneById(playerId)
+    if (!player) throw new PlayerErrors.NotFound(`Player with id ${playerId} not found`)
+    return await this.playerRepository.findSeasonStats(playerId)
+  }
+
+  async getPlayerTitles(playerId: string) {
+    const player = await this.playerRepository.findOneById(playerId)
+    if (!player) throw new PlayerErrors.NotFound(`Player with id ${playerId} not found`)
+    return await this.playerRepository.findTitles(playerId)
+  }
+
+  async getPlayerTransferHistory(playerId: string) {
+    const player = await this.playerRepository.findOneById(playerId)
+    if (!player) throw new PlayerErrors.NotFound(`Player with id ${playerId} not found`)
+    return await this.playerRepository.findTransferHistory(playerId)
+  }
+
   async processCSVFile(csvContent: string) {
     const cleanCsvContent = csvContent.replace(/^\uFEFF/, '')
 

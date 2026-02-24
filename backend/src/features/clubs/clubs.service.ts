@@ -139,6 +139,30 @@ export class ClubService {
     return await this.clubRepository.getActivePlayers(clubId)
   }
 
+  async getClubTitles(clubId: string) {
+    const club = await this.clubRepository.findOneById(clubId)
+    if (!club) throw new ClubNotFoundError()
+    return await this.clubRepository.findTitles(clubId)
+  }
+
+  async getClubSquad(clubId: string) {
+    const club = await this.clubRepository.findOneById(clubId)
+    if (!club) throw new ClubNotFoundError()
+    return await this.clubRepository.findSquad(clubId)
+  }
+
+  async getClubHistory(clubId: string) {
+    const club = await this.clubRepository.findOneById(clubId)
+    if (!club) throw new ClubNotFoundError()
+    return await this.clubRepository.findHistory(clubId)
+  }
+
+  async getClubFinances(clubId: string) {
+    const club = await this.clubRepository.findOneById(clubId)
+    if (!club) throw new ClubNotFoundError()
+    return await this.clubRepository.findFinances(clubId)
+  }
+
   async processCSVFile(csvContent: string) {
     const cleanCsvContent = csvContent.replace(/^\uFEFF/, '')
 

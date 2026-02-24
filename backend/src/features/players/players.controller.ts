@@ -96,6 +96,34 @@ export class PlayerController {
     return Response.success(reply, playerDTO, 'Player fetched successfully')
   }
 
+  async getCareer(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+    const validId = Validator.uuid(id)
+    const career = await this.playerService.getPlayerCareer(validId)
+    return Response.success(reply, career, 'Player career fetched successfully')
+  }
+
+  async getSeasonStats(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+    const validId = Validator.uuid(id)
+    const stats = await this.playerService.getPlayerSeasonStats(validId)
+    return Response.success(reply, stats, 'Player season stats fetched successfully')
+  }
+
+  async getTitles(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+    const validId = Validator.uuid(id)
+    const titles = await this.playerService.getPlayerTitles(validId)
+    return Response.success(reply, titles, 'Player titles fetched successfully')
+  }
+
+  async getTransfers(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const { id } = req.params
+    const validId = Validator.uuid(id)
+    const transfers = await this.playerService.getPlayerTransferHistory(validId)
+    return Response.success(reply, transfers, 'Player transfer history fetched successfully')
+  }
+
   async uploadCSVFile(req: FastifyRequest, reply: FastifyReply) {
     const data = await (req as any).file()
 

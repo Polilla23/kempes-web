@@ -40,9 +40,10 @@ model Club {
   awayMatches       Match[]            @relation("AwayMatches")
   competitions      Competition[]      @relation("CompetitionTeams")
   seasonTransitions SeasonTransition[]
-  clubHistory   ClubHistory[]
-  coefKempes    CoefKempes[]
-  matchCovids   MatchCovid[]
+  clubHistory       ClubHistory[]
+  playerSeasonStats PlayerSeasonStats[]
+  coefKempes        CoefKempes[]
+  matchCovids       MatchCovid[]
 
   // Transfer and finance relations
   transfersFrom         Transfer[]  @relation("TransferFromClub")
@@ -141,6 +142,7 @@ model Competition {
   seasonTransitionsTo   SeasonTransition[]  @relation("ToCompetition")
   clubHistory           ClubHistory[]
   playerSeasonStats     PlayerSeasonStats[]
+  standingsSnapshot     StandingsSnapshot?
 }
 
 model CompetitionType {
@@ -191,6 +193,8 @@ model Match {
 
   covidPlayers MatchCovid[]
 
+  resultRecordedAt DateTime? @map("result_recorded_at")
+
   @@index([competitionId])
   @@index([homeSourceMatchId])
   @@index([awaySourceMatchId])
@@ -211,6 +215,18 @@ model MatchCovid {
   @@index([matchId])
   @@index([playerId])
   @@map("match_covids")
+}
+
+model StandingsSnapshot {
+  id            String   @id @default(uuid())
+  competitionId String   @unique @map("competition_id")
+  data          Json
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  @@index([competitionId])
+  @@map("standings_snapshots")
 }
 
 model EventType {
@@ -519,6 +535,7 @@ model PlayerSeasonStats {
   playerId      String
   seasonId      String
   competitionId String
+  clubId        String @map("club_id")
   appearances   Int    @default(0)
   goals         Int    @default(0)
   assists       Int    @default(0)
@@ -529,10 +546,12 @@ model PlayerSeasonStats {
   player      Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
   season      Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  club        Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
 
-  @@unique([playerId, seasonId, competitionId])
+  @@unique([playerId, seasonId, competitionId, clubId])
   @@index([playerId])
   @@index([seasonId])
+  @@index([clubId])
   @@map("player_season_stats")
 }
 
