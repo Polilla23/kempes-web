@@ -1,0 +1,54 @@
+{
+  "title": "Plazos",
+  "subtitle": "Fechas y recordatorios importantes de la temporada",
+  "types": {
+    "TRANSFER_MARKET": "Mercado de Pases",
+    "COVID_REDRAW": "ReSorteo de COVIDs",
+    "MATCH_SCHEDULE": "Fechas de Partidos",
+    "INSTALLMENT_DUE": "Pago de Cuotas",
+    "SEASON_CLOSE": "Cierre de Temporada",
+    "CUSTOM": "Personalizado"
+  },
+  "create": {
+    "title": "Nuevo Plazo",
+    "description": "Agregar un nuevo plazo a la temporada",
+    "button": "Nuevo Plazo"
+  },
+  "edit": {
+    "title": "Editar Plazo",
+    "description": "Modificar los datos del plazo"
+  },
+  "delete": {
+    "confirm": "Eliminar este plazo?",
+    "success": "Plazo eliminado",
+    "error": "Error al eliminar el plazo"
+  },
+  "fields": {
+    "type": "Tipo",
+    "title": "Titulo",
+    "description": "Descripcion",
+    "date": "Fecha",
+    "status": "Estado"
+  },
+  "status": {
+    "completed": "Completado",
+    "pending": "Pendiente",
+    "overdue": "Vencido"
+  },
+  "quickCreate": {
+    "button": "Crear Plazos Predefinidos",
+    "description": "Crea los 5 tipos de plazos automaticamente",
+    "success": "{{count}} plazos creados"
+  },
+  "empty": "No hay plazos configurados para esta temporada",
+  "success": {
+    "created": "Plazo creado exitosamente",
+    "updated": "Plazo actualizado exitosamente",
+    "toggled": "Estado del plazo actualizado"
+  },
+  "error": {
+    "fetch": "Error al cargar los plazos",
+    "create": "Error al crear el plazo",
+    "update": "Error al actualizar el plazo"
+  }
+}

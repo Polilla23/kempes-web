@@ -4,7 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { DefaultHeader } from '@/components/table/table-header'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Search, Ellipsis, Pencil, Trash2 } from 'lucide-react'
+import { Search, Ellipsis, Pencil, Trash2, Trophy, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -14,6 +14,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
+import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import CompetitionService, { type Competition } from '@/services/competition.service'
 import type { CompetitionType } from '@/services/competition-type.service'
 import CreateCompetitionForm from './create-competition-form'
@@ -26,6 +28,8 @@ interface CompetitionsTabProps {
 }
 
 export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: CompetitionsTabProps) {
+  const { t } = useTranslation('fixtures')
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null)
@@ -119,6 +123,34 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(competition)}>
                     <Pencil className="size-4" /> Edit
                   </DropdownMenuItem>
+                  {/* Cup-specific actions: only for CUP format + ROUND_ROBIN system */}
+                  {(competition.type?.format === 'CUP' || competition.competitionType?.format === 'CUP') &&
+                    competition.system === 'ROUND_ROBIN' && (
+                    <>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() =>
+                          navigate({
+                            to: '/management/fixtures/cup/kempes/generate-brackets',
+                            search: { competitionId: competition.id },
+                          })
+                        }
+                      >
+                        <Trophy className="size-4 text-amber-500" /> {t('cup.generateBrackets')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer"
+                        onClick={() =>
+                          navigate({
+                            to: '/management/fixtures/cup/kempes/edit-groups',
+                            search: { competitionId: competition.id },
+                          })
+                        }
+                      >
+                        <Settings className="size-4" /> {t('cup.editGroups.title')}
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuItem
                     className="cursor-pointer"
                     onClick={() => handleDeleteCompetition(competition.id)}

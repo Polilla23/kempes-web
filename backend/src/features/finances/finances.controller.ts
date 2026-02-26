@@ -444,6 +444,33 @@ export class FinanceController {
     }
   }
 
+  // ==================== Salary Processing ====================
+
+  async processSalaries(
+    req: FastifyRequest<{ Body: { seasonHalfId: string } }>,
+    reply: FastifyReply
+  ) {
+    const { seasonHalfId } = req.body
+
+    try {
+      const validSeasonHalfId = Validator.uuid(seasonHalfId)
+      const result = await this.financeService.processSalaries(validSeasonHalfId)
+
+      return Response.success(reply, result, 'Salaries processed successfully')
+    } catch (error: any) {
+      if (error.message?.includes('already been processed')) {
+        return Response.validation(reply, error.message, 'Salaries already processed')
+      }
+      return Response.error(
+        reply,
+        'PROCESS_ERROR',
+        'Error while processing salaries',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
   // ==================== Financial Report ====================
 
   async getClubFinancialReport(

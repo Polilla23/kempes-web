@@ -1,13 +1,16 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { SeasonService } from '@/features/seasons/seasons.service'
+import { StandingsService } from '@/features/seasons/standings.service'
 import { SeasonMapper, Response } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
 
 export class SeasonController {
   private seasonService: SeasonService
+  private standingsService: StandingsService
 
-  constructor({ seasonService }: { seasonService: SeasonService }) {
+  constructor({ seasonService, standingsService }: { seasonService: SeasonService; standingsService: StandingsService }) {
     this.seasonService = seasonService
+    this.standingsService = standingsService
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
@@ -218,6 +221,122 @@ export class SeasonController {
         reply,
         'ADVANCE_ERROR',
         'Error while advancing season',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  // ============================================
+  // WIZARD DE AVANCE — 4 PASOS DISCRETOS
+  // ============================================
+
+  async verifyCompetitions(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const result = await this.seasonService.verifyCompetitions()
+
+      return Response.success(reply, result, 'Competitions verified successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.error(reply, 'NOT_FOUND', 'No active season found', 404)
+      }
+      return Response.error(
+        reply,
+        'VERIFY_ERROR',
+        'Error while verifying competitions',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async previewMovements(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const result = await this.seasonService.previewMovements()
+
+      return Response.success(reply, result, 'Movements preview generated successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.error(reply, 'NOT_FOUND', 'No active season found', 404)
+      }
+      return Response.error(
+        reply,
+        'PREVIEW_ERROR',
+        'Error while previewing movements',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async saveSeasonHistory(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const result = await this.seasonService.saveSeasonHistory()
+
+      return Response.success(
+        reply,
+        result,
+        result.alreadyExisted
+          ? 'Season history already saved'
+          : 'Season history saved successfully'
+      )
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.error(reply, 'NOT_FOUND', 'No active season found', 404)
+      }
+      return Response.error(
+        reply,
+        'SAVE_HISTORY_ERROR',
+        'Error while saving season history',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async createNextSeason(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const result = await this.seasonService.createNextSeason()
+
+      return Response.success(
+        reply,
+        {
+          previousSeason: { id: result.previousSeason.id, number: result.previousSeason.number },
+          newSeason: { id: result.newSeason.id, number: result.newSeason.number },
+        },
+        `Season ${result.newSeason.number} created successfully`
+      )
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.error(reply, 'NOT_FOUND', 'No active season found', 404)
+      }
+      if (error instanceof Error && error.message.includes('Must save')) {
+        return Response.error(reply, 'VALIDATION_ERROR', error.message, 400)
+      }
+      return Response.error(
+        reply,
+        'CREATE_NEXT_ERROR',
+        'Error while creating next season',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  // ============================================
+  // COEFKEMPES RANKING
+  // ============================================
+
+  async getCoefKempesRanking(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const ranking = await this.standingsService.getCoefKempesRanking()
+
+      return Response.success(reply, ranking, 'CoefKempes ranking fetched successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching CoefKempes ranking',
         500,
         error instanceof Error ? error.message : error
       )

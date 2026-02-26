@@ -16,6 +16,7 @@ import type {
   PrizeResponse,
   PrizesResponse,
   FinancialReportResponse,
+  ProcessSalariesResponse,
 } from '@/types'
 
 export class FinanceService {
@@ -222,6 +223,21 @@ export class FinanceService {
       return { transaction: response.data?.data, message: response.data?.message }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error recording bonus')
+    }
+  }
+
+  // ==================== Salary Processing ====================
+
+  // Procesar salarios para una media temporada
+  static async processSalaries(seasonHalfId: string): Promise<ProcessSalariesResponse> {
+    try {
+      const response = await api.post<{ data: ProcessSalariesResponse }>(
+        '/api/v1/finances/salaries/process',
+        { seasonHalfId }
+      )
+      return response.data?.data || { clubsProcessed: 0, totalSalariesPaid: 0, details: [] }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error processing salaries')
     }
   }
 

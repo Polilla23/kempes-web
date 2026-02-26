@@ -43,7 +43,7 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
         throw new Error('Error: No se encontró información de la temporada activa.')
       }
 
-      // Construir el payload LeaguesRules usando los CompetitionTypes que ya tenemos
+      // Construir el payload LeaguesRules usando los tipos alineados con el backend
       const leaguesRules: LeaguesRules = {
         type: 'LEAGUES',
         leagues: leagues.map((league) => {
@@ -59,17 +59,21 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
             return {
               ...baseLeague,
               league_position: 'TOP' as const,
-              firstIsChampion: league.firstIsChampion ?? false,
+              // Configuración de campeonato
+              championship: league.championship || { format: 'FIRST_PLACE' as const },
+              // Playout opcional
+              ...(league.playout ? { playout: league.playout } : {}),
+              // Descensos
               relegations: {
                 direct: {
                   quantity: league.directRelegations,
-                  teams_index: [], // Se calculará en el backend basado en quantity
+                  teams_index: [],
                 },
                 ...(league.playoffRelegations > 0
                   ? {
-                      playoffs: {
+                      promotion: {
                         quantity: league.playoffRelegations,
-                        matches: [], // Se calculará en el backend
+                        teams_index: [],
                       },
                     }
                   : {}),
@@ -79,6 +83,9 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
             return {
               ...baseLeague,
               league_position: 'MIDDLE' as const,
+              // Playout opcional
+              ...(league.playout ? { playout: league.playout } : {}),
+              // Ascensos
               promotions: {
                 direct: {
                   quantity: league.directPromotions,
@@ -86,13 +93,14 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
                 },
                 ...(league.playoffPromotions > 0
                   ? {
-                      playoffs: {
+                      playoff: {
                         quantity: league.playoffPromotions,
-                        matches: [],
+                        teams_index: [],
                       },
                     }
                   : {}),
               },
+              // Descensos
               relegations: {
                 direct: {
                   quantity: league.directRelegations,
@@ -100,9 +108,9 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
                 },
                 ...(league.playoffRelegations > 0
                   ? {
-                      playoffs: {
+                      promotion: {
                         quantity: league.playoffRelegations,
-                        matches: [],
+                        teams_index: [],
                       },
                     }
                   : {}),
@@ -113,6 +121,7 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
             return {
               ...baseLeague,
               league_position: 'BOTTOM' as const,
+              // Ascensos
               promotions: {
                 direct: {
                   quantity: league.directPromotions,
@@ -120,18 +129,16 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
                 },
                 ...(league.playoffPromotions > 0
                   ? {
-                      playoffs: {
+                      playoff: {
                         quantity: league.playoffPromotions,
-                        matches: [],
+                        teams_index: [],
                       },
                     }
                   : {}),
               },
-              playons: {
-                direct_to_final_team_index: 0,
-                direct_to_semifinal_team_index: 0,
-                quarterfinal_teams_index: [],
-              },
+              // Reducido para pelear promoción
+              ...(league.reducido ? { reducido: league.reducido } : {}),
+              // Descensos opcionales
               relegations: {
                 direct: {
                   quantity: 0,
@@ -292,18 +299,45 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
                 <div className="space-y-2">
                   <p className="text-sm font-semibold">Reglas de la Liga:</p>
                   <div className="flex flex-wrap gap-2">
-                    {league.firstIsChampion && <Badge variant="secondary">🏆 Primero es Campeón</Badge>}
+                    {/* Campeonato */}
+                    {league.championship?.format === 'FIRST_PLACE' && (
+                      <Badge variant="secondary">🏆 Primero es Campeón</Badge>
+                    )}
+                    {league.championship?.format === 'LIGUILLA' && (
+                      <Badge variant="secondary">
+                        🏆 Liguilla ({(league.championship as any).teamsCount} equipos)
+                      </Badge>
+                    )}
+                    {league.championship?.format === 'TRIANGULAR' && (
+                      <Badge variant="secondary">🏆 Triangular (3° vs 2°, Ganador vs 1°)</Badge>
+                    )}
+                    {/* Ascensos */}
                     {league.position !== 'TOP' && league.directPromotions > 0 && (
                       <Badge variant="secondary">⬆️ {league.directPromotions} Ascensos Directos</Badge>
                     )}
                     {league.position !== 'TOP' && league.playoffPromotions > 0 && (
-                      <Badge variant="secondary">⬆️ {league.playoffPromotions} Playoffs Ascenso</Badge>
+                      <Badge variant="secondary">⬆️ {league.playoffPromotions} Promoción</Badge>
                     )}
+                    {/* Descensos */}
                     {league.position !== 'BOTTOM' && league.directRelegations > 0 && (
                       <Badge variant="destructive">⬇️ {league.directRelegations} Descensos Directos</Badge>
                     )}
                     {league.position !== 'BOTTOM' && league.playoffRelegations > 0 && (
-                      <Badge variant="destructive">⬇️ {league.playoffRelegations} Playoffs Descenso</Badge>
+                      <Badge variant="destructive">⬇️ {league.playoffRelegations} Promoción Descenso</Badge>
+                    )}
+                    {/* Playout */}
+                    {league.playout && (
+                      <Badge variant="outline">
+                        ⚔️ Playout: {league.playout.positions.join('° vs ')}°
+                      </Badge>
+                    )}
+                    {/* Reducido */}
+                    {league.reducido && (
+                      <Badge variant="outline">
+                        ⚔️ Reducido: {league.reducido.startPositions.join('° vs ')}°
+                        {league.reducido.waitingPositions.length > 0 &&
+                          ` → espera ${league.reducido.waitingPositions.join('°, ')}°`}
+                      </Badge>
                     )}
                   </div>
                 </div>

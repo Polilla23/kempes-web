@@ -277,6 +277,59 @@ export class FixtureController {
     }
   }
 
+  // ===================== REASSIGN GROUPS =====================
+
+  /**
+   * Reasigna los grupos de una Copa Kempes (solo si no hay partidos jugados)
+   */
+  async reassignKempesCupGroups(
+    req: FastifyRequest<{
+      Params: { competitionId: string }
+      Body: { groups: Array<{ groupName: string; clubIds: string[] }> }
+    }>,
+    reply: FastifyReply
+  ) {
+    const { competitionId } = req.params
+    const { groups } = req.body
+
+    try {
+      const validatedCompetitionId = Validator.uuid(competitionId)
+
+      if (!groups || !Array.isArray(groups) || groups.length === 0) {
+        return Response.validation(reply, 'Groups array is required and must not be empty', 'Validation error')
+      }
+
+      // Validar cada grupo
+      for (const group of groups) {
+        if (!group.groupName || !group.clubIds || !Array.isArray(group.clubIds) || group.clubIds.length < 2) {
+          return Response.validation(
+            reply,
+            `Each group must have a groupName and at least 2 clubIds. Issue with group: ${group.groupName || 'unnamed'}`,
+            'Validation error'
+          )
+        }
+        group.clubIds = group.clubIds.map((id: string) => Validator.uuid(id))
+      }
+
+      const result = await this.fixtureService.reassignKempesCupGroups(validatedCompetitionId, groups)
+      return Response.success(reply, result, 'Groups reassigned successfully')
+    } catch (error: any) {
+      if (error.message?.includes('Cannot reassign')) {
+        return Response.error(reply, 'VALIDATION_ERROR', error.message, 400)
+      }
+      if (error.message?.includes('not found')) {
+        return Response.notFound(reply, 'Competition', competitionId)
+      }
+      return Response.error(
+        reply,
+        'REASSIGN_ERROR',
+        'Failed to reassign groups',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
   // ===================== SUBMIT RESULT =====================
 
   /**

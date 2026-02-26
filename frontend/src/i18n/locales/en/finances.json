@@ -141,5 +141,79 @@
   "messages": {
     "noBalanceFound": "No balance found for this club",
     "balanceInitialized": "Balance initialized successfully"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "prizes": "Prizes",
+    "installments": "Installments",
+    "salaries": "Salaries"
+  },
+  "installments": {
+    "title": "Pending Installments",
+    "pay": "Pay Installment",
+    "paySuccess": "Installment paid successfully",
+    "payError": "Error paying installment",
+    "payConfirm": "Confirm payment for this installment?",
+    "noInstallments": "No pending installments",
+    "transfer": "Transfer",
+    "player": "Player",
+    "fromClub": "Selling Club",
+    "toClub": "Buying Club",
+    "installmentNumber": "Installment #",
+    "dueDate": "Due Date",
+    "status": {
+      "PENDING": "Pending",
+      "DUE": "Due",
+      "PAID": "Paid",
+      "OVERDUE": "Overdue"
+    },
+    "updateStatuses": "Update Statuses",
+    "updateStatusesSuccess": "Statuses updated: {{due}} installments due, {{overdue}} overdue",
+    "updateStatusesError": "Error updating installment statuses"
+  },
+  "salaries": {
+    "title": "Salary Processing",
+    "process": "Process Salaries",
+    "processSuccess": "Salaries processed successfully",
+    "processError": "Error processing salaries",
+    "processConfirm": "Process salaries for this season half? This action cannot be undone.",
+    "alreadyProcessed": "Salaries have already been processed for this period",
+    "clubsProcessed": "Clubs Processed",
+    "totalPaid": "Total Paid",
+    "playerCount": "Players",
+    "noSalaryData": "No salary data for this period",
+    "details": "Processing Details",
+    "clubName": "Club",
+    "totalSalary": "Total Salaries",
+    "players": "Players"
+  },
+  "clubDetail": {
+    "title": "Financial Detail",
+    "recordFine": "Record Fine",
+    "recordBonus": "Record Bonus",
+    "balance": "Balance",
+    "transactionHistory": "Transaction History",
+    "summary": "Financial Summary",
+    "starting": "Starting Balance",
+    "income": "Income",
+    "expenses": "Expenses",
+    "salariesAmount": "Salaries",
+    "ending": "Ending Balance",
+    "allTypes": "All types",
+    "backToDashboard": "Back to Dashboard"
+  },
+  "overview": {
+    "title": "League Financial Overview",
+    "allClubBalances": "All Club Balances",
+    "clubName": "Club",
+    "startingBalance": "Starting Balance",
+    "income": "Income",
+    "expenses": "Expenses",
+    "endingBalance": "Ending Balance",
+    "noBalances": "No balances for this season half",
+    "totalLeagueIncome": "Total League Income",
+    "totalLeagueExpenses": "Total League Expenses",
+    "totalLeagueSalaries": "Total League Salaries",
+    "selectSeasonHalf": "Select season half"
   }
 }

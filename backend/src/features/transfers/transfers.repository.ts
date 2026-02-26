@@ -209,6 +209,73 @@ export class TransferRepository implements ITransferRepository {
     return await this.prisma.transfer.delete({ where: { id } })
   }
 
+  // Buscar cuota por ID con su transferencia
+  async findInstallmentById(installmentId: string) {
+    return await this.prisma.transferInstallment.findUnique({
+      where: { id: installmentId },
+      include: {
+        transfer: {
+          include: {
+            fromClub: { select: { id: true, name: true } },
+            toClub: { select: { id: true, name: true } },
+            player: { select: { id: true, name: true, lastName: true } },
+            installments: { orderBy: { installmentNumber: 'asc' } },
+          },
+        },
+        dueSeasonHalf: { include: { season: true } },
+      },
+    })
+  }
+
+  // Actualizar una cuota
+  async updateInstallment(installmentId: string, data: Prisma.TransferInstallmentUpdateInput) {
+    return await this.prisma.transferInstallment.update({
+      where: { id: installmentId },
+      data,
+      include: {
+        transfer: {
+          include: {
+            fromClub: { select: { id: true, name: true } },
+            toClub: { select: { id: true, name: true } },
+            installments: { orderBy: { installmentNumber: 'asc' } },
+          },
+        },
+        dueSeasonHalf: { include: { season: true } },
+      },
+    })
+  }
+
+  // Actualizar cuotas por estado en lote
+  async updateInstallmentsByStatus(
+    where: Prisma.TransferInstallmentWhereInput,
+    data: Prisma.TransferInstallmentUpdateManyMutationInput
+  ) {
+    return await this.prisma.transferInstallment.updateMany({ where, data })
+  }
+
+  // Obtener todas las cuotas con filtros
+  async findAllInstallments(filters?: { status?: string; dueSeasonHalfId?: string }) {
+    const where: Prisma.TransferInstallmentWhereInput = {}
+
+    if (filters?.status) {
+      where.status = filters.status as any
+    }
+    if (filters?.dueSeasonHalfId) {
+      where.dueSeasonHalfId = filters.dueSeasonHalfId
+    }
+
+    return await this.prisma.transferInstallment.findMany({
+      where,
+      include: {
+        transfer: {
+          include: this.getDefaultInclude(),
+        },
+        dueSeasonHalf: { include: { season: true } },
+      },
+      orderBy: { dueSeasonHalf: { season: { number: 'asc' } } },
+    })
+  }
+
   // Crear transferencia con cuotas en una transacción
   async createWithInstallments(
     transferData: Prisma.TransferCreateInput,

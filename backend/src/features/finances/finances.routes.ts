@@ -110,6 +110,13 @@ export const financeRoutes = async (fastify: FastifyInstance) => {
     handler: financeController.recordBonus.bind(financeController),
   })
 
+  // ==================== Salary Processing ====================
+  fastify.post('/salaries/process', {
+    preHandler: [fastify.authenticate],
+    schema: financesSchemas.processSalaries,
+    handler: financeController.processSalaries.bind(financeController),
+  })
+
   // ==================== Financial Report ====================
   fastify.get('/report/:clubId', {
     preHandler: [fastify.authenticate],

@@ -141,5 +141,79 @@
   "messages": {
     "noBalanceFound": "No se encontró balance para este club",
     "balanceInitialized": "Balance inicializado correctamente"
+  },
+  "tabs": {
+    "overview": "Resumen",
+    "prizes": "Premios",
+    "installments": "Cuotas",
+    "salaries": "Salarios"
+  },
+  "installments": {
+    "title": "Cuotas Pendientes",
+    "pay": "Pagar Cuota",
+    "paySuccess": "Cuota pagada exitosamente",
+    "payError": "Error al pagar la cuota",
+    "payConfirm": "¿Confirmar pago de esta cuota?",
+    "noInstallments": "No hay cuotas pendientes",
+    "transfer": "Transferencia",
+    "player": "Jugador",
+    "fromClub": "Club vendedor",
+    "toClub": "Club comprador",
+    "installmentNumber": "Cuota #",
+    "dueDate": "Vencimiento",
+    "status": {
+      "PENDING": "Pendiente",
+      "DUE": "A pagar",
+      "PAID": "Pagada",
+      "OVERDUE": "Vencida"
+    },
+    "updateStatuses": "Actualizar Estados",
+    "updateStatusesSuccess": "Estados actualizados: {{due}} cuotas a pagar, {{overdue}} cuotas vencidas",
+    "updateStatusesError": "Error al actualizar estados de cuotas"
+  },
+  "salaries": {
+    "title": "Procesamiento de Salarios",
+    "process": "Procesar Salarios",
+    "processSuccess": "Salarios procesados exitosamente",
+    "processError": "Error al procesar salarios",
+    "processConfirm": "¿Procesar salarios para esta media temporada? Esta acción no se puede deshacer.",
+    "alreadyProcessed": "Los salarios ya fueron procesados para este período",
+    "clubsProcessed": "Clubes procesados",
+    "totalPaid": "Total pagado",
+    "playerCount": "Jugadores",
+    "noSalaryData": "No hay datos de salarios para este período",
+    "details": "Detalles del Procesamiento",
+    "clubName": "Club",
+    "totalSalary": "Total Salarios",
+    "players": "Jugadores"
+  },
+  "clubDetail": {
+    "title": "Detalle Financiero",
+    "recordFine": "Registrar Multa",
+    "recordBonus": "Registrar Bono",
+    "balance": "Balance",
+    "transactionHistory": "Historial de Transacciones",
+    "summary": "Resumen Financiero",
+    "starting": "Balance Inicial",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "salariesAmount": "Salarios",
+    "ending": "Balance Final",
+    "allTypes": "Todos los tipos",
+    "backToDashboard": "Volver al Dashboard"
+  },
+  "overview": {
+    "title": "Resumen Financiero de la Liga",
+    "allClubBalances": "Balances de Todos los Clubes",
+    "clubName": "Club",
+    "startingBalance": "Balance Inicial",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "endingBalance": "Balance Final",
+    "noBalances": "No hay balances para esta media temporada",
+    "totalLeagueIncome": "Ingresos Totales Liga",
+    "totalLeagueExpenses": "Gastos Totales Liga",
+    "totalLeagueSalaries": "Salarios Totales Liga",
+    "selectSeasonHalf": "Seleccionar media temporada"
   }
 }

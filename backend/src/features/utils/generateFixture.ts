@@ -728,3 +728,254 @@ export function generateFullCupFixture(config: CupFixtureConfig): {
     silverCupMatches,
   }
 }
+
+// ============================================
+// POST-SEASON FIXTURE GENERATION
+// ============================================
+
+/**
+ * Información de un equipo en los standings para post-temporada
+ */
+export interface PostSeasonTeam {
+  clubId: string
+  position: number  // Posición en la tabla regular (1-indexed)
+}
+
+/**
+ * Genera fixtures de Liguilla (mini liga entre los mejores equipos)
+ * Round-robin a partido único entre N equipos con knockoutRound = LIGUILLA
+ *
+ * @param teams - Equipos participantes con su posición en tabla regular
+ * @param competitionId - ID de la competición (misma liga)
+ * @param lastMatchday - Última jornada de la fase regular (para numerar desde ahí)
+ * @returns Array de matches para crear
+ */
+export function generateLiguillaFixture(
+  teams: PostSeasonTeam[],
+  competitionId: string,
+  lastMatchday: number
+): Prisma.MatchCreateInput[] {
+  const matches: Prisma.MatchCreateInput[] = []
+  const clubIds = teams.map(t => t.clubId)
+
+  // Usar el mismo algoritmo de round-robin pero con knockoutRound = LIGUILLA
+  // No shuffleamos: mantenemos el orden de la tabla para que las localías sean coherentes
+  const numTeams = clubIds.length
+  let matchdayOrder = lastMatchday + 1
+  let rotation = [...clubIds]
+
+  for (let round = 0; round < numTeams - 1; round++) {
+    for (let i = 0; i < Math.floor(numTeams / 2); i++) {
+      const homeIdx = i
+      const awayIdx = numTeams - 1 - i
+
+      matches.push({
+        competition: { connect: { id: competitionId } },
+        homeClub: { connect: { id: rotation[homeIdx] } },
+        awayClub: { connect: { id: rotation[awayIdx] } },
+        matchdayOrder,
+        stage: CompetitionStage.KNOCKOUT,
+        knockoutRound: KnockoutRound.LIGUILLA,
+        status: MatchStatus.PENDIENTE,
+      })
+    }
+
+    matchdayOrder++
+
+    // Rotar (primero fijo, resto rota)
+    const fixed = rotation[0]
+    const rest = rotation.slice(1)
+    rotation = [fixed, rest[rest.length - 1], ...rest.slice(0, rest.length - 1)]
+  }
+
+  return matches
+}
+
+/**
+ * Genera fixtures de Triangular (3° vs 2° en semi, ganador vs 1° en final)
+ * Partido único por fase, con linking de sourceMatchId
+ *
+ * @param team1st - Equipo 1° clasificado
+ * @param team2nd - Equipo 2° clasificado
+ * @param team3rd - Equipo 3° clasificado
+ * @param competitionId - ID de la competición
+ * @param lastMatchday - Última jornada de la fase regular
+ * @returns Array de matches para crear (se crean secuencialmente para linking)
+ */
+export function generateTriangularFixture(
+  team1st: PostSeasonTeam,
+  team2nd: PostSeasonTeam,
+  team3rd: PostSeasonTeam,
+  competitionId: string,
+  lastMatchday: number
+): { semiMatch: Prisma.MatchCreateInput; finalMatch: Prisma.MatchCreateInput } {
+  // Semifinal: 3° vs 2°
+  const semiMatch: Prisma.MatchCreateInput = {
+    competition: { connect: { id: competitionId } },
+    homeClub: { connect: { id: team3rd.clubId } },
+    awayClub: { connect: { id: team2nd.clubId } },
+    matchdayOrder: lastMatchday + 1,
+    stage: CompetitionStage.KNOCKOUT,
+    knockoutRound: KnockoutRound.TRIANGULAR_SEMI,
+    status: MatchStatus.PENDIENTE,
+  }
+
+  // Final: Ganador semi vs 1° (se linkea con sourceMatchId)
+  // El ganador de la semi va como visitante (1° tiene localía)
+  const finalMatch: Prisma.MatchCreateInput = {
+    competition: { connect: { id: competitionId } },
+    homeClub: { connect: { id: team1st.clubId } },
+    // awayClub se asigna via sourceMatch después de crear la semi
+    matchdayOrder: lastMatchday + 2,
+    stage: CompetitionStage.KNOCKOUT,
+    knockoutRound: KnockoutRound.TRIANGULAR_FINAL,
+    status: MatchStatus.PENDIENTE,
+    homePlaceholder: null,
+    awayPlaceholder: 'Ganador Semi',
+    // sourceMatch se conecta en el service después de crear la semi
+  }
+
+  return { semiMatch, finalMatch }
+}
+
+/**
+ * Genera fixture de Playout (partido único entre 2 equipos)
+ * El perdedor puede ir a promoción inter-división
+ *
+ * @param teamA - Primer equipo (mejor clasificado = local)
+ * @param teamB - Segundo equipo (peor clasificado = visitante)
+ * @param competitionId - ID de la competición
+ * @param lastMatchday - Última jornada de la fase regular
+ * @returns Match para crear
+ */
+export function generatePlayoutFixture(
+  teamA: PostSeasonTeam,
+  teamB: PostSeasonTeam,
+  competitionId: string,
+  lastMatchday: number
+): Prisma.MatchCreateInput {
+  return {
+    competition: { connect: { id: competitionId } },
+    homeClub: { connect: { id: teamA.clubId } },
+    awayClub: { connect: { id: teamB.clubId } },
+    matchdayOrder: lastMatchday + 1,
+    stage: CompetitionStage.KNOCKOUT,
+    knockoutRound: KnockoutRound.PLAYOUT,
+    status: MatchStatus.PENDIENTE,
+  }
+}
+
+/**
+ * Genera fixtures de Reducido (cascada/waterfall bracket)
+ * Formato: Primera ronda → luego cada ganador enfrenta al equipo en espera
+ *
+ * Ejemplo con startPositions=[7,8], waitingPositions=[6,5,4,3]:
+ * - R1 (Quarter): 7° vs 8°
+ * - R2 (Semi): 6° vs Ganador R1
+ * - R3 (Final): 5° vs Ganador R2
+ * - R4 (Extra): 4° vs Ganador R3
+ * - R5 (Extra): 3° vs Ganador R4
+ *
+ * @param startTeamA - Equipo en startPositions[0]
+ * @param startTeamB - Equipo en startPositions[1]
+ * @param waitingTeams - Equipos en espera, en orden (primero el que espera en R2, etc.)
+ * @param competitionId - ID de la competición
+ * @param lastMatchday - Última jornada de la fase regular
+ * @returns Array de matches para crear (se crean secuencialmente para linking)
+ */
+export function generateReducidoFixture(
+  startTeamA: PostSeasonTeam,
+  startTeamB: PostSeasonTeam,
+  waitingTeams: PostSeasonTeam[],
+  competitionId: string,
+  lastMatchday: number
+): Prisma.MatchCreateInput[] {
+  const matches: Prisma.MatchCreateInput[] = []
+
+  // Determinar el knockoutRound según la cantidad total de rondas
+  const totalRounds = 1 + waitingTeams.length
+  const getReducidoRound = (roundIndex: number, total: number): KnockoutRound => {
+    if (total <= 3) {
+      // 3 rondas o menos: quarter, semi, final
+      if (roundIndex === total - 1) return KnockoutRound.REDUCIDO_FINAL
+      if (roundIndex === total - 2) return KnockoutRound.REDUCIDO_SEMI
+      return KnockoutRound.REDUCIDO_QUARTER
+    }
+    // Más de 3 rondas: las últimas 3 son quarter/semi/final, las anteriores son quarter
+    if (roundIndex === total - 1) return KnockoutRound.REDUCIDO_FINAL
+    if (roundIndex === total - 2) return KnockoutRound.REDUCIDO_SEMI
+    return KnockoutRound.REDUCIDO_QUARTER
+  }
+
+  // Primera ronda: partido directo entre startTeamA y startTeamB
+  const firstRoundMatch: Prisma.MatchCreateInput = {
+    competition: { connect: { id: competitionId } },
+    homeClub: { connect: { id: startTeamA.clubId } },
+    awayClub: { connect: { id: startTeamB.clubId } },
+    matchdayOrder: lastMatchday + 1,
+    stage: CompetitionStage.KNOCKOUT,
+    knockoutRound: getReducidoRound(0, totalRounds),
+    status: MatchStatus.PENDIENTE,
+  }
+  matches.push(firstRoundMatch)
+
+  // Rondas siguientes: equipo en espera vs ganador de ronda anterior
+  for (let i = 0; i < waitingTeams.length; i++) {
+    const waitingTeam = waitingTeams[i]
+    const roundIndex = i + 1
+    const knockoutRound = getReducidoRound(roundIndex, totalRounds)
+
+    const match: Prisma.MatchCreateInput = {
+      competition: { connect: { id: competitionId } },
+      homeClub: { connect: { id: waitingTeam.clubId } },
+      // awayClub se asigna via sourceMatch después de crear el match anterior
+      matchdayOrder: lastMatchday + 1 + roundIndex,
+      stage: CompetitionStage.KNOCKOUT,
+      knockoutRound,
+      status: MatchStatus.PENDIENTE,
+      homePlaceholder: null,
+      awayPlaceholder: `Ganador R${roundIndex}`,
+      // sourceMatch se conecta en el service
+    }
+    matches.push(match)
+  }
+
+  return matches
+}
+
+/**
+ * Genera fixtures de Promoción inter-división (partido único)
+ * Empareja equipos de liga superior vs liga inferior por seeding
+ *
+ * @param upperTeams - Equipos de liga superior (peor → mejor)
+ * @param lowerTeams - Equipos de liga inferior (mejor → peor)
+ * @param competitionId - ID de la competición de promociones
+ * @returns Array de matches para crear
+ */
+export function generatePromotionFixtures(
+  upperTeams: PostSeasonTeam[],
+  lowerTeams: PostSeasonTeam[],
+  competitionId: string
+): Prisma.MatchCreateInput[] {
+  const matches: Prisma.MatchCreateInput[] = []
+  const matchCount = Math.min(upperTeams.length, lowerTeams.length)
+
+  for (let i = 0; i < matchCount; i++) {
+    // Mejor de inferior vs Peor de superior
+    const lowerTeam = lowerTeams[i]           // Mejor → peor
+    const upperTeam = upperTeams[matchCount - 1 - i]  // Peor → mejor
+
+    matches.push({
+      competition: { connect: { id: competitionId } },
+      // Equipo de la liga inferior es local (busca el ascenso)
+      homeClub: { connect: { id: lowerTeam.clubId } },
+      awayClub: { connect: { id: upperTeam.clubId } },
+      matchdayOrder: i + 1,
+      stage: CompetitionStage.KNOCKOUT,
+      knockoutRound: KnockoutRound.PROMOTION,
+      status: MatchStatus.PENDIENTE,
+    })
+  }
+
+  return matches
+}

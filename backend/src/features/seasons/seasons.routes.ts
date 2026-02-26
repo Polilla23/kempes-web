@@ -22,6 +22,33 @@ export const seasonRoutes = async (fastify: FastifyInstance) => {
     handler: seasonController.findActive.bind(seasonController),
   })
 
+  // CoefKempes ranking (ANTES de /:id para evitar conflicto de rutas)
+  fastify.get('/coef-kempes/ranking', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.getCoefKempesRanking.bind(seasonController),
+  })
+
+  // Wizard de avance — 4 pasos discretos (ANTES de /:id para evitar conflicto)
+  fastify.get('/active/verify-competitions', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.verifyCompetitions.bind(seasonController),
+  })
+
+  fastify.get('/active/preview-movements', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.previewMovements.bind(seasonController),
+  })
+
+  fastify.post('/active/save-history', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.saveSeasonHistory.bind(seasonController),
+  })
+
+  fastify.post('/active/create-next', {
+    preHandler: [fastify.authenticate],
+    handler: seasonController.createNextSeason.bind(seasonController),
+  })
+
   fastify.get('/:id', {
     preHandler: [fastify.authenticate],
     schema: seasonsSchemas.findOne,

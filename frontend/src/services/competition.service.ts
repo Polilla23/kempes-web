@@ -57,6 +57,42 @@ export interface CreateCompetitionWithFixturesResponse {
   }[]
 }
 
+// Post-season types
+export interface PostSeasonGenerationResult {
+  success: boolean
+  matchesCreated: number
+  phases: { phase: string; matchesCreated: number }[]
+}
+
+export interface PostSeasonPhaseStatus {
+  phase: string
+  matches: {
+    id: string
+    status: string
+    homeClubId: string | null
+    awayClubId: string | null
+    knockoutRound: string | null
+  }[]
+  isComplete: boolean
+}
+
+export interface PostSeasonStatus {
+  regularSeasonComplete: boolean
+  regularMatchesPlayed: number
+  regularMatchesTotal: number
+  hasPostSeason: boolean
+  postSeasonGenerated: boolean
+  phases: PostSeasonPhaseStatus[]
+}
+
+export interface PromotionGenerationResult {
+  success: boolean
+  competition: Competition
+  matchesCreated: number
+  upperTeams: { clubId: string; position: number }[]
+  lowerTeams: { clubId: string; position: number }[]
+}
+
 class CompetitionService {
   static async getCompetitions(): Promise<CompetitionsResponse> {
     try {
@@ -191,6 +227,57 @@ class CompetitionService {
       return response.data?.data || response.data as unknown as BracketCompetitionResponse
     } catch (error: any) {
       throw new Error(error?.response?.data?.message || error.message || 'Error creating Copa Cindor')
+    }
+  }
+
+  // ============================================
+  // POST-SEASON METHODS
+  // ============================================
+
+  /**
+   * Genera los partidos de post-temporada para una liga
+   */
+  static async generatePostSeason(competitionId: string): Promise<PostSeasonGenerationResult> {
+    try {
+      const response = await api.post<{ data: PostSeasonGenerationResult }>(
+        `/api/v1/competitions/${competitionId}/post-season`
+      )
+      return response.data?.data || response.data as unknown as PostSeasonGenerationResult
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error generating post-season')
+    }
+  }
+
+  /**
+   * Obtiene el estado de la post-temporada de una liga
+   */
+  static async getPostSeasonStatus(competitionId: string): Promise<PostSeasonStatus> {
+    try {
+      const response = await api.get<{ data: PostSeasonStatus }>(
+        `/api/v1/competitions/${competitionId}/post-season/status`
+      )
+      return response.data?.data || response.data as unknown as PostSeasonStatus
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error fetching post-season status')
+    }
+  }
+
+  /**
+   * Genera una competencia de promociones entre dos divisiones
+   */
+  static async generatePromotions(data: {
+    upperCompetitionId: string
+    lowerCompetitionId: string
+    seasonId: string
+  }): Promise<PromotionGenerationResult> {
+    try {
+      const response = await api.post<{ data: PromotionGenerationResult }>(
+        '/api/v1/competitions/promotions',
+        data
+      )
+      return response.data?.data || response.data as unknown as PromotionGenerationResult
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error generating promotions')
     }
   }
 }

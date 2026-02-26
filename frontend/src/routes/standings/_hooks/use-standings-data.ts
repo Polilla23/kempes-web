@@ -187,6 +187,7 @@ export function useStandingsData(filters: StandingsFilterState) {
 
   return {
     seasons,
+    allCompetitions,
     filteredCompetitions,
     leagueStandings,
     cupGroupsData,

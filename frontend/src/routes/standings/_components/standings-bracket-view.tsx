@@ -10,6 +10,7 @@ interface StandingsBracketViewProps {
   competitionName?: string
   seasonNumber?: number
   isLoading?: boolean
+  onMatchClick?: (match: BracketMatch) => void
 }
 
 // Constantes de diseno (igual que bracket-editor)
@@ -27,6 +28,7 @@ interface TeamPath {
 export function StandingsBracketView({
   bracketData,
   isLoading,
+  onMatchClick,
 }: StandingsBracketViewProps) {
   const [highlightedClubId, setHighlightedClubId] = useState<string | null>(null)
 
@@ -169,6 +171,7 @@ export function StandingsBracketView({
                             isHighlighted={isHighlighted}
                             highlightedClubId={highlightedClubId}
                             onTeamHover={handleTeamHover}
+                            onMatchClick={onMatchClick}
                           />
                         </div>
                       )
@@ -260,6 +263,7 @@ interface BracketMatchCardProps {
   isHighlighted: boolean
   highlightedClubId: string | null
   onTeamHover: (clubId: string | null) => void
+  onMatchClick?: (match: BracketMatch) => void
 }
 
 function BracketMatchCard({
@@ -268,10 +272,12 @@ function BracketMatchCard({
   isHighlighted,
   highlightedClubId,
   onTeamHover,
+  onMatchClick,
 }: BracketMatchCardProps) {
   const isPlayed = match.status === 'FINALIZADO'
   const isHomeHighlighted = highlightedClubId && match.homeClub?.id === highlightedClubId
   const isAwayHighlighted = highlightedClubId && match.awayClub?.id === highlightedClubId
+  const isClickable = isPlayed && onMatchClick
 
   return (
     <div
@@ -280,8 +286,10 @@ function BracketMatchCard({
         !highlightedClubId && 'border-border bg-card',
         isFinal && !highlightedClubId && 'border-primary/50 bg-primary/5',
         isHighlighted && 'border-primary ring-2 ring-primary/50 shadow-lg shadow-primary/20 bg-primary/5',
-        highlightedClubId && !isHighlighted && 'opacity-40'
+        highlightedClubId && !isHighlighted && 'opacity-40',
+        isClickable && 'cursor-pointer hover:ring-1 hover:ring-primary/30'
       )}
+      onClick={() => isClickable && onMatchClick(match)}
     >
       {isFinal && (
         <div

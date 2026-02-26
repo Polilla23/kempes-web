@@ -60,5 +60,95 @@
     "inactive": "Inactiva",
     "creating": "Creando temporada...",
     "updating": "Actualizando temporada..."
+  },
+  "advance": {
+    "title": "Avanzar Temporada",
+    "button": "Avanzar Temporada",
+    "description": "Finalizar la temporada actual y crear la siguiente",
+    "steps": {
+      "verify": {
+        "label": "Verificar",
+        "description": "Verificar competencias"
+      },
+      "movements": {
+        "label": "Movimientos",
+        "description": "Revisar ascensos y descensos"
+      },
+      "history": {
+        "label": "Historial",
+        "description": "Guardar historial"
+      },
+      "create": {
+        "label": "Nueva Temporada",
+        "description": "Crear la siguiente temporada"
+      }
+    },
+    "verify": {
+      "title": "Verificar Competencias",
+      "description": "Verifica que todas las competencias esten finalizadas",
+      "allComplete": "Todas las competencias finalizadas",
+      "hasIncomplete": "Hay competencias con partidos pendientes",
+      "competition": "Competencia",
+      "progress": "Progreso",
+      "matches": "{{completed}}/{{total}} partidos",
+      "complete": "Completa",
+      "incomplete": "Pendiente",
+      "regularSeason": "Fase Regular",
+      "postSeason": "Post-Temporada"
+    },
+    "movements": {
+      "title": "Revisar Movimientos",
+      "description": "Revisa los ascensos, descensos y permanencias",
+      "summary": "Resumen de movimientos",
+      "club": "Club",
+      "from": "Liga Origen",
+      "to": "Liga Destino",
+      "type": "Tipo",
+      "position": "Posicion",
+      "champions": "Campeones",
+      "promotions": "Ascensos",
+      "relegations": "Descensos",
+      "stayed": "Permanencias",
+      "movementTypes": {
+        "CHAMPION": "Campeon",
+        "DIRECT_PROMOTION": "Ascenso Directo",
+        "PLAYOFF_PROMOTION": "Ascenso Playoff",
+        "REDUCIDO_PROMOTION": "Ascenso Reducido",
+        "DIRECT_RELEGATION": "Descenso Directo",
+        "PLAYOFF_RELEGATION": "Descenso Playoff",
+        "STAYED": "Permanencia"
+      }
+    },
+    "history": {
+      "title": "Guardar Historial",
+      "description": "Guarda los registros historicos de clubes y jugadores",
+      "save": "Guardar Historial",
+      "saving": "Guardando historial...",
+      "saved": "Historial guardado exitosamente",
+      "alreadySaved": "El historial ya fue guardado previamente",
+      "movements": "Movimientos guardados",
+      "clubHistory": "Historiales de clubes",
+      "playerStats": "Estadisticas de jugadores",
+      "coefKempes": "Coeficientes Kempes"
+    },
+    "create": {
+      "title": "Crear Nueva Temporada",
+      "description": "Desactiva la temporada actual y crea la siguiente",
+      "confirm": "Se desactivara la Temporada {{current}} y se creara la Temporada {{next}}",
+      "button": "Crear Temporada {{number}}",
+      "creating": "Creando temporada...",
+      "success": "Temporada {{number}} creada exitosamente!",
+      "goToSeasons": "Ir a Temporadas"
+    },
+    "errors": {
+      "verify": "Error al verificar competencias",
+      "movements": "Error al cargar movimientos",
+      "history": "Error al guardar historial",
+      "create": "Error al crear la nueva temporada"
+    }
+  },
+  "deadlines": {
+    "button": "Ver Plazos",
+    "viewAll": "Ver todos los plazos"
   }
 }

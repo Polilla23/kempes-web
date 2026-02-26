@@ -18,7 +18,8 @@
     "clubs": "Clubes",
     "players": "Jugadores",
     "salaryRates": "Tarifas Salariales",
-    "competitions": "Competencias"
+    "competitions": "Competencias",
+    "finances": "Finanzas"
   },
   "configuration": {
     "title": "Configuración",
@@ -29,7 +30,8 @@
   "fixtures": {
     "title": "Crear Fixtures",
     "createLeague": "Crear Liga",
-    "createCup": "Crear Copa"
+    "createCup": "Crear Copa",
+    "postSeason": "Post-Temporada"
   },
   "userMenu": {
     "profileSettings": "Configuración de Perfil",

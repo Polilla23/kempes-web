@@ -15,12 +15,13 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { ChevronLeft, ChevronRight, Users, AlertCircle, Trophy } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Users, AlertCircle, Trophy, Dice5 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { CupWizardState, AvailableTeam } from '@/types/fixture'
 import { ClubService } from '@/services/club.service'
 import { DroppableLeagueZone } from '../../league/_components/droppable-league-zone'
 import { DraggableTeam } from '../../league/_components/draggable-team'
+import { SorteoDrawModal } from './sorteo-draw-modal'
 
 interface Step2TeamAssignmentCupProps {
   wizardState: CupWizardState
@@ -39,6 +40,7 @@ export function Step2TeamAssignmentCup({
   const [isLoading, setIsLoading] = useState(true)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [sorteoOpen, setSorteoOpen] = useState(false)
   const hasLoadedRef = useRef(false)
 
   // Sensores para drag & drop
@@ -236,7 +238,17 @@ export function Step2TeamAssignmentCup({
                 por grupo)
               </CardDescription>
             </div>
-            <div className="flex gap-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSorteoOpen(true)}
+                disabled={wizardState.availableTeams.length === 0}
+              >
+                <Dice5 className="mr-2 h-4 w-4" />
+                {t('cup.sorteo.button')}
+              </Button>
+              <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary">{assignedTeams}</div>
                 <div className="text-sm text-muted-foreground">Asignados</div>
@@ -252,6 +264,18 @@ export function Step2TeamAssignmentCup({
           </div>
         </CardHeader>
       </Card>
+
+      {/* Sorteo Draw Modal */}
+      <SorteoDrawModal
+        open={sorteoOpen}
+        onOpenChange={setSorteoOpen}
+        teams={wizardState.availableTeams}
+        numGroups={wizardState.numGroups}
+        teamsPerGroup={wizardState.teamsPerGroup}
+        onComplete={(assignments) => {
+          onStateChange({ groupAssignments: assignments })
+        }}
+      />
 
       {/* Alerta de error */}
       {error && (

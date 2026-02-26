@@ -60,5 +60,95 @@
     "inactive": "Inactive",
     "creating": "Creating season...",
     "updating": "Updating season..."
+  },
+  "advance": {
+    "title": "Advance Season",
+    "button": "Advance Season",
+    "description": "Finish the current season and create the next one",
+    "steps": {
+      "verify": {
+        "label": "Verify",
+        "description": "Verify competitions"
+      },
+      "movements": {
+        "label": "Movements",
+        "description": "Review promotions and relegations"
+      },
+      "history": {
+        "label": "History",
+        "description": "Save history"
+      },
+      "create": {
+        "label": "New Season",
+        "description": "Create next season"
+      }
+    },
+    "verify": {
+      "title": "Verify Competitions",
+      "description": "Verify all competitions are finished",
+      "allComplete": "All competitions completed",
+      "hasIncomplete": "Some competitions have pending matches",
+      "competition": "Competition",
+      "progress": "Progress",
+      "matches": "{{completed}}/{{total}} matches",
+      "complete": "Complete",
+      "incomplete": "Pending",
+      "regularSeason": "Regular Season",
+      "postSeason": "Post-Season"
+    },
+    "movements": {
+      "title": "Review Movements",
+      "description": "Review promotions, relegations and stays",
+      "summary": "Movements Summary",
+      "club": "Club",
+      "from": "From League",
+      "to": "To League",
+      "type": "Type",
+      "position": "Position",
+      "champions": "Champions",
+      "promotions": "Promotions",
+      "relegations": "Relegations",
+      "stayed": "Stayed",
+      "movementTypes": {
+        "CHAMPION": "Champion",
+        "DIRECT_PROMOTION": "Direct Promotion",
+        "PLAYOFF_PROMOTION": "Playoff Promotion",
+        "REDUCIDO_PROMOTION": "Reducido Promotion",
+        "DIRECT_RELEGATION": "Direct Relegation",
+        "PLAYOFF_RELEGATION": "Playoff Relegation",
+        "STAYED": "Stayed"
+      }
+    },
+    "history": {
+      "title": "Save History",
+      "description": "Save historical records for clubs and players",
+      "save": "Save History",
+      "saving": "Saving history...",
+      "saved": "History saved successfully",
+      "alreadySaved": "History was already saved previously",
+      "movements": "Movements saved",
+      "clubHistory": "Club histories",
+      "playerStats": "Player statistics",
+      "coefKempes": "Kempes Coefficients"
+    },
+    "create": {
+      "title": "Create New Season",
+      "description": "Deactivate the current season and create the next one",
+      "confirm": "Season {{current}} will be deactivated and Season {{next}} will be created",
+      "button": "Create Season {{number}}",
+      "creating": "Creating season...",
+      "success": "Season {{number}} created successfully!",
+      "goToSeasons": "Go to Seasons"
+    },
+    "errors": {
+      "verify": "Error verifying competitions",
+      "movements": "Error loading movements",
+      "history": "Error saving history",
+      "create": "Error creating next season"
+    }
+  },
+  "deadlines": {
+    "button": "View Deadlines",
+    "viewAll": "View all deadlines"
   }
 }

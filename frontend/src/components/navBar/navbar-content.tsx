@@ -16,6 +16,8 @@ import {
   Award,
   Upload,
   Newspaper,
+  ArrowUpDown,
+  DollarSign,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -48,10 +50,12 @@ const adminItems = [
   { key: 'players', icon: Users, to: '/management/players' },
   { key: 'salaryRates', icon: CircleDollarSign, to: '/management/salary-rates' },
   { key: 'competitions', icon: Trophy, to: '/management/competitions' },
+  { key: 'finances', icon: DollarSign, to: '/management/finances' },
 ]
 const fixtureItems = [
   { key: 'createLeague', icon: ListTree, to: '/management/fixtures/league/' },
   { key: 'createCup', icon: Award, to: '/management/fixtures/cup/' },
+  { key: 'postSeason', icon: ArrowUpDown, to: '/management/fixtures/post-season/' },
 ]
 const configurationItems = [
   { key: 'eventTypes', icon: Zap, to: '/configuration/event-types' },

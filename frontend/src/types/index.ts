@@ -69,6 +69,77 @@ export interface Season {
   isActive: boolean
 }
 
+export type DeadlineType = 'TRANSFER_MARKET' | 'COVID_REDRAW' | 'MATCH_SCHEDULE' | 'INSTALLMENT_DUE' | 'SEASON_CLOSE' | 'CUSTOM'
+
+export interface SeasonDeadline {
+  id: string
+  seasonId: string
+  type: DeadlineType
+  title: string
+  description?: string | null
+  date: string
+  isCompleted: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// Season Advancement Wizard Types
+export interface CompetitionVerification {
+  id: string
+  name: string
+  format: string
+  category: string
+  totalMatches: number
+  completedMatches: number
+  pendingMatches: number
+  regularComplete: boolean
+  postSeasonComplete: boolean
+  hasPostSeason: boolean
+}
+
+export interface VerifyCompetitionsResponse {
+  season: { id: string; number: number }
+  allCompleted: boolean
+  competitions: CompetitionVerification[]
+}
+
+export interface TeamMovement {
+  clubId: string
+  clubName: string
+  fromCompetitionId: string
+  fromLeague: string
+  toCompetitionId: string | null
+  toLeague: string | null
+  movementType: string
+  reason: string
+  finalPosition: number
+}
+
+export interface PreviewMovementsResponse {
+  season: { id: string; number: number }
+  movements: TeamMovement[]
+  summary: {
+    champions: number
+    promotions: number
+    relegations: number
+    stayed: number
+  }
+}
+
+export interface SaveHistoryResponse {
+  season: { id: string; number: number }
+  movementsSaved: number
+  clubHistorySaved: number
+  playerStatsSaved: number
+  coefKempesSaved: number
+  alreadyExisted: boolean
+}
+
+export interface CreateNextSeasonResponse {
+  previousSeason: { id: string; number: number }
+  newSeason: { id: string; number: number }
+}
+
 export interface SalaryRate {
   id: string
   minOverall: number
@@ -550,6 +621,26 @@ export interface PrizesResponse {
 export interface FinancialReportResponse {
   report?: FinancialReport
   message?: string
+}
+
+export interface ProcessSalariesResponse {
+  clubsProcessed: number
+  totalSalariesPaid: number
+  details: Array<{
+    clubId: string
+    clubName: string
+    totalSalary: number
+    playerCount: number
+  }>
+}
+
+export interface UpdateInstallmentStatusesResponse {
+  markedDue: number
+  markedOverdue: number
+}
+
+export interface InstallmentWithTransfer extends TransferInstallment {
+  transfer: Transfer
 }
 
 // ==================== Season Half & Transfer Window Responses ====================

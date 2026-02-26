@@ -6,30 +6,48 @@ import { ICompetitionRepository } from '@/features/competitions/interface/ICompe
 import { ICompetitionTypeRepository } from '@/features/competition-types/interface/ICompetitionTypeRepository'
 import { FixtureRepository } from '@/features/fixtures/fixtures.repository'
 import { validateCompetitionRules, isLeaguesRules, isKempesCupRules, isCindorCupRules, isSuperCupRules } from '@/features/utils/jsonTypeChecker'
-import { generateLeagueFixture, generateFullCupFixture, generateDirectKnockoutBracket, generateEmptyBracketStructure, BracketTeamPlacement, EmptyBracketStructure } from '@/features/utils/generateFixture'
-import { KempesCupRules, LeaguesRules, CompetitionRules, CindorCupRules, SuperCupRules } from '@/types'
-import { Competition, Match, Prisma, PrismaClient, CompetitionStage, CompetitionName } from '@prisma/client'
+import {
+  generateLeagueFixture,
+  generateFullCupFixture,
+  generateDirectKnockoutBracket,
+  generateEmptyBracketStructure,
+  BracketTeamPlacement,
+  EmptyBracketStructure,
+  generateLiguillaFixture,
+  generateTriangularFixture,
+  generatePlayoutFixture,
+  generateReducidoFixture,
+  generatePromotionFixtures,
+  PostSeasonTeam,
+} from '@/features/utils/generateFixture'
+import { KempesCupRules, LeaguesRules, CompetitionRules, CindorCupRules, SuperCupRules, TopLeagueRules, MiddleLeagueRules, BottomLeagueRules } from '@/types'
+import { Competition, Match, Prisma, PrismaClient, CompetitionStage, CompetitionName, CompetitionCategory, MatchStatus, KnockoutRound } from '@prisma/client'
+import { StandingsService } from '@/features/seasons/standings.service'
 
 export class CompetitionService {
   private competitionRepository: ICompetitionRepository
   private competitionTypeRepository: ICompetitionTypeRepository
   private fixtureRepository: FixtureRepository
+  private standingsService: StandingsService
   private prisma: PrismaClient
 
   constructor({
     competitionRepository,
     competitionTypeRepository,
     fixtureRepository,
+    standingsService,
     prisma,
   }: {
     competitionRepository: ICompetitionRepository
     competitionTypeRepository: ICompetitionTypeRepository
+    standingsService: StandingsService
     fixtureRepository: FixtureRepository
     prisma: PrismaClient
   }) {
     this.competitionRepository = competitionRepository
     this.competitionTypeRepository = competitionTypeRepository
     this.fixtureRepository = fixtureRepository
+    this.standingsService = standingsService
     this.prisma = prisma
   }
 
@@ -639,5 +657,545 @@ export class CompetitionService {
     }
 
     return createdMatches
+  }
+
+  // ============================================
+  // POST-SEASON GENERATION
+  // ============================================
+
+  /**
+   * Genera los partidos de post-temporada para una liga
+   * Lee las rules de la competición y genera:
+   * - Liguilla/Triangular (campeonato)
+   * - Playout (pelea por no descender)
+   * - Reducido (pelea por ascender, solo BOTTOM)
+   *
+   * Requiere que TODOS los partidos de fase regular estén FINALIZADOS
+   */
+  async generatePostSeason(competitionId: string): Promise<{
+    success: boolean
+    matchesCreated: number
+    phases: { phase: string; matchesCreated: number }[]
+  }> {
+    // 1. Obtener la competición con sus matches y rules
+    const competition = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+      include: {
+        matches: true,
+        teams: true,
+        season: true,
+        competitionType: true,
+      },
+    })
+
+    if (!competition) {
+      throw new CompetitionNotFoundError()
+    }
+
+    // 2. Verificar que todos los partidos de fase regular estén finalizados
+    const regularMatches = competition.matches.filter(
+      (m) => m.stage === CompetitionStage.ROUND_ROBIN
+    )
+    const pendingRegular = regularMatches.filter(
+      (m) => m.status === MatchStatus.PENDIENTE
+    )
+
+    if (pendingRegular.length > 0) {
+      throw new Error(
+        `Cannot generate post-season: ${pendingRegular.length} regular season matches are still pending`
+      )
+    }
+
+    // 3. Verificar que no existan ya partidos post-temporada
+    const existingPostSeason = competition.matches.filter(
+      (m) => m.stage === CompetitionStage.KNOCKOUT && m.knockoutRound !== null
+    )
+    if (existingPostSeason.length > 0) {
+      throw new Error('Post-season matches already exist for this competition')
+    }
+
+    // 4. Obtener standings de la fase regular
+    const standingsResult = await this.standingsService.calculateStandings(competitionId)
+    const standings = standingsResult.standings
+
+    // 5. Leer las rules de la competición
+    const rules = competition.rules as unknown as (TopLeagueRules | BottomLeagueRules)
+
+    // 6. Obtener la última jornada de la fase regular
+    const lastMatchday = Math.max(...regularMatches.map((m) => m.matchdayOrder), 0)
+
+    // 7. Generar partidos en transacción
+    const result = await this.prisma.$transaction(async (tx) => {
+      const phases: { phase: string; matchesCreated: number }[] = []
+      let totalCreated = 0
+
+      // --- CAMPEONATO (solo para liga TOP) ---
+      if ('championship' in rules && rules.championship) {
+        const championship = rules.championship
+
+        if (championship.format === 'LIGUILLA') {
+          const liguillaConfig = championship as { format: 'LIGUILLA'; teamsCount: number; keepPoints: boolean; roundType: string }
+          const teamsCount = liguillaConfig.teamsCount || 4
+          const liguillaTeams: PostSeasonTeam[] = standings
+            .slice(0, teamsCount)
+            .map((s) => ({ clubId: s.clubId, position: s.position }))
+
+          const liguillaMatches = generateLiguillaFixture(
+            liguillaTeams,
+            competitionId,
+            lastMatchday
+          )
+
+          for (const matchData of liguillaMatches) {
+            await tx.match.create({ data: matchData })
+            totalCreated++
+          }
+
+          phases.push({ phase: 'LIGUILLA', matchesCreated: liguillaMatches.length })
+        } else if (championship.format === 'TRIANGULAR') {
+          const team1st = { clubId: standings[0].clubId, position: 1 }
+          const team2nd = { clubId: standings[1].clubId, position: 2 }
+          const team3rd = { clubId: standings[2].clubId, position: 3 }
+
+          const { semiMatch, finalMatch } = generateTriangularFixture(
+            team1st, team2nd, team3rd,
+            competitionId,
+            lastMatchday
+          )
+
+          // Crear semi primero
+          const createdSemi = await tx.match.create({ data: semiMatch })
+          totalCreated++
+
+          // Crear final con sourceMatch linking
+          const finalData = {
+            ...finalMatch,
+            awaySourceMatch: { connect: { id: createdSemi.id } },
+            awaySourcePosition: 'WINNER',
+            awayPlaceholder: null as string | null,
+          }
+          // Limpiar placeholder
+          delete (finalData as any).awayPlaceholder
+          await tx.match.create({
+            data: {
+              ...finalData,
+              awayPlaceholder: null,
+            }
+          })
+          totalCreated++
+
+          phases.push({ phase: 'TRIANGULAR', matchesCreated: 2 })
+        }
+        // FIRST_PLACE: no se generan partidos extra
+      }
+
+      // --- PLAYOUT ---
+      if ('playout' in rules && rules.playout) {
+        const playout = rules.playout
+        const positions = playout.positions
+
+        if (positions.length >= 2) {
+          // Obtener equipos por posición en standings
+          const teamA: PostSeasonTeam = {
+            clubId: standings[positions[0] - 1].clubId,
+            position: positions[0],
+          }
+          const teamB: PostSeasonTeam = {
+            clubId: standings[positions[1] - 1].clubId,
+            position: positions[1],
+          }
+
+          const playoutMatch = generatePlayoutFixture(teamA, teamB, competitionId, lastMatchday)
+          await tx.match.create({ data: playoutMatch })
+          totalCreated++
+
+          phases.push({ phase: 'PLAYOUT', matchesCreated: 1 })
+        }
+      }
+
+      // --- REDUCIDO (solo para liga BOTTOM) ---
+      if ('reducido' in rules && rules.reducido) {
+        const reducido = rules.reducido
+        const startPos = reducido.startPositions
+        const waitingPos = reducido.waitingPositions
+
+        const startTeamA: PostSeasonTeam = {
+          clubId: standings[startPos[0] - 1].clubId,
+          position: startPos[0],
+        }
+        const startTeamB: PostSeasonTeam = {
+          clubId: standings[startPos[1] - 1].clubId,
+          position: startPos[1],
+        }
+        const waitingTeams: PostSeasonTeam[] = waitingPos.map((pos: number) => ({
+          clubId: standings[pos - 1].clubId,
+          position: pos,
+        }))
+
+        const reducidoMatches = generateReducidoFixture(
+          startTeamA, startTeamB, waitingTeams,
+          competitionId, lastMatchday
+        )
+
+        // Crear matches secuencialmente con sourceMatch linking
+        let previousMatchId: string | null = null
+        for (let i = 0; i < reducidoMatches.length; i++) {
+          const matchData = { ...reducidoMatches[i] }
+
+          // Para rondas posteriores a la primera, linkar con el match anterior
+          if (i > 0 && previousMatchId) {
+            (matchData as any).awaySourceMatch = { connect: { id: previousMatchId } };
+            (matchData as any).awaySourcePosition = 'WINNER';
+            (matchData as any).awayPlaceholder = null
+            // Remover awayClub si existe (se asigna via sourceMatch)
+            delete (matchData as any).awayClub
+          }
+
+          const created = await tx.match.create({ data: matchData })
+          previousMatchId = created.id
+          totalCreated++
+        }
+
+        phases.push({ phase: 'REDUCIDO', matchesCreated: reducidoMatches.length })
+      }
+
+      return { success: true, matchesCreated: totalCreated, phases }
+    }, {
+      timeout: 60000,
+    })
+
+    return result
+  }
+
+  /**
+   * Obtiene el estado de la post-temporada de una competición
+   */
+  async getPostSeasonStatus(competitionId: string): Promise<{
+    regularSeasonComplete: boolean
+    regularMatchesPlayed: number
+    regularMatchesTotal: number
+    hasPostSeason: boolean
+    postSeasonGenerated: boolean
+    phases: {
+      phase: string
+      matches: { id: string; status: string; homeClubId: string | null; awayClubId: string | null; knockoutRound: string | null }[]
+      isComplete: boolean
+    }[]
+  }> {
+    const competition = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+      include: { matches: true },
+    })
+
+    if (!competition) {
+      throw new CompetitionNotFoundError()
+    }
+
+    const regularMatches = competition.matches.filter(
+      (m) => m.stage === CompetitionStage.ROUND_ROBIN
+    )
+    const postSeasonMatches = competition.matches.filter(
+      (m) => m.stage === CompetitionStage.KNOCKOUT
+    )
+
+    const regularComplete = regularMatches.every(
+      (m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO
+    )
+
+    // Agrupar post-season matches por knockoutRound
+    const phaseMap = new Map<string, typeof postSeasonMatches>()
+    for (const match of postSeasonMatches) {
+      const phase = match.knockoutRound || 'UNKNOWN'
+      if (!phaseMap.has(phase)) phaseMap.set(phase, [])
+      phaseMap.get(phase)!.push(match)
+    }
+
+    const phases = Array.from(phaseMap.entries()).map(([phase, matches]) => ({
+      phase,
+      matches: matches.map((m) => ({
+        id: m.id,
+        status: m.status,
+        homeClubId: m.homeClubId,
+        awayClubId: m.awayClubId,
+        knockoutRound: m.knockoutRound,
+      })),
+      isComplete: matches.every(
+        (m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO
+      ),
+    }))
+
+    // Determinar si la competición tiene reglas de post-temporada configuradas
+    const rules = competition.rules as any
+    const hasPostSeason = Boolean(
+      (rules?.championship && rules.championship.format !== 'FIRST_PLACE') ||
+      rules?.playout ||
+      rules?.reducido
+    )
+
+    return {
+      regularSeasonComplete: regularComplete && regularMatches.length > 0,
+      regularMatchesPlayed: regularMatches.filter(
+        (m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO
+      ).length,
+      regularMatchesTotal: regularMatches.length,
+      hasPostSeason,
+      postSeasonGenerated: postSeasonMatches.length > 0,
+      phases,
+    }
+  }
+
+  // ============================================
+  // PROMOTION COMPETITION (INTER-DIVISION)
+  // ============================================
+
+  /**
+   * Genera una competencia de Promociones entre dos divisiones adyacentes.
+   *
+   * Flujo:
+   * 1. Verifica que ambas ligas hayan completado su post-temporada interna
+   * 2. Determina equipos de la liga superior que bajan a promoción
+   *    (zona playoff relegation + perdedor de playout si existe)
+   * 3. Determina equipos de la liga inferior que suben a promoción
+   *    (zona promotion_playoff + ganador de reducido si existe)
+   * 4. Empareja por seeding: mejor inferior vs peor superior
+   * 5. Crea una nueva Competition tipo PROMOTIONS
+   * 6. Genera los matches de promoción (partido único)
+   *
+   * @param upperCompetitionId - ID de la liga superior (ej: Liga A)
+   * @param lowerCompetitionId - ID de la liga inferior (ej: Liga B)
+   * @param seasonId - ID de la temporada activa
+   */
+  async generatePromotionCompetition(
+    upperCompetitionId: string,
+    lowerCompetitionId: string,
+    seasonId: string
+  ): Promise<{
+    success: boolean
+    competition: Competition
+    matchesCreated: number
+    upperTeams: PostSeasonTeam[]
+    lowerTeams: PostSeasonTeam[]
+  }> {
+    // 1. Obtener ambas competiciones con sus datos
+    const [upperComp, lowerComp] = await Promise.all([
+      this.prisma.competition.findUnique({
+        where: { id: upperCompetitionId },
+        include: { matches: true, competitionType: true, season: true },
+      }),
+      this.prisma.competition.findUnique({
+        where: { id: lowerCompetitionId },
+        include: { matches: true, competitionType: true, season: true },
+      }),
+    ])
+
+    if (!upperComp) throw new Error(`Upper competition not found: ${upperCompetitionId}`)
+    if (!lowerComp) throw new Error(`Lower competition not found: ${lowerCompetitionId}`)
+
+    // 2. Verificar que ambas hayan completado su post-temporada
+    const upperStatus = await this.getPostSeasonStatus(upperCompetitionId)
+    const lowerStatus = await this.getPostSeasonStatus(lowerCompetitionId)
+
+    if (!upperStatus.regularSeasonComplete) {
+      throw new Error('Upper league regular season is not complete')
+    }
+    if (!lowerStatus.regularSeasonComplete) {
+      throw new Error('Lower league regular season is not complete')
+    }
+
+    // Si tienen post-temporada configurada, debe estar generada y completa
+    if (upperStatus.hasPostSeason) {
+      if (!upperStatus.postSeasonGenerated) {
+        throw new Error('Upper league post-season has not been generated yet')
+      }
+      const allComplete = upperStatus.phases.every((p) => p.isComplete)
+      if (!allComplete) {
+        throw new Error('Upper league post-season is not complete')
+      }
+    }
+    if (lowerStatus.hasPostSeason) {
+      if (!lowerStatus.postSeasonGenerated) {
+        throw new Error('Lower league post-season has not been generated yet')
+      }
+      const allComplete = lowerStatus.phases.every((p) => p.isComplete)
+      if (!allComplete) {
+        throw new Error('Lower league post-season is not complete')
+      }
+    }
+
+    // 3. Obtener standings de ambas ligas
+    const [upperStandings, lowerStandings] = await Promise.all([
+      this.standingsService.calculateStandings(upperCompetitionId),
+      this.standingsService.calculateStandings(lowerCompetitionId),
+    ])
+
+    const upperRules = upperComp.rules as unknown as (TopLeagueRules | MiddleLeagueRules)
+    const lowerRules = lowerComp.rules as unknown as (MiddleLeagueRules | BottomLeagueRules)
+
+    // 4. Determinar equipos de la liga superior que entran a promoción
+    const upperTeamsForPromotion: PostSeasonTeam[] = []
+
+    // Equipos en zona playoff relegation (según rules)
+    const upperPlayoffRelegations = ('relegations' in upperRules && upperRules.relegations?.promotion?.quantity) || 0
+    const upperDirectRelegations = ('relegations' in upperRules && upperRules.relegations?.direct?.quantity) || 0
+    const upperTotal = upperStandings.standings.length
+
+    if (upperPlayoffRelegations > 0) {
+      // Los que están justo encima de la zona de descenso directo
+      for (let i = 0; i < upperPlayoffRelegations; i++) {
+        const position = upperTotal - upperDirectRelegations - i
+        if (position > 0 && position <= upperTotal) {
+          const team = upperStandings.standings[position - 1]
+          upperTeamsForPromotion.push({ clubId: team.clubId, position })
+        }
+      }
+    }
+
+    // Si hay playout en la liga superior, el perdedor también entra
+    if ('playout' in upperRules && upperRules.playout) {
+      const playoutMatches = upperComp.matches.filter(
+        (m) => m.knockoutRound === KnockoutRound.PLAYOUT && m.status === MatchStatus.FINALIZADO
+      )
+      for (const playoutMatch of playoutMatches) {
+        if (playoutMatch.homeClubGoals !== null && playoutMatch.awayClubGoals !== null) {
+          const loserId = playoutMatch.homeClubGoals > playoutMatch.awayClubGoals
+            ? playoutMatch.awayClubId
+            : playoutMatch.homeClubId
+          if (loserId && !upperTeamsForPromotion.some((t) => t.clubId === loserId)) {
+            // Find the position in standings
+            const pos = upperStandings.standings.findIndex((s) => s.clubId === loserId)
+            upperTeamsForPromotion.push({ clubId: loserId, position: pos + 1 })
+          }
+        }
+      }
+    }
+
+    // 5. Determinar equipos de la liga inferior que entran a promoción
+    const lowerTeamsForPromotion: PostSeasonTeam[] = []
+
+    // Equipos en zona promotion_playoff (según rules)
+    const lowerPlayoffPromotions = ('promotions' in lowerRules && lowerRules.promotions?.playoff?.quantity) || 0
+    const lowerDirectPromotions = ('promotions' in lowerRules && lowerRules.promotions?.direct?.quantity) || 0
+
+    if (lowerPlayoffPromotions > 0) {
+      // Los que están justo debajo de la zona de ascenso directo
+      for (let i = 0; i < lowerPlayoffPromotions; i++) {
+        const position = lowerDirectPromotions + 1 + i
+        if (position > 0 && position <= lowerStandings.standings.length) {
+          const team = lowerStandings.standings[position - 1]
+          lowerTeamsForPromotion.push({ clubId: team.clubId, position })
+        }
+      }
+    }
+
+    // Si hay reducido en la liga inferior, el ganador de la última ronda también entra
+    if ('reducido' in lowerRules && lowerRules.reducido) {
+      // Encontrar la última ronda del reducido (REDUCIDO_FINAL)
+      const reducidoFinals = lowerComp.matches.filter(
+        (m) => m.knockoutRound === KnockoutRound.REDUCIDO_FINAL && m.status === MatchStatus.FINALIZADO
+      )
+      for (const finalMatch of reducidoFinals) {
+        if (finalMatch.homeClubGoals !== null && finalMatch.awayClubGoals !== null) {
+          const winnerId = finalMatch.homeClubGoals > finalMatch.awayClubGoals
+            ? finalMatch.homeClubId
+            : finalMatch.awayClubId
+          if (winnerId && !lowerTeamsForPromotion.some((t) => t.clubId === winnerId)) {
+            const pos = lowerStandings.standings.findIndex((s) => s.clubId === winnerId)
+            lowerTeamsForPromotion.push({ clubId: winnerId, position: pos + 1 })
+          }
+        }
+      }
+    }
+
+    if (upperTeamsForPromotion.length === 0 && lowerTeamsForPromotion.length === 0) {
+      throw new Error('No teams qualify for promotion matches between these leagues')
+    }
+
+    // Asegurar cantidades iguales (emparejar los que haya)
+    const matchCount = Math.min(upperTeamsForPromotion.length, lowerTeamsForPromotion.length)
+    if (matchCount === 0) {
+      throw new Error('Cannot create promotion matches: one side has no qualifying teams')
+    }
+
+    // Ordenar: upper teams por posición descendente (peor primero)
+    upperTeamsForPromotion.sort((a, b) => b.position - a.position)
+    // Ordenar: lower teams por posición ascendente (mejor primero)
+    lowerTeamsForPromotion.sort((a, b) => a.position - b.position)
+
+    // Recortar al matchCount
+    const finalUpperTeams = upperTeamsForPromotion.slice(0, matchCount)
+    const finalLowerTeams = lowerTeamsForPromotion.slice(0, matchCount)
+
+    // 6. Crear la competencia de Promociones
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Find or create PROMOTIONS CompetitionType
+      const category = upperComp.competitionType.category
+      let promoType = await tx.competitionType.findFirst({
+        where: { name: CompetitionName.PROMOTIONS, category },
+      })
+      if (!promoType) {
+        promoType = await tx.competitionType.create({
+          data: {
+            name: CompetitionName.PROMOTIONS,
+            category,
+            format: 'CUP',
+            hierarchy: 15,
+          },
+        })
+      }
+
+      const seasonNumber = upperComp.season.number
+      const upperName = upperComp.competitionType.name
+      const lowerName = lowerComp.competitionType.name
+
+      // Create the Promotions competition
+      const promoCompetition = await tx.competition.create({
+        data: {
+          name: `Promociones ${category} ${upperName}/${lowerName} - T${seasonNumber}`,
+          system: CompetitionStage.KNOCKOUT,
+          competitionTypeId: promoType.id,
+          seasonId,
+          isActive: true,
+          rules: {
+            type: 'PROMOTIONS',
+            upperCompetitionId,
+            lowerCompetitionId,
+            upperTeams: finalUpperTeams,
+            lowerTeams: finalLowerTeams,
+          } as unknown as Prisma.InputJsonValue,
+        },
+      })
+
+      // Connect teams to the promotion competition
+      const allTeamIds = [...finalUpperTeams, ...finalLowerTeams].map((t) => t.clubId)
+      await tx.competition.update({
+        where: { id: promoCompetition.id },
+        data: {
+          teams: {
+            connect: allTeamIds.map((id) => ({ id })),
+          },
+        },
+      })
+
+      // Generate promotion matches
+      const promoMatches = generatePromotionFixtures(
+        finalUpperTeams,
+        finalLowerTeams,
+        promoCompetition.id
+      )
+
+      for (const matchData of promoMatches) {
+        await tx.match.create({ data: matchData })
+      }
+
+      return {
+        success: true as const,
+        competition: promoCompetition,
+        matchesCreated: promoMatches.length,
+        upperTeams: finalUpperTeams,
+        lowerTeams: finalLowerTeams,
+      }
+    }, { timeout: 60000 })
+
+    return result
   }
 }

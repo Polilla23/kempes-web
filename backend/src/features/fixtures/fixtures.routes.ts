@@ -70,4 +70,11 @@ export const fixtureRoutes = async (fastify: FastifyInstance) => {
     preHandler: [fastify.authenticate],
     handler: fixtureController.generateGoldSilverCups.bind(fixtureController),
   })
+
+  // PUT /fixtures/kempes/:competitionId/reassign-groups
+  // Reasigna los grupos de una Copa Kempes (solo si no hay partidos jugados)
+  fastify.put('/kempes/:competitionId/reassign-groups', {
+    preHandler: [fastify.authenticate],
+    handler: fixtureController.reassignKempesCupGroups.bind(fixtureController),
+  })
 }

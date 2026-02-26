@@ -21,6 +21,7 @@ import enTransfers from './locales/en/transfers.json'
 import enFinances from './locales/en/finances.json'
 import enNews from './locales/en/news.json'
 import enStandings from './locales/en/standings.json'
+import enSeasonDeadlines from './locales/en/seasonDeadlines.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -41,6 +42,7 @@ import esTransfers from './locales/es/transfers.json'
 import esFinances from './locales/es/finances.json'
 import esNews from './locales/es/news.json'
 import esStandings from './locales/es/standings.json'
+import esSeasonDeadlines from './locales/es/seasonDeadlines.json'
 
 // Configure i18next
 i18n
@@ -71,6 +73,7 @@ i18n
         finances: enFinances,
         news: enNews,
         standings: enStandings,
+        seasonDeadlines: enSeasonDeadlines,
       },
       es: {
         common: esCommon,
@@ -91,6 +94,7 @@ i18n
         finances: esFinances,
         news: esNews,
         standings: esStandings,
+        seasonDeadlines: esSeasonDeadlines,
       },
     },
 
@@ -123,6 +127,7 @@ i18n
       'finances',
       'news',
       'standings',
+      'seasonDeadlines',
     ],
 
     // Interpolation options

@@ -86,14 +86,20 @@ export class StandingsService {
       })
     }
 
+    // Filtrar solo partidos de fase regular (ROUND_ROBIN) para el standings de liga
+    // Los partidos post-temporada (KNOCKOUT con knockoutRound) no cuentan para la tabla
+    const regularMatches = competition.competitionType.format === CompetitionFormat.LEAGUE
+      ? competition.matches.filter((m) => m.stage === 'ROUND_ROBIN')
+      : competition.matches
+
     // Contar partidos completados (finalizados o cancelados)
-    const completedMatches = competition.matches.filter(
+    const completedMatches = regularMatches.filter(
       (m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO
     )
-    const totalMatches = competition.matches.length
+    const totalMatches = regularMatches.length
 
     // Procesar cada partido finalizado (los cancelados no dan puntos)
-    competition.matches.forEach((match) => {
+    regularMatches.forEach((match) => {
       if (!match.homeClub || !match.awayClub) return
       if (match.status !== MatchStatus.FINALIZADO) return  // Solo procesar finalizados
 
@@ -545,6 +551,79 @@ export class StandingsService {
 
     // Último fallback
     return actualClubId
+  }
+
+  /**
+   * Obtiene el ranking acumulado de CoefKempes para todos los clubes
+   * Suma puntos de todas las temporadas, útil para armar bombos del sorteo
+   */
+  async getCoefKempesRanking(): Promise<
+    Array<{
+      clubId: string
+      clubName: string
+      clubLogo: string | null
+      totalPoints: number
+      records: Array<{
+        seasonId: string
+        seasonNumber: number
+        points: number
+        cupPhase: string
+        cupName: string
+      }>
+    }>
+  > {
+    const allRecords = await this.prisma.coefKempes.findMany({
+      include: {
+        club: { select: { id: true, name: true, logo: true } },
+        season: { select: { id: true, number: true } },
+      },
+      orderBy: { season: { number: 'desc' } },
+    })
+
+    // Agrupar por club y sumar puntos
+    const clubMap = new Map<
+      string,
+      {
+        clubId: string
+        clubName: string
+        clubLogo: string | null
+        totalPoints: number
+        records: Array<{
+          seasonId: string
+          seasonNumber: number
+          points: number
+          cupPhase: string
+          cupName: string
+        }>
+      }
+    >()
+
+    for (const record of allRecords) {
+      const existing = clubMap.get(record.clubId)
+      const recordData = {
+        seasonId: record.seasonId,
+        seasonNumber: record.season.number,
+        points: record.points,
+        cupPhase: record.cupPhase,
+        cupName: record.cupName,
+      }
+
+      if (existing) {
+        existing.totalPoints += record.points
+        existing.records.push(recordData)
+      } else {
+        clubMap.set(record.clubId, {
+          clubId: record.clubId,
+          clubName: record.club.name,
+          clubLogo: record.club.logo,
+          totalPoints: record.points,
+          records: [recordData],
+        })
+      }
+    }
+
+    // Ordenar por puntos totales descendente
+    return Array.from(clubMap.values()).sort((a, b) => b.totalPoints - a.totalPoints)
   }
 
   /**

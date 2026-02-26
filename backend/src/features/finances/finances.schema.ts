@@ -456,6 +456,50 @@ export const financesSchemas: Record<string, FastifySchema> = {
     },
   },
 
+  // ==================== Salary Processing ====================
+  processSalaries: {
+    summary: 'Process salaries',
+    description: 'Process salary payments for all clubs in a season half',
+    tags: ['Finances'],
+    body: {
+      type: 'object',
+      required: ['seasonHalfId'],
+      properties: {
+        seasonHalfId: { type: 'string', format: 'uuid' },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          data: {
+            type: 'object',
+            properties: {
+              clubsProcessed: { type: 'number' },
+              totalSalariesPaid: { type: 'number' },
+              details: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    clubId: { type: 'string' },
+                    clubName: { type: 'string' },
+                    totalSalary: { type: 'number' },
+                    playerCount: { type: 'number' },
+                  },
+                },
+              },
+            },
+          },
+          message: { type: 'string' },
+        },
+      },
+      400: errorResponse,
+      500: errorResponse,
+    },
+  },
+
   // ==================== Financial Report ====================
   getClubFinancialReport: {
     summary: 'Get club financial report',

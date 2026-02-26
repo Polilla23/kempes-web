@@ -315,6 +315,60 @@ export class CompetitionController {
   }
 
   /**
+   * Genera los partidos de post-temporada para una liga
+   * POST /competitions/:id/post-season
+   */
+  async generatePostSeason(
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) {
+    const { id } = req.params
+    try {
+      const validId = Validator.uuid(id)
+      const result = await this.competitionService.generatePostSeason(validId)
+
+      return Response.created(reply, result, 'Post-season generated successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Competition', id)
+      }
+      return Response.error(
+        reply,
+        'GENERATION_ERROR',
+        error instanceof Error ? error.message : 'Error generating post-season',
+        500
+      )
+    }
+  }
+
+  /**
+   * Obtiene el estado de la post-temporada de una competición
+   * GET /competitions/:id/post-season/status
+   */
+  async getPostSeasonStatus(
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) {
+    const { id } = req.params
+    try {
+      const validId = Validator.uuid(id)
+      const status = await this.competitionService.getPostSeasonStatus(validId)
+
+      return Response.success(reply, status, 'Post-season status fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Competition', id)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        error instanceof Error ? error.message : 'Error fetching post-season status',
+        500
+      )
+    }
+  }
+
+  /**
    * Crea una Copa Cindor con posicionamiento manual de equipos
    * POST /competitions/cindor
    */
@@ -391,6 +445,44 @@ export class CompetitionController {
         reply,
         'CREATION_ERROR',
         error instanceof Error ? error.message : 'Error creating Copa Cindor',
+        500
+      )
+    }
+  }
+
+  /**
+   * Genera una competencia de Promociones entre dos divisiones
+   * POST /competitions/promotions
+   */
+  async generatePromotions(
+    req: FastifyRequest<{
+      Body: {
+        upperCompetitionId: string
+        lowerCompetitionId: string
+        seasonId: string
+      }
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const { upperCompetitionId, lowerCompetitionId, seasonId } = req.body
+
+      const validUpperId = Validator.uuid(upperCompetitionId)
+      const validLowerId = Validator.uuid(lowerCompetitionId)
+      const validSeasonId = Validator.uuid(seasonId)
+
+      const result = await this.competitionService.generatePromotionCompetition(
+        validUpperId,
+        validLowerId,
+        validSeasonId
+      )
+
+      return Response.created(reply, result, 'Promotion competition created successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'CREATION_ERROR',
+        error instanceof Error ? error.message : 'Error creating promotion competition',
         500
       )
     }

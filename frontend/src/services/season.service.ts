@@ -1,5 +1,11 @@
 import api from './api'
-import type { Season } from '@/types'
+import type {
+  Season,
+  VerifyCompetitionsResponse,
+  PreviewMovementsResponse,
+  SaveHistoryResponse,
+  CreateNextSeasonResponse,
+} from '@/types'
 
 export interface SeasonResponse {
   season?: Season
@@ -95,6 +101,46 @@ export class SeasonService {
       return response.data?.data
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error advancing season')
+    }
+  }
+
+  // ============================================
+  // WIZARD DE AVANCE — 4 PASOS DISCRETOS
+  // ============================================
+
+  static async verifyCompetitions(): Promise<VerifyCompetitionsResponse> {
+    try {
+      const response = await api.get<{ data: VerifyCompetitionsResponse }>('/api/v1/seasons/active/verify-competitions')
+      return response.data?.data
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error verifying competitions')
+    }
+  }
+
+  static async previewMovements(): Promise<PreviewMovementsResponse> {
+    try {
+      const response = await api.get<{ data: PreviewMovementsResponse }>('/api/v1/seasons/active/preview-movements')
+      return response.data?.data
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error previewing movements')
+    }
+  }
+
+  static async saveSeasonHistory(): Promise<SaveHistoryResponse> {
+    try {
+      const response = await api.post<{ data: SaveHistoryResponse }>('/api/v1/seasons/active/save-history')
+      return response.data?.data
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error saving season history')
+    }
+  }
+
+  static async createNextSeason(): Promise<CreateNextSeasonResponse> {
+    try {
+      const response = await api.post<{ data: CreateNextSeasonResponse }>('/api/v1/seasons/active/create-next')
+      return response.data?.data
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error creating next season')
     }
   }
 }

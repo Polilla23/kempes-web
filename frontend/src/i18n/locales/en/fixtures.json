@@ -131,6 +131,44 @@
     "success": "Fixtures generated successfully",
     "error": "Error generating fixtures"
   },
+  "postSeason": {
+    "title": "Post-Season Management",
+    "description": "Generate and manage playoffs, playout, reducido and promotions",
+    "noLeagues": "No leagues in the active season",
+    "regularSeason": "Regular Season",
+    "regularComplete": "Regular Season Complete",
+    "inProgress": "In Progress",
+    "noPostSeason": "No Post-Season",
+    "postSeasonComplete": "Post-Season Complete",
+    "postSeasonInProgress": "Post-Season In Progress",
+    "generate": "Generate Post-Season",
+    "generating": "Generating...",
+    "waitingRegular": "Waiting for regular season to finish",
+    "readyToGenerate": "Regular season is complete. You can generate the post-season.",
+    "noPostSeasonConfigured": "This league has no post-season configured",
+    "firstIsChampion": "First place is direct champion",
+    "phases": {
+      "title": "Post-Season Phases",
+      "complete": "Complete",
+      "inProgress": "In Progress",
+      "LIGUILLA": "Liguilla",
+      "TRIANGULAR_SEMI": "Triangular - Semi",
+      "TRIANGULAR_FINAL": "Triangular - Final",
+      "PLAYOUT": "Playout",
+      "REDUCIDO_QUARTER": "Reducido - Quarter",
+      "REDUCIDO_SEMI": "Reducido - Semi",
+      "REDUCIDO_FINAL": "Reducido - Final",
+      "PROMOTION": "Promotion"
+    },
+    "promotions": {
+      "title": "Inter-Division Promotions",
+      "description": "Generate promotion matches between adjacent leagues",
+      "generate": "Generate Promotions",
+      "ready": "Ready",
+      "pending": "Pending",
+      "waitBoth": "Both leagues must complete their post-season before generating promotions"
+    }
+  },
   "cup": {
     "title": "Create Cup",
     "description": "Define cup configuration and groups",
@@ -148,6 +186,48 @@
       "minTeamsPerGroup": "Must have at least 2 teams per group",
       "minQualify": "At least 1 team must qualify",
       "allGroupsFull": "All groups must have {{count}} teams"
+    },
+    "sorteo": {
+      "title": "Group Draw",
+      "bombos": "Pots",
+      "bombo": "Pot {{number}}",
+      "draw": "Draw Ball",
+      "drawAll": "Full Draw",
+      "place": "Place",
+      "placeAuto": "Place Automatically",
+      "drawing": "Drawing...",
+      "revealed": "Drawn Team",
+      "selectGroup": "Select a group",
+      "complete": "Draw Complete!",
+      "confirm": "Confirm",
+      "repeat": "Repeat Draw",
+      "button": "Draw",
+      "setup": "Configure Pots",
+      "noCoefData": "No CoefKempes data. Default order: alphabetical.",
+      "ruleOnePerPot": "One team per pot in each group",
+      "seedsHeader": "Seeds",
+      "remaining": "{{count}} teams remaining",
+      "potEmpty": "Pot empty",
+      "placingTeam": "Placing: {{team}}",
+      "autoPlacing": "Placing automatically..."
+    },
+    "editGroups": {
+      "title": "Edit Groups",
+      "description": "Reassign teams to cup groups",
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "success": "Groups reassigned successfully",
+      "error": "Error reassigning groups",
+      "noMatchesPlayed": "Can only edit if no matches have been played",
+      "hasPlayedMatches": "Cannot edit: matches have already been played"
+    },
+    "generateBrackets": "Generate Gold / Silver Cup",
+    "groupsComplete": "All groups have finished",
+    "groupsCompleteDesc": "You can now generate the Gold Cup and Silver Cup",
+    "successCreated": "Cup created successfully!",
+    "successLinks": {
+      "viewStandings": "View in Standings",
+      "goToCompetitions": "Go to Competitions"
     }
   }
 }
