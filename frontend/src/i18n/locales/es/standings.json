@@ -49,5 +49,18 @@
     "noCompetitions": "No hay competiciones disponibles",
     "description": "Las tablas de posiciones aparecerán cuando haya competiciones con partidos"
   },
-  "progress": "{{played}} de {{total}} partidos jugados"
+  "progress": "{{played}} de {{total}} partidos jugados",
+  "combined": {
+    "groups": "Grupos",
+    "goldCup": "Copa de Oro",
+    "silverCup": "Copa de Plata",
+    "pendingGeneration": "Pendiente de generación",
+    "noMatchDetails": "Sin detalles del partido",
+    "matchDetails": "Detalles del Partido",
+    "date": "Fecha",
+    "status": "Estado",
+    "round": "Ronda",
+    "events": "Eventos",
+    "noEvents": "Sin eventos registrados"
+  }
 }

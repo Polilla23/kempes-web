@@ -106,6 +106,38 @@ export class FixtureService {
       throw new Error(error instanceof Error ? error.message : 'Error generating gold/silver cups')
     }
   }
+
+  /**
+   * Reasigna los grupos de una Copa Kempes (solo si no hay partidos jugados)
+   */
+  static async reassignKempesCupGroups(
+    competitionId: string,
+    groups: Array<{ groupName: string; clubIds: string[] }>
+  ): Promise<ReassignGroupsResponse> {
+    try {
+      const response = await api.put<{ data: ReassignGroupsResponse }>(
+        `/api/v1/fixtures/kempes/${competitionId}/reassign-groups`,
+        { groups }
+      )
+      return response.data?.data as ReassignGroupsResponse
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error reassigning groups')
+    }
+  }
+
+  /**
+   * Obtiene el ranking de CoefKempes acumulado
+   */
+  static async getCoefKempesRanking(): Promise<CoefKempesRankingEntry[]> {
+    try {
+      const response = await api.get<{ data: CoefKempesRankingEntry[] }>(
+        '/api/v1/seasons/coef-kempes/ranking'
+      )
+      return response.data?.data || []
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error fetching CoefKempes ranking')
+    }
+  }
 }
 
 // Types for Copa Kempes endpoints
@@ -224,5 +256,28 @@ export interface MatchDetailedDTO {
     type: string
     player: string
     team: 'home' | 'away'
+  }>
+  resultRecordedAt?: string | null
+}
+
+export interface ReassignGroupsResponse {
+  success: boolean
+  competitionId: string
+  groupsCount: number
+  matchesCreated: number
+  teamsTotal: number
+}
+
+export interface CoefKempesRankingEntry {
+  clubId: string
+  clubName: string
+  clubLogo: string | null
+  totalPoints: number
+  records: Array<{
+    seasonId: string
+    seasonNumber: number
+    points: number
+    cupPhase: string
+    cupName: string
   }>
 }

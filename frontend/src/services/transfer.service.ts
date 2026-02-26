@@ -9,6 +9,8 @@ import type {
   TransfersResponse,
   TransferResponse,
   RosterCountResponse,
+  TransferInstallment,
+  UpdateInstallmentStatusesResponse,
 } from '@/types'
 
 export class TransferService {
@@ -203,6 +205,38 @@ export class TransferService {
       return { transfer: response.data?.data, message: response.data?.message }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error rejecting transfer')
+    }
+  }
+
+  // ==================== Installments ====================
+
+  // Pagar una cuota
+  static async payInstallment(
+    transferId: string,
+    installmentId: string
+  ): Promise<{ installment: TransferInstallment; message?: string }> {
+    try {
+      const response = await api.post<{ data: TransferInstallment; message: string }>(
+        `/api/v1/transfers/${transferId}/installments/${installmentId}/pay`
+      )
+      return { installment: response.data?.data, message: response.data?.message }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error paying installment')
+    }
+  }
+
+  // Actualizar estados de cuotas
+  static async updateInstallmentStatuses(
+    seasonHalfId: string
+  ): Promise<UpdateInstallmentStatusesResponse> {
+    try {
+      const response = await api.post<{ data: UpdateInstallmentStatusesResponse }>(
+        '/api/v1/transfers/installments/update-statuses',
+        { seasonHalfId }
+      )
+      return response.data?.data || { markedDue: 0, markedOverdue: 0 }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error updating installment statuses')
     }
   }
 }

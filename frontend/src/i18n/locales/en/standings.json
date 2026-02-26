@@ -49,5 +49,18 @@
     "noCompetitions": "No competitions available",
     "description": "Standings will appear when there are competitions with matches"
   },
-  "progress": "{{played}} of {{total}} matches played"
+  "progress": "{{played}} of {{total}} matches played",
+  "combined": {
+    "groups": "Groups",
+    "goldCup": "Gold Cup",
+    "silverCup": "Silver Cup",
+    "pendingGeneration": "Pending generation",
+    "noMatchDetails": "No match details",
+    "matchDetails": "Match Details",
+    "date": "Date",
+    "status": "Status",
+    "round": "Round",
+    "events": "Events",
+    "noEvents": "No events recorded"
+  }
 }

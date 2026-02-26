@@ -117,7 +117,12 @@ export class FixtureService {
       throw new MatchNotAssignedError() // TODO: Custom error
     }
 
-    if (match.stage === CompetitionStage.KNOCKOUT && input.homeClubGoals === input.awayClubGoals) {
+    // Knockout matches cannot draw EXCEPT for LIGUILLA (which is a round-robin mini-league)
+    if (
+      match.stage === CompetitionStage.KNOCKOUT &&
+      input.homeClubGoals === input.awayClubGoals &&
+      match.knockoutRound !== KnockoutRound.LIGUILLA
+    ) {
       throw new KnockoutMatchDrawError() // TODO: Custom error
     }
 
@@ -606,6 +611,94 @@ export class FixtureService {
     return matches
   }
 
+  // ===================== REASSIGN GROUPS =====================
+
+  /**
+   * Reasigna los grupos de una Copa Kempes (solo si ningún partido fue jugado)
+   * Borra los matches existentes y regenera con las nuevas asignaciones
+   */
+  async reassignKempesCupGroups(
+    competitionId: string,
+    groups: Array<{ groupName: string; clubIds: string[] }>
+  ) {
+    const competition = await this.prisma.competition.findUnique({
+      where: { id: competitionId },
+      include: {
+        matches: true,
+        competitionType: true,
+      },
+    })
+
+    if (!competition) {
+      throw new CompetitionNotFoundError()
+    }
+
+    // Verificar que TODOS los partidos están PENDIENTES
+    const playedMatches = competition.matches.filter(
+      (m) => m.status !== MatchStatus.PENDIENTE
+    )
+
+    if (playedMatches.length > 0) {
+      throw new Error(
+        `Cannot reassign groups: ${playedMatches.length} match(es) have already been played or finalized`
+      )
+    }
+
+    // Ejecutar en transacción
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 1. Borrar todos los matches existentes
+      await tx.match.deleteMany({
+        where: { competitionId },
+      })
+
+      // 2. Desconectar equipos actuales y conectar los nuevos
+      const allClubIds = groups.flatMap((g) => g.clubIds)
+
+      await tx.competition.update({
+        where: { id: competitionId },
+        data: {
+          teams: { set: [] }, // Desconectar todos
+        },
+      })
+
+      await tx.competition.update({
+        where: { id: competitionId },
+        data: {
+          teams: {
+            connect: allClubIds.map((id) => ({ id })),
+          },
+        },
+      })
+
+      // 3. Regenerar fixtures de fase de grupos
+      const allMatches: Prisma.MatchCreateInput[] = []
+
+      for (const group of groups) {
+        const groupMatches = generateGroupStageFixture(
+          group.clubIds,
+          competitionId,
+          group.groupName
+        )
+        allMatches.push(...groupMatches)
+      }
+
+      // 4. Crear los nuevos matches
+      for (const matchData of allMatches) {
+        await tx.match.create({ data: matchData })
+      }
+
+      return {
+        success: true,
+        competitionId,
+        groupsCount: groups.length,
+        matchesCreated: allMatches.length,
+        teamsTotal: allClubIds.length,
+      }
+    }, { timeout: 30000 })
+
+    return result
+  }
+
   // ===================== QUERIES =====================
 
   async getKnockoutBracket(competitionId: string) {
@@ -772,8 +865,12 @@ export class FixtureService {
       throw new UserNotClubOwnerError()
     }
 
-    // Knockout matches cannot draw
-    if (match.stage === CompetitionStage.KNOCKOUT && input.homeClubGoals === input.awayClubGoals) {
+    // Knockout matches cannot draw EXCEPT for LIGUILLA (round-robin mini-league)
+    if (
+      match.stage === CompetitionStage.KNOCKOUT &&
+      input.homeClubGoals === input.awayClubGoals &&
+      match.knockoutRound !== KnockoutRound.LIGUILLA
+    ) {
       throw new KnockoutMatchDrawError()
     }
 

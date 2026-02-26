@@ -47,6 +47,17 @@ export const transferRoutes = async (fastify: FastifyInstance) => {
     handler: transferController.findPendingConfirmations.bind(transferController),
   })
 
+  // Installment management routes (before /:id to avoid conflicts)
+  fastify.post('/installments/update-statuses', {
+    preHandler: [fastify.authenticate],
+    handler: transferController.updateInstallmentStatuses.bind(transferController),
+  })
+
+  fastify.post('/:transferId/installments/:installmentId/pay', {
+    preHandler: [fastify.authenticate],
+    handler: transferController.payInstallment.bind(transferController),
+  })
+
   // POST routes
   fastify.post('/', {
     preHandler: [fastify.authenticate],

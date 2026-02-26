@@ -131,6 +131,44 @@
     "success": "Fixtures generados exitosamente",
     "error": "Error al generar los fixtures"
   },
+  "postSeason": {
+    "title": "Gestion de Post-Temporada",
+    "description": "Genera y administra playoffs, playout, reducido y promociones",
+    "noLeagues": "No hay ligas en la temporada activa",
+    "regularSeason": "Fase Regular",
+    "regularComplete": "Fase Regular Completa",
+    "inProgress": "En Curso",
+    "noPostSeason": "Sin Post-Temporada",
+    "postSeasonComplete": "Post-Temporada Completa",
+    "postSeasonInProgress": "Post-Temporada En Curso",
+    "generate": "Generar Post-Temporada",
+    "generating": "Generando...",
+    "waitingRegular": "Esperando a que termine la fase regular",
+    "readyToGenerate": "La fase regular esta completa. Puedes generar la post-temporada.",
+    "noPostSeasonConfigured": "Esta liga no tiene post-temporada configurada",
+    "firstIsChampion": "El primero es campeon directo",
+    "phases": {
+      "title": "Fases de Post-Temporada",
+      "complete": "Completa",
+      "inProgress": "En Curso",
+      "LIGUILLA": "Liguilla",
+      "TRIANGULAR_SEMI": "Triangular - Semi",
+      "TRIANGULAR_FINAL": "Triangular - Final",
+      "PLAYOUT": "Playout",
+      "REDUCIDO_QUARTER": "Reducido - Cuartos",
+      "REDUCIDO_SEMI": "Reducido - Semi",
+      "REDUCIDO_FINAL": "Reducido - Final",
+      "PROMOTION": "Promocion"
+    },
+    "promotions": {
+      "title": "Promociones entre Divisiones",
+      "description": "Genera partidos de promocion entre ligas adyacentes",
+      "generate": "Generar Promociones",
+      "ready": "Lista",
+      "pending": "Pendiente",
+      "waitBoth": "Ambas ligas deben completar su post-temporada antes de generar promociones"
+    }
+  },
   "cup": {
     "title": "Crear Copa",
     "description": "Define la configuración de la copa y sus grupos",
@@ -148,6 +186,48 @@
       "minTeamsPerGroup": "Debe haber al menos 2 equipos por grupo",
       "minQualify": "Al menos 1 equipo debe clasificar",
       "allGroupsFull": "Todos los grupos deben tener {{count}} equipos"
+    },
+    "sorteo": {
+      "title": "Sorteo de Grupos",
+      "bombos": "Bombos",
+      "bombo": "Bombo {{number}}",
+      "draw": "Sacar Bolilla",
+      "drawAll": "Sorteo Completo",
+      "place": "Colocar",
+      "placeAuto": "Colocar Automáticamente",
+      "drawing": "Sorteando...",
+      "revealed": "Equipo Sorteado",
+      "selectGroup": "Seleccioná un grupo",
+      "complete": "¡Sorteo Completo!",
+      "confirm": "Confirmar",
+      "repeat": "Repetir Sorteo",
+      "button": "Sorteo",
+      "setup": "Configurar Bombos",
+      "noCoefData": "Sin datos de CoefKempes. Orden por defecto: alfabético.",
+      "ruleOnePerPot": "Un equipo por bombo en cada grupo",
+      "seedsHeader": "Cabezas de Serie",
+      "remaining": "{{count}} equipos restantes",
+      "potEmpty": "Bombo vacío",
+      "placingTeam": "Colocando: {{team}}",
+      "autoPlacing": "Colocando automáticamente..."
+    },
+    "editGroups": {
+      "title": "Editar Grupos",
+      "description": "Reasignar equipos a los grupos de la copa",
+      "save": "Guardar Cambios",
+      "saving": "Guardando...",
+      "success": "Grupos reasignados correctamente",
+      "error": "Error al reasignar grupos",
+      "noMatchesPlayed": "Solo se pueden editar si no hay partidos jugados",
+      "hasPlayedMatches": "No se puede editar: ya hay partidos jugados"
+    },
+    "generateBrackets": "Generar Copa Oro / Plata",
+    "groupsComplete": "Todos los grupos han finalizado",
+    "groupsCompleteDesc": "Ya podés generar la Copa de Oro y la Copa de Plata",
+    "successCreated": "¡Copa creada exitosamente!",
+    "successLinks": {
+      "viewStandings": "Ver en Posiciones",
+      "goToCompetitions": "Ir a Competiciones"
     }
   }
 }

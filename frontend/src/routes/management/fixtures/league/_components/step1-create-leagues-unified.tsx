@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ChevronRight, Trophy, Loader2, AlertCircle, Plus, Trash2, Settings } from 'lucide-react'
 import { toast } from 'sonner'
-import type { LeagueWizardState } from '@/types/fixture'
+import type { LeagueWizardState, ChampionshipConfig, PlayoutConfig, ReducidoConfig } from '@/types/fixture'
 import { SeasonService } from '@/services/season.service'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
@@ -254,19 +254,77 @@ export function Step1CreateLeaguesUnified({ wizardState, onUpdate, onNext }: Ste
             throw new Error(`No se encontró el CompetitionType para Liga ${league.letter}`)
           }
 
+          // Construir ChampionshipConfig para liga TOP
+          let championship: ChampionshipConfig | undefined
+          if (league.position === 'TOP') {
+            if (league.firstIsChampion || league.championshipFormat === 'direct') {
+              championship = { format: 'FIRST_PLACE' }
+            } else if (league.championshipFormat === 'playoff') {
+              championship = {
+                format: 'LIGUILLA',
+                teamsCount: league.playoffTeams || 4,
+                keepPoints: true,
+                roundType: 'match', // Liguilla siempre partido único
+              }
+            } else if (league.championshipFormat === 'triangular') {
+              championship = { format: 'TRIANGULAR' }
+            } else {
+              championship = { format: 'FIRST_PLACE' }
+            }
+          }
+
+          // Construir PlayoutConfig desde playoffConfigs del modal
+          let playout: PlayoutConfig | undefined
+          const playoutConfigs = league.playoffConfigs.filter(p => p.type === 'PLAYOUT')
+          if (playoutConfigs.length > 0) {
+            const pc = playoutConfigs[0]
+            const positions = pc.positions.split(',').map(p => parseInt(p.trim())).filter(n => !isNaN(n))
+            playout = {
+              positions,
+              loserGoesToPromotion: pc.loserAction === 'PROMOTION',
+              loserFinalPosition: positions[positions.length - 1] || 0,
+            }
+          }
+
+          // Construir ReducidoConfig desde playoffConfigs del modal (solo BOTTOM)
+          let reducido: ReducidoConfig | undefined
+          if (league.position === 'BOTTOM') {
+            const reducidoConfigs = league.playoffConfigs.filter(p => p.type === 'REDUCIDO')
+            if (reducidoConfigs.length > 0) {
+              const rc = reducidoConfigs[0]
+              const positions = rc.positions.split(',').map(p => parseInt(p.trim())).filter(n => !isNaN(n))
+              if (positions.length >= 2) {
+                // Las 2 últimas posiciones son la primera ronda
+                // Las anteriores son las posiciones en espera (en orden de mayor a menor)
+                const startPositions: [number, number] = [
+                  positions[positions.length - 2],
+                  positions[positions.length - 1],
+                ]
+                const waitingPositions = positions.slice(0, positions.length - 2).reverse()
+                reducido = {
+                  startPositions,
+                  waitingPositions,
+                  winnerGoesToPromotion: rc.winnerAction === 'PROMOTION' || rc.winnerAction === 'ASCEND',
+                }
+              }
+            }
+          }
+
           return {
             id: league.id,
             name: getLeagueName(league.letter),
             letter: league.letter,
             position: league.position,
-            competitionType, // Usar el CompetitionType ya creado en Step0
+            competitionType,
             roundType: league.roundType,
-            firstIsChampion: league.firstIsChampion,
             directPromotions: league.directPromotions,
             playoffPromotions: league.playoffPromotions,
             directRelegations: league.directRelegations,
             playoffRelegations: league.playoffRelegations,
-            hasPlayoutForLastPromotion: league.playoffPromotions > 0,
+            // Nuevos campos de post-temporada
+            championship,
+            playout,
+            reducido,
           }
         }),
         seasonId,

@@ -27,6 +27,7 @@ import { Route as ManagementUsersIndexRouteImport } from './routes/management/us
 import { Route as ManagementSalaryRatesIndexRouteImport } from './routes/management/salary-rates/index'
 import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
 import { Route as ManagementFixturesIndexRouteImport } from './routes/management/fixtures/index'
+import { Route as ManagementFinancesIndexRouteImport } from './routes/management/finances/index'
 import { Route as ManagementCompetitionsIndexRouteImport } from './routes/management/competitions/index'
 import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
 import { Route as ConfigurationSeasonsIndexRouteImport } from './routes/configuration/seasons/index'
@@ -38,16 +39,21 @@ import { Route as AuthForgotPasswordIndexRouteImport } from './routes/_auth/forg
 import { Route as PlayerUpdateIdRouteImport } from './routes/player/update.$id'
 import { Route as PlayerFindIdRouteImport } from './routes/player/find.$id'
 import { Route as PlayerDeleteIdRouteImport } from './routes/player/delete.$id'
+import { Route as ConfigurationSeasonsDeadlinesRouteImport } from './routes/configuration/seasons/deadlines'
+import { Route as ConfigurationSeasonsAdvanceRouteImport } from './routes/configuration/seasons/advance'
 import { Route as ClubUpdateIdRouteImport } from './routes/club/update.$id'
 import { Route as ClubFindOneIdRouteImport } from './routes/club/findOne.$id'
 import { Route as ClubDeleteIdRouteImport } from './routes/club/delete.$id'
 import { Route as AuthResetPasswordIndexTokenRouteImport } from './routes/_auth/reset-password/index.$token'
+import { Route as ManagementFixturesPostSeasonIndexRouteImport } from './routes/management/fixtures/post-season/index'
 import { Route as ManagementFixturesLeagueIndexRouteImport } from './routes/management/fixtures/league/index'
 import { Route as ManagementFixturesCupIndexRouteImport } from './routes/management/fixtures/cup/index'
+import { Route as ManagementFinancesClubClubIdRouteImport } from './routes/management/finances/club.$clubId'
 import { Route as ManagementFixturesCupSupercopaIndexRouteImport } from './routes/management/fixtures/cup/supercopa/index'
 import { Route as ManagementFixturesCupKempesIndexRouteImport } from './routes/management/fixtures/cup/kempes/index'
 import { Route as ManagementFixturesCupCindorIndexRouteImport } from './routes/management/fixtures/cup/cindor/index'
 import { Route as ManagementFixturesCupKempesGenerateBracketsRouteImport } from './routes/management/fixtures/cup/kempes/generate-brackets'
+import { Route as ManagementFixturesCupKempesEditGroupsRouteImport } from './routes/management/fixtures/cup/kempes/edit-groups'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -140,6 +146,11 @@ const ManagementFixturesIndexRoute = ManagementFixturesIndexRouteImport.update({
   path: '/management/fixtures/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementFinancesIndexRoute = ManagementFinancesIndexRouteImport.update({
+  id: '/management/finances/',
+  path: '/management/finances/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManagementCompetitionsIndexRoute =
   ManagementCompetitionsIndexRouteImport.update({
     id: '/management/competitions/',
@@ -199,6 +210,18 @@ const PlayerDeleteIdRoute = PlayerDeleteIdRouteImport.update({
   path: '/player/delete/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfigurationSeasonsDeadlinesRoute =
+  ConfigurationSeasonsDeadlinesRouteImport.update({
+    id: '/configuration/seasons/deadlines',
+    path: '/configuration/seasons/deadlines',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ConfigurationSeasonsAdvanceRoute =
+  ConfigurationSeasonsAdvanceRouteImport.update({
+    id: '/configuration/seasons/advance',
+    path: '/configuration/seasons/advance',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ClubUpdateIdRoute = ClubUpdateIdRouteImport.update({
   id: '/club/update/$id',
   path: '/club/update/$id',
@@ -220,6 +243,12 @@ const AuthResetPasswordIndexTokenRoute =
     path: '/reset-password/index/$token',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ManagementFixturesPostSeasonIndexRoute =
+  ManagementFixturesPostSeasonIndexRouteImport.update({
+    id: '/management/fixtures/post-season/',
+    path: '/management/fixtures/post-season/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ManagementFixturesLeagueIndexRoute =
   ManagementFixturesLeagueIndexRouteImport.update({
     id: '/management/fixtures/league/',
@@ -230,6 +259,12 @@ const ManagementFixturesCupIndexRoute =
   ManagementFixturesCupIndexRouteImport.update({
     id: '/management/fixtures/cup/',
     path: '/management/fixtures/cup/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ManagementFinancesClubClubIdRoute =
+  ManagementFinancesClubClubIdRouteImport.update({
+    id: '/management/finances/club/$clubId',
+    path: '/management/finances/club/$clubId',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ManagementFixturesCupSupercopaIndexRoute =
@@ -256,6 +291,12 @@ const ManagementFixturesCupKempesGenerateBracketsRoute =
     path: '/management/fixtures/cup/kempes/generate-brackets',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ManagementFixturesCupKempesEditGroupsRoute =
+  ManagementFixturesCupKempesEditGroupsRouteImport.update({
+    id: '/management/fixtures/cup/kempes/edit-groups',
+    path: '/management/fixtures/cup/kempes/edit-groups',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -275,6 +316,8 @@ export interface FileRoutesByFullPath {
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
+  '/configuration/seasons/advance': typeof ConfigurationSeasonsAdvanceRoute
+  '/configuration/seasons/deadlines': typeof ConfigurationSeasonsDeadlinesRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
@@ -286,13 +329,17 @@ export interface FileRoutesByFullPath {
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
+  '/management/finances': typeof ManagementFinancesIndexRoute
   '/management/fixtures': typeof ManagementFixturesIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
+  '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
   '/management/fixtures/cup': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
+  '/management/fixtures/post-season': typeof ManagementFixturesPostSeasonIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
+  '/management/fixtures/cup/kempes/edit-groups': typeof ManagementFixturesCupKempesEditGroupsRoute
   '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
   '/management/fixtures/cup/cindor': typeof ManagementFixturesCupCindorIndexRoute
   '/management/fixtures/cup/kempes': typeof ManagementFixturesCupKempesIndexRoute
@@ -316,6 +363,8 @@ export interface FileRoutesByTo {
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
+  '/configuration/seasons/advance': typeof ConfigurationSeasonsAdvanceRoute
+  '/configuration/seasons/deadlines': typeof ConfigurationSeasonsDeadlinesRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
@@ -327,13 +376,17 @@ export interface FileRoutesByTo {
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
+  '/management/finances': typeof ManagementFinancesIndexRoute
   '/management/fixtures': typeof ManagementFixturesIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
+  '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
   '/management/fixtures/cup': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
+  '/management/fixtures/post-season': typeof ManagementFixturesPostSeasonIndexRoute
   '/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
+  '/management/fixtures/cup/kempes/edit-groups': typeof ManagementFixturesCupKempesEditGroupsRoute
   '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
   '/management/fixtures/cup/cindor': typeof ManagementFixturesCupCindorIndexRoute
   '/management/fixtures/cup/kempes': typeof ManagementFixturesCupKempesIndexRoute
@@ -358,6 +411,8 @@ export interface FileRoutesById {
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
   '/club/update/$id': typeof ClubUpdateIdRoute
+  '/configuration/seasons/advance': typeof ConfigurationSeasonsAdvanceRoute
+  '/configuration/seasons/deadlines': typeof ConfigurationSeasonsDeadlinesRoute
   '/player/delete/$id': typeof PlayerDeleteIdRoute
   '/player/find/$id': typeof PlayerFindIdRoute
   '/player/update/$id': typeof PlayerUpdateIdRoute
@@ -369,13 +424,17 @@ export interface FileRoutesById {
   '/configuration/seasons/': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs/': typeof ManagementClubsIndexRoute
   '/management/competitions/': typeof ManagementCompetitionsIndexRoute
+  '/management/finances/': typeof ManagementFinancesIndexRoute
   '/management/fixtures/': typeof ManagementFixturesIndexRoute
   '/management/players/': typeof ManagementPlayersIndexRoute
   '/management/salary-rates/': typeof ManagementSalaryRatesIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
+  '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
   '/management/fixtures/cup/': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league/': typeof ManagementFixturesLeagueIndexRoute
+  '/management/fixtures/post-season/': typeof ManagementFixturesPostSeasonIndexRoute
   '/_auth/reset-password/index/$token': typeof AuthResetPasswordIndexTokenRoute
+  '/management/fixtures/cup/kempes/edit-groups': typeof ManagementFixturesCupKempesEditGroupsRoute
   '/management/fixtures/cup/kempes/generate-brackets': typeof ManagementFixturesCupKempesGenerateBracketsRoute
   '/management/fixtures/cup/cindor/': typeof ManagementFixturesCupCindorIndexRoute
   '/management/fixtures/cup/kempes/': typeof ManagementFixturesCupKempesIndexRoute
@@ -401,6 +460,8 @@ export interface FileRouteTypes {
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
+    | '/configuration/seasons/advance'
+    | '/configuration/seasons/deadlines'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
@@ -412,13 +473,17 @@ export interface FileRouteTypes {
     | '/configuration/seasons'
     | '/management/clubs'
     | '/management/competitions'
+    | '/management/finances'
     | '/management/fixtures'
     | '/management/players'
     | '/management/salary-rates'
     | '/management/users'
+    | '/management/finances/club/$clubId'
     | '/management/fixtures/cup'
     | '/management/fixtures/league'
+    | '/management/fixtures/post-season'
     | '/reset-password/index/$token'
+    | '/management/fixtures/cup/kempes/edit-groups'
     | '/management/fixtures/cup/kempes/generate-brackets'
     | '/management/fixtures/cup/cindor'
     | '/management/fixtures/cup/kempes'
@@ -442,6 +507,8 @@ export interface FileRouteTypes {
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
+    | '/configuration/seasons/advance'
+    | '/configuration/seasons/deadlines'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
@@ -453,13 +520,17 @@ export interface FileRouteTypes {
     | '/configuration/seasons'
     | '/management/clubs'
     | '/management/competitions'
+    | '/management/finances'
     | '/management/fixtures'
     | '/management/players'
     | '/management/salary-rates'
     | '/management/users'
+    | '/management/finances/club/$clubId'
     | '/management/fixtures/cup'
     | '/management/fixtures/league'
+    | '/management/fixtures/post-season'
     | '/reset-password/index/$token'
+    | '/management/fixtures/cup/kempes/edit-groups'
     | '/management/fixtures/cup/kempes/generate-brackets'
     | '/management/fixtures/cup/cindor'
     | '/management/fixtures/cup/kempes'
@@ -483,6 +554,8 @@ export interface FileRouteTypes {
     | '/club/delete/$id'
     | '/club/findOne/$id'
     | '/club/update/$id'
+    | '/configuration/seasons/advance'
+    | '/configuration/seasons/deadlines'
     | '/player/delete/$id'
     | '/player/find/$id'
     | '/player/update/$id'
@@ -494,13 +567,17 @@ export interface FileRouteTypes {
     | '/configuration/seasons/'
     | '/management/clubs/'
     | '/management/competitions/'
+    | '/management/finances/'
     | '/management/fixtures/'
     | '/management/players/'
     | '/management/salary-rates/'
     | '/management/users/'
+    | '/management/finances/club/$clubId'
     | '/management/fixtures/cup/'
     | '/management/fixtures/league/'
+    | '/management/fixtures/post-season/'
     | '/_auth/reset-password/index/$token'
+    | '/management/fixtures/cup/kempes/edit-groups'
     | '/management/fixtures/cup/kempes/generate-brackets'
     | '/management/fixtures/cup/cindor/'
     | '/management/fixtures/cup/kempes/'
@@ -525,6 +602,8 @@ export interface RootRouteChildren {
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
   ClubUpdateIdRoute: typeof ClubUpdateIdRoute
+  ConfigurationSeasonsAdvanceRoute: typeof ConfigurationSeasonsAdvanceRoute
+  ConfigurationSeasonsDeadlinesRoute: typeof ConfigurationSeasonsDeadlinesRoute
   PlayerDeleteIdRoute: typeof PlayerDeleteIdRoute
   PlayerFindIdRoute: typeof PlayerFindIdRoute
   PlayerUpdateIdRoute: typeof PlayerUpdateIdRoute
@@ -536,13 +615,17 @@ export interface RootRouteChildren {
   ConfigurationSeasonsIndexRoute: typeof ConfigurationSeasonsIndexRoute
   ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
   ManagementCompetitionsIndexRoute: typeof ManagementCompetitionsIndexRoute
+  ManagementFinancesIndexRoute: typeof ManagementFinancesIndexRoute
   ManagementFixturesIndexRoute: typeof ManagementFixturesIndexRoute
   ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
   ManagementSalaryRatesIndexRoute: typeof ManagementSalaryRatesIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
+  ManagementFinancesClubClubIdRoute: typeof ManagementFinancesClubClubIdRoute
   ManagementFixturesCupIndexRoute: typeof ManagementFixturesCupIndexRoute
   ManagementFixturesLeagueIndexRoute: typeof ManagementFixturesLeagueIndexRoute
+  ManagementFixturesPostSeasonIndexRoute: typeof ManagementFixturesPostSeasonIndexRoute
   AuthResetPasswordIndexTokenRoute: typeof AuthResetPasswordIndexTokenRoute
+  ManagementFixturesCupKempesEditGroupsRoute: typeof ManagementFixturesCupKempesEditGroupsRoute
   ManagementFixturesCupKempesGenerateBracketsRoute: typeof ManagementFixturesCupKempesGenerateBracketsRoute
   ManagementFixturesCupCindorIndexRoute: typeof ManagementFixturesCupCindorIndexRoute
   ManagementFixturesCupKempesIndexRoute: typeof ManagementFixturesCupKempesIndexRoute
@@ -677,6 +760,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementFixturesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/finances/': {
+      id: '/management/finances/'
+      path: '/management/finances'
+      fullPath: '/management/finances'
+      preLoaderRoute: typeof ManagementFinancesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/management/competitions/': {
       id: '/management/competitions/'
       path: '/management/competitions'
@@ -754,6 +844,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayerDeleteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/configuration/seasons/deadlines': {
+      id: '/configuration/seasons/deadlines'
+      path: '/configuration/seasons/deadlines'
+      fullPath: '/configuration/seasons/deadlines'
+      preLoaderRoute: typeof ConfigurationSeasonsDeadlinesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuration/seasons/advance': {
+      id: '/configuration/seasons/advance'
+      path: '/configuration/seasons/advance'
+      fullPath: '/configuration/seasons/advance'
+      preLoaderRoute: typeof ConfigurationSeasonsAdvanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/club/update/$id': {
       id: '/club/update/$id'
       path: '/club/update/$id'
@@ -782,6 +886,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordIndexTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/fixtures/post-season/': {
+      id: '/management/fixtures/post-season/'
+      path: '/management/fixtures/post-season'
+      fullPath: '/management/fixtures/post-season'
+      preLoaderRoute: typeof ManagementFixturesPostSeasonIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/management/fixtures/league/': {
       id: '/management/fixtures/league/'
       path: '/management/fixtures/league'
@@ -794,6 +905,13 @@ declare module '@tanstack/react-router' {
       path: '/management/fixtures/cup'
       fullPath: '/management/fixtures/cup'
       preLoaderRoute: typeof ManagementFixturesCupIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/finances/club/$clubId': {
+      id: '/management/finances/club/$clubId'
+      path: '/management/finances/club/$clubId'
+      fullPath: '/management/finances/club/$clubId'
+      preLoaderRoute: typeof ManagementFinancesClubClubIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/management/fixtures/cup/supercopa/': {
@@ -824,6 +942,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementFixturesCupKempesGenerateBracketsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/fixtures/cup/kempes/edit-groups': {
+      id: '/management/fixtures/cup/kempes/edit-groups'
+      path: '/management/fixtures/cup/kempes/edit-groups'
+      fullPath: '/management/fixtures/cup/kempes/edit-groups'
+      preLoaderRoute: typeof ManagementFixturesCupKempesEditGroupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -845,6 +970,8 @@ const rootRouteChildren: RootRouteChildren = {
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,
   ClubUpdateIdRoute: ClubUpdateIdRoute,
+  ConfigurationSeasonsAdvanceRoute: ConfigurationSeasonsAdvanceRoute,
+  ConfigurationSeasonsDeadlinesRoute: ConfigurationSeasonsDeadlinesRoute,
   PlayerDeleteIdRoute: PlayerDeleteIdRoute,
   PlayerFindIdRoute: PlayerFindIdRoute,
   PlayerUpdateIdRoute: PlayerUpdateIdRoute,
@@ -857,13 +984,19 @@ const rootRouteChildren: RootRouteChildren = {
   ConfigurationSeasonsIndexRoute: ConfigurationSeasonsIndexRoute,
   ManagementClubsIndexRoute: ManagementClubsIndexRoute,
   ManagementCompetitionsIndexRoute: ManagementCompetitionsIndexRoute,
+  ManagementFinancesIndexRoute: ManagementFinancesIndexRoute,
   ManagementFixturesIndexRoute: ManagementFixturesIndexRoute,
   ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,
   ManagementSalaryRatesIndexRoute: ManagementSalaryRatesIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,
+  ManagementFinancesClubClubIdRoute: ManagementFinancesClubClubIdRoute,
   ManagementFixturesCupIndexRoute: ManagementFixturesCupIndexRoute,
   ManagementFixturesLeagueIndexRoute: ManagementFixturesLeagueIndexRoute,
+  ManagementFixturesPostSeasonIndexRoute:
+    ManagementFixturesPostSeasonIndexRoute,
   AuthResetPasswordIndexTokenRoute: AuthResetPasswordIndexTokenRoute,
+  ManagementFixturesCupKempesEditGroupsRoute:
+    ManagementFixturesCupKempesEditGroupsRoute,
   ManagementFixturesCupKempesGenerateBracketsRoute:
     ManagementFixturesCupKempesGenerateBracketsRoute,
   ManagementFixturesCupCindorIndexRoute: ManagementFixturesCupCindorIndexRoute,

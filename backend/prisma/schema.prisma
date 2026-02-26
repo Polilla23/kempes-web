@@ -117,6 +117,7 @@ model Season {
 
   // Season halves relation
   seasonHalves  SeasonHalf[]
+  deadlines     SeasonDeadline[]
 }
 
 model Competition {
@@ -181,14 +182,14 @@ model Match {
   homeSourcePosition String? @map("home_source_position") // "WINNER" or "LOSER"
   awaySourcePosition String? @map("away_source_position") // "WINNER" or "LOSER"
 
-  competition Competition @relation(fields: [competitionId], references: [id])
-  homeClub    Club?       @relation("HomeMatches", fields: [homeClubId], references: [id])
-  awayClub    Club?       @relation("AwayMatches", fields: [awayClubId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  homeClub    Club?       @relation("HomeMatches", fields: [homeClubId], references: [id], onDelete: SetNull)
+  awayClub    Club?       @relation("AwayMatches", fields: [awayClubId], references: [id], onDelete: SetNull)
 
-  homeSourceMatch Match?  @relation("HomeSourceMatch", fields: [homeSourceMatchId], references: [id])
+  homeSourceMatch Match?  @relation("HomeSourceMatch", fields: [homeSourceMatchId], references: [id], onDelete: SetNull)
   homeNextMatches Match[] @relation("HomeSourceMatch")
 
-  awaySourceMatch  Match?  @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id])
+  awaySourceMatch  Match?  @relation("AwaySourceMatch", fields: [awaySourceMatchId], references: [id], onDelete: SetNull)
   dependentMatches Match[] @relation("AwaySourceMatch")
 
   covidPlayers MatchCovid[]
@@ -246,9 +247,9 @@ model Event {
   playerId String
   matchId  String
 
-  player Player    @relation(fields: [playerId], references: [id])
-  match  Match     @relation(fields: [matchId], references: [id])
-  type   EventType @relation(fields: [typeId], references: [id])
+  player Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  match  Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  type   EventType @relation(fields: [typeId], references: [id], onDelete: Cascade)
 
   @@index([playerId])
   @@index([matchId])
@@ -387,6 +388,7 @@ enum CompetitionName {
   SILVER_CUP
   CINDOR_CUP
   SUPER_CUP
+  PROMOTIONS
 }
 
 enum EventTypeName {
@@ -478,6 +480,15 @@ enum SeasonHalfType {
 enum TransferWindowStatus {
   OPEN
   CLOSED
+}
+
+enum DeadlineType {
+  TRANSFER_MARKET
+  COVID_REDRAW
+  MATCH_SCHEDULE
+  INSTALLMENT_DUE
+  SEASON_CLOSE
+  CUSTOM
 }
 
 // ============================================
@@ -617,6 +628,23 @@ model TransferWindow {
   @@map("transfer_windows")
 }
 
+model SeasonDeadline {
+  id          String       @id @default(uuid())
+  seasonId    String       @map("season_id")
+  type        DeadlineType
+  title       String
+  description String?
+  date        DateTime
+  isCompleted Boolean      @default(false) @map("is_completed")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@index([seasonId])
+  @@map("season_deadlines")
+}
+
 // ============================================
 // TRANSFER AND PAYMENT MODELS
 // ============================================
@@ -649,13 +677,13 @@ model Transfer {
   completedAt           DateTime?       @map("completed_at")
 
   // Relaciones
-  player                Player          @relation(fields: [playerId], references: [id])
-  fromClub              Club            @relation("TransferFromClub", fields: [fromClubId], references: [id])
-  toClub                Club            @relation("TransferToClub", fields: [toClubId], references: [id])
-  initiatorClub         Club?           @relation("TransferInitiator", fields: [initiatorClubId], references: [id])
-  transferWindow        TransferWindow? @relation(fields: [transferWindowId], references: [id])
-  seasonHalf            SeasonHalf      @relation("TransferSeasonHalf", fields: [seasonHalfId], references: [id])
-  returnSeasonHalf      SeasonHalf?     @relation("LoanReturnSeasonHalf", fields: [returnSeasonHalfId], references: [id])
+  player                Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  fromClub              Club            @relation("TransferFromClub", fields: [fromClubId], references: [id], onDelete: Cascade)
+  toClub                Club            @relation("TransferToClub", fields: [toClubId], references: [id], onDelete: Cascade)
+  initiatorClub         Club?           @relation("TransferInitiator", fields: [initiatorClubId], references: [id], onDelete: SetNull)
+  transferWindow        TransferWindow? @relation(fields: [transferWindowId], references: [id], onDelete: SetNull)
+  seasonHalf            SeasonHalf      @relation("TransferSeasonHalf", fields: [seasonHalfId], references: [id], onDelete: Cascade)
+  returnSeasonHalf      SeasonHalf?     @relation("LoanReturnSeasonHalf", fields: [returnSeasonHalfId], references: [id], onDelete: SetNull)
 
   installments          TransferInstallment[]
   playersAsPayment      TransferPlayerPayment[]
@@ -682,7 +710,7 @@ model TransferInstallment {
   paidAt            DateTime?         @map("paid_at")
 
   transfer          Transfer          @relation(fields: [transferId], references: [id], onDelete: Cascade)
-  dueSeasonHalf     SeasonHalf        @relation(fields: [dueSeasonHalfId], references: [id])
+  dueSeasonHalf     SeasonHalf        @relation(fields: [dueSeasonHalfId], references: [id], onDelete: Cascade)
   transaction       FinancialTransaction?
 
   @@unique([transferId, installmentNumber])
@@ -699,7 +727,7 @@ model TransferPlayerPayment {
   valuationAmount Float     @map("valuation_amount")
 
   transfer        Transfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
-  player          Player    @relation(fields: [playerId], references: [id])
+  player          Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([transferId, playerId])
   @@index([transferId])
@@ -722,10 +750,10 @@ model FinancialTransaction {
   seasonHalfId        String          @map("season_half_id")
   createdAt           DateTime        @default(now()) @map("created_at")
 
-  club                Club            @relation(fields: [clubId], references: [id])
-  transfer            Transfer?       @relation(fields: [transferId], references: [id])
-  installment         TransferInstallment? @relation(fields: [installmentId], references: [id])
-  seasonHalf          SeasonHalf      @relation(fields: [seasonHalfId], references: [id])
+  club                Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  transfer            Transfer?       @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  installment         TransferInstallment? @relation(fields: [installmentId], references: [id], onDelete: SetNull)
+  seasonHalf          SeasonHalf      @relation(fields: [seasonHalfId], references: [id], onDelete: Cascade)
 
   @@index([clubId])
   @@index([transferId])
@@ -744,8 +772,8 @@ model ClubSeasonBalance {
   endingBalance   Float       @default(0) @map("ending_balance")
   totalSalaries   Float       @default(0) @map("total_salaries")
 
-  club            Club        @relation(fields: [clubId], references: [id])
-  seasonHalf      SeasonHalf  @relation(fields: [seasonHalfId], references: [id])
+  club            Club        @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  seasonHalf      SeasonHalf  @relation(fields: [seasonHalfId], references: [id], onDelete: Cascade)
 
   @@unique([clubId, seasonHalfId])
   @@index([clubId])
@@ -760,7 +788,7 @@ model CompetitionPrize {
   prizeAmount       Float           @map("prize_amount")
   description       String?         // "Campeón Liga A", "Subcampeón"
 
-  competitionType   CompetitionType @relation(fields: [competitionTypeId], references: [id])
+  competitionType   CompetitionType @relation(fields: [competitionTypeId], references: [id], onDelete: Cascade)
 
   @@unique([competitionTypeId, position])
   @@index([competitionTypeId])

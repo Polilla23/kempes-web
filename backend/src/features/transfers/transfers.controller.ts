@@ -447,4 +447,58 @@ export class TransferController {
       )
     }
   }
+
+  // ==================== Installment Management ====================
+
+  // Pagar una cuota
+  async payInstallment(
+    req: FastifyRequest<{ Params: { transferId: string; installmentId: string } }>,
+    reply: FastifyReply
+  ) {
+    const { installmentId } = req.params
+
+    try {
+      const validInstallmentId = Validator.uuid(installmentId)
+      const result = await this.transferService.payInstallment(validInstallmentId)
+
+      return Response.success(reply, result, 'Installment paid successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Installment', installmentId)
+      }
+      if (error instanceof Error && error.message.includes('already been paid')) {
+        return Response.validation(reply, error.message, 'Installment already paid')
+      }
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while paying installment',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  // Actualizar estados de cuotas
+  async updateInstallmentStatuses(
+    req: FastifyRequest<{ Body: { seasonHalfId: string } }>,
+    reply: FastifyReply
+  ) {
+    const { seasonHalfId } = req.body
+
+    try {
+      const validSeasonHalfId = Validator.uuid(seasonHalfId)
+      const result = await this.transferService.updateInstallmentStatuses(validSeasonHalfId)
+
+      return Response.success(reply, result, 'Installment statuses updated successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while updating installment statuses',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
 }

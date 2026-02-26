@@ -33,6 +33,16 @@ export const competitionRoutes = async (fastify: FastifyInstance) => {
     handler: competitionController.delete.bind(competitionController),
   })
 
+  // Post-season endpoints
+  fastify.post('/:id/post-season', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.generatePostSeason.bind(competitionController),
+  })
+  fastify.get('/:id/post-season/status', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.getPostSeasonStatus.bind(competitionController),
+  })
+
   // Nuevos endpoints para bracket editor
   fastify.get('/bracket-structure', {
     preHandler: [fastify.authenticate],
@@ -47,5 +57,11 @@ export const competitionRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/cindor', {
     preHandler: [fastify.authenticate],
     handler: competitionController.createCindor.bind(competitionController),
+  })
+
+  // Promotions endpoint
+  fastify.post('/promotions', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.generatePromotions.bind(competitionController),
   })
 }

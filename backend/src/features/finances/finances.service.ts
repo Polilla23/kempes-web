@@ -1,4 +1,4 @@
-import { TransactionType, Prisma } from '@prisma/client'
+import { TransactionType, Prisma, PrismaClient, TransferType, TransferStatus } from '@prisma/client'
 import { IFinanceRepository } from '@/features/finances/interfaces/IFinanceRepository'
 import { ISeasonHalfRepository } from '@/features/season-halves/interfaces/ISeasonHalfRepository'
 import {
@@ -51,16 +51,20 @@ export interface RecordBonusInput {
 export class FinanceService {
   private financeRepository: IFinanceRepository
   private seasonHalfRepository: ISeasonHalfRepository
+  private prisma: PrismaClient
 
   constructor({
     financeRepository,
     seasonHalfRepository,
+    prisma,
   }: {
     financeRepository: IFinanceRepository
     seasonHalfRepository: ISeasonHalfRepository
+    prisma: PrismaClient
   }) {
     this.financeRepository = financeRepository
     this.seasonHalfRepository = seasonHalfRepository
+    this.prisma = prisma
   }
 
   // ==================== Transactions ====================
@@ -331,6 +335,160 @@ export class FinanceService {
       },
       transactionSummary: transactionsByType,
       transactionCount: transactions?.length || 0,
+    }
+  }
+
+  // ==================== Salary Processing ====================
+
+  async processSalaries(seasonHalfId: string) {
+    // Verificar idempotencia — si ya se procesaron salarios para este seasonHalf
+    const existingSalaryTransactions = await this.financeRepository.findAllTransactions({
+      seasonHalfId,
+      type: 'SALARY_EXPENSE',
+    })
+
+    if (existingSalaryTransactions && existingSalaryTransactions.length > 0) {
+      throw new Error('Salaries have already been processed for this season half')
+    }
+
+    // Obtener todos los jugadores activos con su club actual
+    const players = await this.prisma.player.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        lastName: true,
+        salary: true,
+        actualClubId: true,
+        ownerClubId: true,
+        isKempesita: true,
+      },
+    })
+
+    // Obtener préstamos activos para calcular porcentaje de salario
+    const activeLoans = await this.prisma.transfer.findMany({
+      where: {
+        type: { in: [TransferType.LOAN_OUT, TransferType.LOAN_IN] },
+        status: TransferStatus.ACTIVE,
+      },
+      select: {
+        playerId: true,
+        toClubId: true,
+        fromClubId: true,
+        loanSalaryPercentage: true,
+      },
+    })
+
+    // Crear mapa de préstamos por playerId
+    const loanMap = new Map<string, { toClubId: string; fromClubId: string; percentage: number }>()
+    for (const loan of activeLoans) {
+      loanMap.set(loan.playerId, {
+        toClubId: loan.toClubId,
+        fromClubId: loan.fromClubId,
+        percentage: loan.loanSalaryPercentage ?? 100,
+      })
+    }
+
+    // Agrupar salarios por club
+    const clubSalaries = new Map<string, { totalSalary: number; playerCount: number; playerDetails: Array<{ playerId: string; salary: number; percentage: number }> }>()
+
+    for (const player of players) {
+      const clubId = player.actualClubId
+      const loan = loanMap.get(player.id)
+
+      // Porcentaje de salario que paga el club actual
+      const salaryPercentage = loan ? loan.percentage : 100
+      const effectiveSalary = (player.salary * salaryPercentage) / 100
+
+      if (!clubSalaries.has(clubId)) {
+        clubSalaries.set(clubId, { totalSalary: 0, playerCount: 0, playerDetails: [] })
+      }
+
+      const clubData = clubSalaries.get(clubId)!
+      clubData.totalSalary += effectiveSalary
+      clubData.playerCount++
+      clubData.playerDetails.push({
+        playerId: player.id,
+        salary: effectiveSalary,
+        percentage: salaryPercentage,
+      })
+
+      // Si está en préstamo y el club dueño paga parte del salario
+      if (loan && salaryPercentage < 100) {
+        const ownerClubId = loan.fromClubId
+        const ownerPortion = (player.salary * (100 - salaryPercentage)) / 100
+
+        if (!clubSalaries.has(ownerClubId)) {
+          clubSalaries.set(ownerClubId, { totalSalary: 0, playerCount: 0, playerDetails: [] })
+        }
+
+        const ownerData = clubSalaries.get(ownerClubId)!
+        ownerData.totalSalary += ownerPortion
+      }
+    }
+
+    // Obtener nombres de clubes
+    const clubIds = Array.from(clubSalaries.keys())
+    const clubs = await this.prisma.club.findMany({
+      where: { id: { in: clubIds } },
+      select: { id: true, name: true },
+    })
+    const clubNameMap = new Map(clubs.map(c => [c.id, c.name]))
+
+    // Crear transacciones y registros PlayerSeasonHalfClub
+    const details: Array<{ clubId: string; clubName: string; totalSalary: number; playerCount: number }> = []
+    let totalSalariesPaid = 0
+
+    for (const [clubId, data] of clubSalaries) {
+      if (data.totalSalary <= 0) continue
+
+      // Crear transacción SALARY_EXPENSE
+      await this.createTransaction({
+        clubId,
+        type: 'SALARY_EXPENSE',
+        amount: -Math.abs(data.totalSalary),
+        description: `Salarios media temporada - ${data.playerCount} jugadores`,
+        seasonHalfId,
+      })
+
+      // Crear registros PlayerSeasonHalfClub
+      for (const pd of data.playerDetails) {
+        await this.prisma.playerSeasonHalfClub.upsert({
+          where: {
+            playerId_seasonHalfId_clubId: {
+              playerId: pd.playerId,
+              seasonHalfId,
+              clubId,
+            },
+          },
+          create: {
+            playerId: pd.playerId,
+            seasonHalfId,
+            clubId,
+            salaryPaid: pd.salary,
+            salaryPercentage: pd.percentage,
+          },
+          update: {
+            salaryPaid: pd.salary,
+            salaryPercentage: pd.percentage,
+          },
+        })
+      }
+
+      details.push({
+        clubId,
+        clubName: clubNameMap.get(clubId) || 'Unknown',
+        totalSalary: data.totalSalary,
+        playerCount: data.playerCount,
+      })
+
+      totalSalariesPaid += data.totalSalary
+    }
+
+    return {
+      clubsProcessed: details.length,
+      totalSalariesPaid,
+      details,
     }
   }
 

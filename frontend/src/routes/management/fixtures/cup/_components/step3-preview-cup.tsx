@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { ChevronLeft, Trophy, Users, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { ChevronLeft, Trophy, Users, CheckCircle2, AlertCircle, Loader2, BarChart3, Settings } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@tanstack/react-router'
 import type { CupWizardState } from '@/types/fixture'
+import { Link } from '@tanstack/react-router'
 import CompetitionService, { type CupGroup, type CreateCupPayload } from '@/services/competition.service'
 
 interface Step3PreviewCupProps {
@@ -66,11 +67,6 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
       
       console.log('✅ Cup created successfully')
       setSuccess(true)
-
-      // Redirigir después de 2 segundos
-      setTimeout(() => {
-        navigate({ to: '/management/competitions' })
-      }, 2000)
     } catch (err: any) {
       console.error('Error generating cup:', err)
       setError(err?.message || t('cup.errorCreating'))
@@ -86,16 +82,27 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
   if (success) {
     return (
       <Card className="border-green-500">
-        <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+        <CardContent className="flex flex-col items-center justify-center py-16 space-y-6">
           <CheckCircle2 className="h-16 w-16 text-green-500" />
           <div className="text-center">
-            <h3 className="text-2xl font-bold mb-2">{t('cup.cupCreated')}</h3>
+            <h3 className="text-2xl font-bold mb-2">{t('cup.successCreated')}</h3>
             <p className="text-muted-foreground">
               La copa se ha generado exitosamente con todos los grupos y equipos asignados.
             </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Redirigiendo a competiciones...
-            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button asChild variant="outline">
+              <Link to="/standings">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                {t('cup.successLinks.viewStandings')}
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/management/competitions">
+                <Settings className="mr-2 h-4 w-4" />
+                {t('cup.successLinks.goToCompetitions')}
+              </Link>
+            </Button>
           </div>
         </CardContent>
       </Card>

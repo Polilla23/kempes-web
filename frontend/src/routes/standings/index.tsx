@@ -13,6 +13,7 @@ import { useStandingsData } from './_hooks/use-standings-data'
 import { StandingsFilterBar } from './_components/standings-filter-bar'
 import { StandingsTable } from './_components/standings-table'
 import { StandingsCupGroups } from './_components/standings-cup-groups'
+import { StandingsCupCombined } from './_components/standings-cup-combined'
 import { StandingsSkeleton } from './_components/standings-skeleton'
 import { StandingsLegend } from './_components/standings-legend'
 import { StandingsBracketView } from './_components/standings-bracket-view'
@@ -37,6 +38,7 @@ function StandingsPage() {
   // Datos
   const {
     seasons,
+    allCompetitions,
     filteredCompetitions,
     leagueStandings,
     cupGroupsData,
@@ -142,7 +144,11 @@ function StandingsPage() {
           </>
         ) : cupGroupsData ? (
           <>
-            <StandingsCupGroups data={cupGroupsData} />
+            <StandingsCupCombined
+              cupGroupsData={cupGroupsData}
+              competitionId={filters.selectedCompetition}
+              allCompetitions={allCompetitions}
+            />
             <StandingsLegend type="cup-groups" />
           </>
         ) : (

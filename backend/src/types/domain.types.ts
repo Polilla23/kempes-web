@@ -61,12 +61,14 @@ export type PlayoutConfig = {
 // ============================================
 
 export type ReducidoConfig = {
-  // Cuartos: 5° vs 6° - perdedor queda 6to
-  quarterPositions: [number, number]   // [5, 6]
-  // Semi: Ganador cuartos vs 4° - perdedor queda 5to
-  semiPosition: number                  // 4
-  // Final: Ganador semi vs 3° - perdedor queda 4to, ganador queda 3ro y va a promoción
-  finalPosition: number                 // 3
+  // Primera ronda: los 2 equipos peor clasificados que entran al reducido
+  // Ej: [7, 8] para 7mo vs 8vo
+  startPositions: [number, number]
+  // Posiciones de equipos que esperan en cada ronda siguiente, en orden
+  // Ej: [6, 5, 4, 3] → Ronda 2: 6to vs Ganador R1, Ronda 3: 5to vs Ganador R2, etc.
+  // Cantidad variable: permite desde 1 ronda extra hasta N rondas
+  waitingPositions: number[]
+  // El ganador de la última ronda va a promoción inter-división
   winnerGoesToPromotion: boolean
   [key: string]: unknown    // Index signature para Prisma JSON
 }

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { DataTable } from '@/components/table/data-table'
 import { createColumnHelper } from '@tanstack/react-table'
 import type { Season } from '@/types'
@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Ellipsis, Pencil, Search, Trash2 } from 'lucide-react'
+import { Ellipsis, Pencil, Search, Trash2, FastForward, CalendarClock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,6 +28,7 @@ export const Route = createFileRoute('/configuration/seasons/')({
 
 function SeasonManagement() {
   const { t } = useTranslation('seasons')
+  const navigate = useNavigate()
   const [seasons, setSeasons] = useState<Season[]>([])
   const [isLoadingSeasons, setIsLoadingSeasons] = useState(true)
   const [search, setSearch] = useState('')
@@ -130,6 +131,10 @@ function SeasonManagement() {
                   <Pencil className="mr-2 h-4 w-4" />
                   {t('edit.action')}
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: '/configuration/seasons/deadlines', search: { seasonId: season.id } })}>
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  {t('deadlines.button')}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDeleteSeason(season.id)}>
                   <Trash2 className="mr-2 h-4 w-4 text-destructive" />
                   {t('delete.action')}
@@ -164,6 +169,22 @@ function SeasonManagement() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
+        <Button
+          variant="outline"
+          onClick={() => navigate({ to: '/configuration/seasons/deadlines' })}
+        >
+          <CalendarClock className="mr-2 h-4 w-4" />
+          {t('deadlines.button')}
+        </Button>
+        {seasons.some((s) => s.isActive) && (
+          <Button
+            variant="default"
+            onClick={() => navigate({ to: '/configuration/seasons/advance' })}
+          >
+            <FastForward className="mr-2 h-4 w-4" />
+            {t('advance.button')}
+          </Button>
+        )}
         <CreateSeasonForm onSuccess={fetchSeasons} />
       </div>
       <DataTable<Season, any> columns={columns} data={filteredSeasons} />

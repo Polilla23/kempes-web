@@ -18,7 +18,8 @@
     "clubs": "Clubs",
     "players": "Players",
     "salaryRates": "Salary Rates",
-    "competitions": "Competitions"
+    "competitions": "Competitions",
+    "finances": "Finances"
   },
   "configuration": {
     "title": "Configuration",
@@ -29,7 +30,8 @@
   "fixtures": {
     "title": "Create Fixtures",
     "createLeague": "Create League",
-    "createCup": "Create Cup"
+    "createCup": "Create Cup",
+    "postSeason": "Post-Season"
   },
   "userMenu": {
     "profileSettings": "Profile Settings",

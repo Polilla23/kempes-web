@@ -1,0 +1,54 @@
+{
+  "title": "Deadlines",
+  "subtitle": "Important dates and reminders for the season",
+  "types": {
+    "TRANSFER_MARKET": "Transfer Market",
+    "COVID_REDRAW": "COVID Redraw",
+    "MATCH_SCHEDULE": "Match Schedule",
+    "INSTALLMENT_DUE": "Installment Due",
+    "SEASON_CLOSE": "Season Close",
+    "CUSTOM": "Custom"
+  },
+  "create": {
+    "title": "New Deadline",
+    "description": "Add a new deadline to the season",
+    "button": "New Deadline"
+  },
+  "edit": {
+    "title": "Edit Deadline",
+    "description": "Modify deadline details"
+  },
+  "delete": {
+    "confirm": "Delete this deadline?",
+    "success": "Deadline deleted",
+    "error": "Error deleting deadline"
+  },
+  "fields": {
+    "type": "Type",
+    "title": "Title",
+    "description": "Description",
+    "date": "Date",
+    "status": "Status"
+  },
+  "status": {
+    "completed": "Completed",
+    "pending": "Pending",
+    "overdue": "Overdue"
+  },
+  "quickCreate": {
+    "button": "Create Default Deadlines",
+    "description": "Creates the 5 default deadline types automatically",
+    "success": "{{count}} deadlines created"
+  },
+  "empty": "No deadlines configured for this season",
+  "success": {
+    "created": "Deadline created successfully",
+    "updated": "Deadline updated successfully",
+    "toggled": "Deadline status updated"
+  },
+  "error": {
+    "fetch": "Error fetching deadlines",
+    "create": "Error creating deadline",
+    "update": "Error updating deadline"
+  }
+}

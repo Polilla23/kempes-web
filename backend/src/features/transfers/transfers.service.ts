@@ -11,6 +11,7 @@ import { SeasonHalfRepository } from '@/features/season-halves/season-halves.rep
 import { TransferWindowRepository } from '@/features/transfer-windows/transfer-windows.repository'
 import { PlayerRepository } from '@/features/players/players.repository'
 import { ClubRepository } from '@/features/clubs/clubs.repository'
+import { FinanceService } from '@/features/finances/finances.service'
 import {
   TransferNotFoundError,
   TransferWindowClosedError,
@@ -19,6 +20,8 @@ import {
   TransferAlreadyCompletedError,
   NoActiveSeasonHalfError,
   InvalidInstallmentCountError,
+  InstallmentNotFoundError,
+  InstallmentAlreadyPaidError,
   RosterLimitExceededError,
 } from '@/features/transfers/transfers.errors'
 
@@ -78,6 +81,7 @@ export class TransferService {
   private transferWindowRepository: TransferWindowRepository
   private playerRepository: PlayerRepository
   private clubRepository: ClubRepository
+  private financeService: FinanceService
 
   constructor({
     transferRepository,
@@ -85,18 +89,21 @@ export class TransferService {
     transferWindowRepository,
     playerRepository,
     clubRepository,
+    financeService,
   }: {
     transferRepository: TransferRepository
     seasonHalfRepository: SeasonHalfRepository
     transferWindowRepository: TransferWindowRepository
     playerRepository: PlayerRepository
     clubRepository: ClubRepository
+    financeService: FinanceService
   }) {
     this.transferRepository = transferRepository
     this.seasonHalfRepository = seasonHalfRepository
     this.transferWindowRepository = transferWindowRepository
     this.playerRepository = playerRepository
     this.clubRepository = clubRepository
+    this.financeService = financeService
   }
 
   async findAllTransfers(filters?: TransferFilters) {
@@ -606,6 +613,128 @@ export class TransferService {
     // Simplemente cancelar - el jugador nunca se movió
     return await this.transferRepository.updateOneById(id, {
       status: TransferStatus.CANCELLED,
+    })
+  }
+
+  // ==================== Installment Management ====================
+
+  // Pagar una cuota de transferencia
+  async payInstallment(installmentId: string) {
+    const installment = await this.transferRepository.findInstallmentById(installmentId)
+    if (!installment) {
+      throw new InstallmentNotFoundError()
+    }
+
+    if (installment.status === InstallmentStatus.PAID) {
+      throw new InstallmentAlreadyPaidError()
+    }
+
+    if (installment.status === InstallmentStatus.PENDING) {
+      throw new Error('Cannot pay a PENDING installment. It must be DUE or OVERDUE first.')
+    }
+
+    const transfer = installment.transfer
+
+    // Obtener la media temporada activa para las transacciones
+    const activeSeasonHalf = await this.getActiveSeasonHalf()
+
+    // Marcar la cuota como PAID
+    const updatedInstallment = await this.transferRepository.updateInstallment(installmentId, {
+      status: InstallmentStatus.PAID,
+      paidAt: new Date(),
+    })
+
+    // Crear transacción TRANSFER_EXPENSE para el club comprador (toClub)
+    await this.financeService.createTransaction({
+      clubId: transfer.toClubId,
+      type: 'TRANSFER_EXPENSE',
+      amount: -Math.abs(installment.amount),
+      description: `Cuota ${installment.installmentNumber}/${transfer.numberOfInstallments} - ${transfer.player.name} ${transfer.player.lastName}`,
+      transferId: transfer.id,
+      installmentId: installment.id,
+      seasonHalfId: activeSeasonHalf.id,
+    })
+
+    // Crear transacción TRANSFER_INCOME para el club vendedor (fromClub)
+    await this.financeService.createTransaction({
+      clubId: transfer.fromClubId,
+      type: 'TRANSFER_INCOME',
+      amount: Math.abs(installment.amount),
+      description: `Cuota ${installment.installmentNumber}/${transfer.numberOfInstallments} - ${transfer.player.name} ${transfer.player.lastName}`,
+      transferId: transfer.id,
+      seasonHalfId: activeSeasonHalf.id,
+    })
+
+    // Verificar si TODAS las cuotas están pagadas → completar transfer
+    const allInstallments = transfer.installments
+    const allPaid = allInstallments.every(
+      (inst) => inst.id === installmentId || inst.status === InstallmentStatus.PAID
+    )
+
+    if (allPaid) {
+      await this.transferRepository.updateOneById(transfer.id, {
+        status: TransferStatus.COMPLETED,
+        completedAt: new Date(),
+      })
+    }
+
+    return updatedInstallment
+  }
+
+  // Actualizar estados de cuotas al cambiar de media temporada
+  async updateInstallmentStatuses(currentSeasonHalfId: string) {
+    // Obtener todas las medias temporadas ordenadas
+    const allSeasonHalves = await this.seasonHalfRepository.findAll()
+    if (!allSeasonHalves) {
+      throw new Error('No season halves found')
+    }
+
+    const sortedHalves = allSeasonHalves.sort((a, b) => {
+      const seasonA = (a as any).season?.number ?? 0
+      const seasonB = (b as any).season?.number ?? 0
+      if (seasonA !== seasonB) return seasonA - seasonB
+      return a.halfType === SeasonHalfType.FIRST_HALF ? -1 : 1
+    })
+
+    const currentIndex = sortedHalves.findIndex(h => h.id === currentSeasonHalfId)
+    if (currentIndex === -1) {
+      throw new Error('Current season half not found')
+    }
+
+    // IDs de medias temporadas anteriores a la actual
+    const previousHalfIds = sortedHalves.slice(0, currentIndex).map(h => h.id)
+
+    // PENDING → DUE para cuotas cuyo dueSeasonHalfId === currentSeasonHalfId
+    const markedDue = await this.transferRepository.updateInstallmentsByStatus(
+      {
+        status: InstallmentStatus.PENDING,
+        dueSeasonHalfId: currentSeasonHalfId,
+      },
+      { status: InstallmentStatus.DUE }
+    )
+
+    // DUE → OVERDUE para cuotas cuyo dueSeasonHalfId es de una media temporada anterior
+    let markedOverdue = { count: 0 }
+    if (previousHalfIds.length > 0) {
+      markedOverdue = await this.transferRepository.updateInstallmentsByStatus(
+        {
+          status: InstallmentStatus.DUE,
+          dueSeasonHalfId: { in: previousHalfIds },
+        },
+        { status: InstallmentStatus.OVERDUE }
+      )
+    }
+
+    return {
+      markedDue: markedDue.count,
+      markedOverdue: markedOverdue.count,
+    }
+  }
+
+  // Obtener cuotas pendientes/vencidas
+  async findPendingInstallments() {
+    return await this.transferRepository.findAllInstallments({
+      status: undefined, // We filter in UI
     })
   }
 }
