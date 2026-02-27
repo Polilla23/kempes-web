@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Clock, CheckCircle2, Upload, ChevronDown, ChevronUp } from 'lucide-react'
+import { Clock, ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Match, MatchEvent } from '../_types/fixtures.types'
 import { ROUND_LABELS } from '../_types/fixtures.types'
@@ -118,20 +118,6 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
         </div>
 
-        {/* Status Icon */}
-        <div className="w-10 flex-shrink-0 flex justify-end">
-          {match.status === 'FINALIZADO' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-8 h-8 text-primary hover:bg-primary/10"
-            >
-              <Upload className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Expanded Events */}
