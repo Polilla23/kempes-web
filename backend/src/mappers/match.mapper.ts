@@ -157,7 +157,7 @@ export class MatchMapper {
     if (match.events && match.events.length > 0) {
       dto.events = match.events.map((event) => ({
         type: EVENT_TYPE_MAP[event.type.name] || event.type.name.toLowerCase(),
-        player: event.player.name,
+        player: `${event.player.name.charAt(0)}. ${event.player.lastName}`,
         team: (event.player.actualClubId === match.homeClubId ? 'home' : 'away') as 'home' | 'away',
       }))
     }

@@ -25,7 +25,9 @@ export const ROUND_LABELS: Record<string, string> = {
   ROUND_OF_16: 'Octavos de Final',
   QUARTERFINAL: 'Cuartos de Final',
   SEMIFINAL: 'Semifinales',
+  THIRD_PLACE: 'Tercer Puesto',
   FINAL: 'Final',
+  LIGUILLA: 'Liguilla',
 }
 
 // Estado de filtros
