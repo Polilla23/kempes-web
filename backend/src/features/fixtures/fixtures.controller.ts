@@ -360,6 +360,8 @@ export class FixtureController {
       Body: {
         homeClubGoals: number
         awayClubGoals: number
+        homeOwnGoals?: number
+        awayOwnGoals?: number
         homeEvents: Array<{ typeId: string; playerId: string; quantity: number }>
         awayEvents: Array<{ typeId: string; playerId: string; quantity: number }>
         mvpPlayerId: string
@@ -370,7 +372,7 @@ export class FixtureController {
   ) {
     try {
       const { matchId } = req.params
-      const { homeClubGoals, awayClubGoals, homeEvents, awayEvents, mvpPlayerId, screenshotUrl } = req.body
+      const { homeClubGoals, awayClubGoals, homeOwnGoals, awayOwnGoals, homeEvents, awayEvents, mvpPlayerId, screenshotUrl } = req.body
       const userId = (req as any).user.id
 
       const validatedMatchId = Validator.uuid(matchId)
@@ -379,6 +381,8 @@ export class FixtureController {
         matchId: validatedMatchId,
         homeClubGoals: Number(homeClubGoals),
         awayClubGoals: Number(awayClubGoals),
+        homeOwnGoals: Number(homeOwnGoals || 0),
+        awayOwnGoals: Number(awayOwnGoals || 0),
         homeEvents: homeEvents || [],
         awayEvents: awayEvents || [],
         mvpPlayerId,

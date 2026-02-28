@@ -49,6 +49,8 @@ export type SubmitResultInput = {
   matchId: string
   homeClubGoals: number
   awayClubGoals: number
+  homeOwnGoals: number
+  awayOwnGoals: number
   homeEvents: SubmitResultEventInput[]
   awayEvents: SubmitResultEventInput[]
   mvpPlayerId: string

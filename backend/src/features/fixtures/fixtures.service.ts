@@ -846,7 +846,8 @@ export class FixtureService {
    * Everything runs in a single transaction.
    */
   async submitResult(input: SubmitResultInput) {
-    const match = await this.fixtureRepository.findById(input.matchId)
+    // Use lightweight query (no sourceMatch sub-includes) that also fetches dependent matches
+    const match = await this.fixtureRepository.findByIdForSubmit(input.matchId)
     if (!match) {
       throw new MatchNotFoundError()
     }
@@ -859,8 +860,12 @@ export class FixtureService {
       throw new MatchNotAssignedError()
     }
 
-    // Verify user owns one of the clubs
-    const userClub = await this.fixtureRepository.findClubByUserId(input.userId)
+    // Parallel: verify user + fetch event types in one go
+    const [userClub, eventTypes] = await Promise.all([
+      this.fixtureRepository.findClubByUserId(input.userId),
+      this.prisma.eventType.findMany({ where: { name: { in: ['GOAL', 'MVP'] } } }),
+    ])
+
     if (!userClub || (userClub.id !== match.homeClubId && userClub.id !== match.awayClubId)) {
       throw new UserNotClubOwnerError()
     }
@@ -879,8 +884,10 @@ export class FixtureService {
       throw new MvpRequiredError()
     }
 
-    // Validate goal events match scores
-    const goalEventType = await this.prisma.eventType.findFirst({ where: { name: 'GOAL' } })
+    // Validate goal events + own goals match scores
+    const goalEventType = eventTypes.find((et) => et.name === 'GOAL')
+    const mvpEventType = eventTypes.find((et) => et.name === 'MVP')
+
     if (goalEventType) {
       const homeGoalSum = input.homeEvents
         .filter((e) => e.typeId === goalEventType.id)
@@ -889,16 +896,16 @@ export class FixtureService {
         .filter((e) => e.typeId === goalEventType.id)
         .reduce((sum, e) => sum + e.quantity, 0)
 
-      if (homeGoalSum !== input.homeClubGoals) {
-        throw new GoalEventsMismatchError('home', input.homeClubGoals, homeGoalSum)
+      const homeTotalGoals = homeGoalSum + (input.homeOwnGoals || 0)
+      const awayTotalGoals = awayGoalSum + (input.awayOwnGoals || 0)
+
+      if (homeTotalGoals !== input.homeClubGoals) {
+        throw new GoalEventsMismatchError('home', input.homeClubGoals, homeTotalGoals)
       }
-      if (awayGoalSum !== input.awayClubGoals) {
-        throw new GoalEventsMismatchError('away', input.awayClubGoals, awayGoalSum)
+      if (awayTotalGoals !== input.awayClubGoals) {
+        throw new GoalEventsMismatchError('away', input.awayClubGoals, awayTotalGoals)
       }
     }
-
-    // Get MVP event type
-    const mvpEventType = await this.prisma.eventType.findFirst({ where: { name: 'MVP' } })
 
     // Execute everything in a transaction
     const updatedMatch = await this.prisma.$transaction(async (tx) => {
@@ -908,6 +915,8 @@ export class FixtureService {
         data: {
           homeClubGoals: input.homeClubGoals,
           awayClubGoals: input.awayClubGoals,
+          homeOwnGoals: input.homeOwnGoals || 0,
+          awayOwnGoals: input.awayOwnGoals || 0,
           status: MatchStatus.FINALIZADO,
           resultRecordedAt: new Date(),
         },
@@ -918,51 +927,39 @@ export class FixtureService {
         },
       })
 
-      // 2. Create home events (expand quantity into individual records)
+      // 2. Build flat array of all event records and batch insert
+      const eventRecords: { typeId: string; playerId: string; matchId: string }[] = []
+
       for (const event of input.homeEvents) {
         for (let i = 0; i < event.quantity; i++) {
-          await tx.event.create({
-            data: {
-              type: { connect: { id: event.typeId } },
-              player: { connect: { id: event.playerId } },
-              match: { connect: { id: input.matchId } },
-            },
-          })
+          eventRecords.push({ typeId: event.typeId, playerId: event.playerId, matchId: input.matchId })
         }
       }
 
-      // 3. Create away events
       for (const event of input.awayEvents) {
         for (let i = 0; i < event.quantity; i++) {
-          await tx.event.create({
-            data: {
-              type: { connect: { id: event.typeId } },
-              player: { connect: { id: event.playerId } },
-              match: { connect: { id: input.matchId } },
-            },
-          })
+          eventRecords.push({ typeId: event.typeId, playerId: event.playerId, matchId: input.matchId })
         }
       }
 
-      // 4. Create MVP event
       if (mvpEventType) {
-        await tx.event.create({
-          data: {
-            type: { connect: { id: mvpEventType.id } },
-            player: { connect: { id: input.mvpPlayerId } },
-            match: { connect: { id: input.matchId } },
-          },
-        })
+        eventRecords.push({ typeId: mvpEventType.id, playerId: input.mvpPlayerId, matchId: input.matchId })
       }
 
-      return updated
-    }, { timeout: 30000 })
+      await tx.event.createMany({ data: eventRecords })
 
-    // 5. Post-transaction: propagate knockout dependencies (same logic as finishMatch)
+      return updated
+    }, { timeout: 15000 })
+
+    // Post-transaction: propagate knockout dependencies
+    // Reuse dependent matches already fetched by findByIdForSubmit (no extra query)
     const winnerId = input.homeClubGoals > input.awayClubGoals ? match.homeClubId : match.awayClubId
     const loserId = input.homeClubGoals > input.awayClubGoals ? match.awayClubId : match.homeClubId
 
-    const dependentMatches = await this.fixtureRepository.findMatchesDependingOn(input.matchId)
+    const dependentMatches = [
+      ...((match as any).homeNextMatches || []),
+      ...((match as any).dependentMatches || []),
+    ]
     let dependentMatchesUpdated = 0
 
     for (const nextMatch of dependentMatches) {

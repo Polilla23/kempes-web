@@ -10,6 +10,7 @@ interface MatchListPanelProps {
   selectedMatchId: string | null
   onSelectMatch: (matchId: string) => void
   isLoading: boolean
+  seasonNumber: number | null
 }
 
 const getCompetitionColors = (typeName: string) => {
@@ -39,6 +40,7 @@ export function MatchListPanel({
   selectedMatchId,
   onSelectMatch,
   isLoading,
+  seasonNumber,
 }: MatchListPanelProps) {
   const { t } = useTranslation('submitResult')
 
@@ -49,7 +51,9 @@ export function MatchListPanel({
           <Calendar className="w-5 h-5 text-primary" />
           <CardTitle className="text-foreground">{t('pendingMatches.title')}</CardTitle>
         </div>
-        <p className="text-sm text-muted-foreground">{t('pendingMatches.subtitle')}</p>
+        {seasonNumber != null && (
+          <p className="text-sm text-muted-foreground">{t('pendingMatches.subtitle', { season: seasonNumber, term: 1 })}</p>
+        )}
       </CardHeader>
       <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
         {isLoading ? (

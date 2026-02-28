@@ -3,7 +3,7 @@
   "subtitle": "Selecciona el partido y sube el resultado",
   "pendingMatches": {
     "title": "Tus Partidos Pendientes",
-    "subtitle": "Todas las competencias",
+    "subtitle": "Temporada {{season}} - Plazo {{term}}",
     "empty": "No tienes partidos pendientes",
     "selected": "Seleccionado"
   },
@@ -11,7 +11,8 @@
     "title": "Registrar Resultado",
     "local": "Local",
     "visitante": "Visitante",
-    "vs": "VS"
+    "vs": "VS",
+    "loadingPlayers": "Cargando jugadores..."
   },
   "events": {
     "title": "Eventos del Partido",
@@ -25,7 +26,14 @@
     "selectType": "Seleccionar tipo...",
     "selectPlayer": "Buscar jugador...",
     "noPlayers": "No se encontraron jugadores",
-    "goalsMismatch": "Los goles de {{teamName}} ({{goalEvents}}) no coinciden con el marcador ({{score}})"
+    "goalsMismatch": "Los goles de {{teamName}} ({{goalEvents}}) no coinciden con el marcador ({{score}})",
+    "ownGoals": "Autogoles"
+  },
+  "validation": {
+    "noMvp": "Debes seleccionar un MVP",
+    "goalsMismatchTeam": "Los goles de {{teamName}} no coinciden con los eventos cargados",
+    "incompleteEvents": "Todos los eventos deben tener tipo y jugador asignados",
+    "loadingPlayers": "Los jugadores todavía están cargando"
   },
   "mvp": {
     "title": "MVP del Partido",
