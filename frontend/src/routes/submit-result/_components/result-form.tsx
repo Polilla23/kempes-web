@@ -1,8 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
-import { Upload, Plus, Minus, AlertCircle, ImageIcon, Star } from 'lucide-react'
+import { Upload, Plus, Minus, AlertCircle, ImageIcon, Star, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { EventsColumn, type EventRow, type EventTypeOption } from './events-column'
@@ -24,22 +23,20 @@ interface ResultFormProps {
   awayPlayers: PlayerOption[]
   eventTypes: EventTypeOption[]
   goalTypeId: string | null
+  redCardTypeId: string | null
+  injuryTypeId: string | null
   mvpPlayerId: string | null
   onMvpChange: (playerId: string) => void
   screenshotFile: File | null
   onScreenshotChange: (file: File | null) => void
   isSubmitting: boolean
+  isLoadingPlayers: boolean
   onSubmit: () => void
   canSubmit: boolean
-}
-
-const getCompetitionColors = (typeName: string) => {
-  const name = typeName.toUpperCase()
-  if (name.includes('GOLD')) return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30'
-  if (name.includes('SILVER')) return 'bg-gray-400/20 text-gray-500 border-gray-400/40'
-  if (name.includes('KEMPES') || name.includes('CINDOR') || name.includes('SUPER'))
-    return 'bg-primary/10 text-primary border-primary/30'
-  return 'bg-muted text-muted-foreground border-transparent'
+  homeOwnGoals: number
+  awayOwnGoals: number
+  onHomeOwnGoalsChange: (n: number) => void
+  onAwayOwnGoalsChange: (n: number) => void
 }
 
 export function ResultForm({
@@ -56,13 +53,20 @@ export function ResultForm({
   awayPlayers,
   eventTypes,
   goalTypeId,
+  redCardTypeId,
+  injuryTypeId,
   mvpPlayerId,
   onMvpChange,
   screenshotFile,
   onScreenshotChange,
   isSubmitting,
+  isLoadingPlayers,
   onSubmit,
   canSubmit,
+  homeOwnGoals,
+  awayOwnGoals,
+  onHomeOwnGoalsChange,
+  onAwayOwnGoalsChange,
 }: ResultFormProps) {
   const { t } = useTranslation('submitResult')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -87,33 +91,27 @@ export function ResultForm({
   }
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-xs gap-1 mb-2',
-                getCompetitionColors(match.competition.competitionType.name)
-              )}
-            >
-              {match.competition.name}
-            </Badge>
-            <CardTitle className="text-foreground">{t('form.title')}</CardTitle>
+    <Card className="bg-card border-border relative">
+      {/* Loading overlay */}
+      {isLoadingPlayers && (
+        <div className="absolute inset-0 bg-card/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+          <div className="text-center space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+            <p className="text-sm text-muted-foreground">{t('form.loadingPlayers')}</p>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
+      )}
+
+      <CardContent className="space-y-4 px-4 md:px-6 pt-4">
         {/* Score Input */}
-        <div className="bg-secondary/50 rounded-2xl p-6">
-          <div className="flex items-center justify-between gap-4">
+        <div className="bg-secondary/50 rounded-2xl p-4 md:p-6">
+          <div className="flex items-center justify-between gap-2 md:gap-4">
             {/* Home Team */}
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center gap-3">
+            <div className="flex-1 space-y-3 md:space-y-4">
+              <div className="flex items-center gap-2 md:gap-3">
                 <div
                   className={cn(
-                    'w-14 h-14 rounded-xl flex items-center justify-center text-sm font-bold border overflow-hidden',
+                    'w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center text-xs md:text-sm font-bold border overflow-hidden shrink-0',
                     match.isUserHome
                       ? 'bg-primary/10 text-primary border-primary/30'
                       : 'bg-muted text-muted-foreground border-border'
@@ -129,8 +127,8 @@ export function ResultForm({
                     match.homeClub.name.substring(0, 3).toUpperCase()
                   )}
                 </div>
-                <div>
-                  <p className={cn('font-semibold', match.isUserHome && 'text-primary')}>
+                <div className="min-w-0">
+                  <p className={cn('font-semibold text-sm md:text-base truncate', match.isUserHome && 'text-primary')}>
                     {match.homeClub.name}
                   </p>
                   <p className="text-xs text-muted-foreground">{t('form.local')}</p>
@@ -138,49 +136,58 @@ export function ResultForm({
               </div>
 
               {/* Score Control */}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-2 md:gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => onHomeScoreChange(Math.max(0, homeScore - 1))}
-                  className="h-12 w-12 rounded-full bg-transparent"
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-transparent"
                 >
-                  <Minus className="w-5 h-5" />
+                  <Minus className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
-                <span className="text-6xl font-bold text-primary w-20 text-center tabular-nums">
-                  {homeScore}
-                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={99}
+                  value={homeScore}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10)
+                    onHomeScoreChange(isNaN(v) ? 0 : Math.max(0, Math.min(99, v)))
+                  }}
+                  className="w-16 md:w-20 text-center tabular-nums font-bold text-primary text-4xl md:text-6xl bg-transparent border-none outline-none focus:ring-2 focus:ring-primary/30 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => onHomeScoreChange(homeScore + 1)}
-                  className="h-12 w-12 rounded-full bg-transparent"
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-transparent"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
               </div>
             </div>
 
             {/* VS Divider */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="text-2xl font-bold text-muted-foreground">{t('form.vs')}</div>
-              <div className="w-px h-16 bg-border" />
+            <div className="flex flex-col items-center gap-1 md:gap-2">
+              <div className="text-lg md:text-2xl font-bold text-muted-foreground">{t('form.vs')}</div>
+              <div className="w-px h-10 md:h-16 bg-border" />
             </div>
 
             {/* Away Team */}
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-end gap-3">
-                <div className="text-right">
-                  <p className={cn('font-semibold', !match.isUserHome && 'text-primary')}>
+            <div className="flex-1 space-y-3 md:space-y-4">
+              <div className="flex items-center justify-end gap-2 md:gap-3">
+                <div className="text-right min-w-0">
+                  <p className={cn('font-semibold text-sm md:text-base truncate', !match.isUserHome && 'text-primary')}>
                     {match.awayClub.name}
                   </p>
                   <p className="text-xs text-muted-foreground">{t('form.visitante')}</p>
                 </div>
                 <div
                   className={cn(
-                    'w-14 h-14 rounded-xl flex items-center justify-center text-sm font-bold border overflow-hidden',
+                    'w-10 h-10 md:w-14 md:h-14 rounded-xl flex items-center justify-center text-xs md:text-sm font-bold border overflow-hidden shrink-0',
                     !match.isUserHome
                       ? 'bg-primary/10 text-primary border-primary/30'
                       : 'bg-muted text-muted-foreground border-border'
@@ -199,27 +206,36 @@ export function ResultForm({
               </div>
 
               {/* Score Control */}
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-2 md:gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => onAwayScoreChange(Math.max(0, awayScore - 1))}
-                  className="h-12 w-12 rounded-full bg-transparent"
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-transparent"
                 >
-                  <Minus className="w-5 h-5" />
+                  <Minus className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
-                <span className="text-6xl font-bold text-primary w-20 text-center tabular-nums">
-                  {awayScore}
-                </span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  max={99}
+                  value={awayScore}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10)
+                    onAwayScoreChange(isNaN(v) ? 0 : Math.max(0, Math.min(99, v)))
+                  }}
+                  className="w-16 md:w-20 text-center tabular-nums font-bold text-primary text-4xl md:text-6xl bg-transparent border-none outline-none focus:ring-2 focus:ring-primary/30 rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => onAwayScoreChange(awayScore + 1)}
-                  className="h-12 w-12 rounded-full bg-transparent"
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-transparent"
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
               </div>
             </div>
@@ -236,6 +252,10 @@ export function ResultForm({
             players={homePlayers}
             eventTypes={eventTypes}
             goalTypeId={goalTypeId}
+            redCardTypeId={redCardTypeId}
+            injuryTypeId={injuryTypeId}
+            ownGoals={homeOwnGoals}
+            onOwnGoalsChange={onHomeOwnGoalsChange}
           />
           <EventsColumn
             teamName={match.awayClub.name}
@@ -245,6 +265,10 @@ export function ResultForm({
             players={awayPlayers}
             eventTypes={eventTypes}
             goalTypeId={goalTypeId}
+            redCardTypeId={redCardTypeId}
+            injuryTypeId={injuryTypeId}
+            ownGoals={awayOwnGoals}
+            onOwnGoalsChange={onAwayOwnGoalsChange}
           />
         </div>
 
@@ -272,7 +296,7 @@ export function ResultForm({
         <div className="space-y-2">
           <Label className="text-foreground">{t('screenshot.title')}</Label>
           <div
-            className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/30"
+            className="border-2 border-dashed border-border rounded-xl p-4 md:p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/30"
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
@@ -309,7 +333,7 @@ export function ResultForm({
         </div>
 
         {/* Alert */}
-        <div className="flex items-start gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+        <div className="flex items-start gap-2 md:gap-3 p-3 md:p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
           <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
           <div className="text-sm">
             <p className="font-medium text-yellow-600">{t('warning.title')}</p>
@@ -319,13 +343,14 @@ export function ResultForm({
 
         {/* Submit Button */}
         <Button
-          className="w-full h-12 text-lg font-semibold"
+          className="w-full h-10 md:h-12 text-base md:text-lg font-semibold"
           onClick={onSubmit}
           disabled={!canSubmit || isSubmitting}
         >
           <Upload className="w-5 h-5 mr-2" />
           {isSubmitting ? t('submitting') : t('submit')}
         </Button>
+
       </CardContent>
     </Card>
   )

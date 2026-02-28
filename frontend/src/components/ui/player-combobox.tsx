@@ -68,7 +68,7 @@ export function PlayerCombobox({
         >
           <span className="truncate">
             {selectedPlayer
-              ? `${selectedPlayer.name} ${selectedPlayer.lastName}`
+              ? `${selectedPlayer.name.charAt(0)}. ${selectedPlayer.lastName}`
               : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

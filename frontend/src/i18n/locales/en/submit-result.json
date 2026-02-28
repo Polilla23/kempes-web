@@ -3,7 +3,7 @@
   "subtitle": "Select the match and submit the result",
   "pendingMatches": {
     "title": "Your Pending Matches",
-    "subtitle": "All competitions",
+    "subtitle": "Season {{season}} - Term {{term}}",
     "empty": "You have no pending matches",
     "selected": "Selected"
   },
@@ -11,7 +11,8 @@
     "title": "Register Result",
     "local": "Home",
     "visitante": "Away",
-    "vs": "VS"
+    "vs": "VS",
+    "loadingPlayers": "Loading players..."
   },
   "events": {
     "title": "Match Events",
@@ -25,7 +26,14 @@
     "selectType": "Select type...",
     "selectPlayer": "Search player...",
     "noPlayers": "No players found",
-    "goalsMismatch": "Goals for {{teamName}} ({{goalEvents}}) don't match the score ({{score}})"
+    "goalsMismatch": "Goals for {{teamName}} ({{goalEvents}}) don't match the score ({{score}})",
+    "ownGoals": "Own goals"
+  },
+  "validation": {
+    "noMvp": "You must select an MVP",
+    "goalsMismatchTeam": "Goals for {{teamName}} don't match the loaded events",
+    "incompleteEvents": "All events must have a type and player assigned",
+    "loadingPlayers": "Players are still loading"
   },
   "mvp": {
     "title": "Match MVP",

@@ -233,6 +233,16 @@ export const fixturesSchemas = {
         awayClubGoals: {
           type: 'integer',
           minimum: 0
+        },
+        homeOwnGoals: {
+          type: 'integer',
+          minimum: 0,
+          default: 0
+        },
+        awayOwnGoals: {
+          type: 'integer',
+          minimum: 0,
+          default: 0
         }
       },
       required: ['homeClubGoals', 'awayClubGoals']

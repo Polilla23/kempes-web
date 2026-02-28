@@ -64,6 +64,19 @@ export class FixtureRepository implements IFixtureRepository {
     })
   }
 
+  async findByIdForSubmit(id: string): Promise<Match | null> {
+    return this.prisma.match.findUnique({
+      where: { id },
+      include: {
+        homeClub: true,
+        awayClub: true,
+        competition: true,
+        homeNextMatches: true,
+        dependentMatches: true,
+      },
+    })
+  }
+
   async findMatchesDependingOn(id: string): Promise<Match[]> {
     const match = await this.prisma.match.findUnique({
       where: { id },

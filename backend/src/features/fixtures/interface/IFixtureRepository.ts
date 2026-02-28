@@ -6,6 +6,7 @@ export interface IFixtureRepository {
 
     findAll(): Promise<Match[]>;
     findById(id: string): Promise<Match | null>;
+    findByIdForSubmit(id: string): Promise<Match | null>;
     findMatchesDependingOn(id: string): Promise<Match[]>;
     getMatchesByCompetition(id: string): Promise<Match[]>;
     getMatchesWithFilters(seasonId?: string, competitionId?: string): Promise<Match[]>;
