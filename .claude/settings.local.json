@@ -23,7 +23,8 @@
       "Bash(npx tsr generate:*)",
       "Bash(npx @tanstack/router-plugin generate:*)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

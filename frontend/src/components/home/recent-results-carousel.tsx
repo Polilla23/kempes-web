@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,45 +13,59 @@ interface RecentResultsCarouselProps {
   isLoading: boolean
 }
 
-// Get competition style based on type
-const getCompetitionStyle = (format: string, name: string) => {
-  const nameLower = name.toLowerCase()
-
-  if (format === 'CUP') {
-    if (nameLower.includes('oro') || nameLower.includes('gold')) {
+// Get competition style based on competition type enum name
+const getCompetitionStyle = (competitionTypeName: string) => {
+  switch (competitionTypeName) {
+    case 'GOLD_CUP':
       return {
-        badge: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
-        border: 'border-amber-500/30 hover:border-amber-500/50',
+        badge: 'bg-amber-500/20 text-amber-700 dark:text-amber-400',
+        border: 'border-amber-500/50 hover:border-amber-500/70',
       }
-    }
-    if (nameLower.includes('plata') || nameLower.includes('silver')) {
+    case 'SILVER_CUP':
       return {
-        badge: 'bg-slate-400/15 text-slate-600 dark:text-slate-300',
-        border: 'border-slate-400/30 hover:border-slate-400/50',
+        badge: 'bg-slate-400/20 text-slate-700 dark:text-slate-300',
+        border: 'border-slate-400/50 hover:border-slate-400/70',
       }
-    }
-    if (nameLower.includes('kempes')) {
+    case 'KEMPES_CUP':
       return {
-        badge: 'bg-primary/15 text-primary',
-        border: 'border-primary/30 hover:border-primary/50',
+        badge: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
+        border: 'border-blue-500/50 hover:border-blue-500/70',
       }
-    }
-    return {
-      badge: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
-      border: 'border-purple-500/30 hover:border-purple-500/50',
-    }
-  }
-
-  // League default
-  return {
-    badge: 'bg-muted text-muted-foreground',
-    border: 'border-border hover:border-primary/30',
+    case 'CINDOR_CUP':
+      return {
+        badge: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+        border: 'border-emerald-500/50 hover:border-emerald-500/70',
+      }
+    case 'SUPER_CUP':
+      return {
+        badge: 'bg-rose-500/20 text-rose-700 dark:text-rose-400',
+        border: 'border-rose-500/50 hover:border-rose-500/70',
+      }
+    case 'LEAGUE_A':
+    case 'LEAGUE_B':
+    case 'LEAGUE_C':
+    case 'LEAGUE_D':
+    case 'LEAGUE_E':
+      return {
+        badge: 'bg-violet-500/20 text-violet-700 dark:text-violet-400',
+        border: 'border-violet-500/50 hover:border-violet-500/70',
+      }
+    case 'PROMOTIONS':
+      return {
+        badge: 'bg-orange-500/20 text-orange-700 dark:text-orange-400',
+        border: 'border-orange-500/50 hover:border-orange-500/70',
+      }
+    default:
+      return {
+        badge: 'bg-muted text-muted-foreground',
+        border: 'border-border hover:border-primary/30',
+      }
   }
 }
 
 function MatchCard({ match }: { match: RecentMatch }) {
   const { t } = useTranslation('home')
-  const style = getCompetitionStyle(match.competition.competitionType.format, match.competition.name)
+  const style = getCompetitionStyle(match.competition.competitionType.name)
 
   const homeWin = match.homeClubGoals > match.awayClubGoals
   const awayWin = match.awayClubGoals > match.homeClubGoals
@@ -61,7 +75,7 @@ function MatchCard({ match }: { match: RecentMatch }) {
   const awayClubName = match.awayClub?.name || 'TBD'
 
   return (
-    <div className={cn('bg-card border rounded-xl overflow-hidden transition-all hover:shadow-lg', style.border)}>
+    <div className={cn('bg-card border-2 rounded-xl overflow-hidden transition-all hover:shadow-lg', style.border)}>
       {/* Header with competition and time */}
       <div className="px-4 py-2.5 flex items-center justify-between border-b border-border/50">
         <div className={cn('flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-md', style.badge)}>
@@ -69,7 +83,9 @@ function MatchCard({ match }: { match: RecentMatch }) {
           <span className="truncate max-w-[100px]">{match.competition.name}</span>
         </div>
         <span className="text-xs text-muted-foreground">
-          {t('competition.matchday', { number: match.matchdayOrder })}
+          {match.knockoutRound
+            ? t(`competition.rounds.${match.knockoutRound}`, match.knockoutRound)
+            : t('competition.matchday', { number: match.matchdayOrder })}
         </span>
       </div>
 
@@ -180,57 +196,9 @@ function MatchCardSkeleton() {
 export function RecentResultsCarousel({ matches, isLoading }: RecentResultsCarouselProps) {
   const { t } = useTranslation('home')
   const scrollRef = useRef<HTMLDivElement>(null)
-  const animationRef = useRef<number | null>(null)
-  const [isPaused, setIsPaused] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeftPos, setScrollLeftPos] = useState(0)
-
-  // Triple the data for infinite scroll effect
-  const infiniteMatches = useMemo(() => [...matches, ...matches, ...matches], [matches])
-
-  // Auto-scroll with requestAnimationFrame - infinite loop
-  useEffect(() => {
-    if (isPaused || isDragging || matches.length === 0) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-        animationRef.current = null
-      }
-      return
-    }
-
-    const speed = 0.5
-
-    const animate = () => {
-      if (!scrollRef.current) return
-
-      const { scrollLeft, scrollWidth } = scrollRef.current
-      const singleSetWidth = scrollWidth / 3
-
-      // Reset to middle set when reaching end or beginning
-      if (scrollLeft >= singleSetWidth * 2) {
-        scrollRef.current.scrollLeft = singleSetWidth
-      } else if (scrollLeft <= 0) {
-        scrollRef.current.scrollLeft = singleSetWidth
-      } else {
-        scrollRef.current.scrollLeft += speed
-      }
-
-      animationRef.current = requestAnimationFrame(animate)
-    }
-
-    // Start from middle set
-    if (scrollRef.current) {
-      const singleSetWidth = scrollRef.current.scrollWidth / 3
-      scrollRef.current.scrollLeft = singleSetWidth
-    }
-
-    animationRef.current = requestAnimationFrame(animate)
-
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current)
-    }
-  }, [isPaused, isDragging, matches.length])
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -314,10 +282,7 @@ export function RecentResultsCarousel({ matches, isLoading }: RecentResultsCarou
             </div>
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
           </div>
-          <div>
-            <CardTitle className="text-foreground">{t('recentResults.title')}</CardTitle>
-            <p className="text-sm text-muted-foreground">{t('recentResults.subtitle')}</p>
-          </div>
+          <CardTitle className="text-foreground">{t('recentResults.title')}</CardTitle>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -346,17 +311,13 @@ export function RecentResultsCarousel({ matches, isLoading }: RecentResultsCarou
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           )}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => {
-            setIsDragging(false)
-            setIsPaused(false)
-          }}
+          onMouseLeave={() => setIsDragging(false)}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={() => setIsDragging(false)}
         >
-          {infiniteMatches.map((match, index) => (
-            <div key={`${match.id}-${index}`} className="flex-shrink-0 w-64">
+          {matches.map((match) => (
+            <div key={match.id} className="flex-shrink-0 w-64">
               <MatchCard match={match} />
             </div>
           ))}

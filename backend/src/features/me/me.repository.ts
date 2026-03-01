@@ -1,4 +1,4 @@
-import { PrismaClient, MatchStatus, CompetitionFormat, Prisma } from '@prisma/client'
+import { PrismaClient, MatchStatus, CompetitionFormat, CompetitionName, Prisma } from '@prisma/client'
 
 // Define the return types for matches with includes
 type MatchWithRelations = Prisma.MatchGetPayload<{
@@ -84,13 +84,22 @@ export class MyAccountRepository {
   }
 
   /**
-   * Get recent finished matches for the user's club
+   * Get recent finished matches for the user's club (current season only)
    */
   async getUserRecentMatches(clubId: string, limit: number = 10): Promise<MatchWithRelations[]> {
+    const activeSeason = await this.prisma.season.findFirst({
+      where: { isActive: true },
+    })
+
+    if (!activeSeason) return []
+
     return await this.prisma.match.findMany({
       where: {
         status: MatchStatus.FINALIZADO,
         OR: [{ homeClubId: clubId }, { awayClubId: clubId }],
+        competition: {
+          seasonId: activeSeason.id,
+        },
       },
       include: {
         homeClub: {
@@ -141,19 +150,20 @@ export class MyAccountRepository {
   }
 
   /**
-   * Get global recent finished matches (for carousel)
+   * Get global recent finished matches for carousel (current season only)
    */
   async getRecentMatches(limit: number = 20): Promise<MatchWithRelations[]> {
-    return await this.prisma.match.findMany({
+    const activeSeason = await this.prisma.season.findFirst({
+      where: { isActive: true },
+    })
+
+    if (!activeSeason) return []
+
+    const matches = await this.prisma.match.findMany({
       where: {
         status: MatchStatus.FINALIZADO,
-        homeClubId: { not: null },
-        awayClubId: { not: null },
-        NOT: {
-          OR: [
-            { homePlaceholder: 'BYE' },
-            { awayPlaceholder: 'BYE' },
-          ],
+        competition: {
+          seasonId: activeSeason.id,
         },
       },
       include: {
@@ -173,8 +183,12 @@ export class MyAccountRepository {
         { resultRecordedAt: 'desc' },
         { matchdayOrder: 'desc' },
       ],
-      take: limit,
     })
+
+    // Filter out BYE matches and matches without both clubs assigned
+    return matches
+      .filter(m => m.homeClubId && m.awayClubId && m.homePlaceholder !== 'BYE' && m.awayPlaceholder !== 'BYE')
+      .slice(0, limit)
   }
 
   /**
@@ -192,10 +206,18 @@ export class MyAccountRepository {
         pendingMatches: 0,
         cancelledMatches: 0,
         totalTransfers: 0, // Placeholder - transfers not implemented yet
+        champions: [],
       }
     }
 
-    const [played, pending, cancelled] = await Promise.all([
+    // Find the previous season for champions data
+    const previousSeason = activeSeason.number > 1
+      ? await this.prisma.season.findFirst({
+          where: { number: activeSeason.number - 1 },
+        })
+      : null
+
+    const [played, pending, cancelled, championsData] = await Promise.all([
       this.prisma.match.count({
         where: {
           competition: { seasonId: activeSeason.id },
@@ -214,7 +236,42 @@ export class MyAccountRepository {
           status: MatchStatus.CANCELADO,
         },
       }),
+      previousSeason
+        ? this.prisma.clubHistory.findMany({
+            where: {
+              seasonId: previousSeason.id,
+              finalPosition: 1,
+              competition: {
+                competitionType: {
+                  name: {
+                    in: [CompetitionName.LEAGUE_A, CompetitionName.GOLD_CUP, CompetitionName.CINDOR_CUP],
+                  },
+                },
+              },
+            },
+            include: {
+              club: { select: { id: true, name: true, logo: true } },
+              competition: {
+                include: { competitionType: { select: { name: true } } },
+              },
+            },
+          })
+        : Promise.resolve([]),
     ])
+
+    // Map champions in a fixed order: LEAGUE_A, GOLD_CUP, CINDOR_CUP
+    const championOrder = [CompetitionName.LEAGUE_A, CompetitionName.GOLD_CUP, CompetitionName.CINDOR_CUP]
+    const champions = championOrder
+      .map((compName) => {
+        const ch = championsData.find((c) => c.competition.competitionType.name === compName)
+        if (!ch) return null
+        return {
+          competitionType: ch.competition.competitionType.name,
+          clubName: ch.club.name,
+          clubLogo: ch.club.logo,
+        }
+      })
+      .filter(Boolean)
 
     return {
       seasonNumber: activeSeason.number,
@@ -223,6 +280,7 @@ export class MyAccountRepository {
       pendingMatches: pending,
       cancelledMatches: cancelled,
       totalTransfers: 0, // Placeholder
+      champions,
     }
   }
 }

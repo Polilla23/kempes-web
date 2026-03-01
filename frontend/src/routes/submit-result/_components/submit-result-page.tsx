@@ -113,6 +113,7 @@ export default function SubmitResultPage() {
       }
     }
     loadPlayers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMatch?.id])
 
   // Handle match selection
