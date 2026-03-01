@@ -46,13 +46,15 @@
     "noLeague": "You are not participating in any league this season"
   },
   "userMatches": {
-    "title": "Your Matches",
-    "subtitle": "Upcoming matches",
+    "title": "Your recent matches",
     "viewAll": "Upload",
+    "viewAllMatches": "View all my matches",
     "noMatches": "No recent matches",
     "win": "W",
     "draw": "D",
-    "loss": "L"
+    "loss": "L",
+    "isHome": "Home",
+    "isAway": "Away"
   },
   "transfers": {
     "title": "Latest Transfers",
@@ -77,7 +79,17 @@
   "competition": {
     "league": "League",
     "cup": "Cup",
-    "matchday": "Matchday {{number}}"
+    "matchday": "Matchday {{number}}",
+    "rounds": {
+      "ROUND_OF_64": "Round of 64",
+      "ROUND_OF_32": "Round of 32",
+      "ROUND_OF_16": "Round of 16",
+      "QUARTERFINAL": "Quarterfinals",
+      "SEMIFINAL": "Semifinals",
+      "THIRD_PLACE": "Third Place",
+      "FINAL": "Final",
+      "LIGUILLA": "Liguilla"
+    }
   },
   "time": {
     "minutes": "{{count}} min",

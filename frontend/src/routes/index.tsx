@@ -47,7 +47,7 @@ function HomePage() {
           HomeService.getSeasonStats(),
           HomeService.getUserClub(),
           HomeService.getHomeStandings(),
-          HomeService.getRecentMatches(10),
+          HomeService.getRecentMatches(15),
           HomeService.getUserRecentMatches(10),
         ])
 

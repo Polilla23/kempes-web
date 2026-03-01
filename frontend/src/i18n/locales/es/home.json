@@ -46,13 +46,15 @@
     "noLeague": "No participas en ninguna liga esta temporada"
   },
   "userMatches": {
-    "title": "Tus Partidos",
-    "subtitle": "Próximos a jugar",
+    "title": "Tus últimos partidos",
     "viewAll": "Subir",
+    "viewAllMatches": "Ver todos mis partidos",
     "noMatches": "Sin partidos recientes",
     "win": "V",
     "draw": "E",
-    "loss": "D"
+    "loss": "D",
+    "isHome": "Local",
+    "isAway": "Visitante"
   },
   "transfers": {
     "title": "Últimos Fichajes",
@@ -77,7 +79,17 @@
   "competition": {
     "league": "Liga",
     "cup": "Copa",
-    "matchday": "Fecha {{number}}"
+    "matchday": "Fecha {{number}}",
+    "rounds": {
+      "ROUND_OF_64": "64vos de Final",
+      "ROUND_OF_32": "32vos de Final",
+      "ROUND_OF_16": "Octavos de Final",
+      "QUARTERFINAL": "Cuartos de Final",
+      "SEMIFINAL": "Semifinales",
+      "THIRD_PLACE": "Tercer Puesto",
+      "FINAL": "Final",
+      "LIGUILLA": "Liguilla"
+    }
   },
   "time": {
     "minutes": "{{count}} min",

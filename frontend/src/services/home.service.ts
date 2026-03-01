@@ -1,6 +1,12 @@
 import api from './api'
 
 // Types for home page data
+export interface ChampionEntry {
+  competitionType: string
+  clubName: string
+  clubLogo: string | null
+}
+
 export interface SeasonStats {
   seasonNumber: number
   seasonId?: string
@@ -8,6 +14,7 @@ export interface SeasonStats {
   pendingMatches: number
   cancelledMatches: number
   totalTransfers: number
+  champions?: ChampionEntry[]
 }
 
 export interface UserClub {
