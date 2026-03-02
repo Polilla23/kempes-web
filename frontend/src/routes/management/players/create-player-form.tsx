@@ -55,7 +55,6 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
     resolver: zodResolver(FormSchemas.PlayerSchema),
     defaultValues: {
       name: '',
-      lastName: '',
       birthdate: new Date(),
       ownerClubId: '',
       actualClubId: '',
@@ -97,7 +96,6 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
     try {
       const newPlayer: RegisterPlayerFormData = {
         name: values.name,
-        lastName: values.lastName,
         birthdate: format(values.birthdate, 'dd/MM/yyyy'),
         ownerClubId: values.ownerClubId === 'none' ? '' : values.ownerClubId,
         actualClubId: values.actualClubId === 'none' ? '' : values.actualClubId,
@@ -135,7 +133,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
   }
 
   const handleDownloadExampleCSV = () => {
-    const csvContent = 'name;lastName;birthdate;actualClubId;ownerClubId;overall;sofifaId;transfermarktId;isActive\nJuan;Perez;15/03/1995;club-uuid-here;club-uuid-here;75;;;true\nCarlos;Lopez;22/08/1998;club-uuid-here;;60;;;true'
+    const csvContent = 'name;birthdate;actualClubId;ownerClubId;overall;sofifaId;transfermarktId;isActive\nJuan Perez;15/03/1995;club-uuid-here;club-uuid-here;75;;;true\nCarlos Lopez;22/08/1998;club-uuid-here;;60;;;true'
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -176,41 +174,25 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
 
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">{t('labels.firstName')}</FormLabel>
-                            <FormControl>
-                              <Input
-                                required
-                                type="text"
-                                placeholder={t('placeholders.enterPlayerName')}
-                                className="h-11"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-medium">{t('labels.lastName')}</FormLabel>
-                            <FormControl>
-                              <Input type="text" placeholder={t('placeholders.enterLastName')} className="h-11" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-medium">{t('labels.name')}</FormLabel>
+                          <FormControl>
+                            <Input
+                              required
+                              type="text"
+                              placeholder={t('placeholders.enterPlayerName')}
+                              className="h-11"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     {/* Calendar selection doesn't work */}
                     <FormField
                       control={form.control}
@@ -432,7 +414,6 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                       </p>
                       <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
                         <li>name (required)</li>
-                        <li>lastName (required)</li>
                         <li>birthdate (DD/MM/YYYY format)</li>
                         <li>ownerClubId (optional)</li>
                         <li>actualClubId (optional)</li>

@@ -30,7 +30,6 @@ export class MyAccountRepository {
               select: {
                 id: true,
                 name: true,
-                lastName: true,
                 overall: true,
               },
             },

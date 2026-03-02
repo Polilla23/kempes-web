@@ -90,7 +90,6 @@ function PlayerManagement() {
       return (
         // Safe string checks with optional chaining and fallbacks
         (player.name?.toLowerCase() || '').includes(lowerCaseSearch) ||
-        (player.lastName?.toLowerCase() || '').includes(lowerCaseSearch) ||
         (player.birthdate?.toLowerCase() || '').includes(lowerCaseSearch) ||
         // Convert numbers to strings for searching
         (player.overall?.toString() || '').includes(lowerCaseSearch) ||
@@ -109,40 +108,6 @@ function PlayerManagement() {
     setSetelectedPlayer(player)
     setIsEditingModalOpen(true)
   }
-
-  // const handleSavePlayer = async (playerId: string, updatedData: { name: string; lastName: string; birthdate: string; overall: number; salary: number; ownerClubId: string; sofifaId: string; transfermarktId: string; isKempesita: boolean; isActive: boolean;}) => {
-  //     try {
-  //         await PlayerService.updatePlayer(playerId, updatedData)
-  //         toast.success('Player updated successfully')
-  //         setEditingPlayer(null)
-  //         fetchPlayers() // Refresh the list
-  //     } catch (error: any) {
-  //         console.error('Error updating player: ', error)
-  //         toast.error(error instanceof Error ? error.message : 'An error occurred while updating the player.')
-  //     }
-  // }
-
-  // // Bulk Create Function
-  // const handleBulkCreate = async () => {
-  //     if (!selectedFile) {
-  //         toast.error('Please select a CSV file')
-  //         return
-  //     }
-
-  //     try {
-  //         setIsUploading(true)
-  //         await PlayerService.bulkCreatePlayer(selectedFile)
-  //         toast.success('Players created successfully from CSV')
-  //         setSelectedFile(null)
-  //         setShowCreateForm(false)
-  //         fetchPlayers()
-  //     } catch (error: any) {
-  //         console.error('Error creating players:', error)
-  //         toast.error(error instanceof Error ? error.message : 'An error occurred while creating players from CSV')
-  //     } finally {
-  //         setIsUploading(false)
-  //     }
-  // }
 
   const handleEditClose = () => {
     setSetelectedPlayer(null)
@@ -165,11 +130,7 @@ function PlayerManagement() {
   const columns = useMemo(
     () => [
       columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name={t('fields.firstname')} type="string" />,
-        cell: (info) => info.getValue(),
-      }),
-      columnHelper.accessor('lastName', {
-        header: (info) => <DefaultHeader info={info} name={t('fields.lastname')} type="string" />,
+        header: (info) => <DefaultHeader info={info} name={t('fields.name')} type="string" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('birthdate', {
@@ -213,21 +174,19 @@ function PlayerManagement() {
           </div>
         )
       }),
-      columnHelper.accessor('ownerClub', {
+      columnHelper.accessor(row => row.ownerClub?.name || '', {
+        id: 'ownerClub',
         header: (info) => <DefaultHeader info={info} name={t('fields.ownerClub')} type="string" />,
-        // cell: (info) => info.getValue(),
         cell: ({ row }) => {
-          const club: Club | null | undefined = row.getValue('ownerClub')
-          const name = club?.name || t('table.noClub')
+          const name = row.original.ownerClub?.name || t('table.noClub')
           return <span>{name}</span>
         },
       }),
-      columnHelper.accessor('actualClub', {
+      columnHelper.accessor(row => row.actualClub?.name || '', {
+        id: 'actualClub',
         header: (info) => <DefaultHeader info={info} name={t('fields.actualClub')} type="string" />,
-        // cell: (info) => info.getValue(),
         cell: ({ row }) => {
-          const club: Club | null | undefined = row.getValue('actualClub')
-          const name = club?.name || t('table.noClub')
+          const name = row.original.actualClub?.name || t('table.noClub')
           return <span>{name}</span>
         },
       }),

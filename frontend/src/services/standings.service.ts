@@ -13,7 +13,11 @@ export interface TeamStanding {
   goalDifference: number
   points: number
   position: number
-  zone?: 'champion' | 'promotion' | 'playoff' | 'relegation' | 'promotion_playoff' | 'gold_cup' | 'silver_cup' | null
+  zone?: 'champion' | 'liguilla' | 'triangular'
+    | 'promotion' | 'promotion_playoff'
+    | 'playout' | 'relegation' | 'relegation_playoff'
+    | 'reducido' | 'playoff'
+    | 'gold_cup' | 'silver_cup' | null
 }
 
 export interface CompetitionStandings {
@@ -24,6 +28,8 @@ export interface CompetitionStandings {
   isComplete: boolean
   matchesPlayed: number
   matchesTotal: number
+  leaguePosition?: 'TOP' | 'MIDDLE' | 'BOTTOM' | null
+  activeZones?: string[]
 }
 
 export interface CupGroupStandings {

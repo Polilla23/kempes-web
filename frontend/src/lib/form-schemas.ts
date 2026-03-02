@@ -42,7 +42,6 @@ class FormSchemas {
 
   static PlayerSchema = z.object({
     name: z.string().min(1, { message: 'Name is required.' }),
-    lastName: z.string().min(1, { message: 'Last name is required.' }),
     birthdate: z.date(),
     ownerClubId: z.string().min(1, { message: 'Owner club is required.' }),
     actualClubId: z.string().optional(),

@@ -14,7 +14,6 @@ export class TransferRepository implements ITransferRepository {
         select: {
           id: true,
           name: true,
-          lastName: true,
           overall: true,
           isKempesita: true,
         },
@@ -69,7 +68,6 @@ export class TransferRepository implements ITransferRepository {
             select: {
               id: true,
               name: true,
-              lastName: true,
               overall: true,
             },
           },
@@ -218,7 +216,7 @@ export class TransferRepository implements ITransferRepository {
           include: {
             fromClub: { select: { id: true, name: true } },
             toClub: { select: { id: true, name: true } },
-            player: { select: { id: true, name: true, lastName: true } },
+            player: { select: { id: true, name: true } },
             installments: { orderBy: { installmentNumber: 'asc' } },
           },
         },

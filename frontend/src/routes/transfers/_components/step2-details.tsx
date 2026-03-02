@@ -59,8 +59,7 @@ export function Step2Details({
     return sellerPlayers.filter(
       (p) =>
         p.isActive &&
-        (p.name.toLowerCase().includes(searchSeller.toLowerCase()) ||
-          p.lastName.toLowerCase().includes(searchSeller.toLowerCase()))
+        p.name.toLowerCase().includes(searchSeller.toLowerCase())
     )
   }, [sellerPlayers, searchSeller])
 
@@ -68,8 +67,7 @@ export function Step2Details({
     return buyerPlayers.filter(
       (p) =>
         p.isActive &&
-        (p.name.toLowerCase().includes(searchBuyer.toLowerCase()) ||
-          p.lastName.toLowerCase().includes(searchBuyer.toLowerCase()))
+        p.name.toLowerCase().includes(searchBuyer.toLowerCase())
     )
   }, [buyerPlayers, searchBuyer])
 
@@ -185,7 +183,7 @@ export function Step2Details({
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
             <span className="font-medium">
-              {player.name} {player.lastName}
+              {player.name}
             </span>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span>OVR: {player.overall || '-'}</span>
@@ -238,7 +236,7 @@ export function Step2Details({
     >
       <div className="flex-1">
         <span className="text-sm font-medium">
-          {config.playerName} {config.playerLastName}
+          {config.playerName}
         </span>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>OVR: {config.overall || '-'}</span>

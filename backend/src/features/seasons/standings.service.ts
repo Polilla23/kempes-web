@@ -1,14 +1,7 @@
 import { PrismaClient, MovementType, CompetitionFormat, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory } from '@prisma/client'
-import { TeamStanding, CompetitionStandings } from '@/types'
+import { TeamStanding, CompetitionStandings, TopLeagueRules, MiddleLeagueRules, BottomLeagueRules, LiguillaConfig } from '@/types'
 
-interface LeagueRules {
-  teamsPerLeague: number
-  championDefinition: 'FIRST_PLACE' | 'PLAYOFF'
-  directPromotions: number
-  directRelegations: number
-  playoffPromotions?: number
-  playoffRelegations?: number
-}
+type AnyLeagueRules = TopLeagueRules | MiddleLeagueRules | BottomLeagueRules
 
 interface TeamMovement {
   clubId: string
@@ -140,13 +133,8 @@ export class StandingsService {
       goalDifference: stat.goalsFor - stat.goalsAgainst,
     }))
 
-    // Ordenar por: 1) Puntos, 2) Diferencia de gol, 3) Goles a favor
-    standings.sort((a, b) => {
-      if (b.points !== a.points) return b.points - a.points
-      if (b.goalDifference !== a.goalDifference)
-        return b.goalDifference - a.goalDifference
-      return b.goalsFor - a.goalsFor
-    })
+    // Ordenar con desempate: head-to-head para 2 equipos, DG general para 3+
+    this.applyTiebreakers(standings, regularMatches)
 
     // Asignar posiciones
     standings.forEach((standing, index) => {
@@ -154,15 +142,20 @@ export class StandingsService {
     })
 
     // Asignar zonas para ligas
+    let leaguePosition: 'TOP' | 'MIDDLE' | 'BOTTOM' | null = null
     if (competition.competitionType.format === CompetitionFormat.LEAGUE) {
-      const rules = competition.rules as unknown as LeagueRules
-      if (rules) {
+      const rules = competition.rules as unknown as AnyLeagueRules
+      if (rules && rules.league_position) {
+        leaguePosition = rules.league_position
         this.assignZones(standings, rules)
       }
     }
 
     // Determinar si la competición está completa
     const isComplete = completedMatches.length === totalMatches && totalMatches > 0
+
+    // Zonas activas para leyenda dinámica
+    const activeZones = [...new Set(standings.map(s => s.zone).filter(Boolean))] as string[]
 
     return {
       competitionId: competition.id,
@@ -172,6 +165,8 @@ export class StandingsService {
       isComplete,
       matchesPlayed: completedMatches.length,
       matchesTotal: totalMatches,
+      leaguePosition,
+      activeZones,
     }
   }
 
@@ -220,69 +215,77 @@ export class StandingsService {
       const league = leagues[i]
       const standingsResult = await this.calculateStandings(league.id)
       const standings = standingsResult.standings
-      const rules = league.rules as unknown as LeagueRules
+      const rules = league.rules as unknown as AnyLeagueRules
 
-      // Campeón
-      if (standings.length > 0) {
-        const champion = standings[0]
-        movements.push({
-          clubId: champion.clubId,
-          clubName: champion.clubName,
-          fromCompetitionId: league.id,
-          fromLeague: league.competitionType.name,
-          toCompetitionId: league.id, // Se mantiene en la misma liga
-          toLeague: league.competitionType.name,
-          movementType: MovementType.CHAMPION,
-          reason: 'Campeón',
-          finalPosition: 1,
-        })
-        processedClubs.add(champion.clubId)
-      }
-
-      // Ascensos directos (si no es la liga más alta)
-      if (i > 0 && rules.directPromotions > 0) {
-        const upperLeague = leagues[i - 1]
-
-        for (let j = 0; j < rules.directPromotions && j < standings.length; j++) {
-          const team = standings[j]
-          if (processedClubs.has(team.clubId)) continue
-
+      // Campeón (solo Liga A con FIRST_PLACE)
+      if (rules.league_position === 'TOP' && standings.length > 0) {
+        const topRules = rules as TopLeagueRules
+        if (topRules.championship.format === 'FIRST_PLACE') {
+          const champion = standings[0]
           movements.push({
-            clubId: team.clubId,
-            clubName: team.clubName,
+            clubId: champion.clubId,
+            clubName: champion.clubName,
             fromCompetitionId: league.id,
             fromLeague: league.competitionType.name,
-            toCompetitionId: upperLeague.id,
-            toLeague: upperLeague.competitionType.name,
-            movementType: MovementType.DIRECT_PROMOTION,
-            reason: `Posición ${team.position}`,
-            finalPosition: team.position,
+            toCompetitionId: league.id,
+            toLeague: league.competitionType.name,
+            movementType: MovementType.CHAMPION,
+            reason: 'Campeón',
+            finalPosition: 1,
           })
-          processedClubs.add(team.clubId)
+          processedClubs.add(champion.clubId)
         }
       }
 
-      // Descensos directos (si no es la liga más baja)
-      if (i < leagues.length - 1 && rules.directRelegations > 0) {
-        const lowerLeague = leagues[i + 1]
+      // Ascensos directos (solo MIDDLE y BOTTOM, no la liga más alta)
+      if (i > 0 && 'promotions' in rules) {
+        const promoRules = rules as MiddleLeagueRules | BottomLeagueRules
+        const directPromoQty = promoRules.promotions.direct.quantity
+        if (directPromoQty > 0) {
+          const upperLeague = leagues[i - 1]
+          for (let j = 0; j < directPromoQty && j < standings.length; j++) {
+            const team = standings[j]
+            if (processedClubs.has(team.clubId)) continue
 
-        for (let j = 0; j < rules.directRelegations && j < standings.length; j++) {
-          const relegatedIndex = standings.length - 1 - j
-          const team = standings[relegatedIndex]
-          if (processedClubs.has(team.clubId)) continue
+            movements.push({
+              clubId: team.clubId,
+              clubName: team.clubName,
+              fromCompetitionId: league.id,
+              fromLeague: league.competitionType.name,
+              toCompetitionId: upperLeague.id,
+              toLeague: upperLeague.competitionType.name,
+              movementType: MovementType.DIRECT_PROMOTION,
+              reason: `Posición ${team.position}`,
+              finalPosition: team.position,
+            })
+            processedClubs.add(team.clubId)
+          }
+        }
+      }
 
-          movements.push({
-            clubId: team.clubId,
-            clubName: team.clubName,
-            fromCompetitionId: league.id,
-            fromLeague: league.competitionType.name,
-            toCompetitionId: lowerLeague.id,
-            toLeague: lowerLeague.competitionType.name,
-            movementType: MovementType.DIRECT_RELEGATION,
-            reason: `Posición ${team.position}`,
-            finalPosition: team.position,
-          })
-          processedClubs.add(team.clubId)
+      // Descensos directos (si no es la liga más baja y tiene relegations)
+      if (i < leagues.length - 1 && rules.relegations) {
+        const directRelQty = rules.relegations.direct.quantity
+        if (directRelQty > 0) {
+          const lowerLeague = leagues[i + 1]
+          for (let j = 0; j < directRelQty && j < standings.length; j++) {
+            const relegatedIndex = standings.length - 1 - j
+            const team = standings[relegatedIndex]
+            if (processedClubs.has(team.clubId)) continue
+
+            movements.push({
+              clubId: team.clubId,
+              clubName: team.clubName,
+              fromCompetitionId: league.id,
+              fromLeague: league.competitionType.name,
+              toCompetitionId: lowerLeague.id,
+              toLeague: lowerLeague.competitionType.name,
+              movementType: MovementType.DIRECT_RELEGATION,
+              reason: `Posición ${team.position}`,
+              finalPosition: team.position,
+            })
+            processedClubs.add(team.clubId)
+          }
         }
       }
 
@@ -1017,37 +1020,252 @@ export class StandingsService {
     return allStandings
   }
 
-  // ===================== STANDINGS SNAPSHOT =====================
+  // ===================== TIEBREAKER LOGIC =====================
 
   /**
-   * Asigna zonas (champion, promotion, relegation, etc.) basado en las reglas de la liga
+   * Aplica criterios de desempate a los standings ya ordenados por puntos
+   * - 2 equipos igualados: head-to-head → h2h DG → DG general
+   * - 3+ equipos igualados: DG general → GF
    */
-  private assignZones(standings: TeamStanding[], rules: LeagueRules): void {
+  private applyTiebreakers(
+    standings: TeamStanding[],
+    matches: Array<{ homeClubId: string | null; awayClubId: string | null; homeClubGoals: number; awayClubGoals: number; status: string }>
+  ): void {
+    // Primero ordenar por puntos descendente
+    standings.sort((a, b) => b.points - a.points)
+
+    // Agrupar equipos consecutivos con mismos puntos y aplicar desempate
+    let i = 0
+    while (i < standings.length) {
+      let j = i
+      while (j < standings.length && standings[j].points === standings[i].points) {
+        j++
+      }
+      const groupSize = j - i
+
+      if (groupSize === 2) {
+        // Head-to-head para exactamente 2 equipos
+        const result = this.resolveHeadToHead(standings[i], standings[i + 1], matches)
+        if (result > 0) {
+          // Swap: standings[i+1] debería ir primero
+          ;[standings[i], standings[i + 1]] = [standings[i + 1], standings[i]]
+        }
+      } else if (groupSize >= 3) {
+        // Para 3+ equipos: ordenar por DG general, luego GF
+        const subGroup = standings.slice(i, j)
+        subGroup.sort((a, b) => {
+          if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference
+          return b.goalsFor - a.goalsFor
+        })
+        for (let k = 0; k < subGroup.length; k++) {
+          standings[i + k] = subGroup[k]
+        }
+      }
+      i = j
+    }
+  }
+
+  /**
+   * Resuelve el desempate head-to-head entre 2 equipos
+   * Retorna: negativo si teamA va primero, positivo si teamB va primero, 0 si siguen iguales
+   */
+  private resolveHeadToHead(
+    teamA: TeamStanding,
+    teamB: TeamStanding,
+    matches: Array<{ homeClubId: string | null; awayClubId: string | null; homeClubGoals: number; awayClubGoals: number; status: string }>
+  ): number {
+    // Buscar partidos FINALIZADOS entre ambos equipos
+    const h2hMatches = matches.filter(m =>
+      m.status === MatchStatus.FINALIZADO &&
+      ((m.homeClubId === teamA.clubId && m.awayClubId === teamB.clubId) ||
+       (m.homeClubId === teamB.clubId && m.awayClubId === teamA.clubId))
+    )
+
+    if (h2hMatches.length === 0) {
+      // Sin partidos entre sí, caer a DG general
+      if (teamB.goalDifference !== teamA.goalDifference) return teamA.goalDifference - teamB.goalDifference
+      return teamA.goalsFor - teamB.goalsFor
+    }
+
+    // Contar victorias y goles head-to-head
+    let winsA = 0, winsB = 0
+    let h2hGoalsA = 0, h2hGoalsB = 0
+
+    for (const m of h2hMatches) {
+      const aGoals = m.homeClubId === teamA.clubId ? m.homeClubGoals : m.awayClubGoals
+      const bGoals = m.homeClubId === teamB.clubId ? m.homeClubGoals : m.awayClubGoals
+      h2hGoalsA += aGoals
+      h2hGoalsB += bGoals
+      if (aGoals > bGoals) winsA++
+      else if (bGoals > aGoals) winsB++
+    }
+
+    // Criterio 1: Partidos entre sí (quien ganó más)
+    if (winsA !== winsB) return winsB - winsA
+
+    // Criterio 2: DG de partidos entre sí (si cada uno ganó 1, o empates)
+    if (h2hGoalsA !== h2hGoalsB) return h2hGoalsB - h2hGoalsA
+
+    // Criterio 3: DG general
+    if (teamB.goalDifference !== teamA.goalDifference) return teamA.goalDifference - teamB.goalDifference
+    return teamA.goalsFor - teamB.goalsFor
+  }
+
+  // ===================== ZONE ASSIGNMENT =====================
+
+  /**
+   * Asigna zonas basado en las reglas reales de la liga (TOP/MIDDLE/BOTTOM)
+   */
+  private assignZones(standings: TeamStanding[], rules: AnyLeagueRules): void {
+    // Resetear zonas
+    standings.forEach(team => { team.zone = null })
+
+    if (rules.league_position === 'TOP') {
+      this.assignTopLeagueZones(standings, rules as TopLeagueRules)
+    } else if (rules.league_position === 'MIDDLE') {
+      this.assignMiddleLeagueZones(standings, rules as MiddleLeagueRules)
+    } else if (rules.league_position === 'BOTTOM') {
+      this.assignBottomLeagueZones(standings, rules as BottomLeagueRules)
+    }
+  }
+
+  private assignTopLeagueZones(standings: TeamStanding[], rules: TopLeagueRules): void {
     const total = standings.length
 
-    standings.forEach((team, index) => {
-      const position = index + 1 // 1-based
-
-      if (position === 1) {
-        team.zone = 'champion'
-      } else if (rules.directPromotions && position <= rules.directPromotions) {
-        team.zone = 'promotion'
-      } else if (
-        rules.playoffPromotions &&
-        position <= (rules.directPromotions || 0) + rules.playoffPromotions
-      ) {
-        team.zone = 'promotion_playoff'
-      } else if (rules.directRelegations && position > total - rules.directRelegations) {
-        team.zone = 'relegation'
-      } else if (
-        rules.playoffRelegations &&
-        position > total - (rules.directRelegations || 0) - rules.playoffRelegations
-      ) {
-        team.zone = 'playoff'
-      } else {
-        team.zone = null
+    // Zona de campeonato (desde arriba)
+    if (rules.championship.format === 'FIRST_PLACE') {
+      if (total > 0) standings[0].zone = 'champion'
+    } else if (rules.championship.format === 'LIGUILLA') {
+      const liguilla = rules.championship as LiguillaConfig
+      for (let i = 0; i < Math.min(liguilla.teamsCount, total); i++) {
+        standings[i].zone = 'liguilla'
       }
-    })
+    } else if (rules.championship.format === 'TRIANGULAR') {
+      for (let i = 0; i < Math.min(3, total); i++) {
+        standings[i].zone = 'triangular'
+      }
+    }
+
+    // Playout (posiciones específicas, 1-based)
+    if (rules.playout) {
+      for (const pos of rules.playout.positions) {
+        const idx = pos - 1
+        if (idx >= 0 && idx < total && !standings[idx].zone) {
+          standings[idx].zone = 'playout'
+        }
+      }
+    }
+
+    // Descenso directo (desde abajo)
+    const directRelQty = rules.relegations.direct.quantity
+    for (let i = 0; i < directRelQty && i < total; i++) {
+      const idx = total - 1 - i
+      if (!standings[idx].zone) {
+        standings[idx].zone = 'relegation'
+      }
+    }
+
+    // Promoción (descenso) - posiciones justo antes del descenso directo
+    if (rules.relegations.promotion) {
+      const promoRelQty = rules.relegations.promotion.quantity
+      for (let i = 0; i < promoRelQty && (total - directRelQty - 1 - i) >= 0; i++) {
+        const idx = total - directRelQty - 1 - i
+        if (!standings[idx].zone) {
+          standings[idx].zone = 'relegation_playoff'
+        }
+      }
+    }
+  }
+
+  private assignMiddleLeagueZones(standings: TeamStanding[], rules: MiddleLeagueRules): void {
+    const total = standings.length
+
+    // Ascenso directo (desde arriba)
+    const directPromoQty = rules.promotions.direct.quantity
+    for (let i = 0; i < directPromoQty && i < total; i++) {
+      standings[i].zone = 'promotion'
+    }
+
+    // Playoff de ascenso (siguientes posiciones)
+    if (rules.promotions.playoff) {
+      const playoffPromoQty = rules.promotions.playoff.quantity
+      for (let i = 0; i < playoffPromoQty && (directPromoQty + i) < total; i++) {
+        standings[directPromoQty + i].zone = 'promotion_playoff'
+      }
+    }
+
+    // Playout (posiciones específicas, 1-based)
+    if (rules.playout) {
+      for (const pos of rules.playout.positions) {
+        const idx = pos - 1
+        if (idx >= 0 && idx < total && !standings[idx].zone) {
+          standings[idx].zone = 'playout'
+        }
+      }
+    }
+
+    // Descenso directo (desde abajo)
+    const directRelQty = rules.relegations.direct.quantity
+    for (let i = 0; i < directRelQty && i < total; i++) {
+      const idx = total - 1 - i
+      if (!standings[idx].zone) {
+        standings[idx].zone = 'relegation'
+      }
+    }
+
+    // Promoción (descenso) - posiciones justo antes del descenso directo
+    if (rules.relegations.promotion) {
+      const promoRelQty = rules.relegations.promotion.quantity
+      for (let i = 0; i < promoRelQty && (total - directRelQty - 1 - i) >= 0; i++) {
+        const idx = total - directRelQty - 1 - i
+        if (!standings[idx].zone) {
+          standings[idx].zone = 'relegation_playoff'
+        }
+      }
+    }
+  }
+
+  private assignBottomLeagueZones(standings: TeamStanding[], rules: BottomLeagueRules): void {
+    const total = standings.length
+
+    // Ascenso directo (desde arriba)
+    const directPromoQty = rules.promotions.direct.quantity
+    for (let i = 0; i < directPromoQty && i < total; i++) {
+      standings[i].zone = 'promotion'
+    }
+
+    // Playoff de ascenso (siguientes posiciones)
+    if (rules.promotions.playoff) {
+      const playoffPromoQty = rules.promotions.playoff.quantity
+      for (let i = 0; i < playoffPromoQty && (directPromoQty + i) < total; i++) {
+        standings[directPromoQty + i].zone = 'promotion_playoff'
+      }
+    }
+
+    // Reducido (posiciones del reducido)
+    if (rules.reducido) {
+      const reducidoPositions = [
+        ...rules.reducido.startPositions,
+        ...rules.reducido.waitingPositions,
+      ]
+      for (const pos of reducidoPositions) {
+        const idx = pos - 1 // posiciones son 1-based
+        if (idx >= 0 && idx < total && !standings[idx].zone) {
+          standings[idx].zone = 'reducido'
+        }
+      }
+    }
+
+    // Descenso directo (si configurado, raro en última división)
+    if (rules.relegations) {
+      const directRelQty = rules.relegations.direct.quantity
+      for (let i = 0; i < directRelQty && i < total; i++) {
+        const idx = total - 1 - i
+        if (!standings[idx].zone) {
+          standings[idx].zone = 'relegation'
+        }
+      }
+    }
   }
 
   /**

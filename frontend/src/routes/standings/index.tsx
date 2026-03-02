@@ -140,7 +140,7 @@ function StandingsPage() {
                 <StandingsTable standings={leagueStandings.standings} />
               </CardContent>
             </Card>
-            <StandingsLegend type="league" />
+            <StandingsLegend type="league" activeZones={leagueStandings.activeZones} />
           </>
         ) : cupGroupsData ? (
           <>

@@ -18,14 +18,23 @@ function getZoneColor(zone?: string | null) {
   switch (zone) {
     case 'champion':
       return 'text-yellow-500'
+    case 'liguilla':
+    case 'triangular':
+      return 'text-purple-500'
     case 'promotion':
       return 'text-emerald-500'
     case 'promotion_playoff':
+      return 'text-blue-500'
+    case 'playout':
       return 'text-orange-500'
     case 'playoff':
       return 'text-blue-500'
     case 'relegation':
       return 'text-destructive'
+    case 'relegation_playoff':
+      return 'text-red-400'
+    case 'reducido':
+      return 'text-cyan-500'
     default:
       return 'text-muted-foreground'
   }

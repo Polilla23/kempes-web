@@ -143,12 +143,12 @@ function ClubManagement() {
           )
         },
       }),
-      columnHelper.accessor('user', {
+      columnHelper.accessor((row) => row.user?.email || '', {
+        id: 'user',
         header: (info) => <DefaultHeader info={info} name={t('fields.user')} type="string" />,
         cell: ({ row }) => {
-          const user: User | null | undefined = row.getValue('user')
-          const name = user?.email || t('table.noUser')
-          return <span>{name}</span>
+          const email = row.getValue('user') as string
+          return <span>{email || t('table.noUser')}</span>
         },
       }),
       columnHelper.accessor('isActive', {
@@ -156,7 +156,7 @@ function ClubManagement() {
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <Badge variant={row.original.isActive ? "default" : "destructive"}>
-              {row.original.isActive ? t('fields.isActive') : t('table.noClubs')}
+              {row.original.isActive ? t('fields.isActive') : t('fields.inactive')}
             </Badge>
           </div>
         ),

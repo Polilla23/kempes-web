@@ -26,9 +26,15 @@
   },
   "legend": {
     "champion": "Champion",
+    "liguilla": "Qualifies to Liguilla",
+    "triangular": "Qualifies to Triangular",
     "promotion": "Direct promotion",
+    "promotionPlayoff": "Promotion playoff",
+    "playout": "Playout",
     "playoff": "Playoff",
-    "relegation": "Relegation",
+    "relegation": "Direct relegation",
+    "relegationPlayoff": "Relegation play",
+    "reducido": "Reducido",
     "qualifyGold": "Qualifies to Gold Cup",
     "qualifySilver": "Qualifies to Silver Cup"
   },

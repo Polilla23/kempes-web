@@ -24,7 +24,6 @@ export const Route = createFileRoute('/player/create')({
 
 const formSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
-  lastName: z.string().min(1, { message: 'Last name is required.' }),
   birthdate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, { message: 'Format must be DD/MM/YYYY.' }),
   actualClubId: z.string().min(1, { message: 'Actual club is required.' }),
   ownerClubId: z.string().min(1, { message: 'Owner club is required.' }),
@@ -47,7 +46,6 @@ function CreatePlayerPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      lastName: '',
       birthdate: '',
       actualClubId: '',
       ownerClubId: '',
@@ -80,7 +78,6 @@ function CreatePlayerPage() {
     try {
       const payload: RegisterPlayerFormData = {
         name: values.name,
-        lastName: values.lastName,
         birthdate: values.birthdate,
         actualClubId: values.actualClubId,
         ownerClubId: values.ownerClubId,
@@ -145,35 +142,19 @@ function CreatePlayerPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">Name</FormLabel>
-                      <FormControl>
-                        <Input type="text" placeholder="Enter name" className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-700 font-medium">Last Name</FormLabel>
-                      <FormControl>
-                        <Input type="text" placeholder="Enter last name" className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 font-medium">Name</FormLabel>
+                    <FormControl>
+                      <Input type="text" placeholder="Enter name" className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField

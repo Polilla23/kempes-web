@@ -25,9 +25,10 @@
   "fields": {
     "name": "Nombre",
     "logo": "Logo",
-    "user": "Usuario",
+    "user": "Mail",
     "active": "¿Activo?",
-    "isActive": "Activo"
+    "isActive": "Activo",
+    "inactive": "Inactivo"
   },
   "labels": {
     "clubName": "Nombre del Club",

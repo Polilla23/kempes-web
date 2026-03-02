@@ -357,7 +357,6 @@ export class FinanceService {
       select: {
         id: true,
         name: true,
-        lastName: true,
         salary: true,
         actualClubId: true,
         ownerClubId: true,

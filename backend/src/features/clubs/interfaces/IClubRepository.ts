@@ -40,7 +40,7 @@ export interface IClubRepository {
   saveMany(data: Prisma.ClubCreateManyInput[]): Promise<Prisma.BatchPayload>
   updateOneById(id: Prisma.ClubWhereUniqueInput['id'], data: Prisma.ClubUpdateInput): Promise<Club>
   deleteOneById(id: Prisma.ClubWhereUniqueInput['id']): Promise<Club> // TODO: change to promise<void>
-  getActivePlayers(clubId: string): Promise<{ id: string; name: string; lastName: string; overall: number | null }[]>
+  getActivePlayers(clubId: string): Promise<{ id: string; name: string; overall: number | null }[]>
   findAvailableClubs(): Promise<{ id: string; name: string; logo: string | null }[]>
   findTitles(clubId: string): Promise<{ total: number; titles: ClubTitle[] }>
   findSquad(clubId: string): Promise<{ squadValue: number; players: any[]; bestXI: any[] }>

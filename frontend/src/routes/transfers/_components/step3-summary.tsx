@@ -44,14 +44,14 @@ export function Step3Summary({
     ...wizardState.playersToSell.flatMap((p) =>
       p.installments.map((inst) => ({
         ...inst,
-        playerName: `${p.playerName} ${p.playerLastName}`,
+        playerName: p.playerName,
         direction: 'receive' as const, // Seller receives money
       }))
     ),
     ...wizardState.playersAsPayment.flatMap((p) =>
       p.installments.map((inst) => ({
         ...inst,
-        playerName: `${p.playerName} ${p.playerLastName}`,
+        playerName: p.playerName,
         direction: 'pay' as const, // Buyer pays money
       }))
     ),
@@ -93,7 +93,7 @@ export function Step3Summary({
         </div>
         <div>
           <p className="font-medium">
-            {player.playerName} {player.playerLastName}
+            {player.playerName}
           </p>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             {player.playerPosition && <span>{player.playerPosition}</span>}
