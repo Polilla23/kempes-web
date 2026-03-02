@@ -777,7 +777,6 @@ export class FixtureService {
       .map(c => ({
         id: c.player.id,
         name: c.player.name,
-        lastName: c.player.lastName,
         overall: c.player.overall
       }))
 
@@ -786,7 +785,6 @@ export class FixtureService {
       .map(c => ({
         id: c.player.id,
         name: c.player.name,
-        lastName: c.player.lastName,
         overall: c.player.overall
       }))
 

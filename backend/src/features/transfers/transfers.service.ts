@@ -649,7 +649,7 @@ export class TransferService {
       clubId: transfer.toClubId,
       type: 'TRANSFER_EXPENSE',
       amount: -Math.abs(installment.amount),
-      description: `Cuota ${installment.installmentNumber}/${transfer.numberOfInstallments} - ${transfer.player.name} ${transfer.player.lastName}`,
+      description: `Cuota ${installment.installmentNumber}/${transfer.numberOfInstallments} - ${transfer.player.name}`,
       transferId: transfer.id,
       installmentId: installment.id,
       seasonHalfId: activeSeasonHalf.id,
@@ -660,7 +660,7 @@ export class TransferService {
       clubId: transfer.fromClubId,
       type: 'TRANSFER_INCOME',
       amount: Math.abs(installment.amount),
-      description: `Cuota ${installment.installmentNumber}/${transfer.numberOfInstallments} - ${transfer.player.name} ${transfer.player.lastName}`,
+      description: `Cuota ${installment.installmentNumber}/${transfer.numberOfInstallments} - ${transfer.player.name}`,
       transferId: transfer.id,
       seasonHalfId: activeSeasonHalf.id,
     })

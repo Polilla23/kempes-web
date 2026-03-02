@@ -182,7 +182,7 @@ export function MyTransfersTab({ userClub, transfers, onRefresh }: MyTransfersTa
                         )}
                         <div>
                           <p className="font-medium">
-                            {transfer.player?.name} {transfer.player?.lastName}
+                            {transfer.player?.name}
                           </p>
                           {transfer.player?.overall && (
                             <p className="text-xs text-muted-foreground">

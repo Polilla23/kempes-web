@@ -6,7 +6,6 @@ export const playersSchemas = {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        lastName: { type: 'string' },
         birthdate: { type: 'string', pattern: '^\\d{2}/\\d{2}/\\d{4}$' },
         actualClubId: { type: 'string', format: 'uuid' },
         ownerClubId: { type: 'string', format: 'uuid' },
@@ -15,7 +14,7 @@ export const playersSchemas = {
         transfermarktId: { type: 'string' },
         isActive: { type: 'boolean' },
       },
-      required: ['name', 'lastName', 'birthdate', 'actualClubId', 'overall'],
+      required: ['name', 'birthdate', 'actualClubId', 'overall'],
     },
     response: {
       201: {
@@ -50,7 +49,6 @@ export const playersSchemas = {
               properties: {
                 id: { type: 'string', format: 'uuid' },
                 name: { type: 'string' },
-                lastName: { type: 'string' },
                 birthdate: { type: 'string', format: 'date-time' },
                 actualClubId: { type: 'string', format: 'uuid' },
                 ownerClubId: { type: 'string', format: 'uuid' },
@@ -124,7 +122,6 @@ export const playersSchemas = {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        lastName: { type: 'string' },
         birthdate: { type: 'string', pattern: '^\\d{2}/\\d{2}/\\d{4}$' },
         actualClubId: { type: 'string' },
         ownerClubId: { type: 'string' },

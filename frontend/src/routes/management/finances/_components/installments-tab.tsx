@@ -200,7 +200,7 @@ export function InstallmentsTab({
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">
-                      {transfer.player?.name} {transfer.player?.lastName}
+                      {transfer.player?.name}
                     </span>
                     <Badge variant="outline">{transfer.type}</Badge>
                   </div>

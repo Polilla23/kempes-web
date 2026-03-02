@@ -195,7 +195,11 @@ export type TeamStanding = {
   points: number
   position: number
   // Zona de la tabla (para colorear en UI)
-  zone?: 'champion' | 'promotion' | 'playoff' | 'relegation' | 'promotion_playoff' | 'gold_cup' | 'silver_cup' | null
+  zone?: 'champion' | 'liguilla' | 'triangular'
+    | 'promotion' | 'promotion_playoff'
+    | 'playout' | 'relegation' | 'relegation_playoff'
+    | 'reducido' | 'playoff'
+    | 'gold_cup' | 'silver_cup' | null
   [key: string]: unknown    // Index signature para Prisma JSON
 }
 
@@ -207,6 +211,8 @@ export type CompetitionStandings = {
   isComplete: boolean  // Todos los partidos finalizados/cancelados
   matchesPlayed: number
   matchesTotal: number
+  leaguePosition?: 'TOP' | 'MIDDLE' | 'BOTTOM' | null  // Posicion en jerarquia de ligas
+  activeZones?: string[]  // Zonas presentes en esta tabla (para leyenda dinamica)
   [key: string]: unknown    // Index signature para Prisma JSON
 }
 

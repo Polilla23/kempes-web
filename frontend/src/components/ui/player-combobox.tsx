@@ -19,7 +19,6 @@ import {
 export interface PlayerOption {
   id: string
   name: string
-  lastName: string
   overall?: number | null
 }
 
@@ -68,7 +67,7 @@ export function PlayerCombobox({
         >
           <span className="truncate">
             {selectedPlayer
-              ? `${selectedPlayer.name.charAt(0)}. ${selectedPlayer.lastName}`
+              ? (() => { const parts = selectedPlayer.name.split(' '); return parts.length > 1 ? `${parts[0].charAt(0)}. ${parts.slice(1).join(' ')}` : selectedPlayer.name })()
               : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -85,7 +84,7 @@ export function PlayerCombobox({
                   {group.players.map((player) => (
                     <CommandItem
                       key={player.id}
-                      value={`${player.name} ${player.lastName}`}
+                      value={player.name}
                       onSelect={() => {
                         onSelect(player.id)
                         setOpen(false)
@@ -98,7 +97,7 @@ export function PlayerCombobox({
                         )}
                       />
                       <span className="flex-1">
-                        {player.name} {player.lastName}
+                        {player.name}
                       </span>
                       {player.overall != null && (
                         <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
@@ -114,7 +113,7 @@ export function PlayerCombobox({
                 {players.map((player) => (
                   <CommandItem
                     key={player.id}
-                    value={`${player.name} ${player.lastName}`}
+                    value={player.name}
                     onSelect={() => {
                       onSelect(player.id)
                       setOpen(false)
@@ -127,7 +126,7 @@ export function PlayerCombobox({
                       )}
                     />
                     <span className="flex-1">
-                      {player.name} {player.lastName}
+                      {player.name}
                     </span>
                     {player.overall != null && (
                       <span className="ml-2 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">

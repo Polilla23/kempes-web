@@ -117,13 +117,12 @@ function UserManagement() {
           </div>
         ),
       }),
-      columnHelper.accessor('club', {
+      columnHelper.accessor((row) => row.club?.name || '', {
+        id: 'club',
         header: (info) => <DefaultHeader info={info} name={t('fields.club')} type="string" />,
         cell: ({ row }) => {
-          // const club: Club | null | undefined = row.original.club
-          const club: Club | null | undefined = row.getValue('club')
-          const name = club?.name || t('table.noClub')
-          return <span>{name}</span>
+          const name = row.getValue('club') as string
+          return <span>{name || t('table.noClub')}</span>
         },
       }),
       columnHelper.display({

@@ -34,7 +34,6 @@ export class TransferMapper {
         ? {
             id: transfer.player.id,
             name: transfer.player.name,
-            lastName: transfer.player.lastName,
             overall: transfer.player.overall,
             position: transfer.player.position,
             isKempesita: transfer.player.isKempesita,
@@ -123,8 +122,7 @@ export class TransferMapper {
       player: payment.player
         ? {
             id: payment.player.id,
-            firstName: payment.player.name,
-            lastName: payment.player.lastName,
+            name: payment.player.name,
             overall: payment.player.overall,
             position: payment.player.position,
           }

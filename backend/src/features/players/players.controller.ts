@@ -15,7 +15,6 @@ export class PlayerController {
   async create(req: FastifyRequest, reply: FastifyReply) {
     const {
       name,
-      lastName,
       birthdate,
       actualClubId,
       ownerClubId,
@@ -27,7 +26,6 @@ export class PlayerController {
     // Validación - si falla, lanza error y el errorHandler lo maneja
     const validatedData: CreateBasicPlayerInput = {
       name: Validator.string(name, 1, 100),
-      lastName: Validator.string(lastName, 1, 100),
       birthdate,
       ...(actualClubId && { actualClubId: Validator.uuid(actualClubId) }),
       ...(ownerClubId && { ownerClubId: Validator.uuid(ownerClubId) }),
@@ -62,7 +60,6 @@ export class PlayerController {
     const validatedData = {
       ...data,
       ...(data.name && { name: Validator.string(data.name, 1, 100) }),
-      ...(data.lastName && { lastName: Validator.string(data.lastName, 1, 100) }),
       ...(data.birthdate && { birthdate: data.birthdate }),
       ...(data.actualClubId && { actualClubId: Validator.uuid(data.actualClubId) }),
       ...(data.overall !== undefined && { overall: Validator.number(data.overall, 0, 100) }),

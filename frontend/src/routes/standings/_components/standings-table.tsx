@@ -11,13 +11,22 @@ function getZoneColor(zone?: string | null) {
   switch (zone) {
     case 'champion':
       return 'bg-yellow-500/10'
+    case 'liguilla':
+    case 'triangular':
+      return 'bg-purple-500/10'
     case 'promotion':
       return 'bg-green-500/10'
     case 'playoff':
     case 'promotion_playoff':
       return 'bg-blue-500/10'
+    case 'playout':
+      return 'bg-orange-500/10'
     case 'relegation':
       return 'bg-red-500/10'
+    case 'relegation_playoff':
+      return 'bg-red-300/10'
+    case 'reducido':
+      return 'bg-cyan-500/10'
     case 'gold_cup':
       return 'bg-amber-500/10 dark:bg-amber-400/10'
     case 'silver_cup':
@@ -31,14 +40,26 @@ function getPositionBadge(position: number, zone?: string | null) {
   if (zone === 'champion') {
     return <Badge className="bg-yellow-500 hover:bg-yellow-600">{position}</Badge>
   }
+  if (zone === 'liguilla' || zone === 'triangular') {
+    return <Badge className="bg-purple-500 hover:bg-purple-600">{position}</Badge>
+  }
   if (zone === 'promotion') {
     return <Badge className="bg-green-500 hover:bg-green-600">{position}</Badge>
   }
   if (zone === 'playoff' || zone === 'promotion_playoff') {
     return <Badge className="bg-blue-500 hover:bg-blue-600">{position}</Badge>
   }
+  if (zone === 'playout') {
+    return <Badge className="bg-orange-500 hover:bg-orange-600">{position}</Badge>
+  }
   if (zone === 'relegation') {
     return <Badge className="bg-red-500 hover:bg-red-600">{position}</Badge>
+  }
+  if (zone === 'relegation_playoff') {
+    return <Badge className="bg-red-400 hover:bg-red-500">{position}</Badge>
+  }
+  if (zone === 'reducido') {
+    return <Badge className="bg-cyan-500 hover:bg-cyan-600">{position}</Badge>
   }
   if (zone === 'gold_cup') {
     return <Badge className="bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600">{position}</Badge>

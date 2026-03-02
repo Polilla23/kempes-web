@@ -61,7 +61,6 @@ interface MatchesByMatchday {
 interface CovidPlayer {
   id: string
   name: string
-  lastName: string
   overall: number
 }
 
@@ -405,7 +404,7 @@ function FixturesPage() {
                       {selectedMatchCovids.homeTeamCovids.map((player) => (
                         <TableRow key={player.id}>
                           <TableCell>
-                            {player.name} {player.lastName}
+                            {player.name}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline">{player.overall}</Badge>
@@ -439,7 +438,7 @@ function FixturesPage() {
                       {selectedMatchCovids.awayTeamCovids.map((player) => (
                         <TableRow key={player.id}>
                           <TableCell>
-                            {player.name} {player.lastName}
+                            {player.name}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline">{player.overall}</Badge>

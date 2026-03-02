@@ -50,7 +50,6 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
     resolver: zodResolver(FormSchemas.PlayerSchema),
     defaultValues: {
       name: player.name || '',
-      lastName: player.lastName || '',
       birthdate: player.birthdate ? new Date(player.birthdate) : new Date(),
       ownerClubId: player.ownerClubId || '',
       actualClubId: player.actualClubId || '',
@@ -66,7 +65,6 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
     if (player) {
       form.reset({
         name: player.name || '',
-        lastName: player.lastName || '',
         birthdate: player.birthdate ? new Date(player.birthdate) : new Date(),
         ownerClubId: player.ownerClubId || '',
         actualClubId: player.actualClubId || '',
@@ -84,7 +82,6 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
 
       const updateData = {
         name: values.name || '',
-        lastName: values.lastName || '',
         birthdate: format(values.birthdate, 'dd/MM/yyyy'),
         ownerClubId: values.ownerClubId,
         actualClubId:
@@ -123,50 +120,29 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">{t('labels.firstName')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-11">
-                          <User className="size-4 text-gray-400" />
-                        </div>
-                        <Input
-                          type="text"
-                          placeholder={t('placeholders.enterPlayerName')}
-                          className="h-11 pl-12"
-                          {...field}
-                        />
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium">{t('labels.name')}</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-11">
+                        <User className="size-4 text-gray-400" />
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium">{t('labels.lastName')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-11">
-                          <User className="size-4 text-gray-400" />
-                        </div>
-                        <Input type="text" placeholder={t('placeholders.enterLastName')} className="h-11 pl-12" {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                      <Input
+                        type="text"
+                        placeholder={t('placeholders.enterPlayerName')}
+                        className="h-11 pl-12"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

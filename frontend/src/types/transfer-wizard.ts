@@ -34,7 +34,6 @@ export interface InstallmentConfig {
 export interface PlayerPaymentConfig {
   playerId: string
   playerName: string
-  playerLastName: string
   playerPosition?: string
   overall: number | null
   salary: number
