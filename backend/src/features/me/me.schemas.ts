@@ -100,6 +100,7 @@ export const myAccountSchemas = {
               name: { type: 'string' },
               logo: { type: 'string', nullable: true },
               isActive: { type: 'boolean' },
+              preferredFormation: { type: 'string' },
               playersOwned: { type: 'number' },
               playersActive: { type: 'number' },
             },
@@ -210,6 +211,83 @@ export const myAccountSchemas = {
               totalTransfers: { type: 'number' },
             },
           },
+        },
+      },
+    },
+    skipSanitization: true,
+  },
+  getDashboardData: {
+    description: 'Get consolidated dashboard data for the authenticated user',
+    tags: ['Account'],
+    response: {
+      200: {
+        description: 'Dashboard data retrieved successfully',
+        type: 'object',
+        properties: {
+          data: {
+            type: 'object',
+            nullable: true,
+            properties: {
+              club: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                  logo: { type: 'string', nullable: true },
+                  preferredFormation: { type: 'string' },
+                  titles: {
+                    type: 'object',
+                    properties: {
+                      total: { type: 'number' },
+                      titles: { type: 'array' },
+                    },
+                  },
+                },
+              },
+              squad: {
+                type: 'object',
+                properties: {
+                  squadValue: { type: 'number' },
+                  players: { type: 'array' },
+                },
+              },
+              upcomingMatches: { type: 'array' },
+            },
+          },
+        },
+      },
+    },
+    skipSanitization: true,
+  },
+  updatePreferredFormation: {
+    description: 'Update preferred formation for the authenticated user club',
+    tags: ['Account'],
+    body: {
+      type: 'object',
+      required: ['formation'],
+      properties: {
+        formation: { type: 'string' },
+      },
+    },
+    response: {
+      200: {
+        description: 'Formation updated successfully',
+        type: 'object',
+        properties: {
+          data: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              preferredFormation: { type: 'string', nullable: true },
+            },
+          },
+        },
+      },
+      400: {
+        description: 'Invalid formation',
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
         },
       },
     },

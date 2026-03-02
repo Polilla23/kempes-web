@@ -164,6 +164,48 @@ export class MyAccountController {
     }
   }
 
+  async getDashboardData(req: FastifyRequest, reply: FastifyReply) {
+    const userId = (req.user as { id: string }).id
+
+    try {
+      const validatedUserId = Validator.uuid(userId)
+      const data = await this.myAccountService.getDashboardData(validatedUserId)
+
+      return Response.success(reply, data, 'Dashboard data fetched successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error while fetching dashboard data',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async updatePreferredFormation(req: FastifyRequest, reply: FastifyReply) {
+    const userId = (req.user as { id: string }).id
+    const body = req.body as { formation: string }
+
+    try {
+      const validatedUserId = Validator.uuid(userId)
+      const result = await this.myAccountService.updatePreferredFormation(validatedUserId, body.formation)
+
+      return Response.success(reply, result, 'Formation updated successfully')
+    } catch (error: any) {
+      if (error.message?.startsWith('Invalid formation')) {
+        return Response.badRequest(reply, error.message)
+      }
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while updating formation',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
   async updateProfile(req: FastifyRequest, reply: FastifyReply) {
     const userId = (req.user as { id: string }).id
 

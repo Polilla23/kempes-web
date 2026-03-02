@@ -4,6 +4,7 @@ import {
   ChartColumn,
   CircleDollarSign,
   House,
+  LayoutDashboard,
   Search,
   Shield,
   Trophy,
@@ -37,6 +38,7 @@ import { useTranslation } from 'react-i18next'
 
 const navItems = [
   { key: 'home', icon: House, to: '/' },
+  { key: 'dashboard', icon: LayoutDashboard, to: '/dashboard' },
   { key: 'news', icon: Newspaper, to: '/news' },
   { key: 'standings', icon: ListOrdered, to: '/standings' },
   { key: 'fixture', icon: CalendarRange, to: '/fixtures' },

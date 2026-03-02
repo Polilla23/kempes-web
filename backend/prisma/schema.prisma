@@ -27,14 +27,15 @@ model User {
 }
 
 model Club {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  logo        String?
-  userId      String?  @unique @map("user_id")
-  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  playerOwner Player[] @relation("OwnerClub")
-  playerNow   Player[] @relation("ActualClub")
-  isActive    Boolean  @default(true) @map("is_active")
+  id                 String   @id @default(uuid())
+  name               String   @unique
+  logo               String?
+  userId             String?  @unique @map("user_id")
+  user               User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerOwner        Player[] @relation("OwnerClub")
+  playerNow          Player[] @relation("ActualClub")
+  isActive           Boolean  @default(true) @map("is_active")
+  preferredFormation String?  @default("4-3-3") @map("preferred_formation")
 
   homeMatches       Match[]            @relation("HomeMatches")
   awayMatches       Match[]            @relation("AwayMatches")
@@ -72,6 +73,7 @@ model Player {
   isKempesita       Boolean             @default(false) @map("is_kempesita")
   isActive          Boolean             @default(true) @map("is_active")
   avatar            String?             @map("avatar_url")
+  position          PlayerPosition?
   events            Event[]
   playerSeasonStats PlayerSeasonStats[]
   matchCovids   MatchCovid[]
@@ -327,6 +329,24 @@ model Comment {
 }
 
 // ENUMS AND TYPES
+
+enum PlayerPosition {
+  GK   // Goalkeeper
+  CB   // Centre Back
+  LB   // Left Back
+  RB   // Right Back
+  LWB  // Left Wing Back
+  RWB  // Right Wing Back
+  CDM  // Central Defensive Midfielder
+  CM   // Central Midfielder
+  CAM  // Central Attacking Midfielder
+  LM   // Left Midfielder
+  RM   // Right Midfielder
+  LW   // Left Winger
+  RW   // Right Winger
+  CF   // Centre Forward
+  ST   // Striker
+}
 
 enum RoleType {
   ADMIN

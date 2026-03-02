@@ -16,6 +16,7 @@ import { Route as StandingsIndexRouteImport } from './routes/standings/index'
 import { Route as NewsIndexRouteImport } from './routes/news/index'
 import { Route as MyaccountIndexRouteImport } from './routes/myaccount/index'
 import { Route as FixturesIndexRouteImport } from './routes/fixtures/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as ConfigurationIndexRouteImport } from './routes/configuration/index'
 import { Route as PlayerFindAllRouteImport } from './routes/player/findAll'
 import { Route as PlayerCreateRouteImport } from './routes/player/create'
@@ -88,6 +89,11 @@ const MyaccountIndexRoute = MyaccountIndexRouteImport.update({
 const FixturesIndexRoute = FixturesIndexRouteImport.update({
   id: '/fixtures/',
   path: '/fixtures/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConfigurationIndexRoute = ConfigurationIndexRouteImport.update({
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration': typeof ConfigurationIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/news': typeof NewsIndexRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration': typeof ConfigurationIndexRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/fixtures': typeof FixturesIndexRoute
   '/myaccount': typeof MyaccountIndexRoute
   '/news': typeof NewsIndexRoute
@@ -402,6 +410,7 @@ export interface FileRoutesById {
   '/player/create': typeof PlayerCreateRoute
   '/player/findAll': typeof PlayerFindAllRoute
   '/configuration/': typeof ConfigurationIndexRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/fixtures/': typeof FixturesIndexRoute
   '/myaccount/': typeof MyaccountIndexRoute
   '/news/': typeof NewsIndexRoute
@@ -451,6 +460,7 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/configuration'
+    | '/dashboard'
     | '/fixtures'
     | '/myaccount'
     | '/news'
@@ -498,6 +508,7 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/configuration'
+    | '/dashboard'
     | '/fixtures'
     | '/myaccount'
     | '/news'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/player/create'
     | '/player/findAll'
     | '/configuration/'
+    | '/dashboard/'
     | '/fixtures/'
     | '/myaccount/'
     | '/news/'
@@ -593,6 +605,7 @@ export interface RootRouteChildren {
   PlayerCreateRoute: typeof PlayerCreateRoute
   PlayerFindAllRoute: typeof PlayerFindAllRoute
   ConfigurationIndexRoute: typeof ConfigurationIndexRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
   FixturesIndexRoute: typeof FixturesIndexRoute
   MyaccountIndexRoute: typeof MyaccountIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
@@ -681,6 +694,13 @@ declare module '@tanstack/react-router' {
       path: '/fixtures'
       fullPath: '/fixtures'
       preLoaderRoute: typeof FixturesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/configuration/': {
@@ -961,6 +981,7 @@ const rootRouteChildren: RootRouteChildren = {
   PlayerCreateRoute: PlayerCreateRoute,
   PlayerFindAllRoute: PlayerFindAllRoute,
   ConfigurationIndexRoute: ConfigurationIndexRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
   FixturesIndexRoute: FixturesIndexRoute,
   MyaccountIndexRoute: MyaccountIndexRoute,
   NewsIndexRoute: NewsIndexRoute,

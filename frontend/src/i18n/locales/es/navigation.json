@@ -10,7 +10,8 @@
     "fixture": "Fixture",
     "statistics": "Estadísticas",
     "transfers": "Transferencias",
-    "submitResult": "Subir Resultado"
+    "submitResult": "Subir Resultado",
+    "dashboard": "Mi Dashboard"
   },
   "management": {
     "title": "Gestión y Administración",

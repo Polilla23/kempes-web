@@ -1,0 +1,43 @@
+{
+  "title": "My Dashboard",
+  "loading": "Loading dashboard...",
+  "noClub": "You don't have a club assigned",
+  "header": {
+    "titles": "Titles",
+    "leagues": "Leagues",
+    "cups": "Cups",
+    "players": "Players"
+  },
+  "pitch": {
+    "title": "My Ideal 11",
+    "formation": "Formation",
+    "selectFormation": "Select formation",
+    "savingFormation": "Saving...",
+    "formationSaved": "Formation saved",
+    "formationError": "Error saving formation"
+  },
+  "squad": {
+    "title": "Squad",
+    "players": "players",
+    "columns": {
+      "player": "Player",
+      "position": "Pos",
+      "overall": "Rating",
+      "goals": "Goals",
+      "assists": "Assists",
+      "appearances": "Apps",
+      "yellowCards": "YC",
+      "redCards": "RC",
+      "mvps": "MVPs",
+      "salary": "Salary"
+    },
+    "noStats": "-"
+  },
+  "upcoming": {
+    "title": "Upcoming Matches",
+    "noMatches": "No upcoming matches",
+    "vs": "VS",
+    "home": "Home",
+    "away": "Away"
+  }
+}

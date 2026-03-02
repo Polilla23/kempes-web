@@ -50,7 +50,9 @@
     "updateSuccess": "Perfil actualizado exitosamente",
     "updateError": "Error al actualizar el perfil",
     "usernameTaken": "El nombre de usuario ya está en uso",
-    "noUsername": "Sin nombre de usuario"
+    "noUsername": "Sin nombre de usuario",
+    "formation": "Formación preferida",
+    "selectFormation": "Seleccionar formación"
   },
   "table": {
     "rowsPerPage": "Filas por página",
