@@ -1,4 +1,12 @@
-import { PrismaClient, MatchStatus, CompetitionFormat, CompetitionName, Prisma } from '@prisma/client'
+import {
+  PrismaClient,
+  MatchStatus,
+  CompetitionFormat,
+  MovementType,
+  CupPhase,
+  Prisma,
+  CompetitionName,
+} from '@prisma/client'
 
 // Define the return types for matches with includes
 type MatchWithRelations = Prisma.MatchGetPayload<{
@@ -113,10 +121,7 @@ export class MyAccountRepository {
           },
         },
       },
-      orderBy: [
-        { resultRecordedAt: 'desc' },
-        { matchdayOrder: 'desc' },
-      ],
+      orderBy: [{ resultRecordedAt: 'desc' }, { matchdayOrder: 'desc' }],
       take: limit,
     })
   }
@@ -178,16 +183,136 @@ export class MyAccountRepository {
           },
         },
       },
-      orderBy: [
-        { resultRecordedAt: 'desc' },
-        { matchdayOrder: 'desc' },
-      ],
+      orderBy: [{ resultRecordedAt: 'desc' }, { matchdayOrder: 'desc' }],
     })
 
     // Filter out BYE matches and matches without both clubs assigned
     return matches
-      .filter(m => m.homeClubId && m.awayClubId && m.homePlaceholder !== 'BYE' && m.awayPlaceholder !== 'BYE')
+      .filter(
+        (m) => m.homeClubId && m.awayClubId && m.homePlaceholder !== 'BYE' && m.awayPlaceholder !== 'BYE',
+      )
       .slice(0, limit)
+  }
+
+  /**
+   * Update club's preferred formation
+   */
+  async updateClubFormation(clubId: string, formation: string) {
+    return await this.prisma.club.update({
+      where: { id: clubId },
+      data: { preferredFormation: formation },
+      select: { id: true, preferredFormation: true },
+    })
+  }
+
+  /**
+   * Get all dashboard data: squad with season stats + titles + upcoming matches
+   */
+  async getDashboardData(clubId: string) {
+    const activeSeason = await this.prisma.season.findFirst({
+      where: { isActive: true },
+    })
+
+    const [players, leagueTitles, cupTitles, upcomingMatches] = await Promise.all([
+      this.prisma.player.findMany({
+        where: { actualClubId: clubId, isActive: true },
+        select: {
+          id: true,
+          name: true,
+          overall: true,
+          salary: true,
+          isKempesita: true,
+          avatar: true,
+          position: true,
+          playerSeasonStats: {
+            where: activeSeason ? { seasonId: activeSeason.id, clubId } : { clubId },
+            select: {
+              goals: true,
+              assists: true,
+              appearances: true,
+              yellowCards: true,
+              redCards: true,
+              mvps: true,
+            },
+            take: 1,
+          },
+        },
+        orderBy: [{ overall: 'desc' }, { name: 'desc' }],
+      }),
+      this.prisma.seasonTransition.findMany({
+        where: { clubId, movementType: MovementType.CHAMPION },
+        include: {
+          season: { select: { number: true } },
+          fromCompetition: {
+            include: { competitionType: { select: { name: true, format: true } } },
+          },
+        },
+        orderBy: { season: { number: 'desc' } },
+      }),
+      this.prisma.coefKempes.findMany({
+        where: { clubId, cupPhase: CupPhase.FINAL },
+        include: { season: { select: { number: true } } },
+        orderBy: { season: { number: 'desc' } },
+      }),
+      this.prisma.match.findMany({
+        where: {
+          status: MatchStatus.PENDIENTE,
+          OR: [{ homeClubId: clubId }, { awayClubId: clubId }],
+        },
+        include: {
+          homeClub: { select: { id: true, name: true, logo: true } },
+          awayClub: { select: { id: true, name: true, logo: true } },
+          competition: { include: { competitionType: true } },
+        },
+        orderBy: [{ matchdayOrder: 'asc' }],
+        take: 5,
+      }),
+    ])
+
+    const squadValue = players.reduce((sum, p) => sum + p.salary, 0)
+
+    const allTitles = [
+      ...leagueTitles.map((t) => ({
+        seasonNumber: t.season.number,
+        competitionName: t.fromCompetition.competitionType.name,
+        type: 'LEAGUE' as const,
+      })),
+      ...cupTitles.map((t) => ({
+        seasonNumber: t.season.number,
+        competitionName: t.cupName as string,
+        type: 'CUP' as const,
+      })),
+    ].sort((a, b) => b.seasonNumber - a.seasonNumber)
+
+    return {
+      squadValue,
+      players: players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        overall: p.overall,
+        salary: p.salary,
+        isKempesita: p.isKempesita,
+        avatar: p.avatar,
+        position: p.position,
+        seasonStats: p.playerSeasonStats.length > 0 ? p.playerSeasonStats[0] : null,
+      })),
+      titles: { total: allTitles.length, titles: allTitles },
+      upcomingMatches: upcomingMatches.map((m) => ({
+        id: m.id,
+        matchdayOrder: m.matchdayOrder,
+        status: m.status,
+        stage: m.stage,
+        knockoutRound: m.knockoutRound,
+        homeClub: m.homeClub,
+        awayClub: m.awayClub,
+        competition: {
+          id: m.competition.id,
+          name: m.competition.name,
+          competitionType: m.competition.competitionType,
+        },
+        isUserHome: m.homeClubId === clubId,
+      })),
+    }
   }
 
   /**
@@ -210,11 +335,12 @@ export class MyAccountRepository {
     }
 
     // Find the previous season for champions data
-    const previousSeason = activeSeason.number > 1
-      ? await this.prisma.season.findFirst({
-          where: { number: activeSeason.number - 1 },
-        })
-      : null
+    const previousSeason =
+      activeSeason.number > 1
+        ? await this.prisma.season.findFirst({
+            where: { number: activeSeason.number - 1 },
+          })
+        : null
 
     const [played, pending, cancelled, championsData] = await Promise.all([
       this.prisma.match.count({

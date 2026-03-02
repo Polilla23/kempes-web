@@ -45,7 +45,7 @@ describe('ClubService', () => {
         name: 'FC Barcelona',
         logo: null,
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       mockClubRepository.findOneByName.mockResolvedValue(null)
@@ -68,7 +68,7 @@ describe('ClubService', () => {
         name: 'FC Barcelona',
         logo: null,
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       mockClubRepository.findOneByName.mockResolvedValue(existingClub)
@@ -86,14 +86,14 @@ describe('ClubService', () => {
           name: 'FC Barcelona',
           logo: null,
           userId: null,
-          isActive: true,
+          isActive: true, preferredFormation: null,
         },
         {
           id: '2',
           name: 'Real Madrid',
           logo: null,
           userId: null,
-          isActive: true,
+          isActive: true, preferredFormation: null,
         },
       ]
 
@@ -114,7 +114,7 @@ describe('ClubService', () => {
         name: 'FC Barcelona',
         logo: null,
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       mockClubRepository.findOneById.mockResolvedValue(mockClub)
@@ -143,7 +143,7 @@ describe('ClubService', () => {
         name: 'Old Name',
         logo: null,
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       const updatedClub = { ...existingClub, name: 'New Name' }
@@ -173,7 +173,7 @@ describe('ClubService', () => {
         name: 'FC Barcelona',
         logo: null,
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       const deletedClub: Club = {
@@ -220,7 +220,7 @@ describe('ClubService', () => {
         name: 'FC Barcelona',
         logo: uploadedFile.publicUrl,
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       mockClubRepository.findOneByName.mockResolvedValue(null)
@@ -250,7 +250,7 @@ describe('ClubService', () => {
         name: 'FC Barcelona',
         logo: 'old-logo.png',
         userId: null,
-        isActive: true,
+        isActive: true, preferredFormation: null,
       }
 
       const logoFile = {

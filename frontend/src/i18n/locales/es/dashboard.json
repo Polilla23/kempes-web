@@ -1,0 +1,43 @@
+{
+  "title": "Mi Dashboard",
+  "loading": "Cargando dashboard...",
+  "noClub": "No tenés un club asignado",
+  "header": {
+    "titles": "Títulos",
+    "leagues": "Ligas",
+    "cups": "Copas",
+    "players": "Jugadores"
+  },
+  "pitch": {
+    "title": "Mi 11 Ideal",
+    "formation": "Formación",
+    "selectFormation": "Seleccionar formación",
+    "savingFormation": "Guardando...",
+    "formationSaved": "Formación guardada",
+    "formationError": "Error al guardar la formación"
+  },
+  "squad": {
+    "title": "Plantilla",
+    "players": "jugadores",
+    "columns": {
+      "player": "Jugador",
+      "position": "Pos",
+      "overall": "Media",
+      "goals": "Goles",
+      "assists": "Asist",
+      "appearances": "PJ",
+      "yellowCards": "TA",
+      "redCards": "TR",
+      "mvps": "MVPs",
+      "salary": "Salario"
+    },
+    "noStats": "-"
+  },
+  "upcoming": {
+    "title": "Próximos Partidos",
+    "noMatches": "Sin partidos próximos",
+    "vs": "VS",
+    "home": "Local",
+    "away": "Visitante"
+  }
+}

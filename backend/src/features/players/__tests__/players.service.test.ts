@@ -67,7 +67,7 @@ describe('PlayerService', () => {
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         avatar: null,
       }
 
@@ -87,7 +87,7 @@ describe('PlayerService', () => {
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
       })
     })
 
@@ -113,7 +113,7 @@ describe('PlayerService', () => {
         sofifaId: '20801',
         transfermarktId: '8198',
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         avatar: null,
       }
 
@@ -132,7 +132,7 @@ describe('PlayerService', () => {
         sofifaId: '20801',
         transfermarktId: '8198',
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         actualClub: { connect: { id: 'club-123' } },
       })
     })
@@ -153,7 +153,7 @@ describe('PlayerService', () => {
           sofifaId: null,
           transfermarktId: null,
           isKempesita: false,
-          isActive: true,
+          isActive: true, position: null,
           avatar: null,
         },
       ]
@@ -186,7 +186,7 @@ describe('PlayerService', () => {
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         avatar: null,
       }
 
@@ -232,7 +232,7 @@ describe('PlayerService', () => {
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         avatar: null,
       }
 
@@ -349,7 +349,7 @@ Lionel Messi;fecha-invalida;club-123;90`
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         avatar: uploadedFile.publicUrl,
       }
 
@@ -382,7 +382,7 @@ Lionel Messi;fecha-invalida;club-123;90`
         sofifaId: null,
         transfermarktId: null,
         isKempesita: false,
-        isActive: true,
+        isActive: true, position: null,
         avatar: 'old-avatar.png',
       }
 

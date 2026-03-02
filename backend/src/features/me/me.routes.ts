@@ -72,4 +72,18 @@ export async function myAccountRoutes(fastify: FastifyInstance) {
     schema: myAccountSchemas.getSeasonStats,
     handler: accountController.getSeasonStats.bind(accountController),
   })
+
+  // Dashboard data (consolidated: club + titles + squad + upcoming matches)
+  fastify.get('/dashboard', {
+    preHandler: [fastify.authenticate, authorize(['ADMIN', 'USER'])],
+    schema: myAccountSchemas.getDashboardData,
+    handler: accountController.getDashboardData.bind(accountController),
+  })
+
+  // Update club's preferred formation
+  fastify.patch('/club/formation', {
+    preHandler: [fastify.authenticate, authorize(['ADMIN', 'USER'])],
+    schema: myAccountSchemas.updatePreferredFormation,
+    handler: accountController.updatePreferredFormation.bind(accountController),
+  })
 }

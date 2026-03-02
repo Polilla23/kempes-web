@@ -50,7 +50,9 @@
     "updateSuccess": "Profile updated successfully",
     "updateError": "Error updating profile",
     "usernameTaken": "Username is already taken",
-    "noUsername": "No username"
+    "noUsername": "No username",
+    "formation": "Preferred formation",
+    "selectFormation": "Select formation"
   },
   "table": {
     "rowsPerPage": "Rows per page",

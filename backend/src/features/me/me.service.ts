@@ -57,6 +57,7 @@ export class MyAccountService {
       name: user.club.name,
       logo: user.club.logo,
       isActive: user.club.isActive,
+      preferredFormation: user.club.preferredFormation ?? '4-3-3',
       playersOwned: user.club._count.playerOwner,
       playersActive: user.club._count.playerNow,
       squad: user.club.playerNow,
@@ -269,6 +270,61 @@ export class MyAccountService {
     }
 
     return await this.userRepository.updateOneById(userId, updateData)
+  }
+
+  /**
+   * Get consolidated dashboard data for the user
+   */
+  async getDashboardData(userId: string) {
+    const user = await this.myAccountRepository.getUserWithClub(userId)
+
+    if (!user) {
+      throw new UserNotFoundError()
+    }
+
+    if (!user.club) {
+      return null
+    }
+
+    const dashboardData = await this.myAccountRepository.getDashboardData(user.club.id)
+
+    return {
+      club: {
+        id: user.club.id,
+        name: user.club.name,
+        logo: user.club.logo,
+        preferredFormation: user.club.preferredFormation ?? '4-3-3',
+        titles: dashboardData.titles,
+      },
+      squad: {
+        squadValue: dashboardData.squadValue,
+        players: dashboardData.players,
+      },
+      upcomingMatches: dashboardData.upcomingMatches,
+    }
+  }
+
+  /**
+   * Update preferred formation for user's club
+   */
+  async updatePreferredFormation(userId: string, formation: string) {
+    const VALID_FORMATIONS = ['4-4-2', '4-3-3', '4-2-3-1', '3-5-2', '3-4-3', '5-3-2', '4-5-1', '4-1-4-1']
+
+    if (!VALID_FORMATIONS.includes(formation)) {
+      throw new Error(`Invalid formation. Valid formations: ${VALID_FORMATIONS.join(', ')}`)
+    }
+
+    const user = await this.myAccountRepository.getUserWithClub(userId)
+
+    if (!user) {
+      throw new UserNotFoundError()
+    }
+
+    if (!user.club) {
+      throw new Error('User does not have a club')
+    }
+
+    return await this.myAccountRepository.updateClubFormation(user.club.id, formation)
   }
 
   /**

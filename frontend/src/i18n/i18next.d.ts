@@ -13,6 +13,7 @@ import salaryRates from './locales/en/salary-rates.json'
 import fixtures from './locales/en/fixtures.json'
 import news from './locales/en/news.json'
 import submitResult from './locales/en/submit-result.json'
+import dashboard from './locales/en/dashboard.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -31,6 +32,7 @@ declare module 'i18next' {
       fixtures: typeof fixtures
       news: typeof news
       submitResult: typeof submitResult
+      dashboard: typeof dashboard
     }
   }
 }

@@ -9,12 +9,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useUser } from '@/context/UserContext'
 import MeService from '@/services/me.service'
+import DashboardService from '@/services/dashboard.service'
 import { useState, useRef, useEffect } from 'react'
 import { Camera } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+
+const FORMATIONS = ['4-3-3', '4-4-2', '4-2-3-1', '3-5-2', '3-4-3', '5-3-2', '4-5-1', '4-1-4-1']
 
 interface ProfileSettingsDialogProps {
   open: boolean
@@ -27,6 +31,8 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
+  const [formation, setFormation] = useState<string | null>(null)
+  const [originalFormation, setOriginalFormation] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { t } = useTranslation('common')
 
@@ -35,6 +41,19 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
       setNewUsername(username || '')
       setPreviewUrl(null)
       setSelectedFile(null)
+
+      MeService.getClub().then((club) => {
+        if (club) {
+          setFormation(club.preferredFormation)
+          setOriginalFormation(club.preferredFormation)
+        } else {
+          setFormation(null)
+          setOriginalFormation(null)
+        }
+      }).catch(() => {
+        setFormation(null)
+        setOriginalFormation(null)
+      })
     }
   }, [open, username])
 
@@ -53,6 +72,12 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
         username: newUsername,
         avatar: selectedFile || undefined,
       })
+
+      if (formation !== null && formation !== originalFormation) {
+        await DashboardService.updateFormation(formation)
+        setOriginalFormation(formation)
+      }
+
       await refreshUser()
       toast.success(t('profile.updateSuccess'))
       onOpenChange(false)
@@ -116,6 +141,24 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
             <Label htmlFor="email">{t('profile.email')}</Label>
             <Input id="email" value={email || ''} disabled />
           </div>
+
+          {formation !== null && (
+            <div className="space-y-2">
+              <Label htmlFor="formation">{t('profile.formation')}</Label>
+              <Select value={formation} onValueChange={setFormation}>
+                <SelectTrigger id="formation">
+                  <SelectValue placeholder={t('profile.selectFormation')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {FORMATIONS.map((f) => (
+                    <SelectItem key={f} value={f}>
+                      {f}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
