@@ -1,61 +1,104 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Loader2, AlertCircle, CheckCircle, Trophy, Medal, ArrowLeft, Users, Info } from 'lucide-react'
-import { FixtureService, type KempesCupGroupsStatus, type KempesCupQualifiedTeams, type BracketInput, type QualifiedTeam } from '@/services/fixture.service'
+import { Loader2, AlertCircle, CheckCircle, Trophy, Medal, ArrowLeft, Users, Info, ArrowRight } from 'lucide-react'
+import { FixtureService, type KempesCupGroupsStatus, type KempesCupQualifiedTeams, type QualifiedTeam } from '@/services/fixture.service'
+import CompetitionService from '@/services/competition.service'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { BracketEditorContainer } from '../_components/bracket-editor/bracket-editor-container'
+import { BomboTeamsPanel } from '../_components/bracket-editor/bombo-teams-panel'
+import type { EmptyBracketStructure, BracketTeamPlacement, AvailableTeamWithGroup } from '@/types/bracket-editor'
+
+type WizardStep = 'status' | 'gold-bracket' | 'silver-bracket' | 'success'
+
+export const Route = createFileRoute('/management/fixtures/cup/kempes/generate-brackets')({
+  component: GenerateBracketsPage,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      competitionId: search.competitionId as string,
+    }
+  },
+})
 
 /**
- * Componente que muestra un resumen de como quedara el bracket
+ * Convierte QualifiedTeam[] a AvailableTeamWithGroup[] para el BomboTeamsPanel
+ */
+function toAvailableTeamsWithGroup(teams: QualifiedTeam[]): AvailableTeamWithGroup[] {
+  return teams.map((t) => ({
+    id: t.clubId,
+    name: t.clubName,
+    logo: t.clubLogo || null,
+    isAssigned: false,
+    groupName: t.groupName,
+    position: t.position,
+  }))
+}
+
+/**
+ * Valida que no haya equipos del mismo grupo enfrentandose en primera ronda.
+ * Retorna un mensaje de warning si hay cruces, o null si todo OK.
+ */
+function validateSameGroupConstraint(
+  placements: BracketTeamPlacement[],
+  teams: AvailableTeamWithGroup[],
+  structure: EmptyBracketStructure
+): string | null {
+  const byePositions = new Set(structure.byePositions)
+  const firstRound = structure.firstRound
+  const matchCount = structure.rounds[0]?.matchCount || 0
+  const warnings: string[] = []
+
+  for (let pos = 1; pos <= matchCount; pos++) {
+    if (byePositions.has(pos)) continue
+
+    const homeSlotId = `${firstRound}_${pos}_home`
+    const awaySlotId = `${firstRound}_${pos}_away`
+
+    const homePlacement = placements.find((p) => p.slotId === homeSlotId)
+    const awayPlacement = placements.find((p) => p.slotId === awaySlotId)
+
+    if (homePlacement && awayPlacement) {
+      const homeTeam = teams.find((t) => t.id === homePlacement.teamId)
+      const awayTeam = teams.find((t) => t.id === awayPlacement.teamId)
+
+      if (homeTeam && awayTeam && homeTeam.groupName === awayTeam.groupName) {
+        warnings.push(
+          `${homeTeam.name} y ${awayTeam.name} son del mismo grupo (${homeTeam.groupName})`
+        )
+      }
+    }
+  }
+
+  return warnings.length > 0
+    ? `Equipos del mismo grupo enfrentandose: ${warnings.join('; ')}`
+    : null
+}
+
+/**
+ * Componente que muestra un resumen de la estructura del bracket
  */
 function BracketSummary({ goldTeamCount, silverTeamCount }: { goldTeamCount: number; silverTeamCount: number }) {
   const calculateBracketInfo = (teamCount: number) => {
     if (teamCount < 2) return null
-
-    // Calcular tamano del bracket (potencia de 2)
     let bracketSize = 2
-    while (bracketSize < teamCount) {
-      bracketSize *= 2
-    }
-
+    while (bracketSize < teamCount) bracketSize *= 2
     const byeCount = bracketSize - teamCount
     const matchesInFirstRound = bracketSize / 2
-    const actualFirstRoundMatches = matchesInFirstRound - byeCount
 
-    // Determinar nombre de la primera ronda
     let firstRoundName = ''
     switch (bracketSize) {
-      case 2:
-        firstRoundName = 'Final'
-        break
-      case 4:
-        firstRoundName = 'Semifinales'
-        break
-      case 8:
-        firstRoundName = 'Cuartos de Final'
-        break
-      case 16:
-        firstRoundName = 'Octavos de Final'
-        break
-      case 32:
-        firstRoundName = 'Dieciseisavos'
-        break
-      default:
-        firstRoundName = `Ronda de ${bracketSize}`
+      case 2: firstRoundName = 'Final'; break
+      case 4: firstRoundName = 'Semifinales'; break
+      case 8: firstRoundName = 'Cuartos de Final'; break
+      case 16: firstRoundName = 'Octavos de Final'; break
+      case 32: firstRoundName = 'Dieciseisavos'; break
+      default: firstRoundName = `Ronda de ${bracketSize}`
     }
 
-    return {
-      bracketSize,
-      byeCount,
-      matchesInFirstRound,
-      actualFirstRoundMatches,
-      firstRoundName,
-      teamsWithBye: byeCount,
-      teamsPlaying: teamCount - byeCount,
-    }
+    return { bracketSize, byeCount, matchesInFirstRound, firstRoundName, teamsWithBye: byeCount, teamsPlaying: teamCount - byeCount }
   }
 
   const goldInfo = calculateBracketInfo(goldTeamCount)
@@ -65,7 +108,6 @@ function BracketSummary({ goldTeamCount, silverTeamCount }: { goldTeamCount: num
 
   return (
     <div className="grid md:grid-cols-2 gap-4 mb-6">
-      {/* Copa de Oro */}
       <Card className="border-amber-200">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
@@ -78,23 +120,15 @@ function BracketSummary({ goldTeamCount, silverTeamCount }: { goldTeamCount: num
           <p><strong>Bracket:</strong> {goldInfo.bracketSize} posiciones</p>
           <p><strong>Primera ronda:</strong> {goldInfo.firstRoundName}</p>
           {goldInfo.byeCount > 0 ? (
-            <>
-              <p className="text-amber-600">
-                <strong>Byes:</strong> {goldInfo.byeCount} equipos pasan directo
-              </p>
-              <p className="text-muted-foreground text-xs">
-                Los {goldInfo.byeCount} mejor posicionados avanzan sin jugar la primera ronda
-              </p>
-            </>
-          ) : (
-            <p className="text-green-600">
-              <strong>Sin byes:</strong> Todos juegan desde {goldInfo.firstRoundName}
+            <p className="text-amber-600">
+              <strong>Byes:</strong> {goldInfo.byeCount} equipos pasan directo
             </p>
+          ) : (
+            <p className="text-green-600"><strong>Sin byes</strong></p>
           )}
         </CardContent>
       </Card>
 
-      {/* Copa de Plata */}
       {silverInfo && (
         <Card className="border-slate-200">
           <CardHeader className="pb-2">
@@ -108,18 +142,11 @@ function BracketSummary({ goldTeamCount, silverTeamCount }: { goldTeamCount: num
             <p><strong>Bracket:</strong> {silverInfo.bracketSize} posiciones</p>
             <p><strong>Primera ronda:</strong> {silverInfo.firstRoundName}</p>
             {silverInfo.byeCount > 0 ? (
-              <>
-                <p className="text-slate-600">
-                  <strong>Byes:</strong> {silverInfo.byeCount} equipos pasan directo
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  Los {silverInfo.byeCount} mejor posicionados avanzan sin jugar la primera ronda
-                </p>
-              </>
-            ) : (
-              <p className="text-green-600">
-                <strong>Sin byes:</strong> Todos juegan desde {silverInfo.firstRoundName}
+              <p className="text-slate-600">
+                <strong>Byes:</strong> {silverInfo.byeCount} equipos pasan directo
               </p>
+            ) : (
+              <p className="text-green-600"><strong>Sin byes</strong></p>
             )}
           </CardContent>
         </Card>
@@ -128,44 +155,57 @@ function BracketSummary({ goldTeamCount, silverTeamCount }: { goldTeamCount: num
   )
 }
 
-export const Route = createFileRoute('/management/fixtures/cup/kempes/generate-brackets')({
-  component: GenerateBracketsPage,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      competitionId: search.competitionId as string,
-    }
-  },
-})
-
 function GenerateBracketsPage() {
   const navigate = useNavigate()
   const { competitionId } = useSearch({ from: '/management/fixtures/cup/kempes/generate-brackets' })
 
+  // Data loading state
   const [loading, setLoading] = useState(true)
-  const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-
   const [groupsStatus, setGroupsStatus] = useState<KempesCupGroupsStatus | null>(null)
   const [qualifiedTeams, setQualifiedTeams] = useState<KempesCupQualifiedTeams | null>(null)
+
+  // Wizard state
+  const [step, setStep] = useState<WizardStep>('status')
+  const [generating, setGenerating] = useState(false)
+
+  // Bracket structures
+  const [goldBracketStructure, setGoldBracketStructure] = useState<EmptyBracketStructure | null>(null)
+  const [silverBracketStructure, setSilverBracketStructure] = useState<EmptyBracketStructure | null>(null)
+
+  // Placements
+  const [goldPlacements, setGoldPlacements] = useState<BracketTeamPlacement[] | null>(null)
+  const [silverPlacements, setSilverPlacements] = useState<BracketTeamPlacement[] | null>(null)
+
+  // Warning for same-group constraint
+  const [goldWarning, setGoldWarning] = useState<string | null>(null)
+
+  // Generated cup IDs
   const [generatedCups, setGeneratedCups] = useState<{ goldCupId?: string; silverCupId?: string } | null>(null)
 
+  // Teams for bracket editor
+  const goldTeamsForEditor = useMemo(() => {
+    if (!qualifiedTeams) return []
+    return toAvailableTeamsWithGroup(qualifiedTeams.goldTeams)
+  }, [qualifiedTeams])
+
+  const silverTeamsForEditor = useMemo(() => {
+    if (!qualifiedTeams) return []
+    return toAvailableTeamsWithGroup(qualifiedTeams.silverTeams)
+  }, [qualifiedTeams])
+
   useEffect(() => {
-    if (competitionId) {
-      loadData()
-    }
+    if (competitionId) loadData()
   }, [competitionId])
 
   const loadData = async () => {
     try {
       setLoading(true)
       setError(null)
-
       const [status, qualified] = await Promise.all([
         FixtureService.getKempesCupGroupsStatus(competitionId),
         FixtureService.getKempesCupQualifiedTeams(competitionId),
       ])
-
       setGroupsStatus(status)
       setQualifiedTeams(qualified)
     } catch (err) {
@@ -176,206 +216,83 @@ function GenerateBracketsPage() {
     }
   }
 
-  /**
-   * Genera los brackets para Copa Oro y Copa Plata
-   * Los byes se colocan en posiciones estrategicas (2 arriba, 2 abajo del bracket)
-   */
-  const handleGenerate = async () => {
-    if (!qualifiedTeams || !groupsStatus) return
+  const handleContinueToBracket = async () => {
+    if (!qualifiedTeams) return
+    try {
+      setError(null)
+      setGenerating(true)
 
+      // Fetch bracket structures
+      const goldStructure = await CompetitionService.getBracketStructure(qualifiedTeams.goldTeams.length)
+      setGoldBracketStructure(goldStructure)
+
+      if (qualifiedTeams.silverTeams.length > 0) {
+        const silverStructure = await CompetitionService.getBracketStructure(qualifiedTeams.silverTeams.length)
+        setSilverBracketStructure(silverStructure)
+      }
+
+      setStep('gold-bracket')
+    } catch (err) {
+      console.error('Error fetching bracket structure:', err)
+      setError(err instanceof Error ? err.message : 'Error al obtener la estructura del bracket')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleGoldConfirm = useCallback((placements: BracketTeamPlacement[]) => {
+    setGoldPlacements(placements)
+
+    // Validate same-group constraint
+    if (goldBracketStructure) {
+      const warning = validateSameGroupConstraint(placements, goldTeamsForEditor, goldBracketStructure)
+      setGoldWarning(warning)
+    }
+
+    // Move to silver bracket or generate
+    if (qualifiedTeams && qualifiedTeams.silverTeams.length > 0 && silverBracketStructure) {
+      setStep('silver-bracket')
+    } else {
+      // No silver teams, generate directly
+      handleFinalGenerate(placements, [])
+    }
+  }, [goldBracketStructure, goldTeamsForEditor, qualifiedTeams, silverBracketStructure])
+
+  const handleSilverConfirm = useCallback((placements: BracketTeamPlacement[]) => {
+    setSilverPlacements(placements)
+    handleFinalGenerate(goldPlacements!, placements)
+  }, [goldPlacements])
+
+  const handleFinalGenerate = async (
+    goldPlc: BracketTeamPlacement[],
+    silverPlc: BracketTeamPlacement[]
+  ) => {
     try {
       setGenerating(true)
       setError(null)
 
-      const goldTeams = qualifiedTeams.goldTeams
-      const silverTeams = qualifiedTeams.silverTeams
-
-      // Generar brackets con byes balanceados
-      const goldBrackets = generateBracketsWithByes(goldTeams.length)
-      const silverBrackets = silverTeams.length > 0 ? generateBracketsWithByes(silverTeams.length) : []
-
-      // Asignar equipos a los brackets
-      // Los 1ros de grupo van a las posiciones con bye (pasan directo)
-      // Los demas se asignan al resto de las posiciones
-      assignTeamsToBrackets(goldBrackets, goldTeams)
-      assignTeamsToBrackets(silverBrackets, silverTeams)
-
       const result = await FixtureService.generateGoldSilverCups({
         kempesCupId: competitionId,
-        goldBrackets,
-        silverBrackets,
+        goldTeamPlacements: goldPlc,
+        silverTeamPlacements: silverPlc,
       })
 
       setGeneratedCups({
         goldCupId: result.goldCup.id,
         silverCupId: result.silverCup?.id,
       })
-      setSuccess(true)
+      setStep('success')
     } catch (err) {
       console.error('Error generating brackets:', err)
       setError(err instanceof Error ? err.message : 'Error al generar los brackets')
+      // Go back to gold bracket step on error
+      setStep('gold-bracket')
     } finally {
       setGenerating(false)
     }
   }
 
-  /**
-   * Genera estructura de brackets FLEXIBLE basada en la cantidad de equipos
-   *
-   * Ejemplos:
-   * - 8 equipos → Bracket de 8 → Cuartos directos (4 partidos, 0 byes)
-   * - 12 equipos → Bracket de 16 → 8vos con 4 byes
-   * - 16 equipos → Bracket de 16 → 8vos completos (0 byes)
-   * - 6 equipos → Bracket de 8 → Cuartos con 2 byes
-   * - 4 equipos → Bracket de 4 → Semifinales directas (0 byes)
-   *
-   * Los byes se distribuyen equilibradamente: mitad arriba, mitad abajo del bracket
-   */
-  const generateBracketsWithByes = (teamCount: number): BracketInput[] => {
-    const brackets: BracketInput[] = []
-
-    // Caso especial: menos de 2 equipos no tiene sentido
-    if (teamCount < 2) {
-      console.warn('Se necesitan al menos 2 equipos para generar un bracket')
-      return brackets
-    }
-
-    // Calcular tamano del bracket (potencia de 2 mas cercana hacia arriba)
-    let bracketSize = 2
-    while (bracketSize < teamCount) {
-      bracketSize *= 2
-    }
-
-    const byeCount = bracketSize - teamCount
-    const matchesInFirstRound = bracketSize / 2
-
-    // Calcular total de rondas
-    // 2 equipos = 1 ronda (final)
-    // 4 equipos = 2 rondas (semi + final)
-    // 8 equipos = 3 rondas (cuartos + semi + final)
-    // 16 equipos = 4 rondas (8vos + cuartos + semi + final)
-    let totalRounds = 1
-    let temp = bracketSize
-    while (temp > 2) {
-      temp /= 2
-      totalRounds++
-    }
-
-    // Calcular posiciones de bye distribuidas equilibradamente
-    // Mitad de byes arriba del bracket, mitad abajo
-    const byePositions = new Set<number>()
-    const byesTop = Math.ceil(byeCount / 2)
-    const byesBottom = Math.floor(byeCount / 2)
-
-    // Byes en la parte superior (posiciones 1, 2, 3...)
-    for (let i = 1; i <= byesTop; i++) {
-      byePositions.add(i)
-    }
-
-    // Byes en la parte inferior (posiciones n, n-1, n-2...)
-    for (let i = 0; i < byesBottom; i++) {
-      byePositions.add(matchesInFirstRound - i)
-    }
-
-    // Primera ronda
-    for (let i = 1; i <= matchesInFirstRound; i++) {
-      brackets.push({
-        round: 1,
-        position: i,
-        isBye: byePositions.has(i),
-      })
-    }
-
-    // Rondas siguientes (sin equipos asignados, solo placeholders)
-    let matchesInRound = matchesInFirstRound / 2
-    for (let round = 2; round <= totalRounds; round++) {
-      for (let pos = 1; pos <= matchesInRound; pos++) {
-        brackets.push({
-          round,
-          position: pos,
-        })
-      }
-      matchesInRound = Math.max(1, matchesInRound / 2)
-    }
-
-    return brackets
-  }
-
-  /**
-   * Asigna equipos a los brackets de forma inteligente
-   * - Los equipos mejor posicionados (1ros de grupo) reciben byes si los hay
-   * - Los demas se distribuyen en los partidos normales
-   * - Se mezclan los grupos para evitar que equipos del mismo grupo se enfrenten temprano
-   */
-  const assignTeamsToBrackets = (brackets: BracketInput[], teams: QualifiedTeam[]) => {
-    if (!teams || teams.length === 0) return
-
-    const firstRoundBrackets = brackets.filter((b) => b.round === 1)
-    const byeBrackets = firstRoundBrackets.filter((b) => b.isBye)
-    const normalBrackets = firstRoundBrackets.filter((b) => !b.isBye)
-
-    // Ordenar equipos por posicion en grupo (1ros primero, luego 2dos, etc.)
-    const sortedTeams = [...teams].sort((a, b) => a.position - b.position)
-
-    // Los equipos mejor posicionados reciben byes (pasan directo a siguiente ronda)
-    const teamsWithByes = sortedTeams.slice(0, byeBrackets.length)
-    const teamsToPlay = sortedTeams.slice(byeBrackets.length)
-
-    // Asignar equipos con bye
-    byeBrackets.forEach((bracket, index) => {
-      if (teamsWithByes[index]) {
-        bracket.homeTeamId = teamsWithByes[index].clubId
-        bracket.awayTeamId = undefined // Bye - no hay rival
-      }
-    })
-
-    // Asignar equipos que juegan partidos normales
-    // Mezclar para que equipos del mismo grupo no se enfrenten en primera ronda
-    const shuffledTeamsToPlay = shuffleAvoidingSameGroup(teamsToPlay)
-
-    let teamIndex = 0
-    normalBrackets.forEach((bracket) => {
-      if (shuffledTeamsToPlay[teamIndex]) {
-        bracket.homeTeamId = shuffledTeamsToPlay[teamIndex].clubId
-        teamIndex++
-      }
-      if (shuffledTeamsToPlay[teamIndex]) {
-        bracket.awayTeamId = shuffledTeamsToPlay[teamIndex].clubId
-        teamIndex++
-      }
-    })
-  }
-
-  /**
-   * Mezcla equipos intentando evitar que equipos del mismo grupo se enfrenten
-   */
-  const shuffleAvoidingSameGroup = (teams: QualifiedTeam[]): QualifiedTeam[] => {
-    if (teams.length <= 2) return teams
-
-    // Agrupar por grupo de origen
-    const teamsByGroup = new Map<string, QualifiedTeam[]>()
-    teams.forEach((team) => {
-      if (!teamsByGroup.has(team.groupName)) {
-        teamsByGroup.set(team.groupName, [])
-      }
-      teamsByGroup.get(team.groupName)!.push(team)
-    })
-
-    // Intercalar equipos de diferentes grupos
-    const result: QualifiedTeam[] = []
-    const groups = Array.from(teamsByGroup.values())
-    const maxLength = Math.max(...groups.map((g) => g.length))
-
-    for (let i = 0; i < maxLength; i++) {
-      for (const group of groups) {
-        if (group[i]) {
-          result.push(group[i])
-        }
-      }
-    }
-
-    return result
-  }
+  // ==================== RENDER ====================
 
   if (loading) {
     return (
@@ -390,7 +307,20 @@ function GenerateBracketsPage() {
     )
   }
 
-  if (success && generatedCups) {
+  if (!groupsStatus || !qualifiedTeams) {
+    return (
+      <div className="container mx-auto p-6 max-w-6xl">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error || 'No se pudieron cargar los datos de la Copa Kempes'}</AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // ---- SUCCESS STEP ----
+  if (step === 'success' && generatedCups) {
     return (
       <div className="container mx-auto p-6 max-w-6xl">
         <Alert className="bg-green-50 border-green-200">
@@ -400,7 +330,6 @@ function GenerateBracketsPage() {
             Se han creado la Copa de Oro y la Copa de Plata con los equipos clasificados.
           </AlertDescription>
         </Alert>
-
         <div className="mt-6 flex gap-4">
           <Button onClick={() => navigate({ to: '/fixtures' })}>Ver Fixtures</Button>
           <Button variant="outline" onClick={() => navigate({ to: '/management/fixtures/cup' })}>
@@ -411,18 +340,105 @@ function GenerateBracketsPage() {
     )
   }
 
-  if (!groupsStatus || !qualifiedTeams) {
+  // ---- GOLD BRACKET STEP ----
+  if (step === 'gold-bracket' && goldBracketStructure) {
     return (
-      <div className="container mx-auto p-6 max-w-6xl">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>No se pudieron cargar los datos de la Copa Kempes</AlertDescription>
-        </Alert>
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={() => setStep('status')} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver al resumen
+          </Button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Trophy className="h-6 w-6 text-amber-500" />
+            Copa de Oro - Armar Bracket
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Asigna los equipos clasificados a las posiciones del bracket
+          </p>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <BracketEditorContainer
+          structure={goldBracketStructure}
+          teams={goldTeamsForEditor}
+          onConfirm={handleGoldConfirm}
+          onCancel={() => setStep('status')}
+          isSubmitting={generating}
+          confirmLabel={qualifiedTeams.silverTeams.length > 0 ? 'Continuar a Copa de Plata' : 'Generar Copas'}
+          renderTeamsPanel={(props) => (
+            <BomboTeamsPanel
+              teams={goldTeamsForEditor.map(t => ({
+                ...t,
+                isAssigned: props.teams.find(pt => pt.id === t.id)?.isAssigned || false,
+              }))}
+              assignedCount={props.assignedCount}
+              totalRequired={props.totalRequired}
+              selectedTeamId={props.selectedTeamId}
+              onSelectTeam={props.onSelectTeam}
+            />
+          )}
+        />
       </div>
     )
   }
 
+  // ---- SILVER BRACKET STEP ----
+  if (step === 'silver-bracket' && silverBracketStructure) {
+    return (
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="mb-6">
+          <Button variant="ghost" onClick={() => setStep('gold-bracket')} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver a Copa de Oro
+          </Button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Medal className="h-6 w-6 text-slate-500" />
+            Copa de Plata - Armar Bracket
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Asigna los equipos clasificados a las posiciones del bracket
+          </p>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <BracketEditorContainer
+          structure={silverBracketStructure}
+          teams={silverTeamsForEditor}
+          onConfirm={handleSilverConfirm}
+          onCancel={() => setStep('gold-bracket')}
+          isSubmitting={generating}
+          confirmLabel="Generar Copas"
+          renderTeamsPanel={(props) => (
+            <BomboTeamsPanel
+              teams={silverTeamsForEditor.map(t => ({
+                ...t,
+                isAssigned: props.teams.find(pt => pt.id === t.id)?.isAssigned || false,
+              }))}
+              assignedCount={props.assignedCount}
+              totalRequired={props.totalRequired}
+              selectedTeamId={props.selectedTeamId}
+              onSelectTeam={props.onSelectTeam}
+            />
+          )}
+        />
+      </div>
+    )
+  }
+
+  // ---- STATUS STEP (default) ----
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8">
@@ -430,7 +446,6 @@ function GenerateBracketsPage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Volver
         </Button>
-
         <h1 className="text-3xl font-bold mb-2">Generar Copa de Oro y Copa de Plata</h1>
         <p className="text-muted-foreground">{groupsStatus.competitionName}</p>
       </div>
@@ -452,7 +467,7 @@ function GenerateBracketsPage() {
           </CardTitle>
           <CardDescription>
             {groupsStatus.allGroupsComplete
-              ? 'Todos los grupos han finalizado. Puedes generar los brackets.'
+              ? 'Todos los grupos han finalizado. Puedes armar los brackets.'
               : 'Algunos grupos aun no han terminado.'}
           </CardDescription>
         </CardHeader>
@@ -514,32 +529,34 @@ function GenerateBracketsPage() {
             </Card>
 
             {/* Copa de Plata */}
-            <Card>
-              <CardHeader className="bg-slate-50">
-                <CardTitle className="flex items-center gap-2 text-slate-700">
-                  <Medal className="h-5 w-5" />
-                  Copa de Plata ({qualifiedTeams.silverTeams.length} equipos)
-                </CardTitle>
-                <CardDescription>
-                  Siguientes {groupsStatus.qualifyToSilver} de cada grupo
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-2">
-                  {qualifiedTeams.silverTeams.map((team) => (
-                    <div key={team.clubId} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      {team.clubLogo && (
-                        <img src={team.clubLogo} alt={team.clubName} className="h-6 w-6 object-contain" />
-                      )}
-                      <span className="flex-1">{team.clubName}</span>
-                      <Badge variant="outline">
-                        {team.position}° Grupo {team.groupName}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {qualifiedTeams.silverTeams.length > 0 && (
+              <Card>
+                <CardHeader className="bg-slate-50">
+                  <CardTitle className="flex items-center gap-2 text-slate-700">
+                    <Medal className="h-5 w-5" />
+                    Copa de Plata ({qualifiedTeams.silverTeams.length} equipos)
+                  </CardTitle>
+                  <CardDescription>
+                    Siguientes {groupsStatus.qualifyToSilver} de cada grupo
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="space-y-2">
+                    {qualifiedTeams.silverTeams.map((team) => (
+                      <div key={team.clubId} className="flex items-center gap-2 p-2 bg-muted rounded">
+                        {team.clubLogo && (
+                          <img src={team.clubLogo} alt={team.clubName} className="h-6 w-6 object-contain" />
+                        )}
+                        <span className="flex-1">{team.clubName}</span>
+                        <Badge variant="outline">
+                          {team.position}° Grupo {team.groupName}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <Separator className="my-6" />
@@ -550,22 +567,22 @@ function GenerateBracketsPage() {
             silverTeamCount={qualifiedTeams.silverTeams.length}
           />
 
-          {/* Boton de generar */}
+          {/* Boton para continuar al bracket editor */}
           <div className="flex justify-end">
             <Button
               size="lg"
-              onClick={handleGenerate}
+              onClick={handleContinueToBracket}
               disabled={generating || !groupsStatus.allGroupsComplete}
             >
               {generating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generando...
+                  Cargando...
                 </>
               ) : (
                 <>
-                  <Trophy className="mr-2 h-4 w-4" />
-                  Generar Copa de Oro y Copa de Plata
+                  <ArrowRight className="mr-2 h-4 w-4" />
+                  Continuar al Bracket
                 </>
               )}
             </Button>

@@ -106,7 +106,10 @@ export interface RecentMatch {
 }
 
 export interface HomeStandingEntry extends StandingEntry {
-  zone?: 'champion' | 'promotion' | 'promotion_playoff' | 'playoff' | 'relegation' | null
+  zone?: 'champion' | 'liguilla' | 'triangular'
+    | 'promotion' | 'promotion_playoff'
+    | 'playout' | 'relegation' | 'relegation_playoff'
+    | 'reducido' | 'playoff' | null
 }
 
 export interface HomeStandings {
@@ -117,6 +120,7 @@ export interface HomeStandings {
   isComplete: boolean
   matchesPlayed: number
   matchesTotal: number
+  activeZones?: string[]
 }
 
 export interface UserMatch extends RecentMatch {

@@ -8,7 +8,7 @@ import { FixtureRepository } from '@/features/fixtures/fixtures.repository'
 import { validateCompetitionRules, isLeaguesRules, isKempesCupRules, isCindorCupRules, isSuperCupRules } from '@/features/utils/jsonTypeChecker'
 import {
   generateLeagueFixture,
-  generateFullCupFixture,
+  generateGroupStageFixture,
   generateDirectKnockoutBracket,
   generateEmptyBracketStructure,
   BracketTeamPlacement,
@@ -213,13 +213,12 @@ export class CompetitionService {
       return result
     }
 
-    // Para copas, crear las 3 competiciones (fase de grupos, copa oro, copa plata)
-    // y generar TODOS los fixtures automáticamente
+    // Para Copa Kempes, crear SOLO la fase de grupos
+    // Copa Oro y Copa Plata se crean después cuando termine la fase de grupos
     if (isKempesCupRules(validatedConfig)) {
       const cupConfig = validatedConfig as KempesCupRules
-      
+
       const result = await this.prisma.$transaction(async (tx) => {
-        const createdCompetitions: Competition[] = []
         const seasonNumber = cupConfig.activeSeason.number
         const category = cupConfig.competitionCategory
 
@@ -234,118 +233,40 @@ export class CompetitionService {
             rules: cupConfig as unknown as Prisma.InputJsonValue,
           },
         })
-        createdCompetitions.push(groupStageCompetition)
 
-        // 2. Buscar o crear CompetitionType para Copa Oro
-        let goldCupType = await tx.competitionType.findFirst({
-          where: { name: CompetitionName.GOLD_CUP, category },
+        // 2. Conectar equipos a la competición
+        const allClubIds = (cupConfig.groups || []).flatMap(g => g.clubIds)
+        await tx.competition.update({
+          where: { id: groupStageCompetition.id },
+          data: { teams: { connect: allClubIds.map(id => ({ id })) } },
         })
-        if (!goldCupType) {
-          goldCupType = await tx.competitionType.create({
-            data: {
-              name: CompetitionName.GOLD_CUP,
-              category,
-              format: 'CUP',
-              hierarchy: 10, // Copa Oro tiene alta jerarquía
-            },
-          })
+
+        // 3. Generar SOLO matches de fase de grupos
+        const groupStageMatches: Prisma.MatchCreateInput[] = []
+        for (const group of cupConfig.groups || []) {
+          const groupMatches = generateGroupStageFixture(
+            group.clubIds,
+            groupStageCompetition.id,
+            group.groupName
+          )
+          groupStageMatches.push(...groupMatches)
         }
 
-        // 3. Crear competición Copa Oro
-        const goldCupCompetition = await tx.competition.create({
-          data: {
-            name: `Copa de Oro ${category} - T${seasonNumber}`,
-            system: CompetitionStage.KNOCKOUT,
-            competitionTypeId: goldCupType.id,
-            seasonId: cupConfig.activeSeason.id,
-            isActive: true,
-            rules: { 
-              type: 'CUP_KNOCKOUT', 
-              parentCup: groupStageCompetition.id,
-              cupType: 'GOLD',
-            } as unknown as Prisma.InputJsonValue,
-          },
-        })
-        createdCompetitions.push(goldCupCompetition)
-
-        // 4. Crear competición Copa Plata (si hay clasificados)
-        let silverCupCompetition: Competition | null = null
-        if (cupConfig.qualifyToSilver > 0) {
-          let silverCupType = await tx.competitionType.findFirst({
-            where: { name: CompetitionName.SILVER_CUP, category },
-          })
-          if (!silverCupType) {
-            silverCupType = await tx.competitionType.create({
-              data: {
-                name: CompetitionName.SILVER_CUP,
-                category,
-                format: 'CUP',
-                hierarchy: 11, // Copa Plata tiene jerarquía después de Oro
-              },
-            })
-          }
-
-          silverCupCompetition = await tx.competition.create({
-            data: {
-              name: `Copa de Plata ${category} - T${seasonNumber}`,
-              system: CompetitionStage.KNOCKOUT,
-              competitionTypeId: silverCupType.id,
-              seasonId: cupConfig.activeSeason.id,
-              isActive: true,
-              rules: { 
-                type: 'CUP_KNOCKOUT', 
-                parentCup: groupStageCompetition.id,
-                cupType: 'SILVER',
-              } as unknown as Prisma.InputJsonValue,
-            },
-          })
-          createdCompetitions.push(silverCupCompetition)
-        }
-
-        // 5. Generar todos los fixtures
-        const fixtureConfig = {
-          groupStageCompetitionId: groupStageCompetition.id,
-          goldCupCompetitionId: goldCupCompetition.id,
-          silverCupCompetitionId: silverCupCompetition?.id || '',
-          groups: cupConfig.groups || [],
-          qualifyToGold: cupConfig.qualifyToGold,
-          qualifyToSilver: cupConfig.qualifyToSilver,
-        }
-
-        const { groupStageMatches, goldCupMatches, silverCupMatches } = generateFullCupFixture(fixtureConfig)
-
-        // 6. Crear matches de fase de grupos (secuencialmente para evitar timeout)
         const createdGroupMatches: Match[] = []
         for (const matchData of groupStageMatches) {
           const match = await tx.match.create({ data: matchData })
           createdGroupMatches.push(match)
         }
 
-        // 7. Crear matches de Copa Oro
-        const createdGoldMatches: Match[] = []
-        for (const matchData of goldCupMatches) {
-          const match = await tx.match.create({ data: matchData })
-          createdGoldMatches.push(match)
-        }
-
-        // 8. Crear matches de Copa Plata
-        const createdSilverMatches: Match[] = []
-        for (const matchData of silverCupMatches) {
-          const match = await tx.match.create({ data: matchData })
-          createdSilverMatches.push(match)
-        }
-
         return {
           success: true,
-          competitions: createdCompetitions,
+          competitions: [groupStageCompetition],
           fixtures: [
             { competition: groupStageCompetition, matchesCreated: createdGroupMatches.length, matches: createdGroupMatches },
-            { competition: goldCupCompetition, matchesCreated: createdGoldMatches.length, matches: createdGoldMatches },
-            ...(silverCupCompetition ? [{ competition: silverCupCompetition, matchesCreated: createdSilverMatches.length, matches: createdSilverMatches }] : []),
           ],
         }
       }, {
-        timeout: 120000, // 2 minutos de timeout para copas (más matches)
+        timeout: 60000,
       })
 
       return result
@@ -991,6 +912,28 @@ export class CompetitionService {
     if (!upperComp) throw new Error(`Upper competition not found: ${upperCompetitionId}`)
     if (!lowerComp) throw new Error(`Lower competition not found: ${lowerCompetitionId}`)
 
+    // 1b. Verificar que no existan ya promociones para estas ligas en esta temporada
+    const existingPromotions = await this.prisma.competition.findMany({
+      where: {
+        seasonId,
+        competitionType: {
+          name: CompetitionName.PROMOTIONS,
+          category: upperComp.competitionType.category,
+        },
+      },
+    })
+
+    // Verificar en las rules si alguna ya es entre estas mismas ligas
+    for (const existing of existingPromotions) {
+      const existingRules = existing.rules as any
+      if (
+        existingRules?.upperCompetitionId === upperCompetitionId &&
+        existingRules?.lowerCompetitionId === lowerCompetitionId
+      ) {
+        throw new Error('Ya existen promociones entre estas ligas para esta temporada')
+      }
+    }
+
     // 2. Verificar que ambas hayan completado su post-temporada
     const upperStatus = await this.getPostSeasonStatus(upperCompetitionId)
     const lowerStatus = await this.getPostSeasonStatus(lowerCompetitionId)
@@ -1034,76 +977,92 @@ export class CompetitionService {
     // 4. Determinar equipos de la liga superior que entran a promoción
     const upperTeamsForPromotion: PostSeasonTeam[] = []
 
-    // Equipos en zona playoff relegation (según rules)
     const upperPlayoffRelegations = ('relegations' in upperRules && upperRules.relegations?.promotion?.quantity) || 0
     const upperDirectRelegations = ('relegations' in upperRules && upperRules.relegations?.direct?.quantity) || 0
     const upperTotal = upperStandings.standings.length
 
-    if (upperPlayoffRelegations > 0) {
-      // Los que están justo encima de la zona de descenso directo
-      for (let i = 0; i < upperPlayoffRelegations; i++) {
-        const position = upperTotal - upperDirectRelegations - i
-        if (position > 0 && position <= upperTotal) {
-          const team = upperStandings.standings[position - 1]
-          upperTeamsForPromotion.push({ clubId: team.clubId, position })
-        }
-      }
-    }
+    // Verificar si hay playout que ocupa un cupo de playoffRelegations
+    const hasPlayout = 'playout' in upperRules && upperRules.playout
+    let playoutLoserId: string | null = null
 
-    // Si hay playout en la liga superior, el perdedor también entra
-    if ('playout' in upperRules && upperRules.playout) {
+    if (hasPlayout) {
+      // Buscar perdedor del playout
       const playoutMatches = upperComp.matches.filter(
         (m) => m.knockoutRound === KnockoutRound.PLAYOUT && m.status === MatchStatus.FINALIZADO
       )
       for (const playoutMatch of playoutMatches) {
         if (playoutMatch.homeClubGoals !== null && playoutMatch.awayClubGoals !== null) {
-          const loserId = playoutMatch.homeClubGoals > playoutMatch.awayClubGoals
+          playoutLoserId = playoutMatch.homeClubGoals > playoutMatch.awayClubGoals
             ? playoutMatch.awayClubId
             : playoutMatch.homeClubId
-          if (loserId && !upperTeamsForPromotion.some((t) => t.clubId === loserId)) {
-            // Find the position in standings
-            const pos = upperStandings.standings.findIndex((s) => s.clubId === loserId)
-            upperTeamsForPromotion.push({ clubId: loserId, position: pos + 1 })
-          }
         }
       }
+    }
+
+    // Si hay playout con resultado, el último cupo de playoffRelegations lo ocupa el perdedor del playout
+    // Los demás cupos van directo por posición en tabla
+    const directRelegationSlots = hasPlayout && playoutLoserId
+      ? upperPlayoffRelegations - 1
+      : upperPlayoffRelegations
+
+    // Equipos que van DIRECTO a promoción por posición (sin pasar por playout)
+    for (let i = 0; i < directRelegationSlots; i++) {
+      const position = upperTotal - upperDirectRelegations - i
+      if (position > 0 && position <= upperTotal) {
+        const team = upperStandings.standings[position - 1]
+        upperTeamsForPromotion.push({ clubId: team.clubId, position })
+      }
+    }
+
+    // Agregar perdedor del playout
+    if (playoutLoserId) {
+      const pos = upperStandings.standings.findIndex((s) => s.clubId === playoutLoserId)
+      upperTeamsForPromotion.push({ clubId: playoutLoserId, position: pos + 1 })
     }
 
     // 5. Determinar equipos de la liga inferior que entran a promoción
     const lowerTeamsForPromotion: PostSeasonTeam[] = []
 
-    // Equipos en zona promotion_playoff (según rules)
     const lowerPlayoffPromotions = ('promotions' in lowerRules && lowerRules.promotions?.playoff?.quantity) || 0
     const lowerDirectPromotions = ('promotions' in lowerRules && lowerRules.promotions?.direct?.quantity) || 0
 
-    if (lowerPlayoffPromotions > 0) {
-      // Los que están justo debajo de la zona de ascenso directo
-      for (let i = 0; i < lowerPlayoffPromotions; i++) {
-        const position = lowerDirectPromotions + 1 + i
-        if (position > 0 && position <= lowerStandings.standings.length) {
-          const team = lowerStandings.standings[position - 1]
-          lowerTeamsForPromotion.push({ clubId: team.clubId, position })
-        }
-      }
-    }
+    // Verificar si hay reducido que ocupa un cupo de playoffPromotions
+    const hasReducido = 'reducido' in lowerRules && lowerRules.reducido
+    let reducidoWinnerId: string | null = null
 
-    // Si hay reducido en la liga inferior, el ganador de la última ronda también entra
-    if ('reducido' in lowerRules && lowerRules.reducido) {
-      // Encontrar la última ronda del reducido (REDUCIDO_FINAL)
+    if (hasReducido) {
+      // Buscar ganador del reducido (REDUCIDO_FINAL)
       const reducidoFinals = lowerComp.matches.filter(
         (m) => m.knockoutRound === KnockoutRound.REDUCIDO_FINAL && m.status === MatchStatus.FINALIZADO
       )
       for (const finalMatch of reducidoFinals) {
         if (finalMatch.homeClubGoals !== null && finalMatch.awayClubGoals !== null) {
-          const winnerId = finalMatch.homeClubGoals > finalMatch.awayClubGoals
+          reducidoWinnerId = finalMatch.homeClubGoals > finalMatch.awayClubGoals
             ? finalMatch.homeClubId
             : finalMatch.awayClubId
-          if (winnerId && !lowerTeamsForPromotion.some((t) => t.clubId === winnerId)) {
-            const pos = lowerStandings.standings.findIndex((s) => s.clubId === winnerId)
-            lowerTeamsForPromotion.push({ clubId: winnerId, position: pos + 1 })
-          }
         }
       }
+    }
+
+    // Si hay reducido con ganador, el último cupo de playoffPromotions lo ocupa el ganador del reducido
+    // Los demás cupos van directo por posición en tabla
+    const directPlayoffSlots = hasReducido && reducidoWinnerId
+      ? lowerPlayoffPromotions - 1
+      : lowerPlayoffPromotions
+
+    // Equipos que van DIRECTO a promoción (por posición en tabla)
+    for (let i = 0; i < directPlayoffSlots; i++) {
+      const position = lowerDirectPromotions + 1 + i
+      if (position > 0 && position <= lowerStandings.standings.length) {
+        const team = lowerStandings.standings[position - 1]
+        lowerTeamsForPromotion.push({ clubId: team.clubId, position })
+      }
+    }
+
+    // Agregar ganador del reducido
+    if (reducidoWinnerId) {
+      const pos = lowerStandings.standings.findIndex((s) => s.clubId === reducidoWinnerId)
+      lowerTeamsForPromotion.push({ clubId: reducidoWinnerId, position: pos + 1 })
     }
 
     if (upperTeamsForPromotion.length === 0 && lowerTeamsForPromotion.length === 0) {
