@@ -1,4 +1,4 @@
-import { PrismaClient, MovementType, CompetitionFormat, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory } from '@prisma/client'
+import { PrismaClient, MovementType, CompetitionFormat, CompetitionName, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory, KnockoutRound } from '@prisma/client'
 import { TeamStanding, CompetitionStandings, TopLeagueRules, MiddleLeagueRules, BottomLeagueRules, LiguillaConfig } from '@/types'
 
 type AnyLeagueRules = TopLeagueRules | MiddleLeagueRules | BottomLeagueRules
@@ -306,6 +306,78 @@ export class StandingsService {
           processedClubs.add(team.clubId)
         }
       })
+    }
+
+    // --- Evaluar resultados de PROMOCIONES ---
+    const promotionComps = await this.prisma.competition.findMany({
+      where: {
+        seasonId,
+        competitionType: {
+          name: CompetitionName.PROMOTIONS,
+        },
+      },
+      include: {
+        matches: true,
+        competitionType: true,
+      },
+    })
+
+    for (const promoComp of promotionComps) {
+      const rules = promoComp.rules as any
+      const upperCompId = rules?.upperCompetitionId
+      const lowerCompId = rules?.lowerCompetitionId
+      if (!upperCompId || !lowerCompId) continue
+
+      // Encontrar las ligas correspondientes
+      const upperLeague = leagues.find((l) => l.id === upperCompId)
+      const lowerLeague = leagues.find((l) => l.id === lowerCompId)
+      if (!upperLeague || !lowerLeague) continue
+
+      // Evaluar cada partido de promoción finalizado
+      const promoMatches = promoComp.matches.filter(
+        (m) => m.knockoutRound === KnockoutRound.PROMOTION && m.status === MatchStatus.FINALIZADO
+      )
+
+      for (const match of promoMatches) {
+        if (match.homeClubGoals === null || match.awayClubGoals === null) continue
+        if (!match.homeClubId || !match.awayClubId) continue
+
+        const homeWins = match.homeClubGoals > match.awayClubGoals
+        // Home = equipo de liga inferior, Away = equipo de liga superior
+        const lowerClubId = match.homeClubId
+        const upperClubId = match.awayClubId
+        const lowerWins = homeWins
+
+        if (lowerWins) {
+          // Equipo inferior gana: asciende a liga superior
+          const lowerMovIdx = movements.findIndex((m) => m.clubId === lowerClubId)
+          if (lowerMovIdx !== -1) {
+            movements[lowerMovIdx].movementType = MovementType.PLAYOFF_PROMOTION
+            movements[lowerMovIdx].toCompetitionId = upperLeague.id
+            movements[lowerMovIdx].toLeague = upperLeague.competitionType.name
+            movements[lowerMovIdx].reason = 'Ganador de Promoción'
+          }
+
+          // Equipo superior: desciende a liga inferior
+          const upperMovIdx = movements.findIndex((m) => m.clubId === upperClubId)
+          if (upperMovIdx !== -1) {
+            movements[upperMovIdx].movementType = MovementType.PLAYOFF_RELEGATION
+            movements[upperMovIdx].toCompetitionId = lowerLeague.id
+            movements[upperMovIdx].toLeague = lowerLeague.competitionType.name
+            movements[upperMovIdx].reason = 'Perdedor de Promoción'
+          }
+        } else {
+          // Equipo superior gana: ambos se mantienen (solo actualizar reason)
+          const lowerMovIdx = movements.findIndex((m) => m.clubId === lowerClubId)
+          if (lowerMovIdx !== -1) {
+            movements[lowerMovIdx].reason = 'Perdedor de Promoción (se mantiene)'
+          }
+          const upperMovIdx = movements.findIndex((m) => m.clubId === upperClubId)
+          if (upperMovIdx !== -1) {
+            movements[upperMovIdx].reason = 'Ganador de Promoción (se mantiene)'
+          }
+        }
+      }
     }
 
     return movements

@@ -205,37 +205,25 @@ export class FixtureController {
 
   /**
    * Genera Copa Oro y Copa Plata a partir de los equipos clasificados de Copa Kempes
-   * El admin define los cruces manualmente (brackets)
+   * El admin define los cruces manualmente con team placements en el bracket
    */
   async generateGoldSilverCups(
     req: FastifyRequest<{
       Body: {
         kempesCupId: string
-        goldBrackets: Array<{
-          round: number
-          position: number
-          homeTeamId?: string
-          awayTeamId?: string
-          isBye?: boolean
-        }>
-        silverBrackets: Array<{
-          round: number
-          position: number
-          homeTeamId?: string
-          awayTeamId?: string
-          isBye?: boolean
-        }>
+        goldTeamPlacements: Array<{ slotId: string; teamId: string }>
+        silverTeamPlacements: Array<{ slotId: string; teamId: string }>
       }
     }>,
     reply: FastifyReply
   ) {
     try {
-      const { kempesCupId, goldBrackets, silverBrackets } = req.body
+      const { kempesCupId, goldTeamPlacements, silverTeamPlacements } = req.body
 
-      if (!kempesCupId || !goldBrackets || !silverBrackets) {
+      if (!kempesCupId || !goldTeamPlacements) {
         return Response.validation(
           reply,
-          'Missing required fields: kempesCupId, goldBrackets, and silverBrackets are required',
+          'Missing required fields: kempesCupId and goldTeamPlacements are required',
           'Validation error'
         )
       }
@@ -258,8 +246,8 @@ export class FixtureController {
         kempesCupId: validatedKempesCupId,
         goldTeams: qualifiedTeams.goldTeams,
         silverTeams: qualifiedTeams.silverTeams,
-        goldBrackets,
-        silverBrackets,
+        goldTeamPlacements,
+        silverTeamPlacements: silverTeamPlacements || [],
       })
 
       return Response.created(reply, result, 'Copa Oro and Copa Plata generated successfully')

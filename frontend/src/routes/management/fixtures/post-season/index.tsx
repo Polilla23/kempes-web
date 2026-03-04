@@ -41,6 +41,8 @@ function PostSeasonPage() {
   const [expandedLeagues, setExpandedLeagues] = useState<Set<string>>(new Set())
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  // Mapa de pares "upperId-lowerId" → competición de promoción existente
+  const [existingPromotions, setExistingPromotions] = useState<Map<string, Competition>>(new Map())
 
   const loadData = useCallback(async () => {
     try {
@@ -75,6 +77,21 @@ function PostSeasonPage() {
         const hierB = b.competitionType?.hierarchy || b.type?.hierarchy || 999
         return hierA - hierB
       })
+
+      // 2b. Detectar competiciones de PROMOTIONS ya existentes en esta temporada
+      const promotionComps = allComps.filter(
+        (c: Competition) =>
+          c.seasonId === active.id &&
+          (c.competitionType?.format || c.type?.format) === 'PROMOTIONS'
+      )
+      const promoMap = new Map<string, Competition>()
+      for (const pc of promotionComps) {
+        const rules = pc.rules as any
+        if (rules?.upperCompetitionId && rules?.lowerCompetitionId) {
+          promoMap.set(`${rules.upperCompetitionId}-${rules.lowerCompetitionId}`, pc)
+        }
+      }
+      setExistingPromotions(promoMap)
 
       // 3. Cargar estado de post-temporada para cada liga
       const leaguesWithStatus: LeagueWithStatus[] = seasonLeagues.map((comp: Competition) => ({
@@ -231,7 +248,14 @@ function PostSeasonPage() {
     const upper = leagues[upperIndex]
     const lower = leagues[lowerIndex]
     if (!upper || !lower) return false
+    // Si ya existen promociones entre estas ligas, no se puede generar de nuevo
+    const promoKey = `${upper.competition.id}-${lower.competition.id}`
+    if (existingPromotions.has(promoKey)) return false
     return isPostSeasonComplete(upper.postSeasonStatus) && isPostSeasonComplete(lower.postSeasonStatus)
+  }
+
+  const hasExistingPromotions = (upperCompId: string, lowerCompId: string): boolean => {
+    return existingPromotions.has(`${upperCompId}-${lowerCompId}`)
   }
 
   return (
@@ -462,6 +486,10 @@ function PostSeasonPage() {
 
                 const promoKey = `promo-${upperLeague.competition.id}-${lowerLeague.competition.id}`
                 const canGenerate = canGeneratePromotions(i, i + 1)
+                const alreadyGenerated = hasExistingPromotions(
+                  upperLeague.competition.id,
+                  lowerLeague.competition.id
+                )
                 const upperComplete = isPostSeasonComplete(upperLeague.postSeasonStatus)
                 const lowerComplete = isPostSeasonComplete(lowerLeague.postSeasonStatus)
 
@@ -498,32 +526,39 @@ function PostSeasonPage() {
                         </div>
                       </div>
 
-                      <Button
-                        onClick={() =>
-                          handleGeneratePromotions(
-                            upperLeague.competition.id,
-                            lowerLeague.competition.id
-                          )
-                        }
-                        disabled={!canGenerate || actionLoading === promoKey}
-                        variant={canGenerate ? 'default' : 'outline'}
-                        className="gap-2"
-                      >
-                        {actionLoading === promoKey ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Generando...
-                          </>
-                        ) : (
-                          <>
-                            <ArrowUpDown className="h-4 w-4" />
-                            Generar Promociones
-                          </>
-                        )}
-                      </Button>
+                      {alreadyGenerated ? (
+                        <Badge variant="default" className="gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Promociones Generadas
+                        </Badge>
+                      ) : (
+                        <Button
+                          onClick={() =>
+                            handleGeneratePromotions(
+                              upperLeague.competition.id,
+                              lowerLeague.competition.id
+                            )
+                          }
+                          disabled={!canGenerate || actionLoading === promoKey}
+                          variant={canGenerate ? 'default' : 'outline'}
+                          className="gap-2"
+                        >
+                          {actionLoading === promoKey ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Generando...
+                            </>
+                          ) : (
+                            <>
+                              <ArrowUpDown className="h-4 w-4" />
+                              Generar Promociones
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
 
-                    {!canGenerate && (
+                    {!canGenerate && !alreadyGenerated && (
                       <p className="text-xs text-muted-foreground">
                         Ambas ligas deben completar su fase regular y post-temporada antes de generar
                         promociones

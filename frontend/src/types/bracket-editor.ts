@@ -43,6 +43,14 @@ export interface AvailableTeam {
 }
 
 /**
+ * Equipo disponible con info de grupo de origen (para Copa Oro/Plata)
+ */
+export interface AvailableTeamWithGroup extends AvailableTeam {
+  groupName: string
+  position: number  // Posición en grupo (1ro, 2do, 3ro)
+}
+
+/**
  * Partido en el bracket editor (primera ronda)
  */
 export interface BracketEditorMatch {

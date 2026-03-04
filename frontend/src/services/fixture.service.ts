@@ -199,8 +199,8 @@ export interface BracketInput {
 
 export interface GenerateGoldSilverInput {
   kempesCupId: string
-  goldBrackets: BracketInput[]
-  silverBrackets: BracketInput[]
+  goldTeamPlacements: Array<{ slotId: string; teamId: string }>
+  silverTeamPlacements: Array<{ slotId: string; teamId: string }>
 }
 
 export interface GenerateGoldSilverResponse {

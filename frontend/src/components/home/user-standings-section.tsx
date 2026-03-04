@@ -40,6 +40,18 @@ function getZoneColor(zone?: string | null) {
   }
 }
 
+const ZONE_LEGEND_CONFIG: Record<string, { color: string; labelKey: string }> = {
+  champion:           { color: 'bg-yellow-500',  labelKey: 'legend.champion' },
+  liguilla:           { color: 'bg-purple-500',  labelKey: 'legend.liguilla' },
+  triangular:         { color: 'bg-purple-500',  labelKey: 'legend.triangular' },
+  promotion:          { color: 'bg-emerald-500', labelKey: 'legend.promotion' },
+  promotion_playoff:  { color: 'bg-blue-500',    labelKey: 'legend.promotionPlayoff' },
+  playout:            { color: 'bg-orange-500',   labelKey: 'legend.playout' },
+  relegation:         { color: 'bg-destructive',  labelKey: 'legend.relegation' },
+  relegation_playoff: { color: 'bg-red-400',      labelKey: 'legend.relegationPlayoff' },
+  reducido:           { color: 'bg-cyan-500',     labelKey: 'legend.reducido' },
+}
+
 export function UserStandingsSection({
   homeStandings,
   userClubId,
@@ -193,25 +205,21 @@ export function UserStandingsSection({
           </table>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-t border-border text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span>Campeón</span>
+        {/* Legend - dynamic based on active zones */}
+        {homeStandings.activeZones && homeStandings.activeZones.length > 0 && (
+          <div className="flex flex-wrap items-center gap-4 px-6 py-4 border-t border-border text-xs text-muted-foreground">
+            {homeStandings.activeZones.map((zone) => {
+              const config = ZONE_LEGEND_CONFIG[zone]
+              if (!config) return null
+              return (
+                <div key={zone} className="flex items-center gap-2">
+                  <div className={cn('w-3 h-3 rounded-full', config.color)} />
+                  <span>{t(config.labelKey, { ns: 'standings' })}</span>
+                </div>
+              )
+            })}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span>Ascenso</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500" />
-            <span>Playoff</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-destructive" />
-            <span>Descenso</span>
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )

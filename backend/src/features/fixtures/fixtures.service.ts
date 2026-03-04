@@ -14,7 +14,7 @@ import {
 } from '@/types'
 import { MatchMapper } from '@/mappers'
 import { sortBracketsByRound, buildKnockoutMatchData } from '@/features/utils/generateKnockoutFixture'
-import { generateLeagueFixture, generateGroupStageFixture, generateDirectKnockoutBracket } from '@/features/utils/generateFixture'
+import { generateLeagueFixture, generateGroupStageFixture, generateDirectKnockoutBracket, BracketTeamPlacement } from '@/features/utils/generateFixture'
 import { CompetitionNotFoundError } from '@/features/competitions/competitions.errors'
 import {
   KnockoutMatchDrawError,
@@ -27,15 +27,6 @@ import {
 } from '@/features/fixtures/fixtures.errors'
 import { SubmitResultInput } from '@/types'
 import { StandingsService } from '@/features/seasons/standings.service'
-
-// Type for bracket input from admin
-type BracketInput = {
-  round: number
-  position: number
-  homeTeamId?: string
-  awayTeamId?: string
-  isBye?: boolean
-}
 
 // Type for qualified team info
 type QualifiedTeam = {
@@ -346,15 +337,16 @@ export class FixtureService {
   // ===================== COPA ORO / COPA PLATA GENERATION =====================
 
   /**
-   * Genera Copa Oro y Copa Plata a partir de los equipos clasificados de Copa Kempes
-   * El admin define los cruces manualmente
+   * Genera Copa Oro y Copa Plata a partir de los equipos clasificados de Copa Kempes.
+   * El admin define los cruces manualmente con BracketTeamPlacement[].
+   * Usa generateDirectKnockoutBracket para crear matches con sourceMatch linking correcto.
    */
   async generateGoldSilverCups(input: {
     kempesCupId: string
     goldTeams: QualifiedTeam[]
     silverTeams: QualifiedTeam[]
-    goldBrackets: BracketInput[]
-    silverBrackets: BracketInput[]
+    goldTeamPlacements: BracketTeamPlacement[]
+    silverTeamPlacements: BracketTeamPlacement[]
   }) {
     const kempesCup = await this.competitionRepository.findOneById(input.kempesCupId)
     if (!kempesCup) {
@@ -419,19 +411,18 @@ export class FixtureService {
         },
       })
 
-      // 4. Generate Copa Oro matches from brackets
-      const goldMatches = this.generateKnockoutMatchesFromBrackets(
+      // 4. Generate Copa Oro matches with proper sourceMatch linking
+      const goldTeamIds = input.goldTeams.map(t => t.clubId)
+      const goldCreatedMatches = await this.createKnockoutMatchesInTransaction(
+        tx,
         goldCupCompetition.id,
-        input.goldBrackets,
-        input.goldTeams
+        goldTeamIds,
+        input.goldTeamPlacements
       )
-
-      for (const matchData of goldMatches) {
-        await tx.match.create({ data: matchData })
-      }
 
       // 5. Find or create SILVER_CUP CompetitionType (if there are silver teams)
       let silverCupCompetition = null
+      let silverMatchesCreated = 0
       if (input.silverTeams.length > 0) {
         let silverCupType = await tx.competitionType.findFirst({
           where: { name: CompetitionName.SILVER_CUP, category },
@@ -473,16 +464,15 @@ export class FixtureService {
           },
         })
 
-        // 8. Generate Copa Plata matches from brackets
-        const silverMatches = this.generateKnockoutMatchesFromBrackets(
+        // 8. Generate Copa Plata matches with proper sourceMatch linking
+        const silverTeamIds = input.silverTeams.map(t => t.clubId)
+        const silverCreatedMatches = await this.createKnockoutMatchesInTransaction(
+          tx,
           silverCupCompetition.id,
-          input.silverBrackets,
-          input.silverTeams
+          silverTeamIds,
+          input.silverTeamPlacements
         )
-
-        for (const matchData of silverMatches) {
-          await tx.match.create({ data: matchData })
-        }
+        silverMatchesCreated = silverCreatedMatches.length
       }
 
       return {
@@ -491,14 +481,14 @@ export class FixtureService {
           id: goldCupCompetition.id,
           name: goldCupCompetition.name,
           teamsCount: input.goldTeams.length,
-          matchesCreated: goldMatches.length,
+          matchesCreated: goldCreatedMatches.length,
         },
         silverCup: silverCupCompetition
           ? {
               id: silverCupCompetition.id,
               name: silverCupCompetition.name,
               teamsCount: input.silverTeams.length,
-              matchesCreated: input.silverBrackets.length,
+              matchesCreated: silverMatchesCreated,
             }
           : null,
       }
@@ -510,105 +500,78 @@ export class FixtureService {
   }
 
   /**
-   * Genera los matches de knockout a partir de los brackets definidos por el admin
-   * Los byes se marcan con homeClub o awayClub vacío, y el equipo con bye pasa directo
+   * Crea matches de knockout dentro de una transacción con sourceMatch linking correcto.
+   * Maneja BYEs propagando equipos directamente a la siguiente ronda.
+   * Mismo patrón que createDirectKnockoutMatchesInTransaction de competitions.service.ts.
    */
-  private generateKnockoutMatchesFromBrackets(
+  private async createKnockoutMatchesInTransaction(
+    tx: Prisma.TransactionClient,
     competitionId: string,
-    brackets: BracketInput[],
-    teams: QualifiedTeam[]
-  ): Prisma.MatchCreateInput[] {
-    const matches: Prisma.MatchCreateInput[] = []
+    teamIds: string[],
+    teamPlacements?: BracketTeamPlacement[]
+  ) {
+    const bracketResult = generateDirectKnockoutBracket(competitionId, teamIds, teamPlacements)
+    const { matchesByRound, roundOrder, startRoundIndex } = bracketResult
 
-    // Determine knockout round based on round number
-    const getKnockoutRound = (round: number, totalRounds: number): KnockoutRound => {
-      const roundsFromFinal = totalRounds - round
-      switch (roundsFromFinal) {
-        case 0:
-          return KnockoutRound.FINAL
-        case 1:
-          return KnockoutRound.SEMIFINAL
-        case 2:
-          return KnockoutRound.QUARTERFINAL
-        case 3:
-          return KnockoutRound.ROUND_OF_16
-        case 4:
-          return KnockoutRound.ROUND_OF_32
-        default:
-          return KnockoutRound.ROUND_OF_64
+    const matchIdMap = new Map<string, string>()
+    const byeTeamMap = new Map<string, string>()
+    const createdMatches: any[] = []
+
+    for (let roundIdx = startRoundIndex; roundIdx < roundOrder.length; roundIdx++) {
+      const currentRound = roundOrder[roundIdx]
+      const roundMatches = matchesByRound.get(currentRound) || []
+      const isFirstRound = roundIdx === startRoundIndex
+
+      for (const bracketMatch of roundMatches) {
+        const { match, round, position, isBye, byeTeamId } = bracketMatch
+        const key = `${round}_${position}`
+
+        const cleanedMatch: any = { ...match }
+        if (!cleanedMatch.homeClub) delete cleanedMatch.homeClub
+        if (!cleanedMatch.awayClub) delete cleanedMatch.awayClub
+
+        if (!isFirstRound) {
+          const prevRound = roundOrder[roundIdx - 1]
+          const homeSourcePosition = position * 2 - 1
+          const awaySourcePosition = position * 2
+
+          const homeSourceKey = `${prevRound}_${homeSourcePosition}`
+          const awaySourceKey = `${prevRound}_${awaySourcePosition}`
+
+          const homeSourceMatchId = matchIdMap.get(homeSourceKey)
+          const awaySourceMatchId = matchIdMap.get(awaySourceKey)
+
+          const homeByeTeamId = byeTeamMap.get(homeSourceKey)
+          const awayByeTeamId = byeTeamMap.get(awaySourceKey)
+
+          if (homeByeTeamId) {
+            cleanedMatch.homeClub = { connect: { id: homeByeTeamId } }
+            cleanedMatch.homePlaceholder = null
+          } else if (homeSourceMatchId) {
+            cleanedMatch.homeSourceMatch = { connect: { id: homeSourceMatchId } }
+            cleanedMatch.homeSourcePosition = 'WINNER'
+          }
+
+          if (awayByeTeamId) {
+            cleanedMatch.awayClub = { connect: { id: awayByeTeamId } }
+            cleanedMatch.awayPlaceholder = null
+          } else if (awaySourceMatchId) {
+            cleanedMatch.awaySourceMatch = { connect: { id: awaySourceMatchId } }
+            cleanedMatch.awaySourcePosition = 'WINNER'
+          }
+        }
+
+        const createdMatch = await tx.match.create({ data: cleanedMatch })
+        matchIdMap.set(key, createdMatch.id)
+        createdMatches.push(createdMatch)
+
+        if (isBye && byeTeamId) {
+          byeTeamMap.set(key, byeTeamId)
+        }
       }
     }
 
-    // Calculate total rounds based on bracket positions
-    const maxRound = Math.max(...brackets.map((b) => b.round))
-
-    // Group brackets by round for dependency tracking
-    const bracketsByRound = new Map<number, BracketInput[]>()
-    brackets.forEach((b) => {
-      if (!bracketsByRound.has(b.round)) {
-        bracketsByRound.set(b.round, [])
-      }
-      bracketsByRound.get(b.round)!.push(b)
-    })
-
-    // Sort rounds
-    const rounds = Array.from(bracketsByRound.keys()).sort((a, b) => a - b)
-
-    for (const round of rounds) {
-      const roundBrackets = bracketsByRound.get(round)!
-      roundBrackets.sort((a, b) => a.position - b.position)
-
-      for (const bracket of roundBrackets) {
-        const knockoutRound = getKnockoutRound(round, maxRound)
-
-        // Build placeholder text based on previous round matches
-        let homePlaceholder: string | undefined
-        let awayPlaceholder: string | undefined
-
-        if (round > 1) {
-          // Link to previous round matches (winner of match X)
-          const prevPos1 = bracket.position * 2 - 1
-          const prevPos2 = bracket.position * 2
-
-          homePlaceholder = `Ganador P${prevPos1}`
-          awayPlaceholder = `Ganador P${prevPos2}`
-        }
-
-        const matchData: Prisma.MatchCreateInput = {
-          competition: { connect: { id: competitionId } },
-          status: MatchStatus.PENDIENTE,
-          stage: CompetitionStage.KNOCKOUT,
-          knockoutRound,
-          matchdayOrder: round, // matchdayOrder corresponds to round for knockout
-        }
-
-        // If home team is assigned (not a bye, not waiting for previous match)
-        if (bracket.homeTeamId) {
-          matchData.homeClub = { connect: { id: bracket.homeTeamId } }
-        } else if (homePlaceholder) {
-          matchData.homePlaceholder = homePlaceholder
-        }
-
-        // If away team is assigned (not a bye, not waiting for previous match)
-        if (bracket.awayTeamId) {
-          matchData.awayClub = { connect: { id: bracket.awayTeamId } }
-        } else if (awayPlaceholder) {
-          matchData.awayPlaceholder = awayPlaceholder
-        }
-
-        // Handle bye case - if one team is assigned and the other is a bye,
-        // this match is effectively already decided (team with bye advances)
-        if (bracket.isBye) {
-          // Mark as a bye match - will be handled specially
-          // The team assigned advances automatically
-          matchData.status = MatchStatus.PENDIENTE // Still pending until processed
-        }
-
-        matches.push(matchData)
-      }
-    }
-
-    return matches
+    return createdMatches
   }
 
   // ===================== REASSIGN GROUPS =====================

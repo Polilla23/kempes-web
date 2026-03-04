@@ -333,11 +333,18 @@ export function Step4FixturesPreview({ wizardState, onBack }: Step4FixturesPrevi
                     )}
                     {/* Reducido */}
                     {league.reducido && (
-                      <Badge variant="outline">
-                        ⚔️ Reducido: {league.reducido.startPositions.join('° vs ')}°
-                        {league.reducido.waitingPositions.length > 0 &&
-                          ` → espera ${league.reducido.waitingPositions.join('°, ')}°`}
-                      </Badge>
+                      <>
+                        <Badge variant="outline">
+                          ⚔️ Reducido: {league.reducido.waitingPositions.length + 2} equipos
+                          ({league.reducido.waitingPositions.length + 1} {league.reducido.waitingPositions.length + 1 === 1 ? 'ronda' : 'rondas'})
+                        </Badge>
+                        <span className="w-full text-xs text-muted-foreground">
+                          R1: {league.reducido.startPositions[0]}° vs {league.reducido.startPositions[1]}°
+                          {league.reducido.waitingPositions.map((pos, i) => (
+                            <span key={i}> → {pos}° vs Ganador</span>
+                          ))}
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>

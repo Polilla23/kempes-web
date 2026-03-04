@@ -32,7 +32,8 @@ interface PlayoffConfig {
   id: string
   name: string
   type: PlayoffType
-  positions: string // e.g., "5, 6" or "3, 4, 5"
+  positions: string // e.g., "5, 6" or "3, 4, 5" (para PLAYOUT y PROMOTION)
+  teamCount?: number // Cantidad de equipos en el reducido (para REDUCIDO)
   winnerAction: PlayoffAction
   loserAction: PlayoffAction
   winnerTargetPosition?: number // Si va a PROMOTION
@@ -59,6 +60,68 @@ const calculateLeaguePosition = (index: number, totalLeagues: number): LeaguePos
   if (index === 0) return 'TOP' // Primera liga (A) siempre TOP
   if (index === totalLeagues - 1) return 'BOTTOM' // Última liga siempre BOTTOM
   return 'MIDDLE' // Intermedias son MIDDLE
+}
+
+function ReducidoPreview({ teamCount, directPromotions, playoffPromotions }: {
+  teamCount: number
+  directPromotions: number
+  playoffPromotions: number
+}) {
+  // El reducido ocupa el cupo del último playoffPromotion
+  // Ej: directPromotions=2, playoffPromotions=2 → 3ro va directo a promoción, 4to-7mo al reducido
+  // firstPos = directPromotions + playoffPromotions = 4 (el mejor clasificado del reducido)
+  // lastPos = firstPos + teamCount - 1 = 7
+  const firstPos = directPromotions + playoffPromotions
+  const lastPos = firstPos + teamCount - 1
+
+  const startA = lastPos - 1
+  const startB = lastPos
+
+  const waitingPositions: number[] = []
+  for (let p = lastPos - 2; p >= firstPos; p--) {
+    waitingPositions.push(p)
+  }
+
+  const totalRounds = 1 + waitingPositions.length
+  const rounds: string[] = []
+
+  if (totalRounds === 1) {
+    rounds.push(`Final: ${startA}° vs ${startB}°`)
+  } else {
+    const r1Label = totalRounds === 2 ? 'SF' : totalRounds === 3 ? 'CF' : `R1`
+    rounds.push(`${r1Label}: ${startA}° vs ${startB}°`)
+
+    for (let i = 0; i < waitingPositions.length; i++) {
+      const isLast = i === waitingPositions.length - 1
+      const isSemi = i === waitingPositions.length - 2
+      const label = isLast ? 'Final' : (isSemi && totalRounds > 2) ? 'SF' : `R${i + 2}`
+      rounds.push(`${label}: ${waitingPositions[i]}° vs Ganador`)
+    }
+  }
+
+  // Cuántos van directo a promoción (sin pasar por reducido)
+  const directToPromotion = playoffPromotions - 1
+
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+      <p className="text-xs font-medium text-muted-foreground">
+        Bracket automático ({firstPos}° al {lastPos}°):
+      </p>
+      {directToPromotion > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {directPromotions + 1}°{directToPromotion > 1 ? ` al ${directPromotions + directToPromotion}°` : ''} → promoción directa
+        </p>
+      )}
+      {rounds.map((round, i) => (
+        <p key={i} className="text-sm flex items-center gap-2">
+          <span className="text-muted-foreground">→</span> {round}
+        </p>
+      ))}
+      <p className="text-xs text-emerald-500 mt-1">
+        Ganador del reducido → promoción
+      </p>
+    </div>
+  )
 }
 
 export function Step1CreateLeaguesUnified({ wizardState, onUpdate, onNext }: Step1CreateLeaguesUnifiedProps) {
@@ -176,6 +239,7 @@ export function Step1CreateLeaguesUnified({ wizardState, onUpdate, onNext }: Ste
       name: '',
       type: 'PLAYOUT',
       positions: '',
+      teamCount: undefined,
       winnerAction: 'ASCEND',
       loserAction: 'DESCEND',
     }
@@ -292,15 +356,22 @@ export function Step1CreateLeaguesUnified({ wizardState, onUpdate, onNext }: Ste
             const reducidoConfigs = league.playoffConfigs.filter(p => p.type === 'REDUCIDO')
             if (reducidoConfigs.length > 0) {
               const rc = reducidoConfigs[0]
-              const positions = rc.positions.split(',').map(p => parseInt(p.trim())).filter(n => !isNaN(n))
-              if (positions.length >= 2) {
-                // Las 2 últimas posiciones son la primera ronda
-                // Las anteriores son las posiciones en espera (en orden de mayor a menor)
-                const startPositions: [number, number] = [
-                  positions[positions.length - 2],
-                  positions[positions.length - 1],
-                ]
-                const waitingPositions = positions.slice(0, positions.length - 2).reverse()
+              const teamCount = rc.teamCount || 0
+
+              if (teamCount >= 2) {
+                // El reducido ocupa el último cupo de playoffPromotions
+                // Ej: directPromotions=2, playoffPromotions=2 → 3ro va directo, 4to-7mo al reducido
+                // firstPos = directPromotions + playoffPromotions (el mejor del reducido)
+                const firstPos = league.directPromotions + league.playoffPromotions
+                const lastPos = firstPos + teamCount - 1
+
+                const startPositions: [number, number] = [lastPos - 1, lastPos]
+
+                const waitingPositions: number[] = []
+                for (let p = lastPos - 2; p >= firstPos; p--) {
+                  waitingPositions.push(p)
+                }
+
                 reducido = {
                   startPositions,
                   waitingPositions,
@@ -759,25 +830,61 @@ export function Step1CreateLeaguesUnified({ wizardState, onUpdate, onNext }: Ste
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="PLAYOUT">PLAYOUT - Pelea por no descender</SelectItem>
-                            <SelectItem value="REDUCIDO">REDUCIDO - Pelea por ascender</SelectItem>
+                            <SelectItem
+                              value="REDUCIDO"
+                              disabled={getSelectedLeague()?.playoffPromotions === 0}
+                            >
+                              REDUCIDO - Pelea por ascender
+                              {getSelectedLeague()?.playoffPromotions === 0 && ' (requiere ascenso por promoción)'}
+                            </SelectItem>
                             <SelectItem value="PROMOTION">PROMOTION - Definir ascenso directo</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      {/* Posiciones */}
-                      <div className="space-y-2">
-                        <Label htmlFor={`playoff-positions-${playoff.id}`}>Posiciones</Label>
-                        <Input
-                          id={`playoff-positions-${playoff.id}`}
-                          placeholder="ej: 5, 6  o  3, 4, 5"
-                          value={playoff.positions}
-                          onChange={(e) => handleUpdatePlayoff(playoff.id, { positions: e.target.value })}
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          Posiciones de la tabla que participan (separadas por coma)
-                        </p>
-                      </div>
+                      {/* Posiciones o Cantidad de equipos (condicional según tipo) */}
+                      {playoff.type === 'REDUCIDO' ? (
+                        <div className="space-y-2">
+                          <Label htmlFor={`playoff-teamcount-${playoff.id}`}>Cantidad de equipos</Label>
+                          <Input
+                            id={`playoff-teamcount-${playoff.id}`}
+                            type="number"
+                            min={2}
+                            max={20}
+                            placeholder="ej: 4"
+                            value={playoff.teamCount || ''}
+                            onChange={(e) =>
+                              handleUpdatePlayoff(playoff.id, {
+                                teamCount: parseInt(e.target.value) || undefined,
+                              })
+                            }
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Equipos que participan del reducido (las posiciones se calculan automáticamente)
+                          </p>
+                          {/* Preview del bracket auto-generado */}
+                          {playoff.teamCount && playoff.teamCount >= 2 && getSelectedLeague() && (
+                            <ReducidoPreview
+                              teamCount={playoff.teamCount}
+                              directPromotions={getSelectedLeague()!.directPromotions}
+                              playoffPromotions={getSelectedLeague()!.playoffPromotions}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor={`playoff-positions-${playoff.id}`}>Posiciones</Label>
+                          <Input
+                            id={`playoff-positions-${playoff.id}`}
+                            placeholder="ej: 5, 6  o  3, 4, 5"
+                            value={playoff.positions}
+                            onChange={(e) => handleUpdatePlayoff(playoff.id, { positions: e.target.value })}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Posiciones de la tabla que participan (separadas por coma)
+                          </p>
+                        </div>
+                      )}
 
                       {/* Acción del ganador */}
                       <div className="grid grid-cols-2 gap-4">

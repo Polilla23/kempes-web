@@ -12,6 +12,18 @@ interface BracketEditorContainerProps {
   onConfirm: (placements: BracketTeamPlacement[]) => void
   onCancel: () => void
   isSubmitting?: boolean
+  /** Render custom teams panel instead of default SelectableTeamsPanel */
+  renderTeamsPanel?: (props: {
+    teams: AvailableTeam[]
+    assignedCount: number
+    totalRequired: number
+    selectedTeamId: string | null
+    onSelectTeam: (teamId: string) => void
+  }) => React.ReactNode
+  /** Warning message to show above action buttons */
+  warningMessage?: string | null
+  /** Custom label for confirm button */
+  confirmLabel?: string
 }
 
 export function BracketEditorContainer({
@@ -20,6 +32,9 @@ export function BracketEditorContainer({
   onConfirm,
   onCancel,
   isSubmitting,
+  renderTeamsPanel,
+  warningMessage,
+  confirmLabel,
 }: BracketEditorContainerProps) {
   // Estado de placements: slotId -> teamId
   const [placements, setPlacements] = useState<Map<string, string>>(new Map())
@@ -105,13 +120,23 @@ export function BracketEditorContainer({
       <div className="lg:col-span-1">
         <Card className="h-[600px]">
           <CardContent className="p-4 h-full overflow-hidden">
-            <SelectableTeamsPanel
-              teams={teamsWithAssignment}
-              assignedCount={assignedCount}
-              totalRequired={requiredSlots}
-              selectedTeamId={selectedTeamId}
-              onSelectTeam={handleSelectTeam}
-            />
+            {renderTeamsPanel ? (
+              renderTeamsPanel({
+                teams: teamsWithAssignment,
+                assignedCount,
+                totalRequired: requiredSlots,
+                selectedTeamId,
+                onSelectTeam: handleSelectTeam,
+              })
+            ) : (
+              <SelectableTeamsPanel
+                teams={teamsWithAssignment}
+                assignedCount={assignedCount}
+                totalRequired={requiredSlots}
+                selectedTeamId={selectedTeamId}
+                onSelectTeam={handleSelectTeam}
+              />
+            )}
           </CardContent>
         </Card>
       </div>
@@ -147,13 +172,21 @@ export function BracketEditorContainer({
           </CardContent>
         </Card>
 
+        {/* Warning message */}
+        {warningMessage && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+            <span className="text-sm text-amber-800">{warningMessage}</span>
+          </div>
+        )}
+
         {/* Botones de acción */}
         <div className="mt-6 flex justify-end gap-4">
           <Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancelar
           </Button>
           <Button onClick={handleConfirm} disabled={!isValid || isSubmitting}>
-            {isSubmitting ? 'Creando...' : 'Confirmar y Crear'}
+            {isSubmitting ? 'Creando...' : (confirmLabel || 'Confirmar y Crear')}
           </Button>
         </div>
       </div>
