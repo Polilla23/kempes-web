@@ -318,6 +318,67 @@ export class FixtureController {
     }
   }
 
+  // ===================== ADMIN EDIT RESULT =====================
+
+  async getMatchDetailForEdit(
+    req: FastifyRequest<{ Params: { matchId: string } }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const validatedMatchId = Validator.uuid(req.params.matchId)
+      const result = await this.fixtureService.getMatchDetailForEdit(validatedMatchId)
+      return Response.success(reply, result, 'Match detail fetched successfully')
+    } catch (error: any) {
+      if (error instanceof MatchNotFoundError) {
+        return Response.notFound(reply, 'Match', req.params.matchId)
+      }
+      return Response.error(reply, 'FETCH_ERROR', 'Failed to fetch match detail', 500, error instanceof Error ? error.message : error)
+    }
+  }
+
+  async adminEditResult(
+    req: FastifyRequest<{
+      Params: { matchId: string }
+      Body: {
+        homeClubGoals: number
+        awayClubGoals: number
+        homeOwnGoals?: number
+        awayOwnGoals?: number
+        homeEvents: Array<{ typeId: string; playerId: string; quantity: number }>
+        awayEvents: Array<{ typeId: string; playerId: string; quantity: number }>
+        mvpPlayerId: string
+        newStatus: 'FINALIZADO' | 'PENDIENTE' | 'CANCELADO'
+      }
+    }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const validatedMatchId = Validator.uuid(req.params.matchId)
+      const { homeClubGoals, awayClubGoals, homeOwnGoals, awayOwnGoals, homeEvents, awayEvents, mvpPlayerId, newStatus } = req.body
+
+      const result = await this.fixtureService.adminEditResult({
+        matchId: validatedMatchId,
+        homeClubGoals: Number(homeClubGoals),
+        awayClubGoals: Number(awayClubGoals),
+        homeOwnGoals: Number(homeOwnGoals || 0),
+        awayOwnGoals: Number(awayOwnGoals || 0),
+        homeEvents: homeEvents || [],
+        awayEvents: awayEvents || [],
+        mvpPlayerId,
+        newStatus: newStatus || 'FINALIZADO',
+      })
+
+      return Response.success(reply, result, 'Result updated successfully')
+    } catch (error: any) {
+      if (error instanceof MatchNotFoundError) return Response.notFound(reply, 'Match', req.params.matchId)
+      if (error instanceof MatchNotAssignedError) return Response.error(reply, 'MATCH_NOT_ASSIGNED', error.message, 400)
+      if (error instanceof KnockoutMatchDrawError) return Response.error(reply, 'KNOCKOUT_DRAW', error.message, 400)
+      if (error instanceof GoalEventsMismatchError) return Response.error(reply, 'GOALS_MISMATCH', error.message, 400)
+      if (error instanceof MvpRequiredError) return Response.error(reply, 'MVP_REQUIRED', error.message, 400)
+      return Response.error(reply, 'EDIT_RESULT_ERROR', 'Failed to edit result', 500, error instanceof Error ? error.message : error)
+    }
+  }
+
   // ===================== SUBMIT RESULT =====================
 
   /**

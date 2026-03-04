@@ -37,6 +37,11 @@ interface ResultFormProps {
   awayOwnGoals: number
   onHomeOwnGoalsChange: (n: number) => void
   onAwayOwnGoalsChange: (n: number) => void
+  submitLabel?: string
+  submittingLabel?: string
+  hideScreenshot?: boolean
+  hideWarning?: boolean
+  extraContent?: React.ReactNode
 }
 
 export function ResultForm({
@@ -67,6 +72,11 @@ export function ResultForm({
   awayOwnGoals,
   onHomeOwnGoalsChange,
   onAwayOwnGoalsChange,
+  submitLabel,
+  submittingLabel,
+  hideScreenshot,
+  hideWarning,
+  extraContent,
 }: ResultFormProps) {
   const { t } = useTranslation('submitResult')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -293,53 +303,60 @@ export function ResultForm({
         </div>
 
         {/* Screenshot Upload */}
-        <div className="space-y-2">
-          <Label className="text-foreground">{t('screenshot.title')}</Label>
-          <div
-            className="border-2 border-dashed border-border rounded-xl p-4 md:p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/30"
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-            {screenshotFile ? (
-              <div>
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <ImageIcon className="w-6 h-6 text-primary" />
+        {!hideScreenshot && (
+          <div className="space-y-2">
+            <Label className="text-foreground">{t('screenshot.title')}</Label>
+            <div
+              className="border-2 border-dashed border-border rounded-xl p-4 md:p-8 text-center hover:border-primary/50 transition-colors cursor-pointer bg-secondary/30"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              {screenshotFile ? (
+                <div>
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <ImageIcon className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-sm text-foreground font-medium">
+                    {t('screenshot.selected', { fileName: screenshotFile.name })}
+                  </p>
                 </div>
-                <p className="text-sm text-foreground font-medium">
-                  {t('screenshot.selected', { fileName: screenshotFile.name })}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <ImageIcon className="w-6 h-6 text-primary" />
-                </div>
-                <p className="text-sm text-foreground font-medium mb-1">
-                  {t('screenshot.dragText')}
-                </p>
-                <p className="text-xs text-muted-foreground">{t('screenshot.clickText')}</p>
-                <p className="text-xs text-muted-foreground mt-2">{t('screenshot.fileTypes')}</p>
-              </>
-            )}
+              ) : (
+                <>
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <ImageIcon className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-sm text-foreground font-medium mb-1">
+                    {t('screenshot.dragText')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{t('screenshot.clickText')}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t('screenshot.fileTypes')}</p>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Alert */}
-        <div className="flex items-start gap-2 md:gap-3 p-3 md:p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm">
-            <p className="font-medium text-yellow-600">{t('warning.title')}</p>
-            <p className="text-muted-foreground">{t('warning.message')}</p>
+        {!hideWarning && (
+          <div className="flex items-start gap-2 md:gap-3 p-3 md:p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-yellow-600">{t('warning.title')}</p>
+              <p className="text-muted-foreground">{t('warning.message')}</p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Extra content slot (e.g. status selector for admin) */}
+        {extraContent}
 
         {/* Submit Button */}
         <Button
@@ -348,7 +365,7 @@ export function ResultForm({
           disabled={!canSubmit || isSubmitting}
         >
           <Upload className="w-5 h-5 mr-2" />
-          {isSubmitting ? t('submitting') : t('submit')}
+          {isSubmitting ? (submittingLabel || t('submitting')) : (submitLabel || t('submit'))}
         </Button>
 
       </CardContent>

@@ -20,7 +20,8 @@
     "players": "Jugadores",
     "salaryRates": "Tarifas Salariales",
     "competitions": "Competencias",
-    "finances": "Finanzas"
+    "finances": "Finanzas",
+    "editResults": "Editar Resultados"
   },
   "configuration": {
     "title": "Configuración",

@@ -195,6 +195,30 @@ export class FixtureRepository implements IFixtureRepository {
     })
   }
 
+  async findByIdWithRawEvents(id: string) {
+    return this.prisma.match.findUnique({
+      where: { id },
+      include: {
+        homeClub: true,
+        awayClub: true,
+        competition: {
+          include: {
+            competitionType: true,
+            season: true,
+          },
+        },
+        events: {
+          include: {
+            player: true,
+            type: true,
+          },
+        },
+        homeNextMatches: true,
+        dependentMatches: true,
+      },
+    })
+  }
+
   async updateMatch(id: string, data: Prisma.MatchUpdateInput): Promise<Match> {
     return this.prisma.match.update({
       where: { id },

@@ -241,22 +241,34 @@ export class CompetitionService {
           data: { teams: { connect: allClubIds.map(id => ({ id })) } },
         })
 
-        // 3. Generar SOLO matches de fase de grupos
-        const groupStageMatches: Prisma.MatchCreateInput[] = []
+        // 3. Generar matches de fase de grupos usando createMany (1 query en vez de N)
+        const groupStageMatchData: Prisma.MatchCreateManyInput[] = []
         for (const group of cupConfig.groups || []) {
           const groupMatches = generateGroupStageFixture(
             group.clubIds,
             groupStageCompetition.id,
             group.groupName
           )
-          groupStageMatches.push(...groupMatches)
+          for (const m of groupMatches) {
+            groupStageMatchData.push({
+              competitionId: groupStageCompetition.id,
+              homeClubId: (m.homeClub as any)?.connect?.id || null,
+              awayClubId: (m.awayClub as any)?.connect?.id || null,
+              matchdayOrder: m.matchdayOrder as number,
+              stage: m.stage as CompetitionStage,
+              status: m.status as MatchStatus,
+              homePlaceholder: (m.homePlaceholder as string) || null,
+              awayPlaceholder: (m.awayPlaceholder as string) || null,
+            })
+          }
         }
 
-        const createdGroupMatches: Match[] = []
-        for (const matchData of groupStageMatches) {
-          const match = await tx.match.create({ data: matchData })
-          createdGroupMatches.push(match)
-        }
+        await tx.match.createMany({ data: groupStageMatchData })
+
+        // Consultar los matches creados para retornarlos
+        const createdGroupMatches = await tx.match.findMany({
+          where: { competitionId: groupStageCompetition.id },
+        })
 
         return {
           success: true,
@@ -266,7 +278,7 @@ export class CompetitionService {
           ],
         }
       }, {
-        timeout: 60000,
+        timeout: 120000,
       })
 
       return result
