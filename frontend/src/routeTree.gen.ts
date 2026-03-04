@@ -29,6 +29,7 @@ import { Route as ManagementSalaryRatesIndexRouteImport } from './routes/managem
 import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
 import { Route as ManagementFixturesIndexRouteImport } from './routes/management/fixtures/index'
 import { Route as ManagementFinancesIndexRouteImport } from './routes/management/finances/index'
+import { Route as ManagementEditResultsIndexRouteImport } from './routes/management/edit-results/index'
 import { Route as ManagementCompetitionsIndexRouteImport } from './routes/management/competitions/index'
 import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
 import { Route as ConfigurationSeasonsIndexRouteImport } from './routes/configuration/seasons/index'
@@ -157,6 +158,12 @@ const ManagementFinancesIndexRoute = ManagementFinancesIndexRouteImport.update({
   path: '/management/finances/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementEditResultsIndexRoute =
+  ManagementEditResultsIndexRouteImport.update({
+    id: '/management/edit-results/',
+    path: '/management/edit-results/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ManagementCompetitionsIndexRoute =
   ManagementCompetitionsIndexRouteImport.update({
     id: '/management/competitions/',
@@ -336,6 +343,7 @@ export interface FileRoutesByFullPath {
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
+  '/management/edit-results': typeof ManagementEditResultsIndexRoute
   '/management/finances': typeof ManagementFinancesIndexRoute
   '/management/fixtures': typeof ManagementFixturesIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
@@ -384,6 +392,7 @@ export interface FileRoutesByTo {
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
+  '/management/edit-results': typeof ManagementEditResultsIndexRoute
   '/management/finances': typeof ManagementFinancesIndexRoute
   '/management/fixtures': typeof ManagementFixturesIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
@@ -433,6 +442,7 @@ export interface FileRoutesById {
   '/configuration/seasons/': typeof ConfigurationSeasonsIndexRoute
   '/management/clubs/': typeof ManagementClubsIndexRoute
   '/management/competitions/': typeof ManagementCompetitionsIndexRoute
+  '/management/edit-results/': typeof ManagementEditResultsIndexRoute
   '/management/finances/': typeof ManagementFinancesIndexRoute
   '/management/fixtures/': typeof ManagementFixturesIndexRoute
   '/management/players/': typeof ManagementPlayersIndexRoute
@@ -483,6 +493,7 @@ export interface FileRouteTypes {
     | '/configuration/seasons'
     | '/management/clubs'
     | '/management/competitions'
+    | '/management/edit-results'
     | '/management/finances'
     | '/management/fixtures'
     | '/management/players'
@@ -531,6 +542,7 @@ export interface FileRouteTypes {
     | '/configuration/seasons'
     | '/management/clubs'
     | '/management/competitions'
+    | '/management/edit-results'
     | '/management/finances'
     | '/management/fixtures'
     | '/management/players'
@@ -579,6 +591,7 @@ export interface FileRouteTypes {
     | '/configuration/seasons/'
     | '/management/clubs/'
     | '/management/competitions/'
+    | '/management/edit-results/'
     | '/management/finances/'
     | '/management/fixtures/'
     | '/management/players/'
@@ -628,6 +641,7 @@ export interface RootRouteChildren {
   ConfigurationSeasonsIndexRoute: typeof ConfigurationSeasonsIndexRoute
   ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
   ManagementCompetitionsIndexRoute: typeof ManagementCompetitionsIndexRoute
+  ManagementEditResultsIndexRoute: typeof ManagementEditResultsIndexRoute
   ManagementFinancesIndexRoute: typeof ManagementFinancesIndexRoute
   ManagementFixturesIndexRoute: typeof ManagementFixturesIndexRoute
   ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
@@ -785,6 +799,13 @@ declare module '@tanstack/react-router' {
       path: '/management/finances'
       fullPath: '/management/finances'
       preLoaderRoute: typeof ManagementFinancesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/edit-results/': {
+      id: '/management/edit-results/'
+      path: '/management/edit-results'
+      fullPath: '/management/edit-results'
+      preLoaderRoute: typeof ManagementEditResultsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/management/competitions/': {
@@ -1005,6 +1026,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfigurationSeasonsIndexRoute: ConfigurationSeasonsIndexRoute,
   ManagementClubsIndexRoute: ManagementClubsIndexRoute,
   ManagementCompetitionsIndexRoute: ManagementCompetitionsIndexRoute,
+  ManagementEditResultsIndexRoute: ManagementEditResultsIndexRoute,
   ManagementFinancesIndexRoute: ManagementFinancesIndexRoute,
   ManagementFixturesIndexRoute: ManagementFixturesIndexRoute,
   ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,

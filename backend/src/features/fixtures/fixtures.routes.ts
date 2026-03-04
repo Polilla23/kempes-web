@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { fixturesSchemas } from '@/features/fixtures/fixtures.schemas'
+import { authorize } from '@/features/core/middleware/authorize'
 
 export const fixtureRoutes = async (fastify: FastifyInstance) => {
   const fixtureController = fastify.container.resolve('fixtureController')
@@ -34,6 +35,18 @@ export const fixtureRoutes = async (fastify: FastifyInstance) => {
   fastify.get('/', {
     preHandler: [fastify.authenticate],
     handler: fixtureController.getMatchesWithFilters.bind(fixtureController),
+  })
+
+  // GET /fixtures/:matchId/detail - Admin: detalle de partido con eventos raw
+  fastify.get('/:matchId/detail', {
+    preHandler: [fastify.authenticate, authorize(['ADMIN'])],
+    handler: fixtureController.getMatchDetailForEdit.bind(fixtureController),
+  })
+
+  // PUT /fixtures/:matchId/admin-edit-result - Admin: editar/subir resultado
+  fastify.put('/:matchId/admin-edit-result', {
+    preHandler: [fastify.authenticate, authorize(['ADMIN'])],
+    handler: fixtureController.adminEditResult.bind(fixtureController),
   })
 
   // POST /fixtures/:matchId/submit-result - Subir resultado de un partido

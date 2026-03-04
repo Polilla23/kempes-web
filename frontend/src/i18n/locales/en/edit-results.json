@@ -1,0 +1,35 @@
+{
+  "title": "Edit Results",
+  "subtitle": "Select a match to edit or load its result",
+  "matchList": {
+    "title": "Matches",
+    "subtitle": "Season {{season}}",
+    "empty": "No matches found for the selected filters",
+    "selected": "Selected"
+  },
+  "filters": {
+    "allCompetitions": "All",
+    "allStatuses": "All",
+    "finalized": "Finalized",
+    "pending": "Pending",
+    "cancelled": "Cancelled"
+  },
+  "status": {
+    "FINALIZADO": "Finalized",
+    "PENDIENTE": "Pending",
+    "CANCELADO": "Cancelled"
+  },
+  "statusSelect": {
+    "label": "Match status",
+    "description": "Select the status when saving"
+  },
+  "save": "Save Changes",
+  "saving": "Saving...",
+  "success": "Result updated successfully",
+  "error": "Error updating the result",
+  "selectMatch": {
+    "title": "Select a match",
+    "description": "Choose a match from the list to edit or load its result"
+  },
+  "loadingDetail": "Loading match detail..."
+}

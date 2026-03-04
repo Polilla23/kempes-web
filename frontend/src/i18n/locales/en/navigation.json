@@ -20,7 +20,8 @@
     "players": "Players",
     "salaryRates": "Salary Rates",
     "competitions": "Competitions",
-    "finances": "Finances"
+    "finances": "Finances",
+    "editResults": "Edit Results"
   },
   "configuration": {
     "title": "Configuration",

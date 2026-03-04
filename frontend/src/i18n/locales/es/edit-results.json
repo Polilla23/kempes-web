@@ -1,0 +1,35 @@
+{
+  "title": "Editar Resultados",
+  "subtitle": "Selecciona un partido para editar o cargar su resultado",
+  "matchList": {
+    "title": "Partidos",
+    "subtitle": "Temporada {{season}}",
+    "empty": "No hay partidos para los filtros seleccionados",
+    "selected": "Seleccionado"
+  },
+  "filters": {
+    "allCompetitions": "Todas",
+    "allStatuses": "Todos",
+    "finalized": "Finalizados",
+    "pending": "Pendientes",
+    "cancelled": "Cancelados"
+  },
+  "status": {
+    "FINALIZADO": "Finalizado",
+    "PENDIENTE": "Pendiente",
+    "CANCELADO": "Cancelado"
+  },
+  "statusSelect": {
+    "label": "Estado del partido",
+    "description": "Selecciona el estado al guardar"
+  },
+  "save": "Guardar Cambios",
+  "saving": "Guardando...",
+  "success": "Resultado actualizado exitosamente",
+  "error": "Error al actualizar el resultado",
+  "selectMatch": {
+    "title": "Selecciona un partido",
+    "description": "Elige un partido de la lista para editar o cargar su resultado"
+  },
+  "loadingDetail": "Cargando detalle del partido..."
+}

@@ -12,6 +12,7 @@ export interface IFixtureRepository {
     getMatchesWithFilters(seasonId?: string, competitionId?: string): Promise<Match[]>;
     getKnockoutBracket(id: string): Promise<Match[]>;
     getGroupStageMatches(id: string): Promise<Match[]>;
+    findByIdWithRawEvents(id: string): Promise<Match | null>;
 
     updateMatch(id: string, data: Prisma.MatchUpdateInput): Promise<Match>;
     

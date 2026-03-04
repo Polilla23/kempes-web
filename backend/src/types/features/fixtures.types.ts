@@ -57,3 +57,15 @@ export type SubmitResultInput = {
   userId: string
   screenshotUrl?: string
 }
+
+export type AdminEditResultInput = {
+  matchId: string
+  homeClubGoals: number
+  awayClubGoals: number
+  homeOwnGoals: number
+  awayOwnGoals: number
+  homeEvents: SubmitResultEventInput[]
+  awayEvents: SubmitResultEventInput[]
+  mvpPlayerId: string
+  newStatus: 'FINALIZADO' | 'PENDIENTE' | 'CANCELADO'
+}

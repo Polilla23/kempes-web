@@ -19,6 +19,7 @@ import {
   Newspaper,
   ArrowUpDown,
   DollarSign,
+  FileEdit,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -53,6 +54,7 @@ const adminItems = [
   { key: 'salaryRates', icon: CircleDollarSign, to: '/management/salary-rates' },
   { key: 'competitions', icon: Trophy, to: '/management/competitions' },
   { key: 'finances', icon: DollarSign, to: '/management/finances' },
+  { key: 'editResults', icon: FileEdit, to: '/management/edit-results' },
 ]
 const fixtureItems = [
   { key: 'createLeague', icon: ListTree, to: '/management/fixtures/league/' },
