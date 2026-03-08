@@ -55,6 +55,9 @@ export default function EditResultsPage() {
   // Status
   const [newStatus, setNewStatus] = useState<MatchStatus>('FINALIZADO')
 
+  // Refresh trigger for match list
+  const [refreshKey, setRefreshKey] = useState(0)
+
   // Data
   const [allMatches, setAllMatches] = useState<MatchDetailedDTO[]>([])
   const [homePlayers, setHomePlayers] = useState<PlayerOption[]>([])
@@ -207,6 +210,9 @@ export default function EditResultsPage() {
 
       toast.success(t('success'))
 
+      // Refresh match list to reflect changes
+      setRefreshKey((prev) => prev + 1)
+
       // Reset selection
       setSelectedMatchId(null)
       setMatchDetail(null)
@@ -295,6 +301,8 @@ export default function EditResultsPage() {
               selectedMatchId={selectedMatchId}
               onSelectMatch={handleSelectMatch}
               onMatchesLoaded={setAllMatches}
+              refreshKey={refreshKey}
+              disabled={isLoadingDetail || isSubmitting}
             />
           </div>
 

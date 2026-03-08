@@ -149,7 +149,7 @@ export function PendingConfirmationsTab({
                           <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="outline">{getTypeLabel(transfer.type)}</Badge>
                             <span className="font-medium">
-                              {transfer.player?.name}
+                              {transfer.player?.fullName}
                             </span>
                             {transfer.player?.overall && (
                               <span className="text-sm text-muted-foreground">
@@ -265,7 +265,7 @@ export function PendingConfirmationsTab({
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">
-                    {dialogState.transfer.player?.name}
+                    {dialogState.transfer.player?.fullName}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">

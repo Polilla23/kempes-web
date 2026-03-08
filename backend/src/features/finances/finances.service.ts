@@ -356,7 +356,7 @@ export class FinanceService {
       where: { isActive: true },
       select: {
         id: true,
-        name: true,
+        fullName: true,
         salary: true,
         actualClubId: true,
         ownerClubId: true,

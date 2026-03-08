@@ -23,7 +23,7 @@
     "error": "Failed to delete player"
   },
   "fields": {
-    "name": "Name",
+    "fullName": "Full Name",
     "position": "Position",
     "club": "Club",
     "number": "Number",
@@ -47,7 +47,7 @@
     "shirtNumber": "Shirt Number",
     "activeStatus": "Active Status",
     "activeDescription": "Allow this player to participate in matches",
-    "name": "Name",
+    "fullName": "Full Name",
     "dateOfBirth": "Date of birth",
     "overall": "Overall (0-99)",
     "salary": "Salary",
@@ -59,12 +59,12 @@
     "isActive": "Is Active"
   },
   "placeholders": {
-    "playerName": "Enter player name",
+    "playerName": "Enter player full name",
     "selectPosition": "Select position",
     "selectClub": "Select club",
     "shirtNumber": "Enter shirt number (optional)",
     "noClub": "No club assigned",
-    "enterPlayerName": "Enter player name",
+    "enterPlayerName": "Enter player full name",
     "pickDate": "Pick a date",
     "selectOwnerClub": "Select owner club",
     "selectActualClub": "Select actual club",

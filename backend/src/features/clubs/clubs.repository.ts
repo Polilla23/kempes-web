@@ -88,10 +88,10 @@ export class ClubRepository implements IClubRepository {
       },
       select: {
         id: true,
-        name: true,
+        fullName: true,
         overall: true,
       },
-      orderBy: [{ name: 'asc' }],
+      orderBy: [{ fullName: 'asc' }],
     })
   }
 
@@ -146,7 +146,7 @@ export class ClubRepository implements IClubRepository {
       where: { actualClubId: clubId, isActive: true },
       select: {
         id: true,
-        name: true,
+        fullName: true,
         birthdate: true,
         overall: true,
         salary: true,
@@ -154,7 +154,7 @@ export class ClubRepository implements IClubRepository {
         avatar: true,
         sofifaId: true,
       },
-      orderBy: [{ overall: 'desc' }, { name: 'asc' }],
+      orderBy: [{ overall: 'desc' }, { fullName: 'asc' }],
     })
 
     const squadValue = players.reduce((sum, p) => sum + p.salary, 0)

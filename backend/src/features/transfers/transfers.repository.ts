@@ -216,7 +216,7 @@ export class TransferRepository implements ITransferRepository {
           include: {
             fromClub: { select: { id: true, name: true } },
             toClub: { select: { id: true, name: true } },
-            player: { select: { id: true, name: true } },
+            player: { select: { id: true, fullName: true } },
             installments: { orderBy: { installmentNumber: 'asc' } },
           },
         },

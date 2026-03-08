@@ -2,20 +2,14 @@ import type { MatchDetailedDTO } from '@/services/fixture.service'
 
 // Categorías de competencias
 export type Category = 'mayores' | 'menores' | 'supercopa'
-export type CompetitionTypeFilter = 'liga' | 'copa'
-export type MatchStatus = 'all' | 'played' | 'pending'
+export type CompetitionTypeFilter = 'liga' | 'copa' | 'definiciones'
+export type MatchStatus = 'all' | 'played' | 'pending' | 'cancelled'
 
 // Mapeo de categorías frontend -> backend
 export const CATEGORY_MAP: Record<Category, string[]> = {
   mayores: ['SENIOR'],
   menores: ['KEMPESITA'],
   supercopa: ['MIXED'],
-}
-
-// Mapeo de formato frontend -> backend
-export const FORMAT_MAP: Record<CompetitionTypeFilter, string> = {
-  liga: 'LEAGUE',
-  copa: 'CUP',
 }
 
 // Labels para las rondas de knockout (usado por match-card)
@@ -28,6 +22,13 @@ export const ROUND_LABELS: Record<string, string> = {
   THIRD_PLACE: 'Tercer Puesto',
   FINAL: 'Final',
   LIGUILLA: 'Liguilla',
+  TRIANGULAR_SEMI: 'Triangular - Semi',
+  TRIANGULAR_FINAL: 'Triangular - Final',
+  PLAYOUT: 'Playout',
+  REDUCIDO_QUARTER: 'Reducido - Cuartos',
+  REDUCIDO_SEMI: 'Reducido - Semi',
+  REDUCIDO_FINAL: 'Reducido - Final',
+  PROMOTION: 'Promoción',
 }
 
 // Estado de filtros
@@ -58,6 +59,7 @@ export interface CompetitionOption {
   category: string
   format: string
   hierarchy: number
+  typeName: string
 }
 
 // Matches agrupados por competencia

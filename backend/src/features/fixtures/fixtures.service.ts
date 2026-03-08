@@ -739,7 +739,7 @@ export class FixtureService {
       .filter(c => c.clubId === match.homeClubId)
       .map(c => ({
         id: c.player.id,
-        name: c.player.name,
+        fullName: c.player.fullName,
         overall: c.player.overall
       }))
 
@@ -747,7 +747,7 @@ export class FixtureService {
       .filter(c => c.clubId === match.awayClubId)
       .map(c => ({
         id: c.player.id,
-        name: c.player.name,
+        fullName: c.player.fullName,
         overall: c.player.overall
       }))
 

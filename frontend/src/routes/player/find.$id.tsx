@@ -78,14 +78,14 @@ function PlayerProfilePage() {
         {/* Header */}
         <div className="flex items-center gap-6 mb-8">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={player.avatar} alt={player.name} />
+            <AvatarImage src={player.avatar} alt={player.fullName} />
             <AvatarFallback className="text-2xl">
-              {player.name?.split(' ').map((n: string) => n.charAt(0)).join('')}
+              {player.fullName?.split(' ').map((n: string) => n.charAt(0)).join('')}
             </AvatarFallback>
           </Avatar>
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              {player.name}
+              {player.fullName}
             </h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <Badge variant="outline">OVR {player.overall}</Badge>

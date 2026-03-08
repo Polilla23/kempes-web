@@ -37,7 +37,7 @@ export class MyAccountRepository {
               where: { isActive: true },
               select: {
                 id: true,
-                name: true,
+                fullName: true,
                 overall: true,
               },
             },
@@ -104,6 +104,11 @@ export class MyAccountRepository {
       where: {
         status: MatchStatus.FINALIZADO,
         OR: [{ homeClubId: clubId }, { awayClubId: clubId }],
+        // Exclude BYE matches — they are walkovers, not real matches
+        homeClubId: { not: null },
+        awayClubId: { not: null },
+        homePlaceholder: { not: 'BYE' },
+        awayPlaceholder: { not: 'BYE' },
         competition: {
           seasonId: activeSeason.id,
         },
@@ -163,9 +168,14 @@ export class MyAccountRepository {
 
     if (!activeSeason) return []
 
-    const matches = await this.prisma.match.findMany({
+    return await this.prisma.match.findMany({
       where: {
         status: MatchStatus.FINALIZADO,
+        // Exclude BYE matches and matches without both clubs assigned
+        homeClubId: { not: null },
+        awayClubId: { not: null },
+        homePlaceholder: { not: 'BYE' },
+        awayPlaceholder: { not: 'BYE' },
         competition: {
           seasonId: activeSeason.id,
         },
@@ -184,14 +194,8 @@ export class MyAccountRepository {
         },
       },
       orderBy: [{ resultRecordedAt: 'desc' }, { matchdayOrder: 'desc' }],
+      take: limit,
     })
-
-    // Filter out BYE matches and matches without both clubs assigned
-    return matches
-      .filter(
-        (m) => m.homeClubId && m.awayClubId && m.homePlaceholder !== 'BYE' && m.awayPlaceholder !== 'BYE',
-      )
-      .slice(0, limit)
   }
 
   /**
@@ -218,7 +222,7 @@ export class MyAccountRepository {
         where: { actualClubId: clubId, isActive: true },
         select: {
           id: true,
-          name: true,
+          fullName: true,
           overall: true,
           salary: true,
           isKempesita: true,
@@ -237,7 +241,7 @@ export class MyAccountRepository {
             take: 1,
           },
         },
-        orderBy: [{ overall: 'desc' }, { name: 'desc' }],
+        orderBy: [{ overall: 'desc' }, { fullName: 'desc' }],
       }),
       this.prisma.seasonTransition.findMany({
         where: { clubId, movementType: MovementType.CHAMPION },
@@ -288,7 +292,7 @@ export class MyAccountRepository {
       squadValue,
       players: players.map((p) => ({
         id: p.id,
-        name: p.name,
+        fullName: p.fullName,
         overall: p.overall,
         salary: p.salary,
         isKempesita: p.isKempesita,
@@ -347,6 +351,10 @@ export class MyAccountRepository {
         where: {
           competition: { seasonId: activeSeason.id },
           status: MatchStatus.FINALIZADO,
+          // Exclude BYE matches from played count
+          homeClubId: { not: null },
+          awayClubId: { not: null },
+          awayPlaceholder: { not: 'BYE' },
         },
       }),
       this.prisma.match.count({

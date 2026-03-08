@@ -7,10 +7,8 @@ import type {
   Match,
   CompetitionOption,
   GroupedMatches,
-  CATEGORY_MAP,
-  FORMAT_MAP,
 } from '../_types/fixtures.types'
-import { CATEGORY_MAP as CategoryMap, FORMAT_MAP as FormatMap } from '../_types/fixtures.types'
+import { CATEGORY_MAP as CategoryMap } from '../_types/fixtures.types'
 
 interface Season {
   id: string
@@ -59,6 +57,7 @@ export function useFixturesData(filters: FilterState) {
                 category: compType?.category?.toUpperCase() || '',
                 format: compType?.format?.toUpperCase() || '',
                 hierarchy: compType?.hierarchy ?? 999,
+                typeName: compType?.name?.toUpperCase() || '',
               }
             })
             .sort((a: CompetitionOption, b: CompetitionOption) => {
@@ -106,6 +105,7 @@ export function useFixturesData(filters: FilterState) {
           category: m.competition.competitionType?.category?.toUpperCase() || '',
           format: m.competition.competitionType?.format?.toUpperCase() || '',
           hierarchy: m.competition.competitionType?.hierarchy ?? 999,
+          typeName: m.competition.competitionType?.name?.toUpperCase() || '',
         })
       }
     })
@@ -116,42 +116,86 @@ export function useFixturesData(filters: FilterState) {
     })
   }, [allMatches])
 
+  // Determinar si una competencia tiene partidos knockout (para mostrarla en Definiciones)
+  const competitionsWithKnockout = useMemo(() => {
+    const ids = new Set<string>()
+    allMatches.forEach((m) => {
+      if (m.stage === 'KNOCKOUT') ids.add(m.competitionId)
+    })
+    return ids
+  }, [allMatches])
+
   // FILTRADO CLIENT-SIDE: Filtrar competencias por categoría y tipo
   const filteredCompetitions = useMemo(() => {
     const allowedCategories = CategoryMap[filters.selectedCategory]
-    const allowedFormat = FormatMap[filters.selectedType]
 
     return competitionsFromMatches.filter((comp) => {
       const categoryMatch = allowedCategories.includes(comp.category)
+      if (!categoryMatch) return false
+
       // Para Supercopa (MIXED), no filtrar por formato ya que solo hay CUP
-      const formatMatch =
-        filters.selectedCategory === 'supercopa' || comp.format === allowedFormat
-      return categoryMatch && formatMatch
+      if (filters.selectedCategory === 'supercopa') return true
+
+      switch (filters.selectedType) {
+        case 'liga':
+          return comp.format === 'LEAGUE'
+        case 'copa':
+          return comp.format === 'CUP' && comp.typeName !== 'PROMOTIONS'
+        case 'definiciones':
+          // Ligas que tienen partidos knockout + promociones
+          return (comp.format === 'LEAGUE' && competitionsWithKnockout.has(comp.id)) ||
+            comp.typeName === 'PROMOTIONS'
+        default:
+          return true
+      }
     })
-  }, [competitionsFromMatches, filters.selectedCategory, filters.selectedType])
+  }, [competitionsFromMatches, filters.selectedCategory, filters.selectedType, competitionsWithKnockout])
 
   // FILTRADO CLIENT-SIDE: Filtrar partidos USANDO la data embebida del match
   const filteredMatches = useMemo(() => {
     let result = allMatches
 
     const allowedCategories = CategoryMap[filters.selectedCategory]
-    const allowedFormat = FormatMap[filters.selectedType]
 
     // Filtrar por competencia específica o por categoría/tipo
     if (filters.selectedCompetition !== 'all') {
       result = result.filter((m) => m.competitionId === filters.selectedCompetition)
+
+      // Para Definiciones con competencia liga seleccionada, mostrar solo knockout
+      if (filters.selectedType === 'definiciones') {
+        const comp = competitionsFromMatches.find((c) => c.id === filters.selectedCompetition)
+        if (comp?.format === 'LEAGUE') {
+          result = result.filter((m) => m.stage === 'KNOCKOUT')
+        }
+      }
+      // Para Liga con competencia seleccionada, excluir knockout
+      if (filters.selectedType === 'liga') {
+        result = result.filter((m) => m.stage !== 'KNOCKOUT')
+      }
     } else {
       // Filtrar usando la info embebida en cada match
       result = result.filter((m) => {
         const matchCategory = m.competition?.competitionType?.category?.toUpperCase()
         const matchFormat = m.competition?.competitionType?.format?.toUpperCase()
+        const matchTypeName = m.competition?.competitionType?.name?.toUpperCase()
 
         const categoryMatch = allowedCategories.includes(matchCategory || '')
-        // Para Supercopa (MIXED), ignorar formato
-        const formatMatch =
-          filters.selectedCategory === 'supercopa' || matchFormat === allowedFormat
+        if (!categoryMatch) return false
 
-        return categoryMatch && formatMatch
+        // Para Supercopa (MIXED), ignorar formato
+        if (filters.selectedCategory === 'supercopa') return true
+
+        switch (filters.selectedType) {
+          case 'liga':
+            return matchFormat === 'LEAGUE' && m.stage !== 'KNOCKOUT'
+          case 'copa':
+            return matchFormat === 'CUP' && matchTypeName !== 'PROMOTIONS'
+          case 'definiciones':
+            return (matchFormat === 'LEAGUE' && m.stage === 'KNOCKOUT') ||
+              matchTypeName === 'PROMOTIONS'
+          default:
+            return true
+        }
       })
     }
 
@@ -160,10 +204,12 @@ export function useFixturesData(filters: FilterState) {
       result = result.filter((m) => m.status === 'FINALIZADO')
     } else if (filters.selectedStatus === 'pending') {
       result = result.filter((m) => m.status === 'PENDIENTE')
+    } else if (filters.selectedStatus === 'cancelled') {
+      result = result.filter((m) => m.status === 'CANCELADO')
     }
 
     return result
-  }, [allMatches, filters.selectedCompetition, filters.selectedStatus, filters.selectedCategory, filters.selectedType])
+  }, [allMatches, filters.selectedCompetition, filters.selectedStatus, filters.selectedCategory, filters.selectedType, competitionsFromMatches])
 
   // Agrupar partidos por competencia para vista lista
   const groupedMatches = useMemo((): GroupedMatches => {

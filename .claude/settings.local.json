@@ -24,7 +24,8 @@
       "Bash(npx @tanstack/router-plugin generate:*)",
       "Bash(npx shadcn@latest add:*)",
       "Bash(xargs:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

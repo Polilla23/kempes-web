@@ -157,7 +157,7 @@ export class MatchMapper {
     if (match.events && match.events.length > 0) {
       dto.events = match.events.map((event) => ({
         type: EVENT_TYPE_MAP[event.type.name] || event.type.name.toLowerCase(),
-        player: (() => { const parts = event.player.name.split(' '); return parts.length > 1 ? `${parts[0].charAt(0)}. ${parts.slice(1).join(' ')}` : event.player.name })(),
+        player: (() => { const parts = event.player.fullName.split(' '); return parts.length > 1 ? `${parts[0].charAt(0)}. ${parts.slice(1).join(' ')}` : event.player.fullName })(),
         team: (event.player.actualClubId === match.homeClubId ? 'home' : 'away') as 'home' | 'away',
       }))
     }

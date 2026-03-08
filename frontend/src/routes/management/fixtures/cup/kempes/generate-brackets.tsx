@@ -3,11 +3,11 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Loader2, AlertCircle, CheckCircle, Trophy, Medal, ArrowLeft, Users, Info, ArrowRight } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle, Trophy, Medal, ArrowLeft, Users, ArrowRight, Zap } from 'lucide-react'
 import { FixtureService, type KempesCupGroupsStatus, type KempesCupQualifiedTeams, type QualifiedTeam } from '@/services/fixture.service'
 import CompetitionService from '@/services/competition.service'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 import { BracketEditorContainer } from '../_components/bracket-editor/bracket-editor-container'
 import { BomboTeamsPanel } from '../_components/bracket-editor/bombo-teams-panel'
 import type { EmptyBracketStructure, BracketTeamPlacement, AvailableTeamWithGroup } from '@/types/bracket-editor'
@@ -78,81 +78,25 @@ function validateSameGroupConstraint(
 }
 
 /**
- * Componente que muestra un resumen de la estructura del bracket
+ * Calcula info de bracket para stat tiles
  */
-function BracketSummary({ goldTeamCount, silverTeamCount }: { goldTeamCount: number; silverTeamCount: number }) {
-  const calculateBracketInfo = (teamCount: number) => {
-    if (teamCount < 2) return null
-    let bracketSize = 2
-    while (bracketSize < teamCount) bracketSize *= 2
-    const byeCount = bracketSize - teamCount
-    const matchesInFirstRound = bracketSize / 2
+function calculateBracketInfo(teamCount: number) {
+  if (teamCount < 2) return null
+  let bracketSize = 2
+  while (bracketSize < teamCount) bracketSize *= 2
+  const byeCount = bracketSize - teamCount
 
-    let firstRoundName = ''
-    switch (bracketSize) {
-      case 2: firstRoundName = 'Final'; break
-      case 4: firstRoundName = 'Semifinales'; break
-      case 8: firstRoundName = 'Cuartos de Final'; break
-      case 16: firstRoundName = 'Octavos de Final'; break
-      case 32: firstRoundName = 'Dieciseisavos'; break
-      default: firstRoundName = `Ronda de ${bracketSize}`
-    }
-
-    return { bracketSize, byeCount, matchesInFirstRound, firstRoundName, teamsWithBye: byeCount, teamsPlaying: teamCount - byeCount }
+  let firstRoundName = ''
+  switch (bracketSize) {
+    case 2: firstRoundName = 'Final'; break
+    case 4: firstRoundName = 'Semifinales'; break
+    case 8: firstRoundName = 'Cuartos'; break
+    case 16: firstRoundName = 'Octavos'; break
+    case 32: firstRoundName = '16vos'; break
+    default: firstRoundName = `R${bracketSize}`
   }
 
-  const goldInfo = calculateBracketInfo(goldTeamCount)
-  const silverInfo = silverTeamCount > 0 ? calculateBracketInfo(silverTeamCount) : null
-
-  if (!goldInfo) return null
-
-  return (
-    <div className="grid md:grid-cols-2 gap-4 mb-6">
-      <Card className="border-amber-200">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
-            <Info className="h-4 w-4" />
-            Estructura Copa de Oro
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-1">
-          <p><strong>Equipos:</strong> {goldTeamCount}</p>
-          <p><strong>Bracket:</strong> {goldInfo.bracketSize} posiciones</p>
-          <p><strong>Primera ronda:</strong> {goldInfo.firstRoundName}</p>
-          {goldInfo.byeCount > 0 ? (
-            <p className="text-amber-600">
-              <strong>Byes:</strong> {goldInfo.byeCount} equipos pasan directo
-            </p>
-          ) : (
-            <p className="text-green-600"><strong>Sin byes</strong></p>
-          )}
-        </CardContent>
-      </Card>
-
-      {silverInfo && (
-        <Card className="border-slate-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2 text-slate-700">
-              <Info className="h-4 w-4" />
-              Estructura Copa de Plata
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-1">
-            <p><strong>Equipos:</strong> {silverTeamCount}</p>
-            <p><strong>Bracket:</strong> {silverInfo.bracketSize} posiciones</p>
-            <p><strong>Primera ronda:</strong> {silverInfo.firstRoundName}</p>
-            {silverInfo.byeCount > 0 ? (
-              <p className="text-slate-600">
-                <strong>Byes:</strong> {silverInfo.byeCount} equipos pasan directo
-              </p>
-            ) : (
-              <p className="text-green-600"><strong>Sin byes</strong></p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  )
+  return { bracketSize, byeCount, firstRoundName }
 }
 
 function GenerateBracketsPage() {
@@ -297,10 +241,10 @@ function GenerateBracketsPage() {
   if (loading) {
     return (
       <div className="container mx-auto p-6 max-w-6xl">
-        <Card>
+        <Card className="bg-card border-border">
           <CardContent className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2">Cargando datos de la Copa Kempes...</span>
+            <span className="ml-2 text-muted-foreground">Cargando datos de la Copa Kempes...</span>
           </CardContent>
         </Card>
       </div>
@@ -323,10 +267,10 @@ function GenerateBracketsPage() {
   if (step === 'success' && generatedCups) {
     return (
       <div className="container mx-auto p-6 max-w-6xl">
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-800">Copas generadas exitosamente</AlertTitle>
-          <AlertDescription className="text-green-700">
+        <Alert className="bg-green-500/10 border-green-500/30">
+          <CheckCircle className="h-4 w-4 text-green-500" />
+          <AlertTitle className="text-green-500">Copas generadas exitosamente</AlertTitle>
+          <AlertDescription className="text-green-400">
             Se han creado la Copa de Oro y la Copa de Plata con los equipos clasificados.
           </AlertDescription>
         </Alert>
@@ -366,6 +310,7 @@ function GenerateBracketsPage() {
         )}
 
         <BracketEditorContainer
+          key="gold-bracket"
           structure={goldBracketStructure}
           teams={goldTeamsForEditor}
           onConfirm={handleGoldConfirm}
@@ -399,7 +344,7 @@ function GenerateBracketsPage() {
             Volver a Copa de Oro
           </Button>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Medal className="h-6 w-6 text-slate-500" />
+            <Medal className="h-6 w-6 text-slate-400" />
             Copa de Plata - Armar Bracket
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -415,6 +360,7 @@ function GenerateBracketsPage() {
         )}
 
         <BracketEditorContainer
+          key="silver-bracket"
           structure={silverBracketStructure}
           teams={silverTeamsForEditor}
           onConfirm={handleSilverConfirm}
@@ -439,167 +385,202 @@ function GenerateBracketsPage() {
   }
 
   // ---- STATUS STEP (default) ----
+  const goldInfo = calculateBracketInfo(qualifiedTeams.goldTeams.length)
+  const silverInfo = qualifiedTeams.silverTeams.length > 0 ? calculateBracketInfo(qualifiedTeams.silverTeams.length) : null
+
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="mb-8">
-        <Button variant="ghost" onClick={() => navigate({ to: '/fixtures' })} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
-        <h1 className="text-3xl font-bold mb-2">Generar Copa de Oro y Copa de Plata</h1>
-        <p className="text-muted-foreground">{groupsStatus.competitionName}</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6 max-w-6xl space-y-6">
+        {/* Page header */}
+        <div>
+          <Button variant="ghost" onClick={() => navigate({ to: '/fixtures' })} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Generar Copa de Oro y Plata</h1>
+              <p className="text-muted-foreground">{groupsStatus.competitionName}</p>
+            </div>
+          </div>
+        </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Estado de los grupos */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Estado de los Grupos
-          </CardTitle>
-          <CardDescription>
-            {groupsStatus.allGroupsComplete
-              ? 'Todos los grupos han finalizado. Puedes armar los brackets.'
-              : 'Algunos grupos aun no han terminado.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {groupsStatus.groups.map((group) => (
-              <div key={group.groupName} className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold">Grupo {group.groupName}</span>
-                  <Badge variant={group.isComplete ? 'default' : 'secondary'}>
+        {/* Grupos - grid 2 cols */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          {groupsStatus.groups.map((group) => (
+            <Card key={group.groupName} className="bg-card border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">
+                    Grupo {group.groupName}
+                  </CardTitle>
+                  <Badge
+                    variant={group.isComplete ? 'default' : 'secondary'}
+                    className={group.isComplete ? 'bg-green-600' : ''}
+                  >
                     {group.isComplete ? 'Completo' : `${group.matchesPlayed}/${group.matchesTotal}`}
                   </Badge>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {group.standings.slice(0, 3).map((team, idx) => (
-                    <div key={team.clubId} className="flex items-center gap-1">
-                      <span className="w-4">{idx + 1}.</span>
-                      <span className="truncate">{team.clubName}</span>
-                      <span className="ml-auto">{team.points}pts</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Equipos clasificados */}
-      {qualifiedTeams.isReady && (
-        <>
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            {/* Copa de Oro */}
-            <Card>
-              <CardHeader className="bg-amber-50">
-                <CardTitle className="flex items-center gap-2 text-amber-700">
-                  <Trophy className="h-5 w-5" />
-                  Copa de Oro ({qualifiedTeams.goldTeams.length} equipos)
-                </CardTitle>
-                <CardDescription>
-                  Primeros {groupsStatus.qualifyToGold} de cada grupo
-                </CardDescription>
               </CardHeader>
-              <CardContent className="pt-4">
-                <div className="space-y-2">
-                  {qualifiedTeams.goldTeams.map((team) => (
-                    <div key={team.clubId} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      {team.clubLogo && (
-                        <img src={team.clubLogo} alt={team.clubName} className="h-6 w-6 object-contain" />
-                      )}
-                      <span className="flex-1">{team.clubName}</span>
-                      <Badge variant="outline">
-                        {team.position}° Grupo {team.groupName}
-                      </Badge>
-                    </div>
-                  ))}
+              <CardContent className="pt-0">
+                <div className="space-y-1">
+                  {group.standings.map((team, idx) => {
+                    const isGold = idx < groupsStatus.qualifyToGold
+                    const isSilver = idx >= groupsStatus.qualifyToGold && idx < groupsStatus.qualifyToGold + groupsStatus.qualifyToSilver
+
+                    return (
+                      <div
+                        key={team.clubId}
+                        className={cn(
+                          'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors',
+                          isGold && 'bg-amber-500/10',
+                          isSilver && 'bg-slate-400/10',
+                          !isGold && !isSilver && 'opacity-50'
+                        )}
+                      >
+                        {/* Position badge */}
+                        {isGold ? (
+                          <Badge className="bg-amber-600 dark:bg-amber-500 text-white text-[10px] px-1.5 py-0 min-w-[22px] justify-center">
+                            {idx + 1}
+                          </Badge>
+                        ) : isSilver ? (
+                          <Badge className="bg-slate-400 text-white text-[10px] px-1.5 py-0 min-w-[22px] justify-center">
+                            {idx + 1}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 min-w-[22px] justify-center">
+                            {idx + 1}
+                          </Badge>
+                        )}
+
+                        {/* Club logo */}
+                        <div className="w-6 h-6 rounded border overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center">
+                          {team.clubLogo ? (
+                            <img src={team.clubLogo} alt={team.clubName} className="w-5 h-5 object-contain" />
+                          ) : (
+                            <span className="text-[8px] font-bold text-muted-foreground">
+                              {team.clubName.substring(0, 2).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Name */}
+                        <span className="flex-1 truncate font-medium">{team.clubName}</span>
+
+                        {/* Stats */}
+                        <span className="text-xs text-muted-foreground tabular-nums">{team.played}PJ</span>
+                        <span className="text-xs font-bold tabular-nums w-8 text-right">{team.points}</span>
+
+                        {/* Zone icon */}
+                        {isGold && <Trophy className="h-3 w-3 text-amber-500 flex-shrink-0" />}
+                        {isSilver && <Medal className="h-3 w-3 text-slate-400 flex-shrink-0" />}
+                      </div>
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>
+          ))}
+        </div>
 
-            {/* Copa de Plata */}
-            {qualifiedTeams.silverTeams.length > 0 && (
-              <Card>
-                <CardHeader className="bg-slate-50">
-                  <CardTitle className="flex items-center gap-2 text-slate-700">
-                    <Medal className="h-5 w-5" />
-                    Copa de Plata ({qualifiedTeams.silverTeams.length} equipos)
-                  </CardTitle>
-                  <CardDescription>
-                    Siguientes {groupsStatus.qualifyToSilver} de cada grupo
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="space-y-2">
-                    {qualifiedTeams.silverTeams.map((team) => (
-                      <div key={team.clubId} className="flex items-center gap-2 p-2 bg-muted rounded">
-                        {team.clubLogo && (
-                          <img src={team.clubLogo} alt={team.clubName} className="h-6 w-6 object-contain" />
-                        )}
-                        <span className="flex-1">{team.clubName}</span>
-                        <Badge variant="outline">
-                          {team.position}° Grupo {team.groupName}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+        {/* Resumen y acción */}
+        {qualifiedTeams.isReady && (
+          <Card className="bg-card border-border">
+            <CardContent className="pt-6">
+              {/* Stat tiles */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div className="text-center p-4 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                  <Trophy className="h-5 w-5 text-amber-500 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-foreground">{qualifiedTeams.goldTeams.length}</div>
+                  <div className="text-xs text-muted-foreground">Copa de Oro</div>
+                  {goldInfo && (
+                    <div className="text-[10px] text-amber-500 mt-1">
+                      Desde {goldInfo.firstRoundName}
+                    </div>
+                  )}
+                </div>
+                <div className="text-center p-4 bg-slate-400/10 rounded-lg border border-slate-400/20">
+                  <Medal className="h-5 w-5 text-slate-400 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-foreground">{qualifiedTeams.silverTeams.length}</div>
+                  <div className="text-xs text-muted-foreground">Copa de Plata</div>
+                  {silverInfo && (
+                    <div className="text-[10px] text-slate-400 mt-1">
+                      Desde {silverInfo.firstRoundName}
+                    </div>
+                  )}
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <Zap className="h-5 w-5 text-amber-500 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-foreground">{goldInfo?.byeCount ?? 0}</div>
+                  <div className="text-xs text-muted-foreground">BYEs Oro</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">Pasan directo</div>
+                </div>
+                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                  <Zap className="h-5 w-5 text-slate-400 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-foreground">{silverInfo?.byeCount ?? 0}</div>
+                  <div className="text-xs text-muted-foreground">BYEs Plata</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">Pasan directo</div>
+                </div>
+              </div>
 
-          <Separator className="my-6" />
+              {/* Leyenda */}
+              <div className="flex items-center justify-center gap-6 mb-6 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-amber-500/30" />
+                  <span>Primeros {groupsStatus.qualifyToGold} → Oro</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-slate-400/30" />
+                  <span>Siguientes {groupsStatus.qualifyToSilver} → Plata</span>
+                </div>
+              </div>
 
-          {/* Resumen del bracket */}
-          <BracketSummary
-            goldTeamCount={qualifiedTeams.goldTeams.length}
-            silverTeamCount={qualifiedTeams.silverTeams.length}
-          />
+              {/* CTA */}
+              <div className="flex justify-end">
+                <Button
+                  size="lg"
+                  onClick={handleContinueToBracket}
+                  disabled={generating || !groupsStatus.allGroupsComplete}
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Cargando...
+                    </>
+                  ) : (
+                    <>
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Continuar al Bracket
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Boton para continuar al bracket editor */}
-          <div className="flex justify-end">
-            <Button
-              size="lg"
-              onClick={handleContinueToBracket}
-              disabled={generating || !groupsStatus.allGroupsComplete}
-            >
-              {generating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Cargando...
-                </>
-              ) : (
-                <>
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  Continuar al Bracket
-                </>
-              )}
-            </Button>
-          </div>
-        </>
-      )}
-
-      {!qualifiedTeams.isReady && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Grupos incompletos</AlertTitle>
-          <AlertDescription>
-            Debes esperar a que todos los partidos de fase de grupos esten finalizados para poder generar los brackets
-            de Copa de Oro y Copa de Plata.
-          </AlertDescription>
-        </Alert>
-      )}
+        {!qualifiedTeams.isReady && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Grupos incompletos</AlertTitle>
+            <AlertDescription>
+              Debes esperar a que todos los partidos de fase de grupos esten finalizados para poder generar los brackets
+              de Copa de Oro y Copa de Plata.
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
     </div>
   )
 }

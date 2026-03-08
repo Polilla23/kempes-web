@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Calendar, Trophy, Shield, Check, Users } from 'lucide-react'
+import { Calendar, Trophy, Shield, Check, Users, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { MatchDetailedDTO } from '@/services/fixture.service'
@@ -79,12 +79,16 @@ interface AdminMatchListPanelProps {
   selectedMatchId: string | null
   onSelectMatch: (matchId: string) => void
   onMatchesLoaded: (matches: MatchDetailedDTO[]) => void
+  refreshKey: number
+  disabled?: boolean
 }
 
 export function AdminMatchListPanel({
   selectedMatchId,
   onSelectMatch,
   onMatchesLoaded,
+  refreshKey,
+  disabled = false,
 }: AdminMatchListPanelProps) {
   const { t } = useTranslation('editResults')
 
@@ -136,7 +140,7 @@ export function AdminMatchListPanel({
     }
     loadMatches()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSeason])
+  }, [selectedSeason, refreshKey])
 
   // Derive competitions from matches
   const competitionsFromMatches = useMemo(() => {
@@ -300,7 +304,13 @@ export function AdminMatchListPanel({
         </p>
 
         {/* Match list */}
-        <div className="space-y-2 max-h-[500px] overflow-y-auto">
+        <div className={cn('space-y-2 max-h-[500px] overflow-y-auto relative', disabled && 'pointer-events-none')}>
+          {/* Disabled overlay */}
+          {disabled && (
+            <div className="absolute inset-0 bg-card/60 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-lg">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          )}
           {isLoading || isLoadingMatches ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
@@ -315,9 +325,13 @@ export function AdminMatchListPanel({
             filteredMatches.map((match) => (
               <button
                 key={match.id}
+                disabled={disabled}
                 onClick={() => onSelectMatch(match.id)}
                 className={cn(
-                  'w-full text-left bg-secondary/50 border rounded-xl p-3 transition-all hover:border-primary/50',
+                  'w-full text-left bg-secondary/50 border rounded-xl p-3 transition-all',
+                  disabled
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'hover:border-primary/50',
                   selectedMatchId === match.id
                     ? 'border-primary bg-primary/5 ring-1 ring-primary'
                     : 'border-border'

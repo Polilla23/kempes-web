@@ -23,7 +23,7 @@ export interface Club {
 // Tipos de jugador
 export interface Player {
   id: string
-  name: string
+  fullName: string
   birthdate: string
   actualClubId: string | null
   ownerClubId: string | null
@@ -183,7 +183,7 @@ export interface ClubFormData {
 }
 
 export interface RegisterPlayerFormData {
-  name: string
+  fullName: string
   birthdate: string
   ownerClubId: string
   actualClubId?: string | null
@@ -335,7 +335,7 @@ export interface TransferPlayerPayment {
   valuationAmount: number
   player?: {
     id: string
-    name: string
+    fullName: string
     overall: number | null
     position?: string
   }
@@ -362,7 +362,7 @@ export interface Transfer {
   completedAt?: string
   player?: {
     id: string
-    name: string
+    fullName: string
     overall: number | null
     position?: string
     isKempesita?: boolean
