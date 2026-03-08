@@ -17,7 +17,7 @@ export interface DashboardSeasonStats {
 
 export interface DashboardPlayer {
   id: string
-  name: string
+  fullName: string
   overall: number | null
   salary: number
   isKempesita: boolean

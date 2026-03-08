@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { BracketEditorView } from './bracket-editor-view'
 import { SelectableTeamsPanel } from './selectable-teams-panel'
-import type { EmptyBracketStructure, AvailableTeam, BracketTeamPlacement } from '@/types/bracket-editor'
+import type { EmptyBracketStructure, AvailableTeam, AvailableTeamWithGroup, BracketTeamPlacement } from '@/types/bracket-editor'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, AlertCircle } from 'lucide-react'
@@ -56,6 +56,32 @@ export function BracketEditorContainer({
 
   // Validar si está completo
   const isValid = assignedCount === requiredSlots
+
+  // Detectar conflictos de mismo grupo (equipos del mismo grupo en el mismo partido)
+  const sameGroupConflicts = useMemo(() => {
+    const conflicts = new Set<string>()
+    const matchesInFirstRound = structure.bracketSize / 2
+
+    for (let pos = 1; pos <= matchesInFirstRound; pos++) {
+      const homeSlotId = `${structure.firstRound}_${pos}_home`
+      const awaySlotId = `${structure.firstRound}_${pos}_away`
+
+      const homeTeamId = placements.get(homeSlotId)
+      const awayTeamId = placements.get(awaySlotId)
+
+      if (homeTeamId && awayTeamId) {
+        const homeTeam = initialTeams.find((t) => t.id === homeTeamId) as AvailableTeamWithGroup | undefined
+        const awayTeam = initialTeams.find((t) => t.id === awayTeamId) as AvailableTeamWithGroup | undefined
+
+        if (homeTeam?.groupName && awayTeam?.groupName && homeTeam.groupName === awayTeam.groupName) {
+          conflicts.add(homeSlotId)
+          conflicts.add(awaySlotId)
+        }
+      }
+    }
+
+    return conflicts
+  }, [placements, initialTeams, structure])
 
   // Handler para seleccionar un equipo del panel
   const handleSelectTeam = useCallback((teamId: string) => {
@@ -168,6 +194,7 @@ export function BracketEditorContainer({
               selectedTeamId={selectedTeamId}
               onSlotClick={handleAssignToSlot}
               onRemove={handleRemove}
+              sameGroupConflicts={sameGroupConflicts}
             />
           </CardContent>
         </Card>

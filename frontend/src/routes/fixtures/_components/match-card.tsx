@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Clock, ChevronDown, ChevronUp } from 'lucide-react'
+import { Clock, ChevronDown, ChevronUp, Ban } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Match, MatchEvent } from '../_types/fixtures.types'
 import { ROUND_LABELS } from '../_types/fixtures.types'
@@ -98,6 +98,11 @@ export function MatchCard({ match }: MatchCardProps) {
               <span className="text-muted-foreground">-</span>
               <span className="text-lg font-bold text-foreground">{match.awayClubGoals}</span>
             </div>
+          ) : match.status === 'CANCELADO' ? (
+            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">
+              <Ban className="w-3 h-3 mr-1" />
+              Cancelado
+            </Badge>
           ) : (
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
               <Clock className="w-3 h-3 mr-1" />

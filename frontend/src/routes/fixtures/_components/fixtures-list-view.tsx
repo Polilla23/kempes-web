@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -255,6 +255,12 @@ export function FixturesListView({ groupedMatches }: FixturesListViewProps) {
   const [pageSize, setPageSize] = useState(20)
   const [currentPage, setCurrentPage] = useState(0)
   const [expandedSubGroups, setExpandedSubGroups] = useState<Set<string>>(new Set())
+  const [expandedCompetitions, setExpandedCompetitions] = useState<Set<string>>(new Set())
+
+  // Inicializar todas las competencias como expandidas
+  useEffect(() => {
+    setExpandedCompetitions(new Set(Object.keys(groupedMatches)))
+  }, [groupedMatches])
 
   // Aplanar partidos para paginación manteniendo info del grupo
   const allMatches = useMemo(() => {
@@ -289,34 +295,58 @@ export function FixturesListView({ groupedMatches }: FixturesListViewProps) {
 
   return (
     <div className="space-y-6">
-      {Object.entries(paginatedGroups).map(([competitionId, { name, matches }]) => (
-        <Card key={competitionId} className="bg-card border-border overflow-hidden py-0 gap-0">
-          {/* Competition Header */}
-          <div className="bg-primary/10 px-4 py-3 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">
-                  {name.substring(0, 2).toUpperCase()}
-                </span>
-              </div>
-              <span className="font-semibold text-foreground">{name}</span>
-              <Badge variant="outline" className="text-xs">
-                {matches.length} partidos
-              </Badge>
-            </div>
-            <Button variant="ghost" size="sm" className="text-primary">
-              Ver todo <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
+      {Object.entries(paginatedGroups).map(([competitionId, { name, matches }]) => {
+        const isCompExpanded = expandedCompetitions.has(competitionId)
 
-          {/* Matches grouped by matchday/phase/group */}
-          <CardContent className="p-0">
-            <div className="divide-y divide-border">
-              {renderCompetitionMatches(competitionId, matches, expandedSubGroups, setExpandedSubGroups)}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+        return (
+          <Collapsible
+            key={competitionId}
+            open={isCompExpanded}
+            onOpenChange={(open) => {
+              setExpandedCompetitions((prev) => {
+                const next = new Set(prev)
+                if (open) next.add(competitionId)
+                else next.delete(competitionId)
+                return next
+              })
+            }}
+          >
+            <Card className="bg-card border-border overflow-hidden py-0 gap-0">
+              {/* Competition Header */}
+              <CollapsibleTrigger asChild>
+                <div className="bg-primary/10 px-4 py-3 border-b border-border flex items-center justify-between cursor-pointer hover:bg-primary/15 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <ChevronDown
+                      className={cn(
+                        'w-5 h-5 text-primary transition-transform',
+                        !isCompExpanded && '-rotate-90'
+                      )}
+                    />
+                    <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center">
+                      <span className="text-primary font-bold text-sm">
+                        {name.substring(0, 2).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-foreground">{name}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {matches.length} partidos
+                    </Badge>
+                  </div>
+                </div>
+              </CollapsibleTrigger>
+
+              {/* Matches grouped by matchday/phase/group */}
+              <CollapsibleContent>
+                <CardContent className="p-0">
+                  <div className="divide-y divide-border">
+                    {renderCompetitionMatches(competitionId, matches, expandedSubGroups, setExpandedSubGroups)}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )
+      })}
 
       {/* Pagination Controls */}
       {allMatches.length > PAGE_SIZE_OPTIONS[0] && (

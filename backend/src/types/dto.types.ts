@@ -126,7 +126,7 @@ export type MatchListDTO = {
 
 export type PlayerDTO = {
   id: string
-  name: string
+  fullName: string
   birthdate: string
   actualClubId: string | null
   ownerClubId: string | null
@@ -162,7 +162,7 @@ export type EventDTO = {
   type: string
   player: {
     id: string
-    name: string
+    fullName: string
     jerseyNumber: number | null
   }
   club: {
@@ -248,7 +248,7 @@ export type TransferDTO = {
   completedAt: Date | null
   player?: {
     id: string
-    name: string
+    fullName: string
     overall: number | null
     position?: string
     isKempesita?: boolean
@@ -292,7 +292,7 @@ export type TransferPlayerPaymentDTO = {
   valuationAmount: number
   player?: {
     id: string
-    name: string
+    fullName: string
     overall: number | null
     position?: string
   }

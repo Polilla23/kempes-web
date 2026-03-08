@@ -23,7 +23,7 @@
     "error": "Error al eliminar jugador"
   },
   "fields": {
-    "name": "Nombre",
+    "fullName": "Nombre Completo",
     "position": "Posición",
     "club": "Club",
     "number": "Número",
@@ -47,7 +47,7 @@
     "shirtNumber": "Número de Camiseta",
     "activeStatus": "Estado Activo",
     "activeDescription": "Permitir que este jugador participe en partidos",
-    "name": "Nombre",
+    "fullName": "Nombre Completo",
     "dateOfBirth": "Fecha de nacimiento",
     "overall": "Overall (0-99)",
     "salary": "Salario",
@@ -59,12 +59,12 @@
     "isActive": "Está Activo"
   },
   "placeholders": {
-    "playerName": "Ingrese nombre del jugador",
+    "playerName": "Ingrese nombre completo del jugador",
     "selectPosition": "Seleccionar posición",
     "selectClub": "Seleccionar club",
     "shirtNumber": "Ingrese número de camiseta (opcional)",
     "noClub": "Sin club asignado",
-    "enterPlayerName": "Ingrese nombre del jugador",
+    "enterPlayerName": "Ingrese nombre completo del jugador",
     "pickDate": "Seleccione una fecha",
     "selectOwnerClub": "Seleccione club dueño",
     "selectActualClub": "Seleccione club actual",

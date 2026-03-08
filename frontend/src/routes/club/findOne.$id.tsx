@@ -132,10 +132,10 @@ function ClubProfilePage() {
                         <div key={p.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={p.avatar} />
-                            <AvatarFallback className="text-xs">{p.name?.split(' ').map((n: string) => n.charAt(0)).join('')}</AvatarFallback>
+                            <AvatarFallback className="text-xs">{p.fullName?.split(' ').map((n: string) => n.charAt(0)).join('')}</AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{p.name?.split(' ').slice(-1)[0]}</p>
+                            <p className="text-sm font-medium truncate">{p.fullName?.split(' ').slice(-1)[0]}</p>
                             <p className="text-xs text-muted-foreground">{p.overall}</p>
                           </div>
                         </div>
@@ -166,9 +166,9 @@ function ClubProfilePage() {
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-6 w-6">
                                   <AvatarImage src={p.avatar} />
-                                  <AvatarFallback className="text-xs">{p.name?.charAt(0)}</AvatarFallback>
+                                  <AvatarFallback className="text-xs">{p.fullName?.charAt(0)}</AvatarFallback>
                                 </Avatar>
-                                {p.name}
+                                {p.fullName}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">{p.overall}</TableCell>

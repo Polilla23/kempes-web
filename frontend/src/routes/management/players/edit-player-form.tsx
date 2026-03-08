@@ -49,7 +49,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
   const form = useForm<z.infer<typeof FormSchemas.PlayerSchema>>({
     resolver: zodResolver(FormSchemas.PlayerSchema),
     defaultValues: {
-      name: player.name || '',
+      fullName: player.fullName || '',
       birthdate: player.birthdate ? new Date(player.birthdate) : new Date(),
       ownerClubId: player.ownerClubId || '',
       actualClubId: player.actualClubId || '',
@@ -64,7 +64,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
   useEffect(() => {
     if (player) {
       form.reset({
-        name: player.name || '',
+        fullName: player.fullName || '',
         birthdate: player.birthdate ? new Date(player.birthdate) : new Date(),
         ownerClubId: player.ownerClubId || '',
         actualClubId: player.actualClubId || '',
@@ -81,7 +81,7 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
       setVerificationStatus('loading')
 
       const updateData = {
-        name: values.name || '',
+        fullName: values.fullName || '',
         birthdate: format(values.birthdate, 'dd/MM/yyyy'),
         ownerClubId: values.ownerClubId,
         actualClubId:
@@ -122,10 +122,10 @@ function EditPlayerForm({ player, clubs, onSuccess, onClose }: EditPlayerFormPro
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="name"
+              name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-medium">{t('labels.name')}</FormLabel>
+                  <FormLabel className="font-medium">{t('labels.fullName')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-11">

@@ -54,7 +54,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
   const form = useForm<z.infer<typeof FormSchemas.PlayerSchema>>({
     resolver: zodResolver(FormSchemas.PlayerSchema),
     defaultValues: {
-      name: '',
+      fullName: '',
       birthdate: new Date(),
       ownerClubId: '',
       actualClubId: '',
@@ -95,7 +95,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
   async function onSubmit(values: z.infer<typeof FormSchemas.PlayerSchema>) {
     try {
       const newPlayer: RegisterPlayerFormData = {
-        name: values.name,
+        fullName: values.fullName,
         birthdate: format(values.birthdate, 'dd/MM/yyyy'),
         ownerClubId: values.ownerClubId === 'none' ? '' : values.ownerClubId,
         actualClubId: values.actualClubId === 'none' ? '' : values.actualClubId,
@@ -133,7 +133,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
   }
 
   const handleDownloadExampleCSV = () => {
-    const csvContent = 'name;birthdate;actualClubId;ownerClubId;overall;sofifaId;transfermarktId;isActive\nJuan Perez;15/03/1995;club-uuid-here;club-uuid-here;75;;;true\nCarlos Lopez;22/08/1998;club-uuid-here;;60;;;true'
+    const csvContent = 'fullName;birthdate;actualClubId;ownerClubId;overall;sofifaId;transfermarktId;isActive\nJuan Perez;15/03/1995;club-uuid-here;club-uuid-here;75;;;true\nCarlos Lopez;22/08/1998;club-uuid-here;;60;;;true'
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -176,10 +176,10 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="name"
+                      name="fullName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-medium">{t('labels.name')}</FormLabel>
+                          <FormLabel className="font-medium">{t('labels.fullName')}</FormLabel>
                           <FormControl>
                             <Input
                               required
@@ -413,7 +413,7 @@ const CreatePlayerForm = ({ fetchPlayers }: CreatePlayerFormProps) => {
                         {t('csv.formatDescription')}
                       </p>
                       <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
-                        <li>name (required)</li>
+                        <li>fullName (required)</li>
                         <li>birthdate (DD/MM/YYYY format)</li>
                         <li>ownerClubId (optional)</li>
                         <li>actualClubId (optional)</li>

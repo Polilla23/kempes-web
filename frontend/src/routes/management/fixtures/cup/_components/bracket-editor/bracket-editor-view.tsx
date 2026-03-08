@@ -9,6 +9,8 @@ interface BracketEditorViewProps {
   selectedTeamId: string | null
   onSlotClick: (slotId: string) => void
   onRemove: (slotId: string) => void
+  /** Set of slotIds where the team conflicts with its opponent (same group) */
+  sameGroupConflicts?: Set<string>
 }
 
 // Constantes de diseño
@@ -34,6 +36,7 @@ export function BracketEditorView({
   selectedTeamId,
   onSlotClick,
   onRemove,
+  sameGroupConflicts,
 }: BracketEditorViewProps) {
   const { slots, byePositions, rounds } = structure
   const matchesInFirstRound = structure.bracketSize / 2
@@ -144,6 +147,10 @@ export function BracketEditorView({
                     selectedTeamId={selectedTeamId}
                     onSlotClick={onSlotClick}
                     onRemove={onRemove}
+                    hasSameGroupConflict={
+                      !!sameGroupConflicts?.has(match.homeSlot.id) ||
+                      !!sameGroupConflicts?.has(match.awaySlot.id)
+                    }
                   />
                 </div>
               ))}
@@ -281,6 +288,7 @@ interface EditableMatchCardProps {
   selectedTeamId: string | null
   onSlotClick: (slotId: string) => void
   onRemove: (slotId: string) => void
+  hasSameGroupConflict?: boolean
 }
 
 function EditableMatchCard({
@@ -292,12 +300,15 @@ function EditableMatchCard({
   selectedTeamId,
   onSlotClick,
   onRemove,
+  hasSameGroupConflict,
 }: EditableMatchCardProps) {
   return (
     <div
       className={cn(
         'rounded-lg border overflow-hidden h-full',
-        isBye ? 'border-amber-500/50 bg-amber-500/5' : 'border-border bg-card'
+        hasSameGroupConflict
+          ? 'border-red-500 bg-red-50/50 ring-1 ring-red-300'
+          : isBye ? 'border-amber-500/50 bg-amber-500/5' : 'border-border bg-card'
       )}
     >
       {/* Home Team */}
@@ -307,6 +318,7 @@ function EditableMatchCard({
         isSelecting={!!selectedTeamId}
         onSlotClick={onSlotClick}
         onRemove={onRemove}
+        isConflict={hasSameGroupConflict}
       />
 
       {/* Divider */}
@@ -325,6 +337,7 @@ function EditableMatchCard({
           isSelecting={!!selectedTeamId}
           onSlotClick={onSlotClick}
           onRemove={onRemove}
+          isConflict={hasSameGroupConflict}
         />
       )}
     </div>
@@ -338,19 +351,26 @@ interface ClickableSlotProps {
   isSelecting: boolean
   onSlotClick: (slotId: string) => void
   onRemove: (slotId: string) => void
+  isConflict?: boolean
 }
 
-function ClickableSlot({ slot, team, isSelecting, onSlotClick, onRemove }: ClickableSlotProps) {
+function ClickableSlot({ slot, team, isSelecting, onSlotClick, onRemove, isConflict }: ClickableSlotProps) {
   // Si tiene equipo asignado
   if (team) {
     return (
-      <div className="h-[29px] flex items-center gap-1 px-2 bg-primary/10 group">
+      <div className={cn(
+        'h-[29px] flex items-center gap-1 px-2 group',
+        isConflict ? 'bg-red-100' : 'bg-primary/10'
+      )}>
         {team.logo ? (
           <img src={team.logo} alt={team.name} className="h-4 w-4 object-contain rounded" />
         ) : (
           <Users className="h-4 w-4 text-muted-foreground" />
         )}
-        <span className="text-[11px] font-medium flex-1 truncate">{team.name}</span>
+        <span className={cn(
+          'text-[11px] font-medium flex-1 truncate',
+          isConflict && 'text-red-600'
+        )}>{team.name}</span>
         <button
           onClick={(e) => {
             e.stopPropagation()

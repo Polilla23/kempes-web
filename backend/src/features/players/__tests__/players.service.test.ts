@@ -52,13 +52,13 @@ describe('PlayerService', () => {
     it('debería crear un jugador con valores por defecto cuando solo se envían campos básicos', async () => {
       // Arrange (preparar)
       const input: CreateBasicPlayerInput = {
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
       }
 
       const expectedPlayer: Player = {
         id: '123',
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
         actualClubId: 'null',
         ownerClubId: 'null',
@@ -80,7 +80,7 @@ describe('PlayerService', () => {
       expect(result).toEqual(expectedPlayer)
       expect(mockPlayerRepository.save).toHaveBeenCalledTimes(1)
       expect(mockPlayerRepository.save).toHaveBeenCalledWith({
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: expect.any(Date),
         overall: 50,
         salary: 100000,
@@ -94,7 +94,7 @@ describe('PlayerService', () => {
     it('debería usar los valores proporcionados en lugar de los defaults', async () => {
       // Arrange
       const input: CreateBasicPlayerInput = {
-        name: 'Cristiano Ronaldo',
+        fullName: 'Cristiano Ronaldo',
         birthdate: new Date('1985-02-05'),
         overall: 91,
         sofifaId: '20801',
@@ -104,7 +104,7 @@ describe('PlayerService', () => {
 
       const expectedPlayer: Player = {
         id: '456',
-        name: 'Cristiano Ronaldo',
+        fullName: 'Cristiano Ronaldo',
         birthdate: new Date('1985-02-05'),
         actualClubId: 'club-123',
         ownerClubId: 'null',
@@ -125,7 +125,7 @@ describe('PlayerService', () => {
       // Assert
       expect(result).toEqual(expectedPlayer)
       expect(mockPlayerRepository.save).toHaveBeenCalledWith({
-        name: 'Cristiano Ronaldo',
+        fullName: 'Cristiano Ronaldo',
         birthdate: expect.any(Date),
         overall: 91,
         salary: 100000,
@@ -144,7 +144,7 @@ describe('PlayerService', () => {
       const mockPlayers: Player[] = [
         {
           id: '1',
-          name: 'Lionel Messi',
+          fullName: 'Lionel Messi',
           birthdate: new Date('1987-06-24'),
           actualClubId: 'club-1',
           ownerClubId: 'null',
@@ -177,7 +177,7 @@ describe('PlayerService', () => {
 
       const existingPlayer: Player = {
         id: playerId,
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
         actualClubId: 'club-1',
         ownerClubId: 'null',
@@ -223,7 +223,7 @@ describe('PlayerService', () => {
       const playerId = '123'
       const deletedPlayer: Player = {
         id: playerId,
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
         actualClubId: 'club-1',
         ownerClubId: 'null',
@@ -258,7 +258,7 @@ describe('PlayerService', () => {
     it('debería lanzar ValidationError con birthdate inválida', async () => {
       // Arrange
       const input: CreateBasicPlayerInput = {
-        name: 'Test Player',
+        fullName: 'Test Player',
         birthdate: new Date('invalid-date'),
       }
 
@@ -296,7 +296,7 @@ describe('PlayerService', () => {
 
     it('debería lanzar CSV error cuando faltan campos requeridos', async () => {
       // Arrange
-      const invalidCSV = `name;birthdate
+      const invalidCSV = `fullName;birthdate
 Lionel Messi;24/06/1987`
 
       // Act & Assert (falta actualClubId y overall)
@@ -305,7 +305,7 @@ Lionel Messi;24/06/1987`
 
     it('debería lanzar CSV error con formato de fecha inválido', async () => {
       // Arrange
-      const invalidCSV = `name;birthdate;actualClubId;overall
+      const invalidCSV = `fullName;birthdate;actualClubId;overall
 Lionel Messi;fecha-invalida;club-123;90`
 
       // Act & Assert
@@ -316,7 +316,7 @@ Lionel Messi;fecha-invalida;club-123;90`
   describe('createPlayer con avatar file', () => {
     it('debería subir avatar y crear jugador con la URL', async () => {
       const input: CreateBasicPlayerInput & { avatarFile?: any } = {
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
         avatarFile: {
           buffer: Buffer.from('fake-image'),
@@ -340,7 +340,7 @@ Lionel Messi;fecha-invalida;club-123;90`
 
       const expectedPlayer: Player = {
         id: '123',
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
         actualClubId: 'null',
         ownerClubId: 'null',
@@ -373,7 +373,7 @@ Lionel Messi;fecha-invalida;club-123;90`
       const playerId = '123'
       const existingPlayer: Player = {
         id: playerId,
-        name: 'Lionel Messi',
+        fullName: 'Lionel Messi',
         birthdate: new Date('1987-06-24'),
         actualClubId: 'null',
         ownerClubId: 'null',

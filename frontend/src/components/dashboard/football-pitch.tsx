@@ -64,9 +64,9 @@ function PlayerCard({ player }: PlayerCardProps) {
     <div className="flex flex-col items-center gap-1 group cursor-default">
       <div className="relative">
         <Avatar className="h-10 w-10 border-2 border-white/30 shadow-lg">
-          <AvatarImage src={player.avatar ?? undefined} alt={player.name} />
+          <AvatarImage src={player.avatar ?? undefined} alt={player.fullName} />
           <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
-            {player.name.slice(0, 2).toUpperCase()}
+            {player.fullName.slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <span className="absolute -bottom-1 -right-1 bg-black/80 text-white text-[9px] font-bold rounded px-1 leading-tight">
@@ -75,7 +75,7 @@ function PlayerCard({ player }: PlayerCardProps) {
       </div>
       <div className="bg-black/50 backdrop-blur-sm rounded px-1.5 py-0.5 max-w-[72px]">
         <p className="text-white text-[10px] font-semibold truncate text-center leading-tight">
-          {player.name}
+          {player.fullName}
         </p>
         {player.position && (
           <p className="text-white/60 text-[9px] text-center leading-tight">{player.position}</p>

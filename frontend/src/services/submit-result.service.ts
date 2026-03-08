@@ -24,7 +24,7 @@ export interface PendingMatch {
 
 export interface ClubPlayer {
   id: string
-  name: string
+  fullName: string
   overall: number | null
 }
 

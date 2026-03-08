@@ -65,11 +65,11 @@ export function SquadTable({ players, isLoading }: SquadTableProps) {
                         <Avatar className="h-7 w-7 flex-shrink-0">
                           <AvatarImage src={player.avatar ?? undefined} />
                           <AvatarFallback className="text-[10px] font-bold">
-                            {player.name.slice(0, 2).toUpperCase()}
+                            {player.fullName.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{player.name}</p>
+                          <p className="text-sm font-medium truncate">{player.fullName}</p>
                           {player.isKempesita && (
                             <Badge variant="secondary" className="text-[9px] h-4 px-1">Kempesita</Badge>
                           )}

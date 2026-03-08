@@ -263,18 +263,17 @@ export interface BracketTeamPlacement {
 }
 
 /**
- * Distribuye los BYEs de forma balanceada entre llave superior e inferior
+ * Distribuye los BYEs de forma balanceada entre llave superior e inferior,
+ * asegurando que dos BYEs nunca alimenten el mismo partido de la ronda siguiente.
  *
- * Para un bracket, la "llave superior" son los primeros matchCount/2 partidos
- * y la "llave inferior" son los últimos matchCount/2 partidos.
+ * Los partidos de primera ronda se agrupan en pares (1,2), (3,4), (5,6)...
+ * donde cada par alimenta un partido de la siguiente ronda.
+ * Dos BYEs en el mismo par causan que los equipos con BYE se crucen inmediatamente.
  *
- * Los BYEs se distribuyen equitativamente:
- * - Si hay 2 BYEs: 1 arriba, 1 abajo
- * - Si hay 6 BYEs: 3 arriba, 3 abajo
- * - Si hay 5 BYEs: 3 arriba, 2 abajo (o viceversa)
- *
- * Dentro de cada mitad, los BYEs se colocan al final para que los equipos
- * con BYE avancen a semifinales en posiciones predecibles.
+ * Algoritmo:
+ * 1. Split equitativo entre mitad superior e inferior
+ * 2. En cada mitad, colocar BYEs desde los extremos hacia adentro (máxima separación)
+ * 3. Nunca poner 2 BYEs en el mismo par (posiciones 2k-1 y 2k)
  *
  * @param matchCount - Cantidad de partidos en la primera ronda
  * @param byeCount - Cantidad de BYEs a distribuir
@@ -283,7 +282,6 @@ export interface BracketTeamPlacement {
 export function distributeByesBalanced(matchCount: number, byeCount: number): number[] {
   if (byeCount === 0) return []
   if (byeCount >= matchCount) {
-    // Todos son BYEs
     return Array.from({ length: matchCount }, (_, i) => i + 1)
   }
 
@@ -291,23 +289,67 @@ export function distributeByesBalanced(matchCount: number, byeCount: number): nu
   const byesInUpperHalf = Math.ceil(byeCount / 2)
   const byesInLowerHalf = Math.floor(byeCount / 2)
 
-  const byePositions: number[] = []
+  // Coloca BYEs desde los extremos hacia adentro dentro de un rango [start, end]
+  // Alternando: primero el extremo exterior, luego el interior, etc.
+  // Intenta no poner 2 BYEs en el mismo par (2k-1, 2k).
+  // Si hay más BYEs que pares, el overflow se coloca en los pares restantes.
+  function spreadFromEdges(start: number, end: number, count: number, fromTop: boolean): number[] {
+    if (count === 0) return []
+    const rangeSize = end - start + 1
+    const numPairs = rangeSize / 2
+    const usedPairs = new Set<number>()
+    const positions: number[] = []
 
-  // BYEs en llave superior: posiciones al final de la primera mitad
-  // Ej: si hay 4 partidos arriba y 1 BYE, el BYE va en posición 2 (partido 2)
-  // Para que el ganador de QF1 se cruce con el BYE en SF1
-  for (let i = 0; i < byesInUpperHalf; i++) {
-    byePositions.push(halfMatches - i)
+    let lo = 0
+    let hi = numPairs - 1
+    let pickOuter = true
+
+    // Primera pasada: 1 BYE por par, desde los extremos
+    while (positions.length < count && lo <= hi) {
+      if (fromTop) {
+        if (pickOuter) {
+          positions.push(start + lo * 2)
+          usedPairs.add(lo)
+          lo++
+        } else {
+          positions.push(start + hi * 2 + 1)
+          usedPairs.add(hi)
+          hi--
+        }
+      } else {
+        if (pickOuter) {
+          positions.push(start + hi * 2 + 1)
+          usedPairs.add(hi)
+          hi--
+        } else {
+          positions.push(start + lo * 2)
+          usedPairs.add(lo)
+          lo++
+        }
+      }
+      pickOuter = !pickOuter
+    }
+
+    // Segunda pasada: si sobran BYEs, llenar la otra posición de pares ya usados
+    if (positions.length < count) {
+      for (let p = 0; p < numPairs && positions.length < count; p++) {
+        if (usedPairs.has(p)) {
+          // Agregar la posición complementaria del par
+          const pos1 = start + p * 2
+          const pos2 = start + p * 2 + 1
+          if (!positions.includes(pos1)) positions.push(pos1)
+          else if (!positions.includes(pos2)) positions.push(pos2)
+        }
+      }
+    }
+
+    return positions
   }
 
-  // BYEs en llave inferior: posiciones al inicio de la segunda mitad
-  // Ej: si hay 4 partidos abajo y 1 BYE, el BYE va en posición 3 (partido 3)
-  // Para que el BYE se cruce con el ganador de QF4 en SF2
-  for (let i = 0; i < byesInLowerHalf; i++) {
-    byePositions.push(halfMatches + 1 + i)
-  }
+  const upperPositions = spreadFromEdges(1, halfMatches, byesInUpperHalf, true)
+  const lowerPositions = spreadFromEdges(halfMatches + 1, matchCount, byesInLowerHalf, false)
 
-  return byePositions.sort((a, b) => a - b)
+  return [...upperPositions, ...lowerPositions].sort((a, b) => a - b)
 }
 
 /**

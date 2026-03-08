@@ -404,7 +404,7 @@ function FixturesPage() {
                       {selectedMatchCovids.homeTeamCovids.map((player) => (
                         <TableRow key={player.id}>
                           <TableCell>
-                            {player.name}
+                            {player.fullName}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline">{player.overall}</Badge>
@@ -438,7 +438,7 @@ function FixturesPage() {
                       {selectedMatchCovids.awayTeamCovids.map((player) => (
                         <TableRow key={player.id}>
                           <TableCell>
-                            {player.name}
+                            {player.fullName}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant="outline">{player.overall}</Badge>

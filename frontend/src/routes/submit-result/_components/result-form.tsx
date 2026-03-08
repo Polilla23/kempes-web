@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Upload, Plus, Minus, AlertCircle, ImageIcon, Star, Loader2 } from 'lucide-react'
+import { Upload, Plus, Minus, AlertCircle, ImageIcon, Star, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import { EventsColumn, type EventRow, type EventTypeOption } from './events-column'
@@ -26,7 +26,7 @@ interface ResultFormProps {
   redCardTypeId: string | null
   injuryTypeId: string | null
   mvpPlayerId: string | null
-  onMvpChange: (playerId: string) => void
+  onMvpChange: (playerId: string | null) => void
   screenshotFile: File | null
   onScreenshotChange: (file: File | null) => void
   isSubmitting: boolean
@@ -289,14 +289,29 @@ export function ResultForm({
             <Label className="text-foreground font-semibold">{t('mvp.title')}</Label>
           </div>
           <p className="text-xs text-muted-foreground">{t('mvp.description')}</p>
-          <PlayerCombobox
-            groups={mvpPlayerGroups}
-            players={[]}
-            value={mvpPlayerId}
-            onSelect={onMvpChange}
-            placeholder={t('mvp.selectPlayer')}
-            searchPlaceholder={t('mvp.selectPlayer')}
-          />
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <PlayerCombobox
+                groups={mvpPlayerGroups}
+                players={[]}
+                value={mvpPlayerId}
+                onSelect={onMvpChange}
+                placeholder={t('mvp.selectPlayer')}
+                searchPlaceholder={t('mvp.selectPlayer')}
+              />
+            </div>
+            {mvpPlayerId && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                onClick={() => onMvpChange(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           {!mvpPlayerId && (
             <p className="text-xs text-destructive">{t('mvp.required')}</p>
           )}

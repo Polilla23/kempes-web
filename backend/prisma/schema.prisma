@@ -60,7 +60,7 @@ model Club {
 
 model Player {
   id                String              @id @default(uuid())
-  name              String
+  fullName          String              @map("full_name")
   birthdate         DateTime
   actualClubId      String              @default("null") @map("actual_club_id")
   ownerClubId       String              @default("null") @map("owner_club_id")

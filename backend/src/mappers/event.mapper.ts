@@ -22,7 +22,7 @@ export class EventMapper {
       type: event.type.name.toString(),
       player: {
         id: event.player.id,
-        name: event.player.name,
+        fullName: event.player.fullName,
         jerseyNumber: null,
       },
       club: {

@@ -1,210 +1,167 @@
-# Kempes Master League - Convenciones del Proyecto
+# CLAUDE.md
 
-Sistema de gestión de ligas de fútbol con soporte para ligas multi-tier, copas con fases de grupos y eliminatorias.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Stack Tecnológico
+## Project Overview
 
-### Backend
-- **Framework**: Fastify v5 + TypeScript
-- **ORM**: Prisma con PostgreSQL
-- **DI**: Awilix (inyección de dependencias)
-- **Auth**: JWT con cookies httpOnly
-- **Validación**: Zod + Validator utility
+Kempes Master League - Football league management system with multi-tier leagues, cups with group stages and knockouts. Monorepo with separate `backend/` and `frontend/` directories.
 
-### Frontend
-- **Framework**: React 19 + TypeScript
-- **Routing**: TanStack Router (file-based)
-- **UI**: Shadcn UI + Radix UI + Tailwind CSS
-- **Forms**: React Hook Form + Zod
-- **Tablas**: TanStack Table
-- **i18n**: i18next (ES/EN)
+## Commands
 
-## Arquitectura Backend
+### Development (run from root)
+```bash
+npm run dev              # Backend + Frontend concurrently
+npm run dev:backend      # Solo backend (localhost:3000)
+npm run dev:frontend     # Solo frontend (localhost:5173)
+```
 
-### Estructura de carpetas
+### Backend (run from backend/)
+```bash
+npm run dev              # Start with ts-node + nodemon
+npm run test             # Run Jest tests
+npm run test:watch       # Jest in watch mode
+npm run test:coverage    # Jest with coverage
+npm run seed             # Seed database
+```
+
+### Frontend (run from frontend/)
+```bash
+npm run dev              # Vite dev server
+npm run build            # TypeScript check + Vite build
+npm run lint             # ESLint (v9 flat config)
+npm run preview          # Preview production build
+```
+
+### Database (run from root)
+```bash
+npm run migrate          # Run Prisma migrations
+npm run generate         # Regenerate Prisma client
+```
+
+### Running a single backend test
+```bash
+cd backend && npx jest --testPathPattern="clubs" --no-coverage
+```
+
+### API Docs
+Swagger UI available at `http://localhost:3000/apidocs` when backend is running.
+
+## Stack
+
+- **Backend**: Fastify v5 + TypeScript, Prisma + PostgreSQL, Awilix DI, JWT (httpOnly cookies), Zod validation
+- **Frontend**: React 19 + TypeScript, TanStack Router (file-based), Shadcn/Radix UI + Tailwind CSS, React Hook Form + Zod, i18next (ES/EN)
+
+## Architecture
+
+### Backend: Controller → Service → Repository
+
 ```
 backend/src/features/[feature]/
-├── [feature].controller.ts    # Handlers HTTP
-├── [feature].service.ts       # Lógica de negocio
-├── [feature].repository.ts    # Acceso a datos
-├── [feature].routes.ts        # Definición de rutas
-├── [feature].schema.ts        # Schemas para Swagger
-├── [feature].errors.ts        # Errores personalizados
+├── [feature].controller.ts    # HTTP handlers, validates input, uses mapper for response
+├── [feature].service.ts       # Business logic
+├── [feature].repository.ts    # Data access (Prisma)
+├── [feature].routes.ts        # Route definitions
+├── [feature].schema.ts        # Swagger schemas
+├── [feature].errors.ts        # Custom errors
 └── interfaces/
     └── I[Feature]Repository.ts
 ```
 
-### Patrón de capas
-1. **Controller**: Valida inputs, llama al service, transforma respuesta con mapper
-2. **Service**: Lógica de negocio, usa repository para datos
-3. **Repository**: Implementa interface, usa Prisma para queries
+**Key wiring files:**
+- DI Container: `backend/src/features/core/container/index.ts` — register repository, controller, service as singletons
+- Routes registry: `backend/src/features/api/routes.ts` — all routes under `/api/v1` prefix
+- Mappers: `backend/src/mappers/[entity].mapper.ts` — static `toDTO()`, `toDTOArray()`, `toPaginatedDTO()` methods
+- Core barrel export: `backend/src/features/core/index.ts` — re-exports Response helpers, errors, env config, mappers, types
 
-### Convenciones de naming
+### Backend Conventions
 
-| Elemento | Convención | Ejemplo |
-|----------|------------|---------|
-| Clases | PascalCase | `ClubController`, `ClubService` |
-| Interfaces | Prefijo `I` | `IClubRepository` |
-| Métodos | camelCase | `findAllClubs`, `createClub` |
-| Errores | `[Feature]Error` | `ClubNotFoundError` |
-| Archivos | kebab-case | `clubs.controller.ts` |
+**Naming:**
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Classes | PascalCase | `ClubController` |
+| Interfaces | `I` prefix | `IClubRepository` |
+| Methods | camelCase | `findAllClubs` |
+| Errors | `[Feature]Error` | `ClubNotFoundError` |
+| Files | kebab-case | `clubs.controller.ts` |
 
-### Validación
-Usar el utility `Validator` de `@/features/utils/validation`:
+**Validation** — use `Validator` from `@/features/utils/validation`:
 ```typescript
-import { Validator } from '@/features/utils/validation'
-
 const validId = Validator.uuid(id)
 const validName = Validator.string(name, 1, 100)
-const validEmail = Validator.email(email)
-const validUrl = Validator.url(logo)
 ```
 
-### Respuestas
-Usar helpers de `@/features/core` (Response):
+**Responses** — use helpers from `@/features/core`:
 ```typescript
 import { Response } from '@/features/core'
-
 return Response.success(reply, data, 'Message')
 return Response.created(reply, data, 'Created')
 return Response.notFound(reply, 'Entity', id)
-return Response.error(reply, 'ERROR_CODE', 'Message', 500, details)
-return Response.validation(reply, 'Validation error', 'Details')
 ```
 
-### Mappers
-Ubicación: `backend/src/mappers/[entity].mapper.ts`
-```typescript
-export class ClubMapper {
-  static toDTO(club: Club): ClubDTO { ... }
-  static toDTOArray(clubs: Club[]): ClubDTO[] { ... }
-  static toPaginatedDTO(...): PaginatedResponse<ClubDTO> { ... }
-}
-```
+**Error classes** (from `@/features/core`): BadRequestError, ValidationError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError, InternalServerError.
 
-### Registro en DI Container
-Archivo: `backend/src/features/core/container/index.ts`
-```typescript
-// Agregar imports
-import { FeatureRepository } from '@/features/[feature]/[feature].repository'
-import { FeatureController } from '@/features/[feature]/[feature].controller'
-import { FeatureService } from '@/features/[feature]/[feature].service'
+### Backend Test Configuration
 
-// Registrar en container
-container.register({
-  featureRepository: asClass(FeatureRepository).singleton(),
-  featureController: asClass(FeatureController).singleton(),
-  featureService: asClass(FeatureService).singleton(),
-})
-```
+- Framework: Jest with ts-jest
+- Tests live in `backend/src/features/[feature]/__tests__/*.test.ts`
+- Path alias `@/` mapped to `<rootDir>/src/`
+- Coverage excludes `.d.ts`, `.interface.ts`, `server.ts`
 
-### Registro de rutas
-Archivo: `backend/src/features/api/routes.ts`
-```typescript
-import { featureRoutes } from '@/features/[feature]/[feature].routes'
+### Frontend Architecture
 
-instance.register(featureRoutes, { prefix: '/[features]' })
-```
-
-## Arquitectura Frontend
-
-### Estructura de carpetas
 ```
 frontend/src/
-├── routes/                    # File-based routing (TanStack)
-│   └── management/[feature]/  # Páginas de gestión
-├── services/                  # API services
-│   └── [feature].service.ts
-├── components/
-│   ├── ui/                    # Shadcn components
-│   └── table/                 # Data table components
-├── context/                   # React Context
-├── i18n/
-│   └── locales/
-│       ├── en/[feature].json
-│       └── es/[feature].json
-└── types/
+├── routes/          # TanStack Router (file-based, auto code-splitting)
+├── services/        # API service layer (static methods wrapping fetch)
+├── components/ui/   # Shadcn components
+├── components/table/# Data table components
+├── context/         # React Context (UserProvider, ThemeProvider)
+├── lib/             # Utilities (form-schemas.ts, utils.ts)
+├── i18n/locales/    # en/ and es/ JSON translation files
+└── types/           # Shared TypeScript types
 ```
 
-### i18n - Traducciones
-Estructura de archivos de traducción:
-```json
-{
-  "title": "Gestión de [Feature]",
-  "create": {
-    "title": "Crear Nuevo [Entity]",
-    "description": "Agregar un nuevo [entity] al sistema",
-    "button": "Nuevo [Entity]",
-    "success": "¡[Entity] creado exitosamente!",
-    "error": "Error al crear [entity]"
-  },
-  "edit": { ... },
-  "delete": { ... },
-  "fields": { ... },
-  "labels": { ... },
-  "placeholders": { ... },
-  "buttons": { ... },
-  "table": { ... }
-}
-```
+**Vite config** (`frontend/vite.config.ts`): Uses `@tanstack/router-plugin/vite` with autoCodeSplitting. Route file ignore patterns exclude `_components/`, form files, and layout files from route generation.
 
-Registrar en `frontend/src/i18n/config.ts`:
-```typescript
-import enFeature from './locales/en/[feature].json'
-import esFeature from './locales/es/[feature].json'
+**API service pattern** (`frontend/src/services/api.ts`):
+- Base URL: `http://localhost:3000`, credentials: 'include'
+- Methods: `api.get<T>()`, `api.post<T>()`, `api.patch<T>()`, `api.delete<T>()`
+- 401 responses trigger `onUnauthorized` callback
+- Services are static classes wrapping these calls, e.g. `ClubService.getAll()`
 
-// En resources:
-en: { ..., feature: enFeature },
-es: { ..., feature: esFeature },
+**i18n** — register new namespaces in `frontend/src/i18n/config.ts` with imports for both `en` and `es` locales.
 
-// En ns array:
-ns: [..., 'feature'],
-```
+**Root layout** (`frontend/src/routes/__root.tsx`): Wraps app in UserProvider → ThemeProvider → SidebarProvider.
 
-## Base de Datos (Prisma)
+## Database (Prisma)
 
-### Convenciones del schema
-- **IDs**: UUID con `@id @default(uuid())`
-- **Nombres de campo**: camelCase en código, snake_case en DB con `@map()`
-- **Relaciones**: Usar `onDelete: Cascade` donde corresponda
-- **Índices**: En campos de FK frecuentemente consultados
-- **Enums**: Para estados y tipos fijos
+Schema: `backend/prisma/schema.prisma`
 
-### Ejemplo de modelo
-```prisma
-model Feature {
-  id        String   @id @default(uuid())
-  name      String   @unique
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
+**Conventions:**
+- IDs: UUID with `@id @default(uuid())`
+- Field names: camelCase in code, snake_case in DB with `@map()`
+- Table names: plural with `@@map("table_name")`
+- Relations: `onDelete: Cascade` where appropriate
 
-  @@map("features")
-}
-```
+**TypeScript path alias:** `@/` → `backend/src/` (configured in tsconfig.json and jest.config.js)
 
-## Archivos de Referencia
+## Environment Variables
 
-Para crear nuevas features, usar como ejemplo:
-- **Backend completo**: `backend/src/features/clubs/`
-- **DI Container**: `backend/src/features/core/container/index.ts`
-- **Routes registry**: `backend/src/features/api/routes.ts`
+Backend `.env` requires:
+- `DATABASE_URL` — PostgreSQL connection string
+- `JWT_SECRET` — minimum 32 chars
+- `FASTIFY_COOKIE_SECRET` — minimum 16 chars
+- `FRONT_URL`, `BACK_URL` — CORS origins
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` — file storage
+
+Frontend `.env` requires:
+- `VITE_API_URL=http://localhost:3000`
+
+## Reference Files
+
+When creating new features, use as templates:
+- **Backend feature**: `backend/src/features/clubs/`
 - **Mapper**: `backend/src/mappers/club.mapper.ts`
-- **Frontend management**: `frontend/src/routes/management/clubs/`
+- **Frontend page**: `frontend/src/routes/management/clubs/`
 - **Frontend service**: `frontend/src/services/club.service.ts`
 - **i18n**: `frontend/src/i18n/locales/es/clubs.json`
-
-## Comandos útiles
-
-```bash
-# Desarrollo
-npm run dev              # Backend + Frontend concurrentes
-npm run dev:backend      # Solo backend
-npm run dev:frontend     # Solo frontend
-
-# Base de datos
-npm run migrate          # Ejecutar migraciones
-npm run generate         # Regenerar Prisma client
-
-# API Docs
-http://localhost:3000/apidocs  # Swagger UI
-```

@@ -89,7 +89,7 @@ function PlayerManagement() {
     return players.filter((player) => {
       return (
         // Safe string checks with optional chaining and fallbacks
-        (player.name?.toLowerCase() || '').includes(lowerCaseSearch) ||
+        (player.fullName?.toLowerCase() || '').includes(lowerCaseSearch) ||
         (player.birthdate?.toLowerCase() || '').includes(lowerCaseSearch) ||
         // Convert numbers to strings for searching
         (player.overall?.toString() || '').includes(lowerCaseSearch) ||
@@ -129,8 +129,8 @@ function PlayerManagement() {
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor('name', {
-        header: (info) => <DefaultHeader info={info} name={t('fields.name')} type="string" />,
+      columnHelper.accessor('fullName', {
+        header: (info) => <DefaultHeader info={info} name={t('fields.fullName')} type="string" />,
         cell: (info) => info.getValue(),
       }),
       columnHelper.accessor('birthdate', {

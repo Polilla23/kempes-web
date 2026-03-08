@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Users, Trophy, Layers, Calendar } from 'lucide-react'
+import { Users, Trophy, Layers, Calendar, Swords } from 'lucide-react'
 import type {
   FilterState,
   Category,
@@ -123,6 +123,15 @@ export function FixturesFilterBar({
               <Trophy className="w-3.5 h-3.5" />
               Copa
             </Button>
+            <Button
+              variant={filters.selectedType === 'definiciones' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onTypeChange('definiciones')}
+              className="gap-1.5"
+            >
+              <Swords className="w-3.5 h-3.5" />
+              Definiciones
+            </Button>
           </div>
         )}
 
@@ -138,7 +147,11 @@ export function FixturesFilterBar({
                 <div className="flex items-center gap-2">
                   {comp.name}
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                    {comp.format === 'CUP' ? 'Copa' : `Div ${comp.hierarchy || ''}`}
+                    {comp.typeName === 'PROMOTIONS'
+                      ? 'Promo'
+                      : comp.format === 'CUP'
+                        ? 'Copa'
+                        : `Div ${comp.hierarchy || ''}`}
                   </Badge>
                 </div>
               </SelectItem>
@@ -158,6 +171,7 @@ export function FixturesFilterBar({
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="played">Jugados</SelectItem>
             <SelectItem value="pending">Pendientes</SelectItem>
+            <SelectItem value="cancelled">Cancelados</SelectItem>
           </SelectContent>
         </Select>
 

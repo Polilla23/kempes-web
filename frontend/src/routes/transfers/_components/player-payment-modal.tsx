@@ -142,7 +142,7 @@ export function PlayerPaymentModal({
 
     const config: PlayerPaymentConfig = {
       playerId: player.id,
-      playerName: player.name,
+      playerName: player.fullName,
       playerPosition: player.position || undefined,
       overall: player.overall,
       salary: player.salary,
@@ -175,7 +175,7 @@ export function PlayerPaymentModal({
               </div>
               <div>
                 <p className="font-medium text-foreground">
-                  {player.name}
+                  {player.fullName}
                 </p>
                 <div className="flex items-center gap-2 text-sm">
                   <span>OVR: {player.overall || '-'}</span>

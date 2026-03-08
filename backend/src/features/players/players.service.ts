@@ -56,7 +56,7 @@ export class PlayerService {
 
     // Crear objeto completo con valores por defecto solo si no vienen
     const playerData: any = {
-      name: input.name,
+      fullName: input.fullName,
       birthdate: birthdateAsDate,
       overall: overallValue,
       salary: resolvedSalary,
@@ -289,7 +289,7 @@ export class PlayerService {
   }
 
   private transformCSVRecord(record: any): CreatePlayerInput {
-    const requiredFields = ['name', 'birthdate', 'actualClubId', 'overall']
+    const requiredFields = ['fullName', 'birthdate', 'actualClubId', 'overall']
     const missingFields = requiredFields.filter((field) => !record[field])
 
     if (missingFields.length > 0) {
@@ -314,7 +314,7 @@ export class PlayerService {
     }
 
     return {
-      name: validateString(record.name, 1),
+      fullName: validateString(record.fullName, 1),
       birthdate: birthdateAsDate,
       actualClubId: record.actualClubId || '',
       ownerClubId: record.ownerClubId || record.actualClubId || '',

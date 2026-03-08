@@ -12,7 +12,7 @@ export class PlayerMapper {
   ): PlayerDTO {
     return {
       id: player.id,
-      name: player.name,
+      fullName: player.fullName,
       birthdate: player.birthdate.toISOString().split('T')[0],
       actualClubId: player.actualClubId,
       ownerClubId: player.ownerClubId,

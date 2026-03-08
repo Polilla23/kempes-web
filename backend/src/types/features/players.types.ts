@@ -1,5 +1,5 @@
 export type CreatePlayerInput = {
-  name: string
+  fullName: string
   birthdate: Date
   actualClubId: string
   ownerClubId: string
@@ -10,7 +10,7 @@ export type CreatePlayerInput = {
 }
 
 export type CreateBasicPlayerInput = {
-  name: string
+  fullName: string
   birthdate: Date
   actualClubId?: string
   ownerClubId?: string
