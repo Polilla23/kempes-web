@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
@@ -14,12 +14,15 @@ import {
   Save,
   Sparkles,
   AlertTriangle,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { InteractiveStepper } from '@/components/ui/interactive-stepper'
 import { SeasonService } from '@/services/season.service'
+import { cn } from '@/lib/utils'
 import type {
   VerifyCompetitionsResponse,
   PreviewMovementsResponse,
@@ -368,14 +371,101 @@ function Step2Movements({
 
   if (!data) return null
 
-  const getMovementIcon = (type: string) => {
-    if (type === 'CHAMPION') return <Trophy className="h-4 w-4 text-yellow-500" />
-    if (type.includes('PROMOTION')) return <ArrowUp className="h-4 w-4 text-green-500" />
-    if (type.includes('RELEGATION')) return <ArrowDown className="h-4 w-4 text-red-500" />
-    return <Minus className="h-4 w-4 text-gray-500" />
+  // Detect available categories
+  const categories = useMemo(() => {
+    const cats = new Set(data.movements.map(m => m.category))
+    return Array.from(cats).sort() // KEMPESITA before SENIOR alphabetically
+  }, [data.movements])
+
+  const defaultTab = categories.includes('SENIOR') ? 'SENIOR' : categories[0] || 'SENIOR'
+
+  return (
+    <Tabs defaultValue={defaultTab} className="space-y-4">
+      <TabsList>
+        {categories.map(cat => (
+          <TabsTrigger key={cat} value={cat} className="gap-1.5">
+            <Users className="h-3.5 w-3.5" />
+            {cat === 'SENIOR' ? t('advance.movements.mayores') : t('advance.movements.kempesitas')}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      {categories.map(cat => (
+        <TabsContent key={cat} value={cat}>
+          <CategoryMovements movements={data.movements} category={cat} t={t} />
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
+}
+
+function CategoryMovements({
+  movements: allMovements,
+  category,
+  t,
+}: {
+  movements: TeamMovement[]
+  category: string
+  t: (key: string, opts?: any) => string
+}) {
+  const { divisions, transfers, summary } = useMemo(() => {
+    const categoryMovements = allMovements.filter(m => m.category === category)
+
+    const summary = {
+      champions: categoryMovements.filter(m => m.movementType === 'CHAMPION').length,
+      promotions: categoryMovements.filter(m => m.movementType.includes('PROMOTION')).length,
+      relegations: categoryMovements.filter(m => m.movementType.includes('RELEGATION')).length,
+      stayed: categoryMovements.filter(m => m.movementType === 'STAYED').length,
+    }
+
+    // Group by fromLeague, sort by league name (LEAGUE_A < LEAGUE_B < ...)
+    const divisionMap = new Map<string, TeamMovement[]>()
+    categoryMovements.forEach(m => {
+      const key = m.fromLeague
+      if (!divisionMap.has(key)) divisionMap.set(key, [])
+      divisionMap.get(key)!.push(m)
+    })
+
+    const divisions = Array.from(divisionMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, teams]) => ({
+        name,
+        teams: teams.sort((a, b) => a.finalPosition - b.finalPosition),
+      }))
+
+    // Build transfers between adjacent divisions
+    const transfers: { from: string; to: string; descending: TeamMovement[]; ascending: TeamMovement[] }[] = []
+    for (let i = 0; i < divisions.length - 1; i++) {
+      const upper = divisions[i]
+      const lower = divisions[i + 1]
+      transfers.push({
+        from: upper.name,
+        to: lower.name,
+        descending: upper.teams.filter(m => m.movementType.includes('RELEGATION')),
+        ascending: lower.teams.filter(m => m.movementType.includes('PROMOTION')),
+      })
+    }
+
+    return { divisions, transfers, summary }
+  }, [allMovements, category])
+
+  const getRowBg = (type: string) => {
+    if (type === 'CHAMPION') return 'bg-amber-50 dark:bg-amber-950/20'
+    if (type.includes('PROMOTION')) return 'bg-green-50 dark:bg-green-950/20'
+    if (type.includes('RELEGATION')) return 'bg-red-50 dark:bg-red-950/20'
+    return ''
   }
 
-  const getMovementBadgeVariant = (type: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
+  const getMovementIcon = (type: string, reason: string) => {
+    if (type === 'CHAMPION') return <Trophy className="h-4 w-4 text-yellow-500" />
+    if (reason === 'Subcampeón') return <span className="text-sm">🥈</span>
+    if (reason.startsWith('3°')) return <span className="text-sm">🥉</span>
+    if (type.includes('PROMOTION')) return <ArrowUp className="h-4 w-4 text-green-600" />
+    if (type.includes('RELEGATION')) return <ArrowDown className="h-4 w-4 text-red-600" />
+    return <Minus className="h-4 w-4 text-muted-foreground" />
+  }
+
+  const getBadgeVariant = (type: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
     if (type === 'CHAMPION') return 'default'
     if (type.includes('PROMOTION')) return 'secondary'
     if (type.includes('RELEGATION')) return 'destructive'
@@ -384,71 +474,131 @@ function Step2Movements({
 
   return (
     <div className="space-y-4">
-      {/* Summary */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-4 gap-3">
         <Card>
           <CardContent className="py-4 text-center">
             <Trophy className="h-6 w-6 text-yellow-500 mx-auto mb-1" />
-            <div className="text-2xl font-bold">{data.summary.champions}</div>
+            <div className="text-2xl font-bold">{summary.champions}</div>
             <div className="text-xs text-muted-foreground">{t('advance.movements.champions')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-4 text-center">
             <ArrowUp className="h-6 w-6 text-green-500 mx-auto mb-1" />
-            <div className="text-2xl font-bold">{data.summary.promotions}</div>
+            <div className="text-2xl font-bold">{summary.promotions}</div>
             <div className="text-xs text-muted-foreground">{t('advance.movements.promotions')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-4 text-center">
             <ArrowDown className="h-6 w-6 text-red-500 mx-auto mb-1" />
-            <div className="text-2xl font-bold">{data.summary.relegations}</div>
+            <div className="text-2xl font-bold">{summary.relegations}</div>
             <div className="text-xs text-muted-foreground">{t('advance.movements.relegations')}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-4 text-center">
-            <Minus className="h-6 w-6 text-gray-500 mx-auto mb-1" />
-            <div className="text-2xl font-bold">{data.summary.stayed}</div>
+            <Minus className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+            <div className="text-2xl font-bold">{summary.stayed}</div>
             <div className="text-xs text-muted-foreground">{t('advance.movements.stayed')}</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="py-0">
-          <div className="divide-y">
-            <div className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 py-3 text-sm font-medium text-muted-foreground">
-              <span>{t('advance.movements.club')}</span>
-              <span>{t('advance.movements.from')}</span>
-              <span>{t('advance.movements.to')}</span>
-              <span className="w-36 text-center">{t('advance.movements.type')}</span>
-              <span className="w-12 text-center">#</span>
+      {/* Division Cards with Transfer Zones */}
+      {divisions.map((div, divIdx) => (
+        <div key={div.name}>
+          {/* Division Card */}
+          <div className="border rounded-lg overflow-hidden">
+            <div className="bg-foreground text-background px-4 py-2.5 flex items-center gap-2 text-sm font-semibold">
+              <span>⚽</span>
+              <span>{div.name}</span>
+              <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">
+                {div.teams.length} {t('advance.movements.teams')}
+              </span>
             </div>
-            {data.movements.map((m, i) => (
-              <div
-                key={`${m.clubId}-${i}`}
-                className="grid grid-cols-[1fr_1fr_1fr_auto_auto] gap-3 py-2.5 items-center text-sm"
-              >
-                <span className="flex items-center gap-2">
-                  {getMovementIcon(m.movementType)}
-                  <span className="font-medium">{m.clubName}</span>
-                </span>
-                <span className="text-muted-foreground">{m.fromLeague}</span>
-                <span className="text-muted-foreground">{m.toLeague || '-'}</span>
-                <span className="w-36 text-center">
-                  <Badge variant={getMovementBadgeVariant(m.movementType)} className="text-xs">
-                    {t(`advance.movements.movementTypes.${m.movementType}`)}
+            <div className="divide-y">
+              {div.teams.map(team => (
+                <div
+                  key={team.clubId}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-2 text-sm',
+                    getRowBg(team.movementType)
+                  )}
+                >
+                  <span className="w-6 text-center text-xs font-semibold text-muted-foreground">
+                    {team.finalPosition}
+                  </span>
+                  <span className="w-5 flex items-center justify-center">
+                    {getMovementIcon(team.movementType, team.reason)}
+                  </span>
+                  <span
+                    className={cn(
+                      'flex-1 font-medium',
+                      team.movementType === 'STAYED' && 'text-muted-foreground'
+                    )}
+                  >
+                    {team.clubName}
+                  </span>
+                  <Badge variant={getBadgeVariant(team.movementType)} className="text-xs">
+                    {t(`advance.movements.movementTypes.${team.movementType}`)}
                   </Badge>
-                </span>
-                <span className="w-12 text-center text-muted-foreground">{m.finalPosition}</span>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Transfer Zone between adjacent divisions */}
+          {divIdx < divisions.length - 1 && transfers[divIdx] &&
+            (transfers[divIdx].descending.length > 0 || transfers[divIdx].ascending.length > 0) && (
+            <div className="bg-gradient-to-b from-red-50 via-background to-green-50 dark:from-red-950/20 dark:via-background dark:to-green-950/20 border-x border-border px-6 py-4 my-0">
+              <div className="flex justify-center gap-8 flex-wrap">
+                {transfers[divIdx].descending.length > 0 && (
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-2">
+                      ↓ {t('advance.movements.descendTo', { league: transfers[divIdx].to })}
+                    </div>
+                    <div className="flex gap-3 justify-center">
+                      {transfers[divIdx].descending.map(m => (
+                        <div
+                          key={m.clubId}
+                          className="bg-background border-2 border-red-300 dark:border-red-800 rounded-lg px-4 py-2 text-center"
+                        >
+                          <div className="font-semibold text-sm">{m.clubName}</div>
+                          <div className="text-xs text-red-600">
+                            {t(`advance.movements.movementTypes.${m.movementType}`)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {transfers[divIdx].ascending.length > 0 && (
+                  <div className="text-center">
+                    <div className="text-xs font-semibold text-green-600 uppercase tracking-wide mb-2">
+                      ↑ {t('advance.movements.ascendTo', { league: transfers[divIdx].from })}
+                    </div>
+                    <div className="flex gap-3 justify-center">
+                      {transfers[divIdx].ascending.map(m => (
+                        <div
+                          key={m.clubId}
+                          className="bg-background border-2 border-green-300 dark:border-green-800 rounded-lg px-4 py-2 text-center"
+                        >
+                          <div className="font-semibold text-sm">{m.clubName}</div>
+                          <div className="text-xs text-green-600">
+                            {t(`advance.movements.movementTypes.${m.movementType}`)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

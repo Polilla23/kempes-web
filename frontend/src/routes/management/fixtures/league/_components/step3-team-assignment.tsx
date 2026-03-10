@@ -77,7 +77,7 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
       
       if (previousSeasonNumber > 0) {
         try {
-          const movementsData = await SeasonService.getSeasonMovements(previousSeasonNumber)
+          const movementsData = await SeasonService.getSeasonMovements(previousSeasonNumber, wizardState.competitionCategory)
           movements = new Map(
             movementsData.map((m: any) => [m.clubId, m])
           )

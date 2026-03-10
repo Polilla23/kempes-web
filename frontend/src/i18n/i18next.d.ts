@@ -11,9 +11,16 @@ import competitionTypes from './locales/en/competition-types.json'
 import seasons from './locales/en/seasons.json'
 import salaryRates from './locales/en/salary-rates.json'
 import fixtures from './locales/en/fixtures.json'
+import home from './locales/en/home.json'
+import bracketEditor from './locales/en/bracket-editor.json'
 import news from './locales/en/news.json'
 import submitResult from './locales/en/submit-result.json'
+import transfers from './locales/en/transfers.json'
+import finances from './locales/en/finances.json'
+import standings from './locales/en/standings.json'
+import seasonDeadlines from './locales/en/seasonDeadlines.json'
 import dashboard from './locales/en/dashboard.json'
+import editResults from './locales/en/edit-results.json'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -30,9 +37,16 @@ declare module 'i18next' {
       seasons: typeof seasons
       salaryRates: typeof salaryRates
       fixtures: typeof fixtures
+      home: typeof home
+      bracketEditor: typeof bracketEditor
       news: typeof news
       submitResult: typeof submitResult
+      transfers: typeof transfers
+      finances: typeof finances
+      standings: typeof standings
+      seasonDeadlines: typeof seasonDeadlines
       dashboard: typeof dashboard
+      editResults: typeof editResults
     }
   }
 }

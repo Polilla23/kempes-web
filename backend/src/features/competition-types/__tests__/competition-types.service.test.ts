@@ -9,7 +9,7 @@ const mockCompetitionTypeRepository: jest.Mocked<ICompetitionTypeRepository> = {
   save: jest.fn(),
   findAll: jest.fn(),
   findOneById: jest.fn(),
-  findOneByName: jest.fn(),
+  findOneByNameAndCategory: jest.fn(),
   updateOneById: jest.fn(),
   deleteOneById: jest.fn(),
 }
@@ -109,13 +109,13 @@ describe('CompetitionTypeService', () => {
         trophyImage: 'trophy1.png',
       }
 
-      mockCompetitionTypeRepository.findOneByName.mockResolvedValue(null)
+      mockCompetitionTypeRepository.findOneByNameAndCategory.mockResolvedValue(null)
       mockCompetitionTypeRepository.save.mockResolvedValue(expectedCompetitionType)
 
       const result = await competitionTypeService.createCompetitionType(input)
 
       expect(result).toEqual(expectedCompetitionType)
-      expect(mockCompetitionTypeRepository.findOneByName).toHaveBeenCalledWith(input.name)
+      expect(mockCompetitionTypeRepository.findOneByNameAndCategory).toHaveBeenCalledWith(input.name, input.category)
       expect(mockCompetitionTypeRepository.save).toHaveBeenCalledWith(input)
     })
 
@@ -137,7 +137,7 @@ describe('CompetitionTypeService', () => {
         trophyImage: 'trophy1.png',
       }
 
-      mockCompetitionTypeRepository.findOneByName.mockResolvedValue(existingCompetitionType)
+      mockCompetitionTypeRepository.findOneByNameAndCategory.mockResolvedValue(existingCompetitionType)
 
       await expect(competitionTypeService.createCompetitionType(input)).rejects.toThrow(
         CompetitionTypeAlreadyExistsError,
@@ -257,7 +257,7 @@ describe('CompetitionTypeService', () => {
         trophyImage: uploadedFile.publicUrl,
       }
 
-      mockCompetitionTypeRepository.findOneByName.mockResolvedValue(null)
+      mockCompetitionTypeRepository.findOneByNameAndCategory.mockResolvedValue(null)
       mockStorageService.uploadImage.mockResolvedValue(uploadedFile)
       mockCompetitionTypeRepository.save.mockResolvedValue(expectedCompetitionType)
 

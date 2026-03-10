@@ -3,6 +3,10 @@ import { CompetitionTypeService } from '@/features/competition-types/competition
 import { CompetitionTypeMapper, Response } from '@/features/core'
 import { Validator } from '@/features/utils/validation'
 import { CompetitionCategory, CompetitionFormat, CompetitionName } from '@prisma/client'
+import {
+  CompetitionTypeAlreadyExistsError,
+  CompetitionTypeNotFoundError,
+} from '@/features/competition-types/competition-types.errors'
 
 export class CompetitionTypeController {
   private competitionTypeService: CompetitionTypeService
@@ -43,10 +47,13 @@ export class CompetitionTypeController {
 
       return Response.created(reply, competitionTypeDTO, 'Competition type created successfully')
     } catch (error: unknown) {
+      if (error instanceof CompetitionTypeAlreadyExistsError) {
+        return Response.error(reply, 'CONFLICT', error.message, 409)
+      }
       return Response.validation(
         reply,
         error instanceof Error ? error.message : 'Validation failed',
-        'Error while creating new competition type'
+        error instanceof Error ? error.message : 'Error while creating new competition type'
       )
     }
   }
@@ -143,15 +150,16 @@ export class CompetitionTypeController {
 
       return Response.success(reply, competitionTypeDTO, 'Competition type updated successfully')
     } catch (error) {
-      if (error instanceof Error && error.message.includes('not found')) {
+      if (error instanceof CompetitionTypeNotFoundError) {
         return Response.notFound(reply, 'Competition type', id)
       }
-      return Response.error(
+      if (error instanceof CompetitionTypeAlreadyExistsError) {
+        return Response.error(reply, 'CONFLICT', error.message, 409)
+      }
+      return Response.validation(
         reply,
-        'UPDATE_ERROR',
-        'Error while updating competition type',
-        500,
-        error instanceof Error ? error.message : error
+        error instanceof Error ? error.message : 'Validation failed',
+        error instanceof Error ? error.message : 'Error while updating competition type'
       )
     }
   }

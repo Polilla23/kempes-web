@@ -1,5 +1,5 @@
 import { PrismaClient, MovementType, CompetitionFormat, CompetitionName, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory, KnockoutRound } from '@prisma/client'
-import { TeamStanding, CompetitionStandings, TopLeagueRules, MiddleLeagueRules, BottomLeagueRules, LiguillaConfig } from '@/types'
+import { TeamStanding, CompetitionStandings, TopLeagueRules, MiddleLeagueRules, BottomLeagueRules, LiguillaConfig, ZoneDescription, ReducidoRound } from '@/types'
 
 type AnyLeagueRules = TopLeagueRules | MiddleLeagueRules | BottomLeagueRules
 
@@ -13,6 +13,7 @@ interface TeamMovement {
   movementType: MovementType
   reason: string
   finalPosition: number
+  category: string
 }
 
 export class StandingsService {
@@ -143,11 +144,41 @@ export class StandingsService {
 
     // Asignar zonas para ligas
     let leaguePosition: 'TOP' | 'MIDDLE' | 'BOTTOM' | null = null
+    let zoneDescriptions: ZoneDescription[] = []
     if (competition.competitionType.format === CompetitionFormat.LEAGUE) {
       const rules = competition.rules as unknown as AnyLeagueRules
-      if (rules && rules.league_position) {
-        leaguePosition = rules.league_position
-        this.assignZones(standings, rules)
+
+      // Determinar league_position: primero desde rules, fallback desde hierarchy
+      let effectiveLeaguePosition: 'TOP' | 'MIDDLE' | 'BOTTOM' | null = rules?.league_position || null
+
+      if (!effectiveLeaguePosition) {
+        // Inferir league_position desde la jerarquía del competitionType
+        const leagueTypes = await this.prisma.competitionType.findMany({
+          where: {
+            category: competition.competitionType.category,
+            format: CompetitionFormat.LEAGUE,
+          },
+          orderBy: { hierarchy: 'asc' },
+        })
+
+        if (leagueTypes.length > 0) {
+          const idx = leagueTypes.findIndex(t => t.id === competition.competitionTypeId)
+          if (idx === 0) effectiveLeaguePosition = 'TOP'
+          else if (idx === leagueTypes.length - 1) effectiveLeaguePosition = 'BOTTOM'
+          else effectiveLeaguePosition = 'MIDDLE'
+        }
+      }
+
+      if (effectiveLeaguePosition) {
+        leaguePosition = effectiveLeaguePosition
+        const effectiveRules = { ...rules, league_position: effectiveLeaguePosition }
+        try {
+          this.assignZones(standings, effectiveRules as AnyLeagueRules)
+          zoneDescriptions = this.buildZoneDescriptions(standings, effectiveRules as AnyLeagueRules)
+        } catch (err) {
+          console.warn(`Zone assignment failed for competition ${competitionId}:`, err)
+          // No crashear standings si falla zone assignment
+        }
       }
     }
 
@@ -167,6 +198,7 @@ export class StandingsService {
       matchesTotal: totalMatches,
       leaguePosition,
       activeZones,
+      zoneDescriptions,
     }
   }
 
@@ -210,10 +242,12 @@ export class StandingsService {
 
     const movements: TeamMovement[] = []
     const processedClubs = new Set<string>()
+    const standingsCache = new Map<string, CompetitionStandings>()
 
     for (let i = 0; i < leagues.length; i++) {
       const league = leagues[i]
       const standingsResult = await this.calculateStandings(league.id)
+      standingsCache.set(league.id, standingsResult)
       const standings = standingsResult.standings
       const rules = league.rules as unknown as AnyLeagueRules
 
@@ -232,6 +266,7 @@ export class StandingsService {
             movementType: MovementType.CHAMPION,
             reason: 'Campeón',
             finalPosition: 1,
+            category: league.competitionType.category,
           })
           processedClubs.add(champion.clubId)
         }
@@ -257,6 +292,7 @@ export class StandingsService {
               movementType: MovementType.DIRECT_PROMOTION,
               reason: `Posición ${team.position}`,
               finalPosition: team.position,
+              category: league.competitionType.category,
             })
             processedClubs.add(team.clubId)
           }
@@ -283,6 +319,7 @@ export class StandingsService {
               movementType: MovementType.DIRECT_RELEGATION,
               reason: `Posición ${team.position}`,
               finalPosition: team.position,
+              category: league.competitionType.category,
             })
             processedClubs.add(team.clubId)
           }
@@ -302,10 +339,152 @@ export class StandingsService {
             movementType: MovementType.STAYED,
             reason: `Posición ${team.position}`,
             finalPosition: team.position,
+            category: league.competitionType.category,
           })
           processedClubs.add(team.clubId)
         }
       })
+    }
+
+    // --- Evaluar resultados de CAMPEONATO (TRIANGULAR / LIGUILLA) ---
+    for (const league of leagues) {
+      const cRules = league.rules as unknown as AnyLeagueRules
+      if (cRules.league_position !== 'TOP') continue
+
+      const topRules = cRules as TopLeagueRules
+      if (!topRules.championship || topRules.championship.format === 'FIRST_PLACE') continue
+
+      if (topRules.championship.format === 'TRIANGULAR') {
+        const knockoutMatches = await this.prisma.match.findMany({
+          where: {
+            competitionId: league.id,
+            stage: CompetitionStage.KNOCKOUT,
+            knockoutRound: { in: [KnockoutRound.TRIANGULAR_SEMI, KnockoutRound.TRIANGULAR_FINAL] },
+          },
+        })
+
+        const finalMatch = knockoutMatches.find(m => m.knockoutRound === KnockoutRound.TRIANGULAR_FINAL)
+        const semiMatch = knockoutMatches.find(m => m.knockoutRound === KnockoutRound.TRIANGULAR_SEMI)
+
+        // Solo procesar si AMBOS partidos están FINALIZADOS
+        if (
+          finalMatch?.status === MatchStatus.FINALIZADO &&
+          semiMatch?.status === MatchStatus.FINALIZADO &&
+          finalMatch.homeClubGoals !== null && finalMatch.awayClubGoals !== null &&
+          semiMatch.homeClubGoals !== null && semiMatch.awayClubGoals !== null &&
+          finalMatch.homeClubId && finalMatch.awayClubId &&
+          semiMatch.homeClubId && semiMatch.awayClubId
+        ) {
+          // Final: home=1°, away=ganador semi
+          const championId = finalMatch.homeClubGoals > finalMatch.awayClubGoals
+            ? finalMatch.homeClubId : finalMatch.awayClubId
+          const runnerUpId = finalMatch.homeClubGoals > finalMatch.awayClubGoals
+            ? finalMatch.awayClubId : finalMatch.homeClubId
+          // Semi: home=3°, away=2° → perdedor es 3°
+          const semiLoserId = semiMatch.homeClubGoals > semiMatch.awayClubGoals
+            ? semiMatch.awayClubId : semiMatch.homeClubId
+
+          // Campeón
+          const champIdx = movements.findIndex(m => m.clubId === championId)
+          if (champIdx !== -1) {
+            movements[champIdx].movementType = MovementType.CHAMPION
+            movements[champIdx].reason = 'Campeón'
+            movements[champIdx].finalPosition = 1
+          }
+
+          // Subcampeón (perdedor de la final) → posición 2
+          const runnerIdx = movements.findIndex(m => m.clubId === runnerUpId)
+          if (runnerIdx !== -1) {
+            movements[runnerIdx].finalPosition = 2
+            movements[runnerIdx].reason = 'Subcampeón'
+          }
+
+          // 3° (perdedor de la semi) → posición 3
+          const thirdIdx = movements.findIndex(m => m.clubId === semiLoserId)
+          if (thirdIdx !== -1) {
+            movements[thirdIdx].finalPosition = 3
+            movements[thirdIdx].reason = '3° Triangular'
+          }
+        }
+      } else if (topRules.championship.format === 'LIGUILLA') {
+        const liguillaConfig = topRules.championship as LiguillaConfig
+        const liguillaMatches = await this.prisma.match.findMany({
+          where: {
+            competitionId: league.id,
+            stage: CompetitionStage.KNOCKOUT,
+            knockoutRound: KnockoutRound.LIGUILLA,
+          },
+        })
+
+        // Verificar que todos estén completados (FINALIZADO o CANCELADO)
+        const allDone = liguillaMatches.length > 0 &&
+          liguillaMatches.every(m => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO)
+
+        if (allDone) {
+          const regularStandings = standingsCache.get(league.id)!.standings
+          const teamsCount = liguillaConfig.teamsCount || 4
+          const miniTable = new Map<string, { points: number; gd: number; gf: number; regPos: number }>()
+
+          for (let t = 0; t < teamsCount && t < regularStandings.length; t++) {
+            const s = regularStandings[t]
+            miniTable.set(s.clubId, {
+              points: liguillaConfig.keepPoints ? s.points : 0,
+              gd: 0,
+              gf: 0,
+              regPos: s.position,
+            })
+          }
+
+          // Acumular resultados de partidos finalizados
+          for (const match of liguillaMatches) {
+            if (match.status !== MatchStatus.FINALIZADO) continue
+            if (!match.homeClubId || !match.awayClubId) continue
+            if (match.homeClubGoals === null || match.awayClubGoals === null) continue
+
+            const home = miniTable.get(match.homeClubId)
+            const away = miniTable.get(match.awayClubId)
+            if (!home || !away) continue
+
+            home.gf += match.homeClubGoals
+            home.gd += (match.homeClubGoals - match.awayClubGoals)
+            away.gf += match.awayClubGoals
+            away.gd += (match.awayClubGoals - match.homeClubGoals)
+
+            if (match.homeClubGoals > match.awayClubGoals) {
+              home.points += 3
+            } else if (match.homeClubGoals < match.awayClubGoals) {
+              away.points += 3
+            } else {
+              home.points += 1
+              away.points += 1
+            }
+          }
+
+          // Ordenar: puntos → dif gol → goles favor → posición regular
+          const sorted = Array.from(miniTable.entries()).sort((a, b) => {
+            if (b[1].points !== a[1].points) return b[1].points - a[1].points
+            if (b[1].gd !== a[1].gd) return b[1].gd - a[1].gd
+            if (b[1].gf !== a[1].gf) return b[1].gf - a[1].gf
+            return a[1].regPos - b[1].regPos
+          })
+
+          // Actualizar movements con resultados de liguilla
+          for (let pos = 0; pos < sorted.length; pos++) {
+            const [clubId] = sorted[pos]
+            const idx = movements.findIndex(m => m.clubId === clubId)
+            if (idx === -1) continue
+
+            if (pos === 0) {
+              movements[idx].movementType = MovementType.CHAMPION
+              movements[idx].reason = 'Campeón'
+              movements[idx].finalPosition = 1
+            } else {
+              movements[idx].reason = pos === 1 ? 'Subcampeón' : `${pos + 1}° Liguilla`
+              movements[idx].finalPosition = pos + 1
+            }
+          }
+        }
+      }
     }
 
     // --- Evaluar resultados de PROMOCIONES ---
@@ -1030,13 +1209,21 @@ export class StandingsService {
     })
 
     if (snapshot) {
-      return snapshot.data as unknown as CompetitionStandings
+      const data = snapshot.data as unknown as CompetitionStandings
+      // Verificar si el snapshot tiene zonas asignadas correctamente.
+      // Un snapshot stale puede tener activeZones: [] y leaguePosition: null
+      // (creado antes de la inferencia de league_position desde hierarchy).
+      // Solo usar snapshot si leaguePosition está asignado (indica zonas calculadas).
+      if (data.leaguePosition) {
+        return data
+      }
+      // Snapshot stale o sin zonas: fall through a recalcular
     }
 
-    // Slow path: calcular fresh (ya incluye zonas para ligas)
+    // Slow path: calcular fresh (incluye inferencia de league_position y zonas)
     const standings = await this.calculateStandings(competitionId)
 
-    // Crear snapshot solo para LEAGUE format (fire-and-forget)
+    // Crear/actualizar snapshot solo para LEAGUE format (fire-and-forget)
     const competition = await this.prisma.competition.findUnique({
       where: { id: competitionId },
       include: { competitionType: true },
@@ -1204,18 +1391,23 @@ export class StandingsService {
   private assignTopLeagueZones(standings: TeamStanding[], rules: TopLeagueRules): void {
     const total = standings.length
 
-    // Zona de campeonato (desde arriba)
-    if (rules.championship.format === 'FIRST_PLACE') {
+    // Zona de campeonato (desde arriba) — null safe
+    if (rules.championship) {
+      if (rules.championship.format === 'FIRST_PLACE') {
+        if (total > 0) standings[0].zone = 'champion'
+      } else if (rules.championship.format === 'LIGUILLA') {
+        const liguilla = rules.championship as LiguillaConfig
+        for (let i = 0; i < Math.min(liguilla.teamsCount, total); i++) {
+          standings[i].zone = 'liguilla'
+        }
+      } else if (rules.championship.format === 'TRIANGULAR') {
+        for (let i = 0; i < Math.min(3, total); i++) {
+          standings[i].zone = 'triangular'
+        }
+      }
+    } else {
+      // Default: 1er puesto es campeón
       if (total > 0) standings[0].zone = 'champion'
-    } else if (rules.championship.format === 'LIGUILLA') {
-      const liguilla = rules.championship as LiguillaConfig
-      for (let i = 0; i < Math.min(liguilla.teamsCount, total); i++) {
-        standings[i].zone = 'liguilla'
-      }
-    } else if (rules.championship.format === 'TRIANGULAR') {
-      for (let i = 0; i < Math.min(3, total); i++) {
-        standings[i].zone = 'triangular'
-      }
     }
 
     // Playout (posiciones específicas, 1-based)
@@ -1228,8 +1420,8 @@ export class StandingsService {
       }
     }
 
-    // Descenso directo (desde abajo)
-    const directRelQty = rules.relegations.direct.quantity
+    // Descenso directo (desde abajo) — null safe
+    const directRelQty = rules.relegations?.direct?.quantity ?? 0
     for (let i = 0; i < directRelQty && i < total; i++) {
       const idx = total - 1 - i
       if (!standings[idx].zone) {
@@ -1238,7 +1430,7 @@ export class StandingsService {
     }
 
     // Promoción (descenso) - posiciones justo antes del descenso directo
-    if (rules.relegations.promotion) {
+    if (rules.relegations?.promotion) {
       const promoRelQty = rules.relegations.promotion.quantity
       for (let i = 0; i < promoRelQty && (total - directRelQty - 1 - i) >= 0; i++) {
         const idx = total - directRelQty - 1 - i
@@ -1252,14 +1444,14 @@ export class StandingsService {
   private assignMiddleLeagueZones(standings: TeamStanding[], rules: MiddleLeagueRules): void {
     const total = standings.length
 
-    // Ascenso directo (desde arriba)
-    const directPromoQty = rules.promotions.direct.quantity
+    // Ascenso directo (desde arriba) — null safe
+    const directPromoQty = rules.promotions?.direct?.quantity ?? 0
     for (let i = 0; i < directPromoQty && i < total; i++) {
       standings[i].zone = 'promotion'
     }
 
     // Playoff de ascenso (siguientes posiciones)
-    if (rules.promotions.playoff) {
+    if (rules.promotions?.playoff) {
       const playoffPromoQty = rules.promotions.playoff.quantity
       for (let i = 0; i < playoffPromoQty && (directPromoQty + i) < total; i++) {
         standings[directPromoQty + i].zone = 'promotion_playoff'
@@ -1276,8 +1468,8 @@ export class StandingsService {
       }
     }
 
-    // Descenso directo (desde abajo)
-    const directRelQty = rules.relegations.direct.quantity
+    // Descenso directo (desde abajo) — null safe
+    const directRelQty = rules.relegations?.direct?.quantity ?? 0
     for (let i = 0; i < directRelQty && i < total; i++) {
       const idx = total - 1 - i
       if (!standings[idx].zone) {
@@ -1286,7 +1478,7 @@ export class StandingsService {
     }
 
     // Promoción (descenso) - posiciones justo antes del descenso directo
-    if (rules.relegations.promotion) {
+    if (rules.relegations?.promotion) {
       const promoRelQty = rules.relegations.promotion.quantity
       for (let i = 0; i < promoRelQty && (total - directRelQty - 1 - i) >= 0; i++) {
         const idx = total - directRelQty - 1 - i
@@ -1300,14 +1492,14 @@ export class StandingsService {
   private assignBottomLeagueZones(standings: TeamStanding[], rules: BottomLeagueRules): void {
     const total = standings.length
 
-    // Ascenso directo (desde arriba)
-    const directPromoQty = rules.promotions.direct.quantity
+    // Ascenso directo (desde arriba) — null safe
+    const directPromoQty = rules.promotions?.direct?.quantity ?? 0
     for (let i = 0; i < directPromoQty && i < total; i++) {
       standings[i].zone = 'promotion'
     }
 
     // Playoff de ascenso (siguientes posiciones)
-    if (rules.promotions.playoff) {
+    if (rules.promotions?.playoff) {
       const playoffPromoQty = rules.promotions.playoff.quantity
       for (let i = 0; i < playoffPromoQty && (directPromoQty + i) < total; i++) {
         standings[directPromoQty + i].zone = 'promotion_playoff'
@@ -1330,7 +1522,7 @@ export class StandingsService {
 
     // Descenso directo (si configurado, raro en última división)
     if (rules.relegations) {
-      const directRelQty = rules.relegations.direct.quantity
+      const directRelQty = rules.relegations?.direct?.quantity ?? 0
       for (let i = 0; i < directRelQty && i < total; i++) {
         const idx = total - 1 - i
         if (!standings[idx].zone) {
@@ -1338,6 +1530,107 @@ export class StandingsService {
         }
       }
     }
+  }
+
+  // ============================================
+  // GENERACIÓN DE DESCRIPCIONES DE ZONAS
+  // ============================================
+
+  /**
+   * Construye las descripciones detalladas de zonas para la leyenda del standings.
+   * Agrupa posiciones por zona y enriquece con info de reglas (playout, reducido).
+   */
+  private buildZoneDescriptions(standings: TeamStanding[], rules: AnyLeagueRules): ZoneDescription[] {
+    // Agrupar posiciones por zona desde los standings ya asignados
+    const zonePositions = new Map<string, number[]>()
+    for (const s of standings) {
+      if (s.zone) {
+        if (!zonePositions.has(s.zone)) zonePositions.set(s.zone, [])
+        zonePositions.get(s.zone)!.push(s.position)
+      }
+    }
+
+    const descriptions: ZoneDescription[] = []
+
+    for (const [zone, positions] of zonePositions) {
+      const desc: ZoneDescription = {
+        zone,
+        positions: positions.sort((a, b) => a - b),
+      }
+
+      // Detalle de playout
+      if (zone === 'playout' && 'playout' in rules && rules.playout?.loserGoesToPromotion) {
+        desc.detail = 'loserGoesToPromotion'
+      }
+
+      // Detalle de reducido con rondas
+      if (zone === 'reducido' && rules.league_position === 'BOTTOM') {
+        const bottomRules = rules as BottomLeagueRules
+        if (bottomRules.reducido) {
+          desc.reducidoRounds = this.buildReducidoRounds(bottomRules.reducido)
+          if (bottomRules.reducido.winnerGoesToPromotion) {
+            desc.detail = 'winnerGoesToPromotion'
+          }
+        }
+      }
+
+      descriptions.push(desc)
+    }
+
+    // Ordenar por posición visual: de arriba (positivas) a abajo (negativas) de la tabla
+    const zoneOrder = [
+      'champion', 'liguilla', 'triangular',
+      'promotion', 'promotion_playoff',
+      'playout', 'reducido',
+      'relegation_playoff', 'relegation',
+    ]
+    descriptions.sort((a, b) => {
+      const ia = zoneOrder.indexOf(a.zone)
+      const ib = zoneOrder.indexOf(b.zone)
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
+    })
+
+    return descriptions
+  }
+
+  /**
+   * Construye las rondas del reducido a partir de la configuración.
+   * Ej: startPositions [7,8], waitingPositions [6,5] →
+   *   R1: 7° vs 8° (Semi), R2: Ganador vs 6° (Final)
+   *   Si hay más rondas: Cuartos, Semi, Final
+   */
+  private buildReducidoRounds(config: { startPositions: [number, number]; waitingPositions: number[] }): ReducidoRound[] {
+    const totalRounds = 1 + config.waitingPositions.length
+    const rounds: ReducidoRound[] = []
+
+    // Ronda inicial
+    rounds.push({
+      type: 'start',
+      positions: config.startPositions,
+      roundName: this.getReducidoRoundName(0, totalRounds),
+    })
+
+    // Rondas con equipos que esperan
+    for (let i = 0; i < config.waitingPositions.length; i++) {
+      rounds.push({
+        type: 'waiting',
+        waitingPosition: config.waitingPositions[i],
+        roundName: this.getReducidoRoundName(i + 1, totalRounds),
+      })
+    }
+
+    return rounds
+  }
+
+  /**
+   * Determina el nombre de ronda del reducido contando hacia atrás desde la final.
+   */
+  private getReducidoRoundName(roundIndex: number, totalRounds: number): string {
+    const fromEnd = totalRounds - 1 - roundIndex
+    if (fromEnd === 0) return 'final'
+    if (fromEnd === 1) return 'semifinal'
+    if (fromEnd === 2) return 'quarterfinal'
+    return `round${roundIndex + 1}`
   }
 
   /**
@@ -1406,16 +1699,24 @@ export class StandingsService {
     })
 
     if (snapshot) {
-      return snapshot.data as unknown as CompetitionStandings
+      const data = snapshot.data as unknown as CompetitionStandings
+      // Solo usar snapshot si tiene leaguePosition asignado (indica zonas calculadas)
+      if (data.leaguePosition) {
+        return data
+      }
     }
 
     // Fallback: calcular (ya incluye zonas) y guardar snapshot
     const standingsData = await this.calculateStandings(competition.id)
 
-    // Guardar para la próxima vez (ignorar error de unique constraint por race condition)
-    await this.prisma.standingsSnapshot.create({
-      data: {
+    // Guardar/actualizar para la próxima vez
+    await this.prisma.standingsSnapshot.upsert({
+      where: { competitionId: competition.id },
+      create: {
         competitionId: competition.id,
+        data: standingsData as any,
+      },
+      update: {
         data: standingsData as any,
       },
     }).catch(() => {})

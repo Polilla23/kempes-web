@@ -25,7 +25,14 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(xargs:*)",
       "mcp__ide__getDiagnostics",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(npx jest --testPathPattern=\"competition-types\" --no-coverage)",
+      "Bash(npx jest --testPathPatterns=\"competition-types\" --no-coverage)",
+      "Bash(npx jest --testPathPattern=\"competitions\" --no-coverage)",
+      "Bash(npx jest --testPathPatterns=\"competitions\" --no-coverage)",
+      "Bash(npx jest --testPathPattern=\"seasons\" --no-coverage)",
+      "Bash(npx jest --testPathPatterns=\"seasons\" --no-coverage)",
+      "Bash(npx jest --testPathPatterns=\"standings\" --no-coverage)"
     ]
   }
 }

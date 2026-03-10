@@ -1,4 +1,4 @@
-import { CompetitionType, Prisma, PrismaClient } from '@prisma/client'
+import { CompetitionType, CompetitionCategory, CompetitionName, Prisma, PrismaClient } from '@prisma/client'
 import { ICompetitionTypeRepository } from '@/features/competition-types/interface/ICompetitionTypeRepository'
 
 export class CompetitionTypeRepository implements ICompetitionTypeRepository {
@@ -13,8 +13,8 @@ export class CompetitionTypeRepository implements ICompetitionTypeRepository {
     return await this.prisma.competitionType.findMany()
   }
 
-  async findOneByName(name: Prisma.CompetitionTypeWhereUniqueInput['name']): Promise<CompetitionType | null> {
-    return await this.prisma.competitionType.findUnique({ where: { name } })
+  async findOneByNameAndCategory(name: CompetitionName, category: CompetitionCategory): Promise<CompetitionType | null> {
+    return await this.prisma.competitionType.findFirst({ where: { name, category } })
   }
   async findOneById(id: Prisma.CompetitionTypeWhereUniqueInput['id']): Promise<CompetitionType | null> {
     return await this.prisma.competitionType.findUnique({ where: { id } })

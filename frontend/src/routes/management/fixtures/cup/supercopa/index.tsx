@@ -55,7 +55,7 @@ function SupercupWizard() {
 
       // Obtener tipo de competicion SUPER_CUP
       const typesResponse = await CompetitionTypeService.getCompetitionTypes()
-      const superType = typesResponse.competitionTypes.find((ct) => ct.name === 'SUPER_CUP')
+      const superType = typesResponse.competitionTypes.find((ct) => ct.name === 'SUPER_CUP' && ct.category === 'MIXED')
       if (!superType) {
         setError('No se encontro el tipo de competicion Supercopa')
         setLoading(false)

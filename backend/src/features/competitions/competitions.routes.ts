@@ -27,6 +27,10 @@ export const competitionRoutes = async (fastify: FastifyInstance) => {
     schema: competitionsSchemas.update,
     handler: competitionController.update.bind(competitionController),
   })
+  fastify.patch('/:id/toggle-active', {
+    preHandler: [fastify.authenticate],
+    handler: competitionController.toggleActive.bind(competitionController),
+  })
   fastify.delete('/:id', {
     preHandler: [fastify.authenticate],
     schema: competitionsSchemas.delete,

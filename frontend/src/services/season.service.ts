@@ -83,9 +83,10 @@ export class SeasonService {
   /**
    * Obtiene los movimientos de equipos de una temporada específica
    */
-  static async getSeasonMovements(seasonNumber: number) {
+  static async getSeasonMovements(seasonNumber: number, category?: string) {
     try {
-      const response = await api.get<{ data: any[] }>(`/api/v1/seasons/${seasonNumber}/movements`)
+      const params = category ? `?category=${category}` : ''
+      const response = await api.get<{ data: any[] }>(`/api/v1/seasons/${seasonNumber}/movements${params}`)
       return response.data?.data || []
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error fetching season movements')

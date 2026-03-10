@@ -70,7 +70,6 @@ function CompetitionsManagement() {
           <TabsContent value="competitions">
             <CompetitionsTab
               competitions={competitions}
-              competitionTypes={competitionTypes}
               onRefresh={loadData}
             />
           </TabsContent>

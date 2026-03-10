@@ -6,6 +6,7 @@ export type CompetitionWithType = Competition & { competitionType: CompetitionTy
 export interface ICompetitionRepository {
   save(config: CompetitionRules): Promise<Competition[]>
   updateOneById(id: string, config: CompetitionRules): Promise<Competition>
+  updateIsActive(id: string, isActive: boolean): Promise<Competition>
   deleteOneById(id: string): Promise<void>
   findAll(): Promise<CompetitionWithType[] | null>
   findOneById(id: string): Promise<Competition | null>

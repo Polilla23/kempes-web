@@ -72,7 +72,7 @@ export class CompetitionController {
           competitionId: f.competition.id,
           competitionName: f.competition.name,
           matchesCreated: f.matchesCreated,
-          totalMatches: f.matches.length,
+          totalMatches: f.matchesCreated,
         })),
       }
 
@@ -166,6 +166,37 @@ export class CompetitionController {
         reply,
         'DELETE_ERROR',
         'Error while deleting the competition',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  async toggleActive(
+    req: FastifyRequest<{
+      Params: { id: string }
+      Body: { isActive: boolean }
+    }>,
+    reply: FastifyReply
+  ) {
+    const { id } = req.params
+    const { isActive } = req.body
+    try {
+      const validId = Validator.uuid(id)
+      const enrichedUpdated = await this.competitionService.toggleCompetitionActive(validId, isActive)
+      const updatedDTO = CompetitionMapper.toDTO(
+        enrichedUpdated.competition,
+        enrichedUpdated.competitionTypeData!
+      )
+      return Response.success(reply, updatedDTO, 'Competition active status updated successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Competition', id)
+      }
+      return Response.error(
+        reply,
+        'UPDATE_ERROR',
+        'Error while updating the competition',
         500,
         error instanceof Error ? error.message : error
       )

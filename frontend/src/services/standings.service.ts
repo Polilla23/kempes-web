@@ -20,6 +20,20 @@ export interface TeamStanding {
     | 'gold_cup' | 'silver_cup' | null
 }
 
+export interface ReducidoRound {
+  type: 'start' | 'waiting'
+  positions?: [number, number]
+  waitingPosition?: number
+  roundName: string
+}
+
+export interface ZoneDescription {
+  zone: string
+  positions: number[]
+  detail?: string
+  reducidoRounds?: ReducidoRound[]
+}
+
 export interface CompetitionStandings {
   competitionId: string
   competitionName: string
@@ -30,6 +44,7 @@ export interface CompetitionStandings {
   matchesTotal: number
   leaguePosition?: 'TOP' | 'MIDDLE' | 'BOTTOM' | null
   activeZones?: string[]
+  zoneDescriptions?: ZoneDescription[]
 }
 
 export interface CupGroupStandings {

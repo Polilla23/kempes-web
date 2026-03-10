@@ -187,17 +187,22 @@ export class CompetitionService {
             league.roundType === 'match_and_rematch'
           )
 
-          // Crear los matches en la transacción (secuencialmente para evitar sobrecarga)
-          const createdMatches: Match[] = []
-          for (const matchData of matchesData) {
-            const match = await tx.match.create({ data: matchData })
-            createdMatches.push(match)
-          }
+          // Crear todos los matches de una sola vez con createMany
+          const createManyData = matchesData.map(m => ({
+            competitionId: competition.id,
+            homeClubId: (m.homeClub as any)?.connect?.id || null,
+            awayClubId: (m.awayClub as any)?.connect?.id || null,
+            matchdayOrder: m.matchdayOrder as number,
+            stage: m.stage as CompetitionStage,
+            status: m.status as MatchStatus,
+          }))
+
+          const { count: matchesCreated } = await tx.match.createMany({ data: createManyData })
 
           fixturesResults.push({
             competition,
-            matchesCreated: createdMatches.length,
-            matches: createdMatches,
+            matchesCreated,
+            matches: [] as Match[],
           })
         }
 
@@ -207,7 +212,7 @@ export class CompetitionService {
           fixtures: fixturesResults,
         }
       }, {
-        timeout: 60000, // 60 segundos de timeout para manejar muchos matches
+        timeout: 120000, // 2 minutos de timeout para muchas ligas con muchos equipos
       })
 
       return result
@@ -361,6 +366,15 @@ export class CompetitionService {
       throw new CompetitionNotFoundError()
     }
     const updatedCompetition = await this.competitionRepository.updateOneById(id, config)
+    return await this.enrichCompetitionWithType(updatedCompetition)
+  }
+
+  async toggleCompetitionActive(id: string, isActive: boolean) {
+    const competitionFound = await this.competitionRepository.findOneById(id)
+    if (!competitionFound) {
+      throw new CompetitionNotFoundError()
+    }
+    const updatedCompetition = await this.competitionRepository.updateIsActive(id, isActive)
     return await this.enrichCompetitionWithType(updatedCompetition)
   }
 

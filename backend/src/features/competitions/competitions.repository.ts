@@ -82,6 +82,12 @@ export class CompetitionRepository implements ICompetitionRepository {
     })
     return updatedCompetition
   }
+  async updateIsActive(id: string, isActive: boolean): Promise<Competition> {
+    return await this.prisma.competition.update({
+      where: { id },
+      data: { isActive },
+    })
+  }
   async deleteOneById(id: string): Promise<void> {
     await this.prisma.competition.delete({
       where: { id },

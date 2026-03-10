@@ -39,6 +39,42 @@ export const standingsRoutes = async (fastify: FastifyInstance) => {
                 isComplete: { type: 'boolean' },
                 matchesPlayed: { type: 'number' },
                 matchesTotal: { type: 'number' },
+                leaguePosition: { type: 'string', nullable: true },
+                activeZones: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
+                zoneDescriptions: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      zone: { type: 'string' },
+                      positions: {
+                        type: 'array',
+                        items: { type: 'number' },
+                      },
+                      detail: { type: 'string', nullable: true },
+                      reducidoRounds: {
+                        type: 'array',
+                        nullable: true,
+                        items: {
+                          type: 'object',
+                          properties: {
+                            type: { type: 'string' },
+                            positions: {
+                              type: 'array',
+                              nullable: true,
+                              items: { type: 'number' },
+                            },
+                            waitingPosition: { type: 'number', nullable: true },
+                            roundName: { type: 'string' },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 standings: {
                   type: 'array',
                   items: {

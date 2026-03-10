@@ -135,6 +135,15 @@ class CompetitionService {
     }
   }
 
+  static async toggleActive(id: string, isActive: boolean): Promise<CompetitionResponse> {
+    try {
+      const response = await api.patch<CompetitionResponse>(`/api/v1/competitions/${id}/toggle-active`, { isActive })
+      return response.data || { data: {} as Competition }
+    } catch (error: any) {
+      throw new Error(error?.response?.data?.message || error.message || 'Error toggling competition active status')
+    }
+  }
+
   static async deleteCompetition(id: string): Promise<void> {
     try {
       await api.delete(`/api/v1/competitions/${id}`)

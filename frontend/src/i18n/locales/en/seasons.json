@@ -117,7 +117,12 @@
         "DIRECT_RELEGATION": "Direct Relegation",
         "PLAYOFF_RELEGATION": "Playoff Relegation",
         "STAYED": "Stayed"
-      }
+      },
+      "mayores": "Seniors",
+      "kempesitas": "Youth",
+      "teams": "teams",
+      "descendTo": "Relegated to {{league}}",
+      "ascendTo": "Promoted to {{league}}"
     },
     "history": {
       "title": "Save History",
