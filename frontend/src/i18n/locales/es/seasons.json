@@ -117,7 +117,12 @@
         "DIRECT_RELEGATION": "Descenso Directo",
         "PLAYOFF_RELEGATION": "Descenso Playoff",
         "STAYED": "Permanencia"
-      }
+      },
+      "mayores": "Mayores",
+      "kempesitas": "Kempesitas",
+      "teams": "equipos",
+      "descendTo": "Descienden a {{league}}",
+      "ascendTo": "Ascienden a {{league}}"
     },
     "history": {
       "title": "Guardar Historial",

@@ -112,6 +112,7 @@ export interface TeamMovement {
   movementType: string
   reason: string
   finalPosition: number
+  category: string
 }
 
 export interface PreviewMovementsResponse {

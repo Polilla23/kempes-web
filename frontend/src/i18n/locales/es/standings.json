@@ -25,6 +25,7 @@
     "points": "PTS"
   },
   "legend": {
+    "references": "Referencias",
     "champion": "Campeón",
     "liguilla": "Clasifica a Liguilla",
     "triangular": "Clasifica a Triangular",
@@ -36,7 +37,15 @@
     "relegationPlayoff": "Promoción",
     "reducido": "Reducido",
     "qualifyGold": "Clasifica a Copa de Oro",
-    "qualifySilver": "Clasifica a Copa de Plata"
+    "qualifySilver": "Clasifica a Copa de Plata",
+    "loserGoesToPromotion": "Perdedor va a Promoción",
+    "winnerGoesToPromotion": "Ganador va a Promoción",
+    "reducidoStart": "{{a}}° vs {{b}}°",
+    "reducidoWaiting": "Ganador vs {{pos}}°",
+    "roundQuarterfinal": "Cuartos",
+    "roundSemifinal": "Semi",
+    "roundFinal": "Final",
+    "roundGeneric": "Ronda {{n}}"
   },
   "cupGroups": {
     "groupStage": "Fase de Grupos",

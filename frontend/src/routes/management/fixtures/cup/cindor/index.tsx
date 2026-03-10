@@ -51,7 +51,7 @@ function CindorCupWizard() {
 
       // Obtener tipo de competicion CINDOR_CUP
       const typesResponse = await CompetitionTypeService.getCompetitionTypes()
-      const cindorType = typesResponse.competitionTypes.find((ct) => ct.name === 'CINDOR_CUP')
+      const cindorType = typesResponse.competitionTypes.find((ct) => ct.name === 'CINDOR_CUP' && ct.category === 'KEMPESITA')
       if (!cindorType) {
         setError('No se encontro el tipo de competicion Copa Cindor')
         setLoading(false)

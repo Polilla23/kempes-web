@@ -4,7 +4,7 @@ import { createColumnHelper } from '@tanstack/react-table'
 import { DefaultHeader } from '@/components/table/table-header'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Search, Ellipsis, Pencil, Trash2, Trophy, Settings } from 'lucide-react'
+import { Search, Ellipsis, Trash2, Trophy, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -17,23 +17,18 @@ import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import CompetitionService, { type Competition } from '@/services/competition.service'
-import type { CompetitionType } from '@/services/competition-type.service'
-import CreateCompetitionForm from './create-competition-form'
-import EditCompetitionForm from './edit-competition-form'
+import { formatCompetitionTypeLabel } from '@/lib/competition-labels'
 
 interface CompetitionsTabProps {
   competitions: Competition[]
-  competitionTypes: CompetitionType[]
   onRefresh: () => void
 }
 
-export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: CompetitionsTabProps) {
+export function CompetitionsTab({ competitions, onRefresh }: CompetitionsTabProps) {
   const { t } = useTranslation('fixtures')
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   // Debounce search term
   useEffect(() => {
@@ -68,14 +63,15 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
     }
   }
 
-  const handleEditClick = (competition: Competition) => {
-    setSelectedCompetition(competition)
-    setIsEditModalOpen(true)
-  }
-
-  const handleEditClose = () => {
-    setSelectedCompetition(null)
-    setIsEditModalOpen(false)
+  const handleToggleActive = async (competitionId: string, isActive: boolean) => {
+    try {
+      await CompetitionService.toggleActive(competitionId, isActive)
+      toast.success(`Competition ${isActive ? 'activated' : 'deactivated'} successfully`)
+      onRefresh()
+    } catch (error) {
+      console.error('Error toggling competition active status:', error)
+      toast.error('Failed to update competition status')
+    }
   }
 
   const columnHelper = createColumnHelper<Competition>()
@@ -90,7 +86,8 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
         header: (info) => <DefaultHeader info={info} name="Type" type="string" />,
         cell: ({ row }) => {
           const type = row.getValue('type') as Competition['type']
-          return <span>{type?.name || 'N/A'}</span>
+          if (!type?.name) return <span>N/A</span>
+          return <span>{formatCompetitionTypeLabel(type.name, type.category || '')}</span>
         },
       }),
       columnHelper.accessor('seasonId', {
@@ -101,7 +98,13 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
         header: (info) => <DefaultHeader info={info} name="Active?" type="boolean" />,
         cell: ({ row }) => (
           <div className="pl-5">
-            <Checkbox checked={row.original.isActive} disabled />
+            <Checkbox
+              checked={row.original.isActive}
+              onCheckedChange={(checked) =>
+                handleToggleActive(row.original.id, checked === true)
+              }
+              className="cursor-pointer"
+            />
           </div>
         ),
       }),
@@ -120,9 +123,6 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(competition)}>
-                    <Pencil className="size-4" /> Edit
-                  </DropdownMenuItem>
                   {/* Cup-specific actions: only for CUP format + ROUND_ROBIN system */}
                   {(competition.type?.format === 'CUP' || competition.competitionType?.format === 'CUP') &&
                     competition.system === 'ROUND_ROBIN' && (
@@ -164,7 +164,7 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
         },
       }),
     ],
-    [isEditModalOpen]
+    []
   )
 
   return (
@@ -182,20 +182,8 @@ export function CompetitionsTab({ competitions, competitionTypes, onRefresh }: C
           onChange={(e) => setSearch(e.target.value)}
         />
         <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 size-4 select-none" />
-        <CreateCompetitionForm competitionTypes={competitionTypes} onSuccess={onRefresh} />
       </div>
       <DataTable<Competition, any> columns={columns} data={filteredCompetitions} />
-      {selectedCompetition && (
-        <EditCompetitionForm
-          competition={selectedCompetition}
-          competitionTypes={competitionTypes}
-          onSuccess={() => {
-            onRefresh()
-            handleEditClose()
-          }}
-          onClose={handleEditClose}
-        />
-      )}
     </div>
   )
 }

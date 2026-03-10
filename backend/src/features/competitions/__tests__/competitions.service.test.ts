@@ -1,7 +1,8 @@
 import { CompetitionService } from '../competitions.service'
-import { ICompetitionRepository } from '../interface/ICompetitionRepository'
+import { ICompetitionRepository, CompetitionWithType } from '../interface/ICompetitionRepository'
 import { ICompetitionTypeRepository } from '../../competition-types/interface/ICompetitionTypeRepository'
 import { FixtureRepository } from '../../fixtures/fixtures.repository'
+import { StandingsService } from '../../seasons/standings.service'
 import { Competition, CompetitionType, PrismaClient } from '@prisma/client'
 import { CompetitionNotFoundError } from '../competitions.errors'
 
@@ -12,6 +13,7 @@ const mockCompetitionRepository: jest.Mocked<ICompetitionRepository> = {
   findOneByIdWithType: jest.fn(),
   findOneBySeasonId: jest.fn(),
   updateOneById: jest.fn(),
+  updateIsActive: jest.fn(),
   deleteOneById: jest.fn(),
 }
 
@@ -19,12 +21,13 @@ const mockCompetitionTypeRepository: jest.Mocked<ICompetitionTypeRepository> = {
   save: jest.fn(),
   findAll: jest.fn(),
   findOneById: jest.fn(),
-  findOneByName: jest.fn(),
+  findOneByNameAndCategory: jest.fn(),
   updateOneById: jest.fn(),
   deleteOneById: jest.fn(),
 }
 
 const mockFixtureRepository = {} as FixtureRepository
+const mockStandingsService = {} as StandingsService
 const mockPrisma = {} as PrismaClient
 
 describe('CompetitionService - Operaciones Básicas', () => {
@@ -35,6 +38,7 @@ describe('CompetitionService - Operaciones Básicas', () => {
     competitionService = new CompetitionService({
       competitionRepository: mockCompetitionRepository,
       competitionTypeRepository: mockCompetitionTypeRepository,
+      standingsService: mockStandingsService,
       fixtureRepository: mockFixtureRepository,
       prisma: mockPrisma,
     })
@@ -42,29 +46,6 @@ describe('CompetitionService - Operaciones Básicas', () => {
 
   describe('findAllCompetitions', () => {
     it('debería retornar todas las competiciones con sus tipos', async () => {
-      const mockCompetitions: Competition[] = [
-        {
-          id: '1',
-          name: 'Liga A - T1',
-          competitionTypeId: 'type-1',
-          seasonId: 'season-1',
-          system: 'ROUND_ROBIN' as any,
-          isActive: true,
-          parentCompetitionId: null,
-          rules: {},
-        },
-        {
-          id: '2',
-          name: 'Copa - T1',
-          competitionTypeId: 'type-2',
-          seasonId: 'season-1',
-          system: 'KNOCKOUT' as any,
-          isActive: true,
-          parentCompetitionId: null,
-          rules: {},
-        },
-      ]
-
       const mockCompetitionType1: CompetitionType = {
         id: 'type-1',
         hierarchy: 1,
@@ -83,10 +64,32 @@ describe('CompetitionService - Operaciones Básicas', () => {
         trophyImage: 'trophy2.png',
       }
 
+      const mockCompetitions: CompetitionWithType[] = [
+        {
+          id: '1',
+          name: 'Liga A - T1',
+          competitionTypeId: 'type-1',
+          seasonId: 'season-1',
+          system: 'ROUND_ROBIN' as any,
+          isActive: true,
+          parentCompetitionId: null,
+          rules: {},
+          competitionType: mockCompetitionType1,
+        },
+        {
+          id: '2',
+          name: 'Copa - T1',
+          competitionTypeId: 'type-2',
+          seasonId: 'season-1',
+          system: 'KNOCKOUT' as any,
+          isActive: true,
+          parentCompetitionId: null,
+          rules: {},
+          competitionType: mockCompetitionType2,
+        },
+      ]
+
       mockCompetitionRepository.findAll.mockResolvedValue(mockCompetitions)
-      mockCompetitionTypeRepository.findOneById
-        .mockResolvedValueOnce(mockCompetitionType1)
-        .mockResolvedValueOnce(mockCompetitionType2)
 
       const result = await competitionService.findAllCompetitions()
 
@@ -163,6 +166,48 @@ describe('CompetitionService - Operaciones Básicas', () => {
 
       expect(result.competition).toEqual(mockCompetition)
       expect(result.competitionTypeData).toBeNull()
+    })
+  })
+
+  describe('toggleCompetitionActive', () => {
+    it('debería cambiar el estado activo de una competición', async () => {
+      const mockCompetition: Competition = {
+        id: '1',
+        name: 'Liga A - T1',
+        competitionTypeId: 'type-1',
+        seasonId: 'season-1',
+        system: 'ROUND_ROBIN' as any,
+        isActive: true,
+        parentCompetitionId: null,
+        rules: {},
+      }
+
+      const updatedCompetition: Competition = { ...mockCompetition, isActive: false }
+
+      const mockCompetitionType: CompetitionType = {
+        id: 'type-1',
+        hierarchy: 1,
+        name: 'FIRST_DIVISION' as any,
+        format: 'LEAGUE' as any,
+        category: 'SENIOR' as any,
+        trophyImage: 'trophy1.png',
+      }
+
+      mockCompetitionRepository.findOneById.mockResolvedValue(mockCompetition)
+      mockCompetitionRepository.updateIsActive.mockResolvedValue(updatedCompetition)
+      mockCompetitionTypeRepository.findOneById.mockResolvedValue(mockCompetitionType)
+
+      const result = await competitionService.toggleCompetitionActive('1', false)
+
+      expect(mockCompetitionRepository.updateIsActive).toHaveBeenCalledWith('1', false)
+      expect(result.competition.isActive).toBe(false)
+      expect(result.competitionTypeData).toBeDefined()
+    })
+
+    it('debería lanzar error si la competición no existe', async () => {
+      mockCompetitionRepository.findOneById.mockResolvedValue(null)
+
+      await expect(competitionService.toggleCompetitionActive('999', true)).rejects.toThrow(CompetitionNotFoundError)
     })
   })
 })

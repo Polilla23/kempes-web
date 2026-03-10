@@ -87,7 +87,7 @@ export class SeasonService {
   /**
    * Obtiene los movimientos de equipos de una temporada específica
    */
-  async getSeasonMovements(seasonNumber: number) {
+  async getSeasonMovements(seasonNumber: number, category?: string) {
     // Buscar la temporada por número
     const season = await this.seasonRepository.findOneByNumber(seasonNumber)
     if (!season) {
@@ -96,8 +96,13 @@ export class SeasonService {
 
     // Obtener movimientos guardados en SeasonTransition
     const transitions = await this.seasonRepository.findTransitionsBySeason(season.id)
-    
-    return transitions.map((t: any) => ({
+
+    // Filtrar por categoría en el service layer
+    const filtered = category
+      ? transitions.filter((t: any) => t.fromCompetition.competitionType.category === category)
+      : transitions
+
+    return filtered.map((t: any) => ({
       clubId: t.clubId,
       clubName: t.club.name,
       fromCompetitionId: t.fromCompetitionId,
@@ -193,7 +198,7 @@ export class SeasonService {
     const competitionStatuses = competitions.map((comp) => {
       const totalMatches = comp.matches.length
       const completedMatches = comp.matches.filter(
-        (m) => m.status === MatchStatus.FINALIZADO
+        (m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO
       ).length
       const pendingMatches = totalMatches - completedMatches
 
@@ -205,11 +210,11 @@ export class SeasonService {
         (m) => m.stage === CompetitionStage.ROUND_ROBIN
       )
       const regularComplete = regularMatches.every(
-        (m) => m.status === MatchStatus.FINALIZADO
+        (m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO
       )
       const postSeasonComplete =
         knockoutMatches.length === 0 ||
-        knockoutMatches.every((m) => m.status === MatchStatus.FINALIZADO)
+        knockoutMatches.every((m) => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO)
 
       return {
         id: comp.id,

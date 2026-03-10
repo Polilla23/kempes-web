@@ -33,17 +33,16 @@ async function main() {
   console.log('Seeding competition types...')
 
   for (const type of competitionTypes) {
-    const existing = await prisma.competitionType.findUnique({
-      where: { name: type.name }
+    const existing = await prisma.competitionType.findFirst({
+      where: { name: type.name, category: type.category }
     })
 
     if (existing) {
       // Update if exists (upsert behavior)
       await prisma.competitionType.update({
-        where: { name: type.name },
+        where: { id: existing.id },
         data: {
           format: type.format,
-          category: type.category,
           hierarchy: type.hierarchy,
         }
       })

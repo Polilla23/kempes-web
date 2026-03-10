@@ -10,6 +10,13 @@ import {
 } from '@/components/ui/dialog'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import type { CompetitionType } from '@/types'
 import { CompetitionTypeService, type CompetitionTypeFormData } from '@/services/competition-type.service'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,11 +32,27 @@ interface EditCompetitionTypeFormProps {
   competitionType: CompetitionType
 }
 
+// Enum values from Prisma schema
+const COMPETITION_NAMES = [
+  'LEAGUE_A', 'LEAGUE_B', 'LEAGUE_C', 'LEAGUE_D', 'LEAGUE_E',
+  'KEMPES_CUP', 'GOLD_CUP', 'SILVER_CUP', 'CINDOR_CUP', 'SUPER_CUP', 'PROMOTIONS',
+] as const
+
+const COMPETITION_FORMATS = ['LEAGUE', 'CUP'] as const
+const COMPETITION_CATEGORIES = ['SENIOR', 'KEMPESITA', 'MIXED'] as const
+
+// Labels amigables para la UI
+import {
+  NAME_LABELS,
+  FORMAT_LABELS,
+  CATEGORY_LABELS,
+} from '@/lib/competition-labels'
+
 const competitionTypeSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  format: z.string().optional(),
-  hierarchy: z.coerce.number().optional(),
-  category: z.string().optional(),
+  name: z.enum(COMPETITION_NAMES, { required_error: 'Seleccioná un nombre' }),
+  format: z.enum(COMPETITION_FORMATS, { required_error: 'Seleccioná un formato' }),
+  hierarchy: z.coerce.number().min(1, 'La jerarquía debe ser al menos 1'),
+  category: z.enum(COMPETITION_CATEGORIES, { required_error: 'Seleccioná una categoría' }),
 })
 
 function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCompetitionTypeFormProps) {
@@ -38,10 +61,10 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
   const form = useForm<z.infer<typeof competitionTypeSchema>>({
     resolver: zodResolver(competitionTypeSchema),
     defaultValues: {
-      name: competitionType.name || '',
-      format: competitionType.format || '',
+      name: competitionType.name as typeof COMPETITION_NAMES[number],
+      format: competitionType.format as typeof COMPETITION_FORMATS[number],
       hierarchy: competitionType.hierarchy,
-      category: competitionType.category || '',
+      category: competitionType.category as typeof COMPETITION_CATEGORIES[number],
     },
   })
 
@@ -51,17 +74,17 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
 
       const updateData: CompetitionTypeFormData = {
         name: values.name,
-        ...(values.format && { format: values.format }),
-        ...(values.hierarchy !== undefined && { hierarchy: values.hierarchy }),
-        ...(values.category && { category: values.category }),
+        format: values.format,
+        hierarchy: values.hierarchy,
+        category: values.category,
       }
 
       await CompetitionTypeService.updateCompetitionType(competitionType.id, updateData)
-      toast.success('Competition type updated successfully!')
+      toast.success('Tipo de competencia actualizado correctamente')
       onSuccess?.()
     } catch (error) {
       console.error('Error updating competition type:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to update competition type')
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar el tipo de competencia')
     } finally {
       setIsSubmitting(false)
     }
@@ -71,9 +94,9 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
     <Dialog open={!!competitionType} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Edit Competition Type</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Editar Tipo de Competencia</DialogTitle>
           <DialogDescription>
-            Make changes to the competition type here. Click save when you're done.
+            Modificá los datos del tipo de competencia. Hacé clic en guardar cuando termines.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,20 +107,21 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Name</FormLabel>
-                  <FormControl>
-                    <div className="relative select-none">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
-                        <Tag className="size-4 text-gray-400 select-none" />
-                      </div>
-                      <Input
-                        type="text"
-                        placeholder="e.g., LEAGUE, CUP"
-                        className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
+                  <FormLabel>Nombre</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Seleccionar nombre" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPETITION_NAMES.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {NAME_LABELS[name] || name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -108,15 +132,21 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="format"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Format (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="e.g., SINGLE_ELIMINATION, ROUND_ROBIN"
-                      className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Formato</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Seleccionar formato" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPETITION_FORMATS.map((format) => (
+                        <SelectItem key={format} value={format}>
+                          {FORMAT_LABELS[format] || format}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -127,12 +157,12 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="hierarchy"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Hierarchy (optional)</FormLabel>
+                  <FormLabel>Jerarquía</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder="e.g., 1, 2, 3"
-                      className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                      placeholder="ej: 1, 2, 3"
+                      className="h-11"
                       {...field}
                     />
                   </FormControl>
@@ -146,15 +176,21 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Category (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="e.g., SENIOR, JUNIOR"
-                      className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Categoría</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPETITION_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {CATEGORY_LABELS[cat] || cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -163,7 +199,7 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={isSubmitting}>
-                  Cancel
+                  Cancelar
                 </Button>
               </DialogClose>
               <Button
@@ -174,12 +210,12 @@ function EditCompetitionTypeForm({ onSuccess, onClose, competitionType }: EditCo
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Saving...
+                    Guardando...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Tag className="size-4" />
-                    Save Changes
+                    Guardar Cambios
                   </div>
                 )}
               </Button>

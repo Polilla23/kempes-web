@@ -1,4 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
+import { CompetitionCategory } from '@prisma/client'
 import { SeasonService } from '@/features/seasons/seasons.service'
 import { StandingsService } from '@/features/seasons/standings.service'
 import { SeasonMapper, Response } from '@/features/core'
@@ -163,14 +164,20 @@ export class SeasonController {
   }
 
   async getMovements(
-    req: FastifyRequest<{ Params: { seasonNumber: string } }>,
+    req: FastifyRequest<{ Params: { seasonNumber: string }; Querystring: { category?: string } }>,
     reply: FastifyReply
   ) {
     const { seasonNumber } = req.params
+    const { category } = req.query as { category?: string }
 
     try {
       const validNumber = Validator.number(parseInt(seasonNumber), 1)
-      const movements = await this.seasonService.getSeasonMovements(validNumber)
+
+      if (category && !Object.values(CompetitionCategory).includes(category as CompetitionCategory)) {
+        return Response.error(reply, 'VALIDATION_ERROR', `Invalid category: ${category}`, 400)
+      }
+
+      const movements = await this.seasonService.getSeasonMovements(validNumber, category)
 
       return Response.success(
         reply,

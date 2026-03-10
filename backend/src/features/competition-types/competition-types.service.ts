@@ -46,7 +46,7 @@ export class CompetitionTypeService {
   }: CreateCompetitionTypeInput & {
     trophyImageFile?: { buffer: Buffer; filename: string; mimetype: string }
   }) {
-    const competitionTypeFound = await this.competitionTypeRepository.findOneByName(name)
+    const competitionTypeFound = await this.competitionTypeRepository.findOneByNameAndCategory(name, category)
     if (competitionTypeFound) {
       throw new CompetitionTypeAlreadyExistsError()
     }

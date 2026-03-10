@@ -213,7 +213,26 @@ export type CompetitionStandings = {
   matchesTotal: number
   leaguePosition?: 'TOP' | 'MIDDLE' | 'BOTTOM' | null  // Posicion en jerarquia de ligas
   activeZones?: string[]  // Zonas presentes en esta tabla (para leyenda dinamica)
+  zoneDescriptions?: ZoneDescription[]  // Descripcion detallada de zonas para leyenda
   [key: string]: unknown    // Index signature para Prisma JSON
+}
+
+// ============================================
+// DESCRIPCIÓN DE ZONAS PARA LEYENDA DE STANDINGS
+// ============================================
+
+export type ReducidoRound = {
+  type: 'start' | 'waiting'
+  positions?: [number, number]   // Para 'start': las dos posiciones iniciales
+  waitingPosition?: number       // Para 'waiting': posición del equipo que espera
+  roundName: string              // 'quarterfinal' | 'semifinal' | 'final'
+}
+
+export type ZoneDescription = {
+  zone: string              // Clave de zona (ej: 'champion', 'liguilla', 'relegation')
+  positions: number[]       // Posiciones 1-based (ej: [1, 2, 3, 4])
+  detail?: string           // Info extra: 'loserGoesToPromotion' | 'winnerGoesToPromotion'
+  reducidoRounds?: ReducidoRound[]  // Solo para zona 'reducido'
 }
 
 export type CompetitionWithType = Competition & {

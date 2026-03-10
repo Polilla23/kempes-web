@@ -2,6 +2,13 @@ import { Button } from '@/components/ui/button'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -23,11 +30,27 @@ interface CreateCompetitionTypeFormProps {
   onSuccess?: () => void
 }
 
+// Enum values from Prisma schema
+const COMPETITION_NAMES = [
+  'LEAGUE_A', 'LEAGUE_B', 'LEAGUE_C', 'LEAGUE_D', 'LEAGUE_E',
+  'KEMPES_CUP', 'GOLD_CUP', 'SILVER_CUP', 'CINDOR_CUP', 'SUPER_CUP', 'PROMOTIONS',
+] as const
+
+const COMPETITION_FORMATS = ['LEAGUE', 'CUP'] as const
+const COMPETITION_CATEGORIES = ['SENIOR', 'KEMPESITA', 'MIXED'] as const
+
+// Labels amigables para la UI
+import {
+  NAME_LABELS,
+  FORMAT_LABELS,
+  CATEGORY_LABELS,
+} from '@/lib/competition-labels'
+
 const competitionTypeSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  format: z.string().optional(),
-  hierarchy: z.coerce.number().optional(),
-  category: z.string().optional(),
+  name: z.enum(COMPETITION_NAMES, { required_error: 'Seleccioná un nombre' }),
+  format: z.enum(COMPETITION_FORMATS, { required_error: 'Seleccioná un formato' }),
+  hierarchy: z.coerce.number().min(1, 'La jerarquía debe ser al menos 1'),
+  category: z.enum(COMPETITION_CATEGORIES, { required_error: 'Seleccioná una categoría' }),
 })
 
 const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps) => {
@@ -37,10 +60,10 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
   const form = useForm<z.infer<typeof competitionTypeSchema>>({
     resolver: zodResolver(competitionTypeSchema),
     defaultValues: {
-      name: '',
-      format: '',
+      name: undefined,
+      format: undefined,
       hierarchy: undefined,
-      category: '',
+      category: undefined,
     },
   })
 
@@ -50,13 +73,13 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
 
       const data: CompetitionTypeFormData = {
         name: values.name,
-        ...(values.format && { format: values.format }),
-        ...(values.hierarchy !== undefined && { hierarchy: values.hierarchy }),
-        ...(values.category && { category: values.category }),
+        format: values.format,
+        hierarchy: values.hierarchy,
+        category: values.category,
       }
 
       await CompetitionTypeService.createCompetitionType(data)
-      toast.success('Competition type created successfully!')
+      toast.success('Tipo de competencia creado correctamente')
 
       form.reset()
       setOpen(false)
@@ -64,7 +87,7 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
     } catch (error: any) {
       console.error('Error creating competition type:', error)
       toast.error(
-        error instanceof Error ? error.message : 'An error occurred while creating the competition type.'
+        error instanceof Error ? error.message : 'Error al crear el tipo de competencia.'
       )
     } finally {
       setIsSubmitting(false)
@@ -84,13 +107,13 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
       <DialogTrigger asChild>
         <Button variant="outline" className="ml-auto">
           <Plus className="size-4" />
-          New Type
+          Nuevo Tipo
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Create Competition Type</DialogTitle>
-          <DialogDescription>Add a new competition type to the system</DialogDescription>
+          <DialogTitle className="text-xl font-semibold">Crear Tipo de Competencia</DialogTitle>
+          <DialogDescription>Agregá un nuevo tipo de competencia al sistema</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -100,20 +123,21 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Name</FormLabel>
-                  <FormControl>
-                    <div className="relative select-none">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
-                        <Tag className="size-4 text-gray-400 select-none" />
-                      </div>
-                      <Input
-                        type="text"
-                        placeholder="e.g., LEAGUE, CUP"
-                        className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                        {...field}
-                      />
-                    </div>
-                  </FormControl>
+                  <FormLabel>Nombre</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Seleccionar nombre" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPETITION_NAMES.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {NAME_LABELS[name] || name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -124,15 +148,21 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="format"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Format (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="e.g., SINGLE_ELIMINATION, ROUND_ROBIN"
-                      className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Formato</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Seleccionar formato" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPETITION_FORMATS.map((format) => (
+                        <SelectItem key={format} value={format}>
+                          {FORMAT_LABELS[format] || format}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -143,12 +173,12 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="hierarchy"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Hierarchy (optional)</FormLabel>
+                  <FormLabel>Jerarquía</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
-                      placeholder="e.g., 1, 2, 3"
-                      className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
+                      placeholder="ej: 1, 2, 3"
+                      className="h-11"
                       {...field}
                     />
                   </FormControl>
@@ -162,15 +192,21 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="select-none">Category (optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="e.g., SENIOR, JUNIOR"
-                      className="h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                      {...field}
-                    />
-                  </FormControl>
+                  <FormLabel>Categoría</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="h-11">
+                        <SelectValue placeholder="Seleccionar categoría" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {COMPETITION_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {CATEGORY_LABELS[cat] || cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -179,7 +215,7 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={isSubmitting}>
-                  Cancel
+                  Cancelar
                 </Button>
               </DialogClose>
               <Button
@@ -190,12 +226,12 @@ const CreateCompetitionTypeForm = ({ onSuccess }: CreateCompetitionTypeFormProps
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin" />
-                    Creating...
+                    Creando...
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Tag className="size-4" />
-                    Create Type
+                    Crear Tipo
                   </div>
                 )}
               </Button>

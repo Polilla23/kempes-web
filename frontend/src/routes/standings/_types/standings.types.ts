@@ -1,4 +1,4 @@
-import type { CompetitionStandings, TeamStanding } from '@/services/standings.service'
+import type { CompetitionStandings, TeamStanding, ZoneDescription } from '@/services/standings.service'
 import type { MatchDetailedDTO } from '@/services/fixture.service'
 
 // Categorías - sin 'supercopa' porque no tiene tabla de posiciones
@@ -99,4 +99,4 @@ export interface BracketRound {
 }
 
 // Re-export para conveniencia
-export type { CompetitionStandings, TeamStanding }
+export type { CompetitionStandings, TeamStanding, ZoneDescription } from '@/services/standings.service'
