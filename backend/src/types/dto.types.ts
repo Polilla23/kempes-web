@@ -94,6 +94,7 @@ export type MatchDTO = {
 
 // MatchDTO con información de competencia para filtrado en frontend
 export type MatchDetailedDTO = MatchDTO & {
+  plazoId?: string | null
   competition: {
     id: string
     name: string

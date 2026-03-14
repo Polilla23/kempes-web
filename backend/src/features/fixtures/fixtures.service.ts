@@ -798,6 +798,13 @@ export class FixtureService {
           hierarchy: match.competition.competitionType.hierarchy,
         },
       },
+      plazo: match.plazo ? {
+        id: match.plazo.id,
+        title: match.plazo.title,
+        order: match.plazo.order,
+        deadline: match.plazo.deadline,
+        isOpen: match.plazo.isOpen,
+      } : null,
       isUserHome: match.homeClubId === club.id,
     }))
   }

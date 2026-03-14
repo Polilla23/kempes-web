@@ -426,9 +426,9 @@ export class CompetitionService {
     // Extraer team IDs de los placements
     const teamIds = [...new Set(config.teamPlacements.map(p => p.teamId))]
 
-    // Validar que sean exactamente 6 equipos
-    if (teamIds.length !== 6) {
-      throw new Error(`Supercopa requires exactly 6 teams, got ${teamIds.length}`)
+    // Validar que sean exactamente 5 equipos
+    if (teamIds.length !== 5) {
+      throw new Error(`Supercopa requires exactly 5 teams, got ${teamIds.length}`)
     }
 
     const season = await this.prisma.season.findUnique({ where: { id: config.seasonId } })
@@ -447,7 +447,7 @@ export class CompetitionService {
           isActive: true,
           rules: {
             type: 'SUPER_CUP',
-            teamCount: 6,
+            teamCount: 5,
             teamPlacements: config.teamPlacements,
           } as unknown as Prisma.InputJsonValue,
         },

@@ -81,6 +81,15 @@ export class PlayerService {
     return response.data?.data
   }
 
+  // Bulk update overalls + auto-recalculate salaries
+  static async bulkUpdateOveralls(updates: Array<{ playerId: string; overall: number }>) {
+    const response = await api.post<{ data: { updated: number; results: Array<{ playerId: string; overall: number; salary: number }> } }>(
+      '/api/v1/players/update-overalls',
+      { updates }
+    )
+    return response.data?.data
+  }
+
   static async deletePlayer(id: string): Promise<PlayerResponse> {
     try {
       const response = await api.delete<{ data: Player; message: string }>(`/api/v1/players/${id}`)

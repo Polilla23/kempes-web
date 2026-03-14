@@ -223,6 +223,7 @@ export interface GenerateGoldSilverResponse {
 export interface MatchDetailedDTO {
   id: string
   competitionId: string
+  plazoId?: string | null
   homeClub: {
     id: string
     name: string

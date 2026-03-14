@@ -1,14 +1,15 @@
 import type { CompetitionStandings, TeamStanding, ZoneDescription } from '@/services/standings.service'
 import type { MatchDetailedDTO } from '@/services/fixture.service'
 
-// Categorías - sin 'supercopa' porque no tiene tabla de posiciones
-export type Category = 'mayores' | 'menores'
+// Categorías
+export type Category = 'mayores' | 'menores' | 'supercopa'
 export type CompetitionTypeFilter = 'liga' | 'copa'
 
 // Mapeo de categorías frontend -> backend
 export const CATEGORY_MAP: Record<Category, string[]> = {
   mayores: ['SENIOR'],
   menores: ['KEMPESITA'],
+  supercopa: ['MIXED'],
 }
 
 // Mapeo de formato frontend -> backend

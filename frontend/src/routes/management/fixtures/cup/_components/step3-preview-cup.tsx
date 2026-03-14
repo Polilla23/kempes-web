@@ -33,11 +33,11 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
         throw new Error('Falta información de temporada o tipo de competición')
       }
 
-      // Convertir groupAssignments al formato del backend
+      // Convertir groupAssignments al formato del backend (filtrar Libre)
       const groups: CupGroup[] = Object.entries(wizardState.groupAssignments).map(
         ([groupName, teams]) => ({
           groupName,
-          clubIds: teams.map((team) => team.id),
+          clubIds: teams.filter((team) => team.id !== wizardState.libreClubId).map((team) => team.id),
         })
       )
 
@@ -75,7 +75,10 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
     }
   }
 
-  const totalTeams = wizardState.numGroups * wizardState.teamsPerGroup
+  // Contar equipos reales (sin Libre)
+  const totalRealTeams = Object.values(wizardState.groupAssignments)
+    .flat()
+    .filter((t) => t.id !== wizardState.libreClubId).length
   const totalGoldTeams = wizardState.numGroups * wizardState.qualifyToGold
   const totalSilverTeams = wizardState.numGroups * wizardState.qualifyToSilver
 
@@ -130,7 +133,7 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
               <div className="text-sm text-muted-foreground">Grupos</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-3xl font-bold text-primary">{totalTeams}</div>
+              <div className="text-3xl font-bold text-primary">{totalRealTeams}</div>
               <div className="text-sm text-muted-foreground">Equipos Totales</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
@@ -188,26 +191,36 @@ export function Step3PreviewCup({ wizardState, onBack }: Step3PreviewCupProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {teams.map((team, index) => (
-                      <div
-                        key={team.id}
-                        className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
-                      >
-                        <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">
-                          {index + 1}
-                        </Badge>
-                        {team.logo ? (
-                          <img
-                            src={team.logo}
-                            alt={team.name}
-                            className="h-5 w-5 object-contain rounded"
-                          />
-                        ) : (
-                          <Users className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm font-medium truncate">{team.name}</span>
-                      </div>
-                    ))}
+                    {teams.map((team, index) => {
+                      const isLibre = team.id === wizardState.libreClubId
+                      return (
+                        <div
+                          key={`${team.id}-${index}`}
+                          className={`flex items-center gap-2 p-2 rounded-lg ${isLibre ? 'bg-muted/10 border border-dashed border-muted-foreground/30' : 'bg-muted/30'}`}
+                        >
+                          <Badge variant="outline" className="w-6 h-6 flex items-center justify-center">
+                            {index + 1}
+                          </Badge>
+                          {team.logo ? (
+                            <img
+                              src={team.logo}
+                              alt={team.name}
+                              className="h-5 w-5 object-contain rounded"
+                            />
+                          ) : (
+                            <Users className="h-5 w-5 text-muted-foreground" />
+                          )}
+                          <span className={`text-sm font-medium truncate ${isLibre ? 'text-muted-foreground italic' : ''}`}>
+                            {team.name}
+                          </span>
+                          {isLibre && (
+                            <Badge variant="outline" className="text-[10px] ml-auto">
+                              Sin partidos
+                            </Badge>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </CardContent>
               </Card>

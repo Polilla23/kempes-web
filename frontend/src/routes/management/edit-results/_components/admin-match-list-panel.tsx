@@ -9,12 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Calendar, Trophy, Shield, Check, Users, Loader2 } from 'lucide-react'
+import { Calendar, Trophy, Shield, Check, Users, Loader2, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import type { MatchDetailedDTO } from '@/services/fixture.service'
 import { SeasonService } from '@/services/season.service'
 import { FixtureService } from '@/services/fixture.service'
+import { PlazoService, type PlazoDTO } from '@/services/plazo.service'
 
 type Category = 'mayores' | 'menores' | 'supercopa'
 type StatusFilter = 'all' | 'FINALIZADO' | 'PENDIENTE' | 'CANCELADO'
@@ -98,11 +99,15 @@ export function AdminMatchListPanel({
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingMatches, setIsLoadingMatches] = useState(false)
 
+  // Plazos
+  const [plazos, setPlazos] = useState<PlazoDTO[]>([])
+
   // Filters
   const [selectedSeason, setSelectedSeason] = useState<string>('')
   const [selectedCategory, setSelectedCategory] = useState<Category>('mayores')
   const [selectedCompetition, setSelectedCompetition] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all')
+  const [selectedPlazo, setSelectedPlazo] = useState<string>('all')
 
   // Load seasons on mount
   useEffect(() => {
@@ -141,6 +146,27 @@ export function AdminMatchListPanel({
     loadMatches()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSeason, refreshKey])
+
+  // Load plazos when season changes
+  useEffect(() => {
+    if (!selectedSeason) return
+    const loadPlazos = async () => {
+      try {
+        const data = await PlazoService.getBySeason(selectedSeason)
+        setPlazos(data)
+      } catch {
+        setPlazos([])
+      }
+    }
+    loadPlazos()
+  }, [selectedSeason])
+
+  // Build a map of plazoId -> plazo for overdue checking
+  const plazoMap = useMemo(() => {
+    const map = new Map<string, PlazoDTO>()
+    plazos.forEach((p) => map.set(p.id, p))
+    return map
+  }, [plazos])
 
   // Derive competitions from matches
   const competitionsFromMatches = useMemo(() => {
@@ -183,8 +209,12 @@ export function AdminMatchListPanel({
       result = result.filter((m) => m.status === selectedStatus)
     }
 
+    if (selectedPlazo !== 'all') {
+      result = result.filter((m) => m.plazoId === selectedPlazo)
+    }
+
     return result
-  }, [allMatches, selectedCompetition, selectedStatus, selectedCategory])
+  }, [allMatches, selectedCompetition, selectedStatus, selectedCategory, selectedPlazo])
 
   // Reset competition when category changes
   const handleCategoryChange = (cat: Category) => {
@@ -195,6 +225,7 @@ export function AdminMatchListPanel({
   const handleSeasonChange = (seasonId: string) => {
     setSelectedSeason(seasonId)
     setSelectedCompetition('all')
+    setSelectedPlazo('all')
   }
 
   const currentSeasonNumber = seasons.find((s) => s.id === selectedSeason)?.number
@@ -296,6 +327,24 @@ export function AdminMatchListPanel({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Plazo filter */}
+          {plazos.length > 0 && (
+            <Select value={selectedPlazo} onValueChange={setSelectedPlazo}>
+              <SelectTrigger className="w-full bg-secondary/50 border-border h-8 text-xs">
+                <SelectValue placeholder={t('filters.allPlazos')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('filters.allPlazos')}</SelectItem>
+                {plazos.map((plazo) => (
+                  <SelectItem key={plazo.id} value={plazo.id}>
+                    {plazo.title}
+                    {plazo.isOverdue && ' ⚠️'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         {/* Match count */}
@@ -356,10 +405,18 @@ export function AdminMatchListPanel({
                   {getStatusBadge(match.status, t)}
                 </div>
 
-                {/* Matchday */}
-                <p className="text-xs text-muted-foreground mb-1.5">
-                  {getKnockoutRoundLabel(match.knockoutRound, match.matchdayOrder)}
-                </p>
+                {/* Matchday + Overdue indicator */}
+                <div className="flex items-center gap-2 mb-1.5">
+                  <p className="text-xs text-muted-foreground">
+                    {getKnockoutRoundLabel(match.knockoutRound, match.matchdayOrder)}
+                  </p>
+                  {match.status === 'PENDIENTE' && match.plazoId && plazoMap.get(match.plazoId)?.isOverdue && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-destructive font-medium">
+                      <AlertTriangle className="w-3 h-3" />
+                      Vencido
+                    </span>
+                  )}
+                </div>
 
                 {/* Teams + Score */}
                 <div className="flex items-center justify-between">

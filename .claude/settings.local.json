@@ -32,7 +32,10 @@
       "Bash(npx jest --testPathPatterns=\"competitions\" --no-coverage)",
       "Bash(npx jest --testPathPattern=\"seasons\" --no-coverage)",
       "Bash(npx jest --testPathPatterns=\"seasons\" --no-coverage)",
-      "Bash(npx jest --testPathPatterns=\"standings\" --no-coverage)"
+      "Bash(npx jest --testPathPatterns=\"standings\" --no-coverage)",
+      "Bash(npx vite:*)",
+      "Bash(find /c/Users/Leand/kempes-web/backend -name \"*standings*\" -type f | grep -E \"\\\\.\\(ts\\)$\" | head -10)",
+      "Bash(git log:*)"
     ]
   }
 }

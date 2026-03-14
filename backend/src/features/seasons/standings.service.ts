@@ -1,4 +1,4 @@
-import { PrismaClient, MovementType, CompetitionFormat, CompetitionName, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory, KnockoutRound } from '@prisma/client'
+import { Prisma, PrismaClient, MovementType, CompetitionFormat, CompetitionName, MatchStatus, CupPhase, CompetitionStage, CompetitionCategory, KnockoutRound } from '@prisma/client'
 import { TeamStanding, CompetitionStandings, TopLeagueRules, MiddleLeagueRules, BottomLeagueRules, LiguillaConfig, ZoneDescription, ReducidoRound } from '@/types'
 
 type AnyLeagueRules = TopLeagueRules | MiddleLeagueRules | BottomLeagueRules
@@ -80,10 +80,15 @@ export class StandingsService {
       })
     }
 
-    // Filtrar solo partidos de fase regular (ROUND_ROBIN) para el standings de liga
-    // Los partidos post-temporada (KNOCKOUT con knockoutRound) no cuentan para la tabla
+    // Filtrar partidos que cuentan para la tabla de posiciones de liga:
+    // - Fase regular (ROUND_ROBIN) siempre cuenta
+    // - Liguilla (KNOCKOUT con knockoutRound LIGUILLA) también cuenta para la tabla combinada
+    // - Otros knockouts (TRIANGULAR, etc.) NO cuentan
     const regularMatches = competition.competitionType.format === CompetitionFormat.LEAGUE
-      ? competition.matches.filter((m) => m.stage === 'ROUND_ROBIN')
+      ? competition.matches.filter((m) =>
+          m.stage === 'ROUND_ROBIN' ||
+          (m.stage === CompetitionStage.KNOCKOUT && m.knockoutRound === KnockoutRound.LIGUILLA)
+        )
       : competition.matches
 
     // Contar partidos completados (finalizados o cancelados)
@@ -214,6 +219,11 @@ export class StandingsService {
    * Calcula los movimientos de equipos de una temporada a la siguiente
    */
   async calculateSeasonMovements(seasonId: string): Promise<TeamMovement[]> {
+    const result = await this.calculateSeasonMovementsWithCache(seasonId)
+    return result.movements
+  }
+
+  async calculateSeasonMovementsWithCache(seasonId: string): Promise<{ movements: TeamMovement[], standingsCache: Map<string, CompetitionStandings> }> {
     const season = await this.prisma.season.findUnique({
       where: { id: seasonId },
       include: {
@@ -421,66 +431,95 @@ export class StandingsService {
           liguillaMatches.every(m => m.status === MatchStatus.FINALIZADO || m.status === MatchStatus.CANCELADO)
 
         if (allDone) {
-          const regularStandings = standingsCache.get(league.id)!.standings
-          const teamsCount = liguillaConfig.teamsCount || 4
-          const miniTable = new Map<string, { points: number; gd: number; gf: number; regPos: number }>()
+          const combinedStandings = standingsCache.get(league.id)!.standings
 
-          for (let t = 0; t < teamsCount && t < regularStandings.length; t++) {
-            const s = regularStandings[t]
-            miniTable.set(s.clubId, {
-              points: liguillaConfig.keepPoints ? s.points : 0,
-              gd: 0,
-              gf: 0,
-              regPos: s.position,
-            })
-          }
-
-          // Acumular resultados de partidos finalizados
+          // Identificar participantes de liguilla desde los partidos (no desde posiciones)
+          const liguillaParticipantIds = new Set<string>()
           for (const match of liguillaMatches) {
-            if (match.status !== MatchStatus.FINALIZADO) continue
-            if (!match.homeClubId || !match.awayClubId) continue
-            if (match.homeClubGoals === null || match.awayClubGoals === null) continue
-
-            const home = miniTable.get(match.homeClubId)
-            const away = miniTable.get(match.awayClubId)
-            if (!home || !away) continue
-
-            home.gf += match.homeClubGoals
-            home.gd += (match.homeClubGoals - match.awayClubGoals)
-            away.gf += match.awayClubGoals
-            away.gd += (match.awayClubGoals - match.homeClubGoals)
-
-            if (match.homeClubGoals > match.awayClubGoals) {
-              home.points += 3
-            } else if (match.homeClubGoals < match.awayClubGoals) {
-              away.points += 3
-            } else {
-              home.points += 1
-              away.points += 1
-            }
+            if (match.homeClubId) liguillaParticipantIds.add(match.homeClubId)
+            if (match.awayClubId) liguillaParticipantIds.add(match.awayClubId)
           }
 
-          // Ordenar: puntos → dif gol → goles favor → posición regular
-          const sorted = Array.from(miniTable.entries()).sort((a, b) => {
-            if (b[1].points !== a[1].points) return b[1].points - a[1].points
-            if (b[1].gd !== a[1].gd) return b[1].gd - a[1].gd
-            if (b[1].gf !== a[1].gf) return b[1].gf - a[1].gf
-            return a[1].regPos - b[1].regPos
-          })
+          if (liguillaConfig.keepPoints) {
+            // calculateStandings() ya incluye resultados de liguilla en la tabla combinada.
+            // Filtrar a participantes de liguilla y usar su orden combinado directamente.
+            const liguillaStandings = combinedStandings.filter(s => liguillaParticipantIds.has(s.clubId))
 
-          // Actualizar movements con resultados de liguilla
-          for (let pos = 0; pos < sorted.length; pos++) {
-            const [clubId] = sorted[pos]
-            const idx = movements.findIndex(m => m.clubId === clubId)
-            if (idx === -1) continue
+            for (let pos = 0; pos < liguillaStandings.length; pos++) {
+              const s = liguillaStandings[pos]
+              const idx = movements.findIndex(m => m.clubId === s.clubId)
+              if (idx === -1) continue
 
-            if (pos === 0) {
-              movements[idx].movementType = MovementType.CHAMPION
-              movements[idx].reason = 'Campeón'
-              movements[idx].finalPosition = 1
-            } else {
-              movements[idx].reason = pos === 1 ? 'Subcampeón' : `${pos + 1}° Liguilla`
-              movements[idx].finalPosition = pos + 1
+              if (pos === 0) {
+                movements[idx].movementType = MovementType.CHAMPION
+                movements[idx].reason = 'Campeón'
+                movements[idx].finalPosition = 1
+              } else {
+                movements[idx].reason = pos === 1 ? 'Subcampeón' : `${pos + 1}° Liguilla`
+                movements[idx].finalPosition = pos + 1
+              }
+            }
+          } else {
+            // keepPoints: false — miniTabla con solo resultados de liguilla (sin arrastrar puntos)
+            const miniTable = new Map<string, { points: number; gd: number; gf: number; regPos: number }>()
+
+            for (const clubId of liguillaParticipantIds) {
+              const standing = combinedStandings.find(s => s.clubId === clubId)
+              miniTable.set(clubId, {
+                points: 0,
+                gd: 0,
+                gf: 0,
+                regPos: standing ? standing.position : 999,
+              })
+            }
+
+            // Acumular resultados de partidos finalizados
+            for (const match of liguillaMatches) {
+              if (match.status !== MatchStatus.FINALIZADO) continue
+              if (!match.homeClubId || !match.awayClubId) continue
+              if (match.homeClubGoals === null || match.awayClubGoals === null) continue
+
+              const home = miniTable.get(match.homeClubId)
+              const away = miniTable.get(match.awayClubId)
+              if (!home || !away) continue
+
+              home.gf += match.homeClubGoals
+              home.gd += (match.homeClubGoals - match.awayClubGoals)
+              away.gf += match.awayClubGoals
+              away.gd += (match.awayClubGoals - match.homeClubGoals)
+
+              if (match.homeClubGoals > match.awayClubGoals) {
+                home.points += 3
+              } else if (match.homeClubGoals < match.awayClubGoals) {
+                away.points += 3
+              } else {
+                home.points += 1
+                away.points += 1
+              }
+            }
+
+            // Ordenar: puntos → dif gol → goles favor → posición regular
+            const sorted = Array.from(miniTable.entries()).sort((a, b) => {
+              if (b[1].points !== a[1].points) return b[1].points - a[1].points
+              if (b[1].gd !== a[1].gd) return b[1].gd - a[1].gd
+              if (b[1].gf !== a[1].gf) return b[1].gf - a[1].gf
+              return a[1].regPos - b[1].regPos
+            })
+
+            // Actualizar movements con resultados de liguilla
+            for (let pos = 0; pos < sorted.length; pos++) {
+              const [clubId] = sorted[pos]
+              const idx = movements.findIndex(m => m.clubId === clubId)
+              if (idx === -1) continue
+
+              if (pos === 0) {
+                movements[idx].movementType = MovementType.CHAMPION
+                movements[idx].reason = 'Campeón'
+                movements[idx].finalPosition = 1
+              } else {
+                movements[idx].reason = pos === 1 ? 'Subcampeón' : `${pos + 1}° Liguilla`
+                movements[idx].finalPosition = pos + 1
+              }
             }
           }
         }
@@ -559,13 +598,13 @@ export class StandingsService {
       }
     }
 
-    return movements
+    return { movements, standingsCache }
   }
 
   /**
    * Guarda los snapshots históricos de clubes al finalizar una temporada
    */
-  async saveClubHistory(seasonId: string): Promise<void> {
+  async saveClubHistory(seasonId: string, standingsCache?: Map<string, CompetitionStandings>, precomputedMovements?: TeamMovement[]): Promise<void> {
     const season = await this.prisma.season.findUnique({
       where: { id: seasonId },
       include: {
@@ -583,32 +622,50 @@ export class StandingsService {
       throw new Error('Season not found')
     }
 
-    const movements = await this.calculateSeasonMovements(seasonId)
+    const movements = precomputedMovements || await this.calculateSeasonMovements(seasonId)
     const movementMap = new Map(
       movements.map((m) => [m.clubId, m.movementType])
     )
 
+    const allHistoryData: Array<{
+      clubId: string
+      seasonId: string
+      competitionId: string
+      finalPosition: number
+      points: number
+      played: number
+      won: number
+      drawn: number
+      lost: number
+      goalsFor: number
+      goalsAgainst: number
+      movement: MovementType
+    }> = []
+
     for (const competition of season.competitions) {
-      const standingsResult = await this.calculateStandings(competition.id)
+      const standingsResult = standingsCache?.get(competition.id)
+        || await this.calculateStandings(competition.id)
 
       for (const standing of standingsResult.standings) {
-        await this.prisma.clubHistory.create({
-          data: {
-            clubId: standing.clubId,
-            seasonId: seasonId,
-            competitionId: competition.id,
-            finalPosition: standing.position,
-            points: standing.points,
-            played: standing.played,
-            won: standing.won,
-            drawn: standing.drawn,
-            lost: standing.lost,
-            goalsFor: standing.goalsFor,
-            goalsAgainst: standing.goalsAgainst,
-            movement: movementMap.get(standing.clubId) || MovementType.STAYED,
-          },
+        allHistoryData.push({
+          clubId: standing.clubId,
+          seasonId: seasonId,
+          competitionId: competition.id,
+          finalPosition: standing.position,
+          points: standing.points,
+          played: standing.played,
+          won: standing.won,
+          drawn: standing.drawn,
+          lost: standing.lost,
+          goalsFor: standing.goalsFor,
+          goalsAgainst: standing.goalsAgainst,
+          movement: movementMap.get(standing.clubId) || MovementType.STAYED,
         })
       }
+    }
+
+    if (allHistoryData.length > 0) {
+      await this.prisma.clubHistory.createMany({ data: allHistoryData })
     }
   }
 
@@ -641,21 +698,56 @@ export class StandingsService {
         })
       : []
 
+    // Pre-indexar transfers por playerId para O(1) lookup
+    const transfersByPlayer = new Map<string, typeof seasonTransfers>()
+    for (const t of seasonTransfers) {
+      if (!transfersByPlayer.has(t.playerId)) {
+        transfersByPlayer.set(t.playerId, [])
+      }
+      transfersByPlayer.get(t.playerId)!.push(t)
+    }
+
+    // Obtener TODOS los eventos de TODAS las competiciones de la temporada en una sola query
+    const competitionIds = season.competitions.map((c) => c.id)
+    const allEvents = await this.prisma.event.findMany({
+      where: {
+        match: {
+          competitionId: { in: competitionIds },
+          status: MatchStatus.FINALIZADO,
+        },
+      },
+      include: {
+        type: { select: { name: true } },
+        player: { select: { actualClubId: true } },
+        match: { select: { id: true, competitionId: true, homeClubId: true, awayClubId: true, resultRecordedAt: true } },
+      },
+    })
+
+    // Agrupar eventos por competitionId
+    const eventsByCompetition = new Map<string, typeof allEvents>()
+    for (const event of allEvents) {
+      const compId = event.match.competitionId
+      if (!eventsByCompetition.has(compId)) {
+        eventsByCompetition.set(compId, [])
+      }
+      eventsByCompetition.get(compId)!.push(event)
+    }
+
+    const allStatsData: Array<{
+      playerId: string
+      seasonId: string
+      competitionId: string
+      clubId: string
+      appearances: number
+      goals: number
+      assists: number
+      yellowCards: number
+      redCards: number
+      mvps: number
+    }> = []
+
     for (const competition of season.competitions) {
-      // Obtener todos los eventos de la competición con datos del match
-      const events = await this.prisma.event.findMany({
-        where: {
-          match: {
-            competitionId: competition.id,
-            status: MatchStatus.FINALIZADO,
-          },
-        },
-        include: {
-          type: true,
-          player: true,
-          match: true,
-        },
-      })
+      const events = eventsByCompetition.get(competition.id) || []
 
       // Agrupar estadísticas por (playerId, clubId)
       const playerClubStats = new Map<
@@ -674,13 +766,16 @@ export class StandingsService {
         const match = event.match
         if (!match.homeClubId || !match.awayClubId) return
 
+        // Usar transfers pre-indexados por player
+        const playerTransfers = transfersByPlayer.get(event.playerId) || []
+
         // Determinar el club del jugador en este partido
         const clubId = this.determinePlayerClubInMatch(
           event.playerId,
           event.player.actualClubId,
           match.homeClubId,
           match.awayClubId,
-          seasonTransfers,
+          playerTransfers,
           match.resultRecordedAt
         )
 
@@ -715,24 +810,26 @@ export class StandingsService {
         }
       })
 
-      // Guardar estadísticas en la BD
+      // Acumular stats para batch insert
       for (const [key, stats] of playerClubStats.entries()) {
         const [playerId, clubId] = key.split(':')
-        await this.prisma.playerSeasonStats.create({
-          data: {
-            playerId,
-            seasonId,
-            competitionId: competition.id,
-            clubId,
-            appearances: stats.appearances.size,
-            goals: stats.goals,
-            assists: stats.assists,
-            yellowCards: stats.yellowCards,
-            redCards: stats.redCards,
-            mvps: stats.mvps,
-          },
+        allStatsData.push({
+          playerId,
+          seasonId,
+          competitionId: competition.id,
+          clubId,
+          appearances: stats.appearances.size,
+          goals: stats.goals,
+          assists: stats.assists,
+          yellowCards: stats.yellowCards,
+          redCards: stats.redCards,
+          mvps: stats.mvps,
         })
       }
+    }
+
+    if (allStatsData.length > 0) {
+      await this.prisma.playerSeasonStats.createMany({ data: allStatsData })
     }
   }
 
@@ -918,6 +1015,8 @@ export class StandingsService {
       [CupPhase.CHAMPION]: 32,
     }
 
+    const allCoefData: Prisma.CoefKempesCreateManyInput[] = []
+
     for (const competition of season.competitions) {
       // Determinar la fase máxima alcanzada por cada equipo
       const teamPhases = new Map<string, CupPhase>()
@@ -940,18 +1039,20 @@ export class StandingsService {
         teamPhases.set(club.id, phase)
       })
 
-      // Guardar coeficientes
+      // Acumular coeficientes para batch insert
       for (const [clubId, phase] of teamPhases.entries()) {
-        await this.prisma.coefKempes.create({
-          data: {
-            clubId,
-            seasonId,
-            points: phasePoints[phase],
-            cupPhase: phase,
-            cupName: competition.competitionType.name,
-          },
+        allCoefData.push({
+          clubId,
+          seasonId,
+          points: phasePoints[phase],
+          cupPhase: phase,
+          cupName: competition.competitionType.name,
         })
       }
+    }
+
+    if (allCoefData.length > 0) {
+      await this.prisma.coefKempes.createMany({ data: allCoefData })
     }
   }
 

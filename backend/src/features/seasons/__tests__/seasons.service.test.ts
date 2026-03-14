@@ -20,6 +20,14 @@ const mockSeasonRepository: jest.Mocked<ISeasonRepository> = {
   saveTransitions: jest.fn(),
 }
 
+const mockSeasonHalfService = {
+  createSeasonHalves: jest.fn(),
+  activateSeasonHalf: jest.fn(),
+  findBySeasonId: jest.fn(),
+  findActiveSeasonHalf: jest.fn(),
+  advanceToNextHalf: jest.fn(),
+} as any
+
 const mockPrisma = {} as PrismaClient
 
 describe('SeasonService - Operaciones Básicas', () => {
@@ -27,8 +35,14 @@ describe('SeasonService - Operaciones Básicas', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    mockSeasonHalfService.createSeasonHalves.mockResolvedValue([
+      { id: 'half-1', halfType: 'FIRST_HALF', seasonId: '1', isActive: false },
+      { id: 'half-2', halfType: 'SECOND_HALF', seasonId: '1', isActive: false },
+    ])
+    mockSeasonHalfService.activateSeasonHalf.mockResolvedValue({})
     seasonService = new SeasonService({
       seasonRepository: mockSeasonRepository,
+      seasonHalfService: mockSeasonHalfService,
       prisma: mockPrisma,
     })
   })

@@ -21,7 +21,9 @@
     "salaryRates": "Salary Rates",
     "competitions": "Competitions",
     "finances": "Finances",
-    "editResults": "Edit Results"
+    "editResults": "Edit Results",
+    "plazos": "Deadlines",
+    "playerRatings": "Ratings & Salaries"
   },
   "configuration": {
     "title": "Configuration",

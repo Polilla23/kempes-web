@@ -1,0 +1,130 @@
+{
+  "title": "Plazos",
+  "subtitle": "Gestiona los plazos de juego para cada mitad de temporada",
+  "tabs": {
+    "firstHalf": "Primera Mitad",
+    "secondHalf": "Segunda Mitad"
+  },
+  "create": {
+    "button": "Crear Plazo",
+    "title": "Crear Plazo",
+    "description": "Define un nuevo plazo con su fecha límite y alcance de competiciones"
+  },
+  "edit": {
+    "title": "Editar Plazo",
+    "description": "Modifica los datos del plazo y su alcance"
+  },
+  "fields": {
+    "title": "Título",
+    "titlePlaceholder": "Ej: Plazo 1",
+    "deadline": "Fecha Límite",
+    "order": "Orden",
+    "orderHelp": "Número de orden dentro de la mitad de temporada"
+  },
+  "scopes": {
+    "title": "Alcance por Competición",
+    "add": "Agregar Competición",
+    "remove": "Quitar",
+    "competition": "Competición",
+    "selectCompetition": "Seleccionar competición",
+    "matchdayFrom": "Desde Fecha",
+    "matchdayTo": "Hasta Fecha",
+    "knockoutRounds": "Rondas Eliminatorias",
+    "selectRounds": "Seleccionar rondas",
+    "empty": "Sin alcance definido. Los partidos no se asignarán automáticamente."
+  },
+  "card": {
+    "deadline": "Límite",
+    "matches": "partidos",
+    "pending": "pendientes",
+    "finalized": "finalizados",
+    "cancelled": "cancelados",
+    "noMatches": "Sin partidos asignados",
+    "open": "Abierto",
+    "closed": "Cerrado",
+    "openedSuccess": "Plazo abierto",
+    "closedSuccess": "Plazo cerrado"
+  },
+  "form": {
+    "isOpen": "Abrir plazo al crear"
+  },
+  "status": {
+    "overdue": "Vencido",
+    "active": "Activo",
+    "upcoming": "Próximo"
+  },
+  "actions": {
+    "reassignAll": "Reasignar Todos",
+    "overdueReport": "Reporte Vencidos",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "createSeasonHalves": "Crear Mitades de Temporada"
+  },
+  "reassign": {
+    "success": "{{count}} partidos reasignados en {{plazos}} plazos",
+    "error": "Error al reasignar plazos"
+  },
+  "success": {
+    "created": "Plazo creado exitosamente",
+    "updated": "Plazo actualizado exitosamente",
+    "deleted": "Plazo eliminado exitosamente",
+    "seasonHalvesCreated": "Mitades de temporada creadas exitosamente"
+  },
+  "error": {
+    "fetch": "Error al cargar los plazos",
+    "create": "Error al crear el plazo",
+    "update": "Error al actualizar el plazo",
+    "delete": "Error al eliminar el plazo",
+    "noSeasonHalf": "No hay mitad de temporada configurada. Creá las mitades primero.",
+    "createSeasonHalves": "Error al crear las mitades de temporada"
+  },
+  "empty": "No hay plazos para esta mitad de temporada",
+  "overdueReport": {
+    "title": "Reporte de Partidos Vencidos",
+    "subtitle": "Partidos pendientes cuyo plazo ya venció",
+    "totalOverdue": "Total partidos vencidos",
+    "clubsAffected": "Clubes afectados",
+    "noOverdue": "No hay partidos vencidos",
+    "plazoDeadline": "Venció el",
+    "pendingMatches": "partidos pendientes",
+    "vs": "vs"
+  },
+  "overdue": {
+    "title": "Reporte de Vencidos",
+    "summary": {
+      "totalMatches": "Partidos atrasados",
+      "affectedClubs": "Clubes afectados"
+    },
+    "club": {
+      "overdueCount": "{{count}} partidos atrasados"
+    },
+    "match": {
+      "vs": "vs",
+      "matchday": "Fecha {{n}}",
+      "home": "Local",
+      "away": "Visitante"
+    },
+    "empty": "No hay partidos vencidos"
+  },
+  "knockoutRounds": {
+    "ROUND_OF_64": "64avos",
+    "ROUND_OF_32": "32avos",
+    "ROUND_OF_16": "Octavos",
+    "QUARTERFINAL": "Cuartos",
+    "SEMIFINAL": "Semifinal",
+    "FINAL": "Final",
+    "THIRD_PLACE": "Tercer Puesto",
+    "LIGUILLA": "Liguilla",
+    "TRIANGULAR_SEMI": "Semi Triangular",
+    "TRIANGULAR_FINAL": "Final Triangular",
+    "PLAYOUT": "Playout",
+    "PROMOTION": "Promoción",
+    "REDUCIDO_QUARTER": "Cuartos Reducido",
+    "REDUCIDO_SEMI": "Semi Reducido",
+    "REDUCIDO_FINAL": "Final Reducido"
+  },
+  "delete_confirm": {
+    "title": "¿Eliminar Plazo?",
+    "description": "Los partidos asignados a este plazo perderán la asignación. ¿Deseas continuar?"
+  }
+}

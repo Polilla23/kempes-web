@@ -1,15 +1,4 @@
 import { useEffect, useState, useRef } from 'react'
-import {
-  DndContext,
-  DragOverlay,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragStartEvent,
-  type DragEndEvent,
-} from '@dnd-kit/core'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -19,8 +8,8 @@ import { ChevronLeft, ChevronRight, Users, AlertCircle, Trophy, Dice5 } from 'lu
 import { useTranslation } from 'react-i18next'
 import type { CupWizardState, AvailableTeam } from '@/types/fixture'
 import { ClubService } from '@/services/club.service'
-import { DroppableLeagueZone } from '../../league/_components/droppable-league-zone'
-import { DraggableTeam } from '../../league/_components/draggable-team'
+import { ClickableTeamItem } from '../../league/_components/clickable-team-item'
+import { ClickableZone } from '../../league/_components/clickable-zone'
 import { SorteoDrawModal } from './sorteo-draw-modal'
 
 interface Step2TeamAssignmentCupProps {
@@ -38,37 +27,30 @@ export function Step2TeamAssignmentCup({
 }: Step2TeamAssignmentCupProps) {
   const { t } = useTranslation('fixtures')
   const [isLoading, setIsLoading] = useState(true)
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sorteoOpen, setSorteoOpen] = useState(false)
   const hasLoadedRef = useRef(false)
 
-  // Sensores para drag & drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor)
-  )
-
   // Cargar equipos disponibles
   const loadAvailableTeams = async () => {
-    // Prevenir múltiples llamadas (Strict Mode en desarrollo ejecuta useEffect dos veces)
-    if (hasLoadedRef.current) {
-      return
-    }
-    
+    if (hasLoadedRef.current) return
     hasLoadedRef.current = true
-    
+
     try {
       setIsLoading(true)
       setError(null)
       const response = await ClubService.getClubs()
 
-      const teams: AvailableTeam[] = response.clubs
+      const activeClubs = response.clubs
         .filter((club) => club.isActive)
+        .sort((a, b) => a.name.localeCompare(b.name))
+
+      // Detectar club "Libre" por nombre (comodín para grupos)
+      const libreClub = activeClubs.find((club) => club.name.toLowerCase() === 'libre')
+
+      const teams: AvailableTeam[] = activeClubs
+        .filter((club) => club.id !== libreClub?.id)
         .map((club) => ({
           id: club.id,
           name: club.name,
@@ -78,31 +60,29 @@ export function Step2TeamAssignmentCup({
 
       // Inicializar grupos vacíos si no existen ya
       const initialGroups: Record<string, AvailableTeam[]> = { ...wizardState.groupAssignments }
-      
-      // Solo crear grupos si están vacíos (primera carga)
+
       if (Object.keys(initialGroups).length === 0) {
         for (let i = 0; i < wizardState.numGroups; i++) {
-          const groupId = String.fromCharCode(65 + i) // A, B, C, D...
+          const groupId = String.fromCharCode(65 + i)
           initialGroups[groupId] = []
         }
       }
-      
-      // Actualizar estado del padre UNA SOLA VEZ
+
       onStateChange({
         availableTeams: teams,
         groupAssignments: initialGroups,
+        libreClubId: libreClub?.id,
       })
     } catch (err) {
       console.error('Error loading teams:', err)
       setError(t('cup.errorCreating'))
-      hasLoadedRef.current = false // Permitir retry en caso de error
+      hasLoadedRef.current = false
     } finally {
       setIsLoading(false)
     }
   }
 
   useEffect(() => {
-    // Solo cargar si aún no hay equipos disponibles
     if (wizardState.availableTeams.length === 0) {
       loadAvailableTeams()
     } else {
@@ -111,63 +91,63 @@ export function Step2TeamAssignmentCup({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
+  // Libre team derivado del club real detectado por nombre
+  const libreClubId = wizardState.libreClubId
+  const libreTeam: AvailableTeam | null = libreClubId
+    ? { id: libreClubId, name: 'Libre', logo: undefined, isAssigned: false }
+    : null
+
+  const handleSelectTeam = (teamId: string) => {
+    setSelectedTeamId(prev => prev === teamId ? null : teamId)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
+  const handleAssignTeam = (groupId: string) => {
+    if (!selectedTeamId) return
+    if (!wizardState.groupAssignments[groupId]) return
 
-    setActiveId(null)
+    const isLibre = libreClubId != null && selectedTeamId === libreClubId
 
-    if (!over) return
-
-    const teamId = active.id as string
-    const targetGroupId = over.id as string
-
-    // Si se soltó en "unassigned", quitar el equipo de cualquier grupo
-    if (targetGroupId === 'unassigned') {
-      const updatedGroups = { ...wizardState.groupAssignments }
-      Object.keys(updatedGroups).forEach((groupId) => {
-        updatedGroups[groupId] = updatedGroups[groupId].filter((t) => t.id !== teamId)
-      })
-
-      onStateChange({ groupAssignments: updatedGroups })
-      return
-    }
-
-    // Validar que targetGroupId es un grupo válido
-    if (!wizardState.groupAssignments[targetGroupId]) {
-      return
-    }
-
-    // Verificar si el grupo ya está lleno
-    const targetGroup = wizardState.groupAssignments[targetGroupId]
+    // Check if group is full
+    const targetGroup = wizardState.groupAssignments[groupId]
     if (targetGroup.length >= wizardState.teamsPerGroup) {
-      setError(
-        `El Grupo ${targetGroupId} ya tiene el máximo de ${wizardState.teamsPerGroup} equipos`
-      )
+      setError(`El Grupo ${groupId} ya tiene el máximo de ${wizardState.teamsPerGroup} equipos`)
       return
     }
 
-    // Quitar el equipo de cualquier grupo anterior
-    const updatedGroups = { ...wizardState.groupAssignments }
-    Object.keys(updatedGroups).forEach((groupId) => {
-      updatedGroups[groupId] = updatedGroups[groupId].filter((t) => t.id !== teamId)
-    })
+    // Check if Libre is already in this group
+    if (isLibre && targetGroup.some((t) => t.id === libreClubId)) {
+      setError(`El Grupo ${groupId} ya tiene un Libre`)
+      return
+    }
 
-    // Agregar el equipo al nuevo grupo
-    const team = wizardState.availableTeams.find((t) => t.id === teamId)
+    // Remove team from any previous group (except Libre, which can be in multiple)
+    const updatedGroups = { ...wizardState.groupAssignments }
+    if (!isLibre) {
+      Object.keys(updatedGroups).forEach((gid) => {
+        updatedGroups[gid] = updatedGroups[gid].filter((t) => t.id !== selectedTeamId)
+      })
+    }
+
+    // Add to new group
+    const team = isLibre
+      ? { ...libreTeam! }
+      : wizardState.availableTeams.find((t) => t.id === selectedTeamId)
     if (team) {
-      updatedGroups[targetGroupId] = [...updatedGroups[targetGroupId], team]
+      updatedGroups[groupId] = [...updatedGroups[groupId], team]
     }
 
     onStateChange({ groupAssignments: updatedGroups })
+    setSelectedTeamId(null)
     setError(null)
   }
 
+  const handleRemoveTeam = (groupId: string, teamId: string) => {
+    const updatedGroups = { ...wizardState.groupAssignments }
+    updatedGroups[groupId] = updatedGroups[groupId].filter((t) => t.id !== teamId)
+    onStateChange({ groupAssignments: updatedGroups })
+  }
+
   const validateAssignments = (): boolean => {
-    // Validar que todos los grupos tengan el número correcto de equipos
     const invalidGroups = Object.keys(wizardState.groupAssignments).filter((groupId) => {
       const teamCount = wizardState.groupAssignments[groupId].length
       return teamCount !== wizardState.teamsPerGroup
@@ -192,17 +172,16 @@ export function Step2TeamAssignmentCup({
     }
   }
 
-  // Obtener equipos sin asignar
+  // Obtener equipos sin asignar (excluir Libre del conteo, siempre está disponible)
   const getUnassignedTeams = (): AvailableTeam[] => {
     const assignedIds = new Set(
       Object.values(wizardState.groupAssignments)
         .flat()
+        .filter((t) => t.id !== libreClubId)
         .map((t) => t.id)
     )
     return wizardState.availableTeams.filter((team) => !assignedIds.has(team.id))
   }
-
-  const activeTeam = activeId ? wizardState.availableTeams.find((t) => t.id === activeId) : null
 
   if (isLoading) {
     return (
@@ -234,8 +213,9 @@ export function Step2TeamAssignmentCup({
                 {t('cup.teamsAssigned')}
               </CardTitle>
               <CardDescription className="mt-2">
-                Arrastra los equipos a los grupos correspondientes ({wizardState.teamsPerGroup} equipos
-                por grupo)
+                {selectedTeamId
+                  ? 'Ahora haz click en un grupo para asignar el equipo'
+                  : `Selecciona un equipo y haz click en un grupo (${wizardState.teamsPerGroup} equipos por grupo)`}
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -285,74 +265,85 @@ export function Step2TeamAssignmentCup({
         </Alert>
       )}
 
-      {/* Drag & Drop Context */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Panel izquierdo: Equipos disponibles */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg">Equipos Disponibles</CardTitle>
-              <CardDescription>
-                {unassignedTeams.length} de {totalTeams} equipos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="max-h-[600px] overflow-y-auto pr-4">
-                <DroppableLeagueZone
-                  id="unassigned"
-                  teams={unassignedTeams}
-                  isEmpty={unassignedTeams.length === 0}
-                  emptyMessage="Todos los equipos han sido asignados"
+      {/* Click-to-Assign */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Panel izquierdo: Equipos disponibles */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
+            <CardTitle className="text-lg">Equipos Disponibles</CardTitle>
+            <CardDescription>
+              {unassignedTeams.length} de {totalTeams} equipos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Libre - siempre disponible (solo si existe el club Libre) */}
+            {libreTeam && (
+              <div className="mb-3 pb-3 border-b">
+                <p className="text-xs text-muted-foreground mb-1.5">Comodin</p>
+                <ClickableTeamItem
+                  team={libreTeam}
+                  isSelected={selectedTeamId === libreClubId}
+                  onClick={() => handleSelectTeam(libreClubId!)}
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Panel derecho: Grupos */}
-          <div className="lg:col-span-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.keys(wizardState.groupAssignments)
-                .sort()
-                .map((groupId) => {
-                  const groupTeams = wizardState.groupAssignments[groupId]
-                  const isFull = groupTeams.length === wizardState.teamsPerGroup
-
-                  return (
-                    <Card key={groupId}>
-                      <CardHeader>
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-lg">
-                            {t('cup.groupLabel', { letter: groupId })}
-                          </CardTitle>
-                          <Badge variant={isFull ? 'default' : 'secondary'}>
-                            {groupTeams.length}/{wizardState.teamsPerGroup}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <DroppableLeagueZone
-                          id={groupId}
-                          teams={groupTeams}
-                          isEmpty={groupTeams.length === 0}
-                          emptyMessage={`Arrastra ${wizardState.teamsPerGroup} equipos aquí`}
-                          minTeams={wizardState.teamsPerGroup}
-                        />
-                      </CardContent>
-                    </Card>
-                  )
-                })}
+            )}
+            <div className="max-h-[550px] overflow-y-auto space-y-2 pr-2">
+              {unassignedTeams.length === 0 ? (
+                <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 text-muted-foreground text-sm">
+                  Todos los equipos han sido asignados
+                </div>
+              ) : (
+                unassignedTeams.map((team) => (
+                  <ClickableTeamItem
+                    key={team.id}
+                    team={team}
+                    isSelected={selectedTeamId === team.id}
+                    onClick={() => handleSelectTeam(team.id)}
+                  />
+                ))
+              )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Panel derecho: Grupos */}
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.keys(wizardState.groupAssignments)
+              .sort()
+              .map((groupId) => {
+                const groupTeams = wizardState.groupAssignments[groupId]
+                const isFull = groupTeams.length === wizardState.teamsPerGroup
+
+                return (
+                  <Card key={groupId}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">
+                          {t('cup.groupLabel', { letter: groupId })}
+                        </CardTitle>
+                        <Badge variant={isFull ? 'default' : 'secondary'}>
+                          {groupTeams.length}/{wizardState.teamsPerGroup}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <ClickableZone
+                        id={groupId}
+                        teams={groupTeams}
+                        onAssignTeam={handleAssignTeam}
+                        onRemoveTeam={handleRemoveTeam}
+                        isSelectionActive={selectedTeamId !== null}
+                        maxTeams={wizardState.teamsPerGroup}
+                        emptyMessage={`Asignar ${wizardState.teamsPerGroup} equipos aquí`}
+                      />
+                    </CardContent>
+                  </Card>
+                )
+              })}
           </div>
         </div>
-
-        {/* Drag Overlay */}
-        <DragOverlay>{activeTeam && <DraggableTeam team={activeTeam} />}</DragOverlay>
-      </DndContext>
+      </div>
 
       {/* Botones de navegación */}
       <div className="flex justify-between pt-6">

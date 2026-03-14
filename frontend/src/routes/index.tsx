@@ -41,27 +41,30 @@ function HomePage() {
   useEffect(() => {
     const fetchHomeData = async () => {
       setIsLoading(true)
-      try {
-        // Fetch all data in parallel
-        const [statsData, clubData, standingsData, globalMatchesData, userMatchesData] = await Promise.all([
-          HomeService.getSeasonStats(),
-          HomeService.getUserClub(),
-          HomeService.getHomeStandings(),
-          HomeService.getRecentMatches(15),
-          HomeService.getUserRecentMatches(10),
-        ])
 
-        setSeasonStats(statsData)
-        setUserClub(clubData)
-        setHomeStandings(standingsData)
-        setRecentMatches(globalMatchesData)
-        setUserMatches(userMatchesData)
-      } catch (error) {
-        console.error('Error fetching home data:', error)
-        toast.error('Error loading home page data')
-      } finally {
-        setIsLoading(false)
+      // Fetch all data in parallel — each call is independent so one failure doesn't block the rest
+      const results = await Promise.allSettled([
+        HomeService.getSeasonStats(),
+        HomeService.getUserClub(),
+        HomeService.getHomeStandings(),
+        HomeService.getRecentMatches(15),
+        HomeService.getUserRecentMatches(10),
+      ])
+
+      const [statsResult, clubResult, standingsResult, matchesResult, userMatchesResult] = results
+
+      if (statsResult.status === 'fulfilled') setSeasonStats(statsResult.value)
+      if (clubResult.status === 'fulfilled') setUserClub(clubResult.value)
+      if (standingsResult.status === 'fulfilled') setHomeStandings(standingsResult.value)
+      if (matchesResult.status === 'fulfilled') setRecentMatches(matchesResult.value)
+      if (userMatchesResult.status === 'fulfilled') setUserMatches(userMatchesResult.value)
+
+      const failed = results.filter((r) => r.status === 'rejected')
+      if (failed.length > 0) {
+        failed.forEach((r) => console.error('Home fetch error:', (r as PromiseRejectedResult).reason))
       }
+
+      setIsLoading(false)
     }
 
     fetchHomeData()

@@ -26,7 +26,9 @@ import { Route as ClubFindAllRouteImport } from './routes/club/findAll'
 import { Route as ClubCreateRouteImport } from './routes/club/create'
 import { Route as ManagementUsersIndexRouteImport } from './routes/management/users/index'
 import { Route as ManagementSalaryRatesIndexRouteImport } from './routes/management/salary-rates/index'
+import { Route as ManagementPlazosIndexRouteImport } from './routes/management/plazos/index'
 import { Route as ManagementPlayersIndexRouteImport } from './routes/management/players/index'
+import { Route as ManagementPlayerRatingsIndexRouteImport } from './routes/management/player-ratings/index'
 import { Route as ManagementFixturesIndexRouteImport } from './routes/management/fixtures/index'
 import { Route as ManagementFinancesIndexRouteImport } from './routes/management/finances/index'
 import { Route as ManagementEditResultsIndexRouteImport } from './routes/management/edit-results/index'
@@ -143,11 +145,22 @@ const ManagementSalaryRatesIndexRoute =
     path: '/management/salary-rates/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ManagementPlazosIndexRoute = ManagementPlazosIndexRouteImport.update({
+  id: '/management/plazos/',
+  path: '/management/plazos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManagementPlayersIndexRoute = ManagementPlayersIndexRouteImport.update({
   id: '/management/players/',
   path: '/management/players/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManagementPlayerRatingsIndexRoute =
+  ManagementPlayerRatingsIndexRouteImport.update({
+    id: '/management/player-ratings/',
+    path: '/management/player-ratings/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ManagementFixturesIndexRoute = ManagementFixturesIndexRouteImport.update({
   id: '/management/fixtures/',
   path: '/management/fixtures/',
@@ -346,7 +359,9 @@ export interface FileRoutesByFullPath {
   '/management/edit-results': typeof ManagementEditResultsIndexRoute
   '/management/finances': typeof ManagementFinancesIndexRoute
   '/management/fixtures': typeof ManagementFixturesIndexRoute
+  '/management/player-ratings': typeof ManagementPlayerRatingsIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
+  '/management/plazos': typeof ManagementPlazosIndexRoute
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
@@ -395,7 +410,9 @@ export interface FileRoutesByTo {
   '/management/edit-results': typeof ManagementEditResultsIndexRoute
   '/management/finances': typeof ManagementFinancesIndexRoute
   '/management/fixtures': typeof ManagementFixturesIndexRoute
+  '/management/player-ratings': typeof ManagementPlayerRatingsIndexRoute
   '/management/players': typeof ManagementPlayersIndexRoute
+  '/management/plazos': typeof ManagementPlazosIndexRoute
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
@@ -445,7 +462,9 @@ export interface FileRoutesById {
   '/management/edit-results/': typeof ManagementEditResultsIndexRoute
   '/management/finances/': typeof ManagementFinancesIndexRoute
   '/management/fixtures/': typeof ManagementFixturesIndexRoute
+  '/management/player-ratings/': typeof ManagementPlayerRatingsIndexRoute
   '/management/players/': typeof ManagementPlayersIndexRoute
+  '/management/plazos/': typeof ManagementPlazosIndexRoute
   '/management/salary-rates/': typeof ManagementSalaryRatesIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
   '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
@@ -496,7 +515,9 @@ export interface FileRouteTypes {
     | '/management/edit-results'
     | '/management/finances'
     | '/management/fixtures'
+    | '/management/player-ratings'
     | '/management/players'
+    | '/management/plazos'
     | '/management/salary-rates'
     | '/management/users'
     | '/management/finances/club/$clubId'
@@ -545,7 +566,9 @@ export interface FileRouteTypes {
     | '/management/edit-results'
     | '/management/finances'
     | '/management/fixtures'
+    | '/management/player-ratings'
     | '/management/players'
+    | '/management/plazos'
     | '/management/salary-rates'
     | '/management/users'
     | '/management/finances/club/$clubId'
@@ -594,7 +617,9 @@ export interface FileRouteTypes {
     | '/management/edit-results/'
     | '/management/finances/'
     | '/management/fixtures/'
+    | '/management/player-ratings/'
     | '/management/players/'
+    | '/management/plazos/'
     | '/management/salary-rates/'
     | '/management/users/'
     | '/management/finances/club/$clubId'
@@ -644,7 +669,9 @@ export interface RootRouteChildren {
   ManagementEditResultsIndexRoute: typeof ManagementEditResultsIndexRoute
   ManagementFinancesIndexRoute: typeof ManagementFinancesIndexRoute
   ManagementFixturesIndexRoute: typeof ManagementFixturesIndexRoute
+  ManagementPlayerRatingsIndexRoute: typeof ManagementPlayerRatingsIndexRoute
   ManagementPlayersIndexRoute: typeof ManagementPlayersIndexRoute
+  ManagementPlazosIndexRoute: typeof ManagementPlazosIndexRoute
   ManagementSalaryRatesIndexRoute: typeof ManagementSalaryRatesIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
   ManagementFinancesClubClubIdRoute: typeof ManagementFinancesClubClubIdRoute
@@ -780,11 +807,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementSalaryRatesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/plazos/': {
+      id: '/management/plazos/'
+      path: '/management/plazos'
+      fullPath: '/management/plazos'
+      preLoaderRoute: typeof ManagementPlazosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/management/players/': {
       id: '/management/players/'
       path: '/management/players'
       fullPath: '/management/players'
       preLoaderRoute: typeof ManagementPlayersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management/player-ratings/': {
+      id: '/management/player-ratings/'
+      path: '/management/player-ratings'
+      fullPath: '/management/player-ratings'
+      preLoaderRoute: typeof ManagementPlayerRatingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/management/fixtures/': {
@@ -1029,7 +1070,9 @@ const rootRouteChildren: RootRouteChildren = {
   ManagementEditResultsIndexRoute: ManagementEditResultsIndexRoute,
   ManagementFinancesIndexRoute: ManagementFinancesIndexRoute,
   ManagementFixturesIndexRoute: ManagementFixturesIndexRoute,
+  ManagementPlayerRatingsIndexRoute: ManagementPlayerRatingsIndexRoute,
   ManagementPlayersIndexRoute: ManagementPlayersIndexRoute,
+  ManagementPlazosIndexRoute: ManagementPlazosIndexRoute,
   ManagementSalaryRatesIndexRoute: ManagementSalaryRatesIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,
   ManagementFinancesClubClubIdRoute: ManagementFinancesClubClubIdRoute,

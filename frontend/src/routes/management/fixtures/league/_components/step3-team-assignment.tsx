@@ -1,15 +1,4 @@
 import { useEffect, useState } from 'react'
-import {
-  DndContext,
-  DragOverlay,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragStartEvent,
-  type DragEndEvent,
-} from '@dnd-kit/core'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -20,7 +9,8 @@ import { ChevronLeft, ChevronRight, Users, AlertCircle, Trophy, ArrowUp, ArrowDo
 import type { LeagueWizardState, AvailableTeam, TeamMovement } from '@/types/fixture'
 import { ClubService } from '@/services/club.service'
 import { SeasonService } from '@/services/season.service'
-import { DroppableLeagueZone } from './droppable-league-zone'
+import { ClickableTeamItem } from './clickable-team-item'
+import { ClickableZone } from './clickable-zone'
 
 interface Step3TeamAssignmentProps {
   wizardState: LeagueWizardState
@@ -31,31 +21,9 @@ interface Step3TeamAssignmentProps {
 
 export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: Step3TeamAssignmentProps) {
   const [isLoading, setIsLoading] = useState(true)
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [teamMovements, setTeamMovements] = useState<Map<string, TeamMovement>>(new Map())
-
-  // Sensores para drag & drop
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Requiere mover 8px para iniciar drag
-      },
-    }),
-    useSensor(KeyboardSensor)
-  )
-
-  // Esta función se usará en el futuro para mapear nombres de liga a jerarquías
-  // const getHierarchyFromName = (leagueName: string): number => {
-  //   const hierarchyMap: Record<string, number> = {
-  //     'LEAGUE_A': 1,
-  //     'LEAGUE_B': 2,
-  //     'LEAGUE_C': 3,
-  //     'LEAGUE_D': 4,
-  //     'LEAGUE_E': 5,
-  //   }
-  //   return hierarchyMap[leagueName] || 999
-  // }
 
   const loadAvailableTeams = async () => {
     try {
@@ -74,7 +42,7 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
       // 2. Obtener movimientos de la temporada anterior (si existe)
       let movements = new Map<string, TeamMovement>()
       const previousSeasonNumber = (wizardState.seasonNumber || 1) - 1
-      
+
       if (previousSeasonNumber > 0) {
         try {
           const movementsData = await SeasonService.getSeasonMovements(previousSeasonNumber, wizardState.competitionCategory)
@@ -83,16 +51,15 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
           )
         } catch (error) {
           console.warn('No se pudieron cargar movimientos de temporada anterior:', error)
-          // Si no hay temporada anterior, no es un error crítico
         }
       }
-      
+
       setTeamMovements(movements)
 
       // 3. Pre-asignar equipos según movimientos
       const initialAssignments = { ...wizardState.teamAssignments }
       const leagues = wizardState.leagueCreationConfigs || []
-      
+
       // Inicializar arrays vacíos para cada liga
       leagues.forEach((league) => {
         if (!initialAssignments[league.id]) {
@@ -105,11 +72,10 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
         teams.forEach(team => {
           const movement = movements.get(team.id)
           if (movement && movement.toLeague) {
-            // Buscar la liga correspondiente por hierarchy
-            const targetLeague = leagues.find(l => 
+            const targetLeague = leagues.find(l =>
               l.competitionType?.name === movement.toLeague
             )
-            
+
             if (targetLeague && !initialAssignments[targetLeague.id].includes(team.id)) {
               initialAssignments[targetLeague.id].push(team.id)
             }
@@ -130,56 +96,44 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
     }
   }
 
-  // Cargar equipos disponibles al montar el componente
   useEffect(() => {
     loadAvailableTeams()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
+  const handleSelectTeam = (teamId: string) => {
+    setSelectedTeamId(prev => prev === teamId ? null : teamId)
   }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
+  const handleAssignTeam = (leagueId: string) => {
+    if (!selectedTeamId) return
 
-    setActiveId(null)
-
-    if (!over) return
-
-    const teamId = active.id as string
-    const targetLeagueId = over.id as string
-
-    // Si se soltó en "unassigned", quitar el equipo de cualquier liga
-    if (targetLeagueId === 'unassigned') {
-      const updatedAssignments = { ...wizardState.teamAssignments }
-      Object.keys(updatedAssignments).forEach((leagueId) => {
-        updatedAssignments[leagueId] = updatedAssignments[leagueId].filter((id) => id !== teamId)
-      })
-
-      onUpdate({
-        ...wizardState,
-        teamAssignments: updatedAssignments,
-      })
-      return
-    }
-
-    // Validar que targetLeagueId es una liga válida
     const leagues = wizardState.leagueCreationConfigs || []
-    if (!leagues.find((l) => l.id === targetLeagueId)) {
-      return
-    }
+    if (!leagues.find((l) => l.id === leagueId)) return
 
-    // Quitar el equipo de cualquier liga anterior
+    // Remove team from any previous league
     const updatedAssignments = { ...wizardState.teamAssignments }
-    Object.keys(updatedAssignments).forEach((leagueId) => {
-      updatedAssignments[leagueId] = updatedAssignments[leagueId].filter((id) => id !== teamId)
+    Object.keys(updatedAssignments).forEach((lid) => {
+      updatedAssignments[lid] = updatedAssignments[lid].filter((id) => id !== selectedTeamId)
     })
 
-    // Agregar el equipo a la nueva liga (si no está ya)
-    if (!updatedAssignments[targetLeagueId].includes(teamId)) {
-      updatedAssignments[targetLeagueId] = [...updatedAssignments[targetLeagueId], teamId]
+    // Add to new league
+    if (!updatedAssignments[leagueId].includes(selectedTeamId)) {
+      updatedAssignments[leagueId] = [...updatedAssignments[leagueId], selectedTeamId]
     }
+
+    onUpdate({
+      ...wizardState,
+      teamAssignments: updatedAssignments,
+    })
+    setSelectedTeamId(null)
+  }
+
+  const handleRemoveTeam = (_leagueId: string, teamId: string) => {
+    const updatedAssignments = { ...wizardState.teamAssignments }
+    Object.keys(updatedAssignments).forEach((lid) => {
+      updatedAssignments[lid] = updatedAssignments[lid].filter((id) => id !== teamId)
+    })
 
     onUpdate({
       ...wizardState,
@@ -194,7 +148,6 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
   }
 
   const validateAssignments = (): boolean => {
-    // Validar que cada liga tenga al menos 4 equipos
     const leagues = wizardState.leagueCreationConfigs || []
     const invalidLeagues = leagues.filter((league) => {
       const teamCount = wizardState.teamAssignments[league.id]?.length || 0
@@ -229,22 +182,14 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
   // Calcular estadísticas de movimientos para una liga
   const getLeagueMovementStats = (leagueId: string) => {
     const teams = getLeagueTeams(leagueId)
-    const stats = {
-      promotions: 0,
-      relegations: 0,
-      stayed: 0
-    }
+    const stats = { promotions: 0, relegations: 0, stayed: 0 }
 
     teams.forEach(team => {
       const movement = teamMovements.get(team.id)
       if (movement) {
-        if (movement.movementType.includes('PROMOTION')) {
-          stats.promotions++
-        } else if (movement.movementType.includes('RELEGATION')) {
-          stats.relegations++
-        } else if (movement.movementType === 'STAYED') {
-          stats.stayed++
-        }
+        if (movement.movementType.includes('PROMOTION')) stats.promotions++
+        else if (movement.movementType.includes('RELEGATION')) stats.relegations++
+        else if (movement.movementType === 'STAYED') stats.stayed++
       }
     })
 
@@ -256,40 +201,40 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
     const getMovementConfig = () => {
       switch (movement.movementType) {
         case 'CHAMPION':
-          return { 
-            icon: '🏆', 
-            className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30', 
-            label: 'Campeón' 
+          return {
+            icon: '\u{1F3C6}',
+            className: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20 dark:bg-yellow-500/20 dark:text-yellow-300 dark:border-yellow-500/30',
+            label: 'Campeón'
           }
         case 'DIRECT_PROMOTION':
-          return { 
-            icon: '⬆️', 
-            className: 'bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30', 
-            label: 'Ascenso' 
+          return {
+            icon: '\u2B06\uFE0F',
+            className: 'bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-300 dark:border-green-500/30',
+            label: 'Ascenso'
           }
         case 'PLAYOFF_PROMOTION':
-          return { 
-            icon: '⬆️', 
-            className: 'bg-lime-500/10 text-lime-700 border-lime-500/20 dark:bg-lime-500/20 dark:text-lime-300 dark:border-lime-500/30', 
-            label: 'Ascenso (Playoff)' 
+          return {
+            icon: '\u2B06\uFE0F',
+            className: 'bg-lime-500/10 text-lime-700 border-lime-500/20 dark:bg-lime-500/20 dark:text-lime-300 dark:border-lime-500/30',
+            label: 'Ascenso (Playoff)'
           }
         case 'DIRECT_RELEGATION':
-          return { 
-            icon: '⬇️', 
-            className: 'bg-red-500/10 text-red-700 border-red-500/20 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30', 
-            label: 'Descenso' 
+          return {
+            icon: '\u2B07\uFE0F',
+            className: 'bg-red-500/10 text-red-700 border-red-500/20 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/30',
+            label: 'Descenso'
           }
         case 'PLAYOFF_RELEGATION':
-          return { 
-            icon: '⬇️', 
-            className: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30', 
-            label: 'Descenso (Playoff)' 
+          return {
+            icon: '\u2B07\uFE0F',
+            className: 'bg-orange-500/10 text-orange-700 border-orange-500/20 dark:bg-orange-500/20 dark:text-orange-300 dark:border-orange-500/30',
+            label: 'Descenso (Playoff)'
           }
         case 'STAYED':
-          return { 
-            icon: '➖', 
-            className: 'bg-muted text-muted-foreground border-border', 
-            label: 'Se mantiene' 
+          return {
+            icon: '\u2796',
+            className: 'bg-muted text-muted-foreground border-border',
+            label: 'Se mantiene'
           }
         default:
           return { icon: '', className: '', label: '' }
@@ -303,8 +248,7 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
         {config.icon} {config.label}
       </Badge>
     )
-  }  // Obtener el equipo que se está arrastrando
-  const activeTeam = activeId ? wizardState.availableTeams.find((t) => t.id === activeId) : null
+  }
 
   if (isLoading) {
     return (
@@ -374,7 +318,7 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
                 Asignación de Equipos
               </CardTitle>
               <CardDescription className="mt-2">
-                Arrastra los equipos a las ligas correspondientes (mínimo 4 equipos por liga)
+                Selecciona un equipo y haz click en una liga para asignarlo (mínimo 4 equipos por liga)
               </CardDescription>
             </div>
             <div className="flex gap-4">
@@ -400,123 +344,108 @@ export function Step3TeamAssignment({ wizardState, onUpdate, onNext, onBack }: S
         </Alert>
       )}
 
-      {/* Drag & Drop Context */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Panel izquierdo: Equipos disponibles */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Equipos Disponibles</CardTitle>
-              <CardDescription>Arrastra un equipo a una liga para asignarlo</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <DroppableLeagueZone
-                id="unassigned"
-                teams={unassignedTeams}
-                isEmpty={unassignedTeams.length === 0}
-                emptyMessage="Todos los equipos han sido asignados"
-              />
-            </CardContent>
-          </Card>
+      {/* Click-to-Assign */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Panel izquierdo: Equipos disponibles */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Equipos Disponibles</CardTitle>
+            <CardDescription>
+              {selectedTeamId
+                ? 'Ahora haz click en una liga para asignarlo'
+                : 'Selecciona un equipo para asignarlo'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="max-h-[600px] overflow-y-auto space-y-2 pr-2">
+              {unassignedTeams.length === 0 ? (
+                <div className="flex items-center justify-center border-2 border-dashed rounded-lg p-6 text-muted-foreground text-sm">
+                  Todos los equipos han sido asignados
+                </div>
+              ) : (
+                unassignedTeams.map((team) => {
+                  const movement = teamMovements.get(team.id)
+                  return (
+                    <ClickableTeamItem
+                      key={team.id}
+                      team={team}
+                      isSelected={selectedTeamId === team.id}
+                      onClick={() => handleSelectTeam(team.id)}
+                      badge={movement ? <MovementBadge movement={movement} /> : undefined}
+                    />
+                  )
+                })
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Panel derecho: Ligas */}
-          <div className="space-y-4">
-            {(wizardState.leagueCreationConfigs || []).map((league) => {
-              const leagueTeams = getLeagueTeams(league.id)
-              const isValid = leagueTeams.length >= 4
-              const movementStats = getLeagueMovementStats(league.id)
+        {/* Panel derecho: Ligas */}
+        <div className="space-y-4">
+          {(wizardState.leagueCreationConfigs || []).map((league) => {
+            const leagueTeams = getLeagueTeams(league.id)
+            const isValid = leagueTeams.length >= 4
+            const movementStats = getLeagueMovementStats(league.id)
 
-              return (
-                <Card key={league.id} className={!isValid ? 'border-destructive' : ''}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-lg">{league.name}</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={isValid ? 'default' : 'destructive'}>
-                          {leagueTeams.length} {leagueTeams.length === 1 ? 'equipo' : 'equipos'}
-                        </Badge>
-                      </div>
+            return (
+              <Card key={league.id} className={!isValid ? 'border-destructive' : ''}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-lg">{league.name}</CardTitle>
                     </div>
-                    
-                    {/* Mostrar estadísticas de movimientos */}
-                    {(movementStats.promotions > 0 || movementStats.relegations > 0) && (
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {movementStats.promotions > 0 && (
-                          <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-300">
-                            <ArrowUp className="h-3 w-3 mr-1" />
-                            {movementStats.promotions} ascenso{movementStats.promotions > 1 ? 's' : ''}
-                          </Badge>
-                        )}
-                        {movementStats.relegations > 0 && (
-                          <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-500/20 dark:bg-red-500/20 dark:text-red-300">
-                            <ArrowDown className="h-3 w-3 mr-1" />
-                            {movementStats.relegations} descenso{movementStats.relegations > 1 ? 's' : ''}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                    
-                    {!isValid && (
-                      <CardDescription className="text-destructive mt-2">
-                        Se necesitan al menos {4 - leagueTeams.length} equipos más
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <DroppableLeagueZone
-                        id={league.id}
-                        teams={leagueTeams}
-                        isEmpty={leagueTeams.length === 0}
-                        emptyMessage="Arrastra equipos aquí"
-                        minTeams={4}
-                      />
-                      
-                      {/* Mostrar equipos con badges de movimiento */}
-                      {leagueTeams.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          {leagueTeams.map((team) => {
-                            const movement = teamMovements.get(team.id)
-                            if (movement) {
-                              return (
-                                <div key={team.id} className="flex items-center justify-between text-sm p-2 rounded bg-muted/50">
-                                  <span className="font-medium">{team.name}</span>
-                                  <MovementBadge movement={movement} />
-                                </div>
-                              )
-                            }
-                            return null
-                          })}
-                        </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={isValid ? 'default' : 'destructive'}>
+                        {leagueTeams.length} {leagueTeams.length === 1 ? 'equipo' : 'equipos'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Mostrar estadísticas de movimientos */}
+                  {(movementStats.promotions > 0 || movementStats.relegations > 0) && (
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      {movementStats.promotions > 0 && (
+                        <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20 dark:bg-green-500/20 dark:text-green-300">
+                          <ArrowUp className="h-3 w-3 mr-1" />
+                          {movementStats.promotions} ascenso{movementStats.promotions > 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                      {movementStats.relegations > 0 && (
+                        <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-500/20 dark:bg-red-500/20 dark:text-red-300">
+                          <ArrowDown className="h-3 w-3 mr-1" />
+                          {movementStats.relegations} descenso{movementStats.relegations > 1 ? 's' : ''}
+                        </Badge>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        </div>
+                  )}
 
-        {/* Drag Overlay - Muestra el equipo mientras se arrastra */}
-        <DragOverlay>
-          {activeTeam ? (
-            <div className="bg-background border-2 border-primary rounded-lg p-3 shadow-lg cursor-grabbing">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="font-medium">{activeTeam.name}</span>
-              </div>
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+                  {!isValid && (
+                    <CardDescription className="text-destructive mt-2">
+                      Se necesitan al menos {4 - leagueTeams.length} equipos más
+                    </CardDescription>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <ClickableZone
+                    id={league.id}
+                    teams={leagueTeams}
+                    onAssignTeam={handleAssignTeam}
+                    onRemoveTeam={handleRemoveTeam}
+                    isSelectionActive={selectedTeamId !== null}
+                    minTeams={4}
+                    emptyMessage="Selecciona equipos para asignar aquí"
+                    renderBadge={(team) => {
+                      const movement = teamMovements.get(team.id)
+                      return movement ? <MovementBadge movement={movement} /> : undefined
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </div>
 
       {/* Botones de navegación */}
       <Card>

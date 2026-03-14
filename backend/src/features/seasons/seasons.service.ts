@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, MatchStatus, CompetitionFormat, CompetitionStage } from '@prisma/client'
+import { Prisma, PrismaClient, MatchStatus, CompetitionFormat, CompetitionStage, SeasonHalfType } from '@prisma/client'
 import { ISeasonRepository } from '@/features/seasons/interface/ISeasonRepository'
 import {
   SeasonNotFoundError,
@@ -6,22 +6,35 @@ import {
   ActiveSeasonAlreadyExistsError
 } from '@/features/seasons/seasons.errors'
 import { StandingsService } from '@/features/seasons/standings.service'
+import { SeasonHalfService } from '@/features/season-halves/season-halves.service'
 
 export class SeasonService {
   private seasonRepository: ISeasonRepository
+  private seasonHalfService: SeasonHalfService
   private standingsService: StandingsService
   private prisma: PrismaClient
 
   constructor({
     seasonRepository,
+    seasonHalfService,
     prisma
   }: {
     seasonRepository: ISeasonRepository
+    seasonHalfService: SeasonHalfService
     prisma: PrismaClient
   }) {
     this.seasonRepository = seasonRepository
+    this.seasonHalfService = seasonHalfService
     this.standingsService = new StandingsService({ prisma })
     this.prisma = prisma
+  }
+
+  private async initializeSeasonHalves(seasonId: string): Promise<void> {
+    const halves = await this.seasonHalfService.createSeasonHalves(seasonId)
+    const firstHalf = halves?.find((h: any) => h.halfType === SeasonHalfType.FIRST_HALF)
+    if (firstHalf) {
+      await this.seasonHalfService.activateSeasonHalf(firstHalf.id)
+    }
   }
 
   async findAllSeasons() {
@@ -57,7 +70,9 @@ export class SeasonService {
       }
     }
 
-    return await this.seasonRepository.save(data)
+    const newSeason = await this.seasonRepository.save(data)
+    await this.initializeSeasonHalves(newSeason.id)
+    return newSeason
   }
 
   async updateSeason(id: string, data: Prisma.SeasonUpdateInput) {
@@ -162,6 +177,7 @@ export class SeasonService {
       number: currentSeason.number + 1,
       isActive: true
     })
+    await this.initializeSeasonHalves(newSeason.id)
 
     return {
       previousSeason: currentSeason,
@@ -280,10 +296,11 @@ export class SeasonService {
     // Verificar si ya se guardó el historial (idempotencia)
     const existingTransitions = await this.seasonRepository.findTransitionsBySeason(currentSeason.id)
 
+    // Calcular movimientos y cache de standings una sola vez
+    const { movements, standingsCache } = await this.standingsService.calculateSeasonMovementsWithCache(currentSeason.id)
+
     let movementsSaved = existingTransitions.length
     if (existingTransitions.length === 0) {
-      // Calcular y guardar movimientos
-      const movements = await this.standingsService.calculateSeasonMovements(currentSeason.id)
       await this.seasonRepository.saveTransitions(
         movements.map((m) => ({
           seasonId: currentSeason.id,
@@ -305,7 +322,7 @@ export class SeasonService {
 
     let clubHistorySaved = existingHistory
     if (existingHistory === 0) {
-      await this.standingsService.saveClubHistory(currentSeason.id)
+      await this.standingsService.saveClubHistory(currentSeason.id, standingsCache, movements)
       clubHistorySaved = await this.prisma.clubHistory.count({
         where: { seasonId: currentSeason.id },
       })
@@ -370,6 +387,7 @@ export class SeasonService {
       number: currentSeason.number + 1,
       isActive: true,
     })
+    await this.initializeSeasonHalves(newSeason.id)
 
     return {
       previousSeason: currentSeason,

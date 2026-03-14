@@ -132,12 +132,13 @@ export class PlayerService {
       delete (updateData as any).avatarFile
     }
 
-    // Validar actualClubId si viene en el update
-    if (data.actualClubId) {
+    // Recalcular salario si cambia el overall
+    if (updateData.overall != null) {
+      updateData.salary = await this.resolveSalary(updateData.overall)
     }
 
     try {
-      return await this.playerRepository.updateOneById(id, data)
+      return await this.playerRepository.updateOneById(id, updateData)
     } catch (error) {
       if (error instanceof Error && error.message.includes('Foreign key constraint')) {
         throw new PlayerErrors.Validation('Invalid club reference', {
@@ -264,6 +265,28 @@ export class PlayerService {
         error instanceof Error ? error.message : 'Failed to save players to database',
       )
     }
+  }
+
+  async bulkUpdateOveralls(updates: Array<{ playerId: string; overall: number }>) {
+    const rates = await this.salaryRateService.findAllSalaryRates()
+
+    const results: Array<{ playerId: string; overall: number; salary: number }> = []
+
+    for (const update of updates) {
+      const matchingRate = rates?.find(
+        (rate) => update.overall >= rate.minOverall && update.overall <= rate.maxOverall,
+      )
+      const salary = matchingRate ? matchingRate.salary : 100000
+
+      await this.playerRepository.updateOneById(update.playerId, {
+        overall: update.overall,
+        salary,
+      })
+
+      results.push({ playerId: update.playerId, overall: update.overall, salary })
+    }
+
+    return { updated: results.length, results }
   }
 
   private async resolveSalary(overall: number): Promise<number> {

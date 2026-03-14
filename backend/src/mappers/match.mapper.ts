@@ -141,6 +141,7 @@ export class MatchMapper {
   static toDetailedDTO(match: MatchWithCompetition): MatchDetailedDTO {
     const dto: MatchDetailedDTO = {
       ...this.toDTO(match),
+      plazoId: (match as any).plazoId || null,
       competition: {
         id: match.competition.id,
         name: match.competition.name,

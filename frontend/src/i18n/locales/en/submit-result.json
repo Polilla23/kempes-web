@@ -3,9 +3,11 @@
   "subtitle": "Select the match and submit the result",
   "pendingMatches": {
     "title": "Your Pending Matches",
-    "subtitle": "Season {{season}} - Term {{term}}",
+    "seasonLabel": "Season {{season}}",
     "empty": "You have no pending matches",
-    "selected": "Selected"
+    "selected": "Selected",
+    "noPlazo": "No deadline assigned",
+    "dueDate": "Due {{date}}"
   },
   "form": {
     "title": "Register Result",

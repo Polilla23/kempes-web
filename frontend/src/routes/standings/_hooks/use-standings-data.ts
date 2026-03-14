@@ -92,8 +92,13 @@ export function useStandingsData(filters: StandingsFilterState) {
   // Filtrar competencias por categoría y tipo
   const filteredCompetitions = useMemo(() => {
     const allowedCategories = CATEGORY_MAP[filters.selectedCategory]
-    const allowedFormat = FORMAT_MAP[filters.selectedType]
 
+    // Supercopa: no filtrar por tipo (liga/copa), solo por categoría MIXED
+    if (filters.selectedCategory === 'supercopa') {
+      return allCompetitions.filter((comp) => allowedCategories.includes(comp.category))
+    }
+
+    const allowedFormat = FORMAT_MAP[filters.selectedType]
     return allCompetitions.filter((comp) => {
       const categoryMatch = allowedCategories.includes(comp.category)
       const formatMatch = comp.format === allowedFormat
@@ -120,46 +125,44 @@ export function useStandingsData(filters: StandingsFilterState) {
       setBracketData(null)
 
       try {
-        if (competition.format === 'LEAGUE') {
+        if (competition.system === 'KNOCKOUT') {
+          // KNOCKOUT: cargar bracket (copas eliminatorias, supercopa, etc.)
+          const matches = await FixtureService.getKnockoutBracket(competition.id)
+          const knockoutMatches = matches as BracketMatch[]
+
+          // Transformar a BracketRound[]
+          const rounds: Record<string, BracketMatch[]> = {}
+          knockoutMatches.forEach((match) => {
+            const round = match.knockoutRound || 'UNKNOWN'
+            if (!rounds[round]) rounds[round] = []
+
+            let winner: 'home' | 'away' | 'draw' | undefined
+            if (match.status === 'FINALIZADO') {
+              if (match.homeClubGoals > match.awayClubGoals) winner = 'home'
+              else if (match.awayClubGoals > match.homeClubGoals) winner = 'away'
+              else winner = 'draw'
+            }
+
+            rounds[round].push({ ...match, winner })
+          })
+
+          const bracketRounds = ROUND_ORDER
+            .filter((r) => rounds[r] && rounds[r].length > 0)
+            .map((r) => ({
+              name: ROUND_LABELS[r] || r,
+              roundKey: r,
+              matches: rounds[r].sort((a, b) => a.matchdayOrder - b.matchdayOrder),
+            }))
+
+          setBracketData(bracketRounds.length > 0 ? bracketRounds : null)
+        } else if (competition.format === 'LEAGUE') {
           // Liga: tabla de posiciones estándar
           const response = await StandingsService.getCompetitionStandings(competition.id)
           setLeagueStandings(response.data)
-        } else if (competition.format === 'CUP') {
-          if (competition.system === 'ROUND_ROBIN') {
-            // Copa con fase de grupos (Copa Kempes)
-            const response = await StandingsService.getCupGroupStandings(competition.id)
-            setCupGroupsData(response.data)
-          } else {
-            // KNOCKOUT: cargar bracket
-            const matches = await FixtureService.getKnockoutBracket(competition.id)
-            const knockoutMatches = matches as BracketMatch[]
-
-            // Transformar a BracketRound[]
-            const rounds: Record<string, BracketMatch[]> = {}
-            knockoutMatches.forEach((match) => {
-              const round = match.knockoutRound || 'UNKNOWN'
-              if (!rounds[round]) rounds[round] = []
-
-              let winner: 'home' | 'away' | 'draw' | undefined
-              if (match.status === 'FINALIZADO') {
-                if (match.homeClubGoals > match.awayClubGoals) winner = 'home'
-                else if (match.awayClubGoals > match.homeClubGoals) winner = 'away'
-                else winner = 'draw'
-              }
-
-              rounds[round].push({ ...match, winner })
-            })
-
-            const bracketRounds = ROUND_ORDER
-              .filter((r) => rounds[r] && rounds[r].length > 0)
-              .map((r) => ({
-                name: ROUND_LABELS[r] || r,
-                roundKey: r,
-                matches: rounds[r].sort((a, b) => a.matchdayOrder - b.matchdayOrder),
-              }))
-
-            setBracketData(bracketRounds.length > 0 ? bracketRounds : null)
-          }
+        } else if (competition.format === 'CUP' && competition.system === 'ROUND_ROBIN') {
+          // Copa con fase de grupos (Copa Kempes)
+          const response = await StandingsService.getCupGroupStandings(competition.id)
+          setCupGroupsData(response.data)
         }
       } catch (err) {
         console.error('Error loading standings:', err)

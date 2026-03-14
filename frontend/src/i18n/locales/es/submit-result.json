@@ -3,9 +3,11 @@
   "subtitle": "Selecciona el partido y sube el resultado",
   "pendingMatches": {
     "title": "Tus Partidos Pendientes",
-    "subtitle": "Temporada {{season}} - Plazo {{term}}",
+    "seasonLabel": "Temporada {{season}}",
     "empty": "No tienes partidos pendientes",
-    "selected": "Seleccionado"
+    "selected": "Seleccionado",
+    "noPlazo": "Sin plazo asignado",
+    "dueDate": "Vence {{date}}"
   },
   "form": {
     "title": "Registrar Resultado",
