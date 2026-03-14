@@ -107,8 +107,6 @@ export class MyAccountRepository {
         // Exclude BYE matches — they are walkovers, not real matches
         homeClubId: { not: null },
         awayClubId: { not: null },
-        homePlaceholder: { not: 'BYE' },
-        awayPlaceholder: { not: 'BYE' },
         competition: {
           seasonId: activeSeason.id,
         },
@@ -174,8 +172,6 @@ export class MyAccountRepository {
         // Exclude BYE matches and matches without both clubs assigned
         homeClubId: { not: null },
         awayClubId: { not: null },
-        homePlaceholder: { not: 'BYE' },
-        awayPlaceholder: { not: 'BYE' },
         competition: {
           seasonId: activeSeason.id,
         },
@@ -354,7 +350,6 @@ export class MyAccountRepository {
           // Exclude BYE matches from played count
           homeClubId: { not: null },
           awayClubId: { not: null },
-          awayPlaceholder: { not: 'BYE' },
         },
       }),
       this.prisma.match.count({

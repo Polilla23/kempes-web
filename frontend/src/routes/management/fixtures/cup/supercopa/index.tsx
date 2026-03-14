@@ -65,7 +65,9 @@ function SupercupWizard() {
 
       // Obtener todos los equipos activos
       const clubsResponse = await ClubService.getClubs()
-      const activeClubs = clubsResponse.clubs.filter((c) => c.isActive)
+      const activeClubs = clubsResponse.clubs
+        .filter((c) => c.isActive)
+        .sort((a, b) => a.name.localeCompare(b.name))
       setClubs(activeClubs)
     } catch (err) {
       console.error('Error loading data:', err)
@@ -81,8 +83,8 @@ function SupercupWizard() {
       if (newSet.has(clubId)) {
         newSet.delete(clubId)
       } else {
-        if (newSet.size >= 6) {
-          setError('Solo puedes seleccionar 6 equipos')
+        if (newSet.size >= 5) {
+          setError('Solo puedes seleccionar 5 equipos')
           return prev
         }
         newSet.add(clubId)
@@ -93,8 +95,8 @@ function SupercupWizard() {
   }
 
   const handleContinueToPlacement = async () => {
-    if (selectedTeamIds.size !== 6) {
-      setError('Debes seleccionar exactamente 6 equipos')
+    if (selectedTeamIds.size !== 5) {
+      setError('Debes seleccionar exactamente 5 equipos')
       return
     }
 
@@ -103,7 +105,7 @@ function SupercupWizard() {
       setError(null)
 
       // Obtener estructura del bracket desde el backend
-      const structure = await CompetitionService.getBracketStructure(6)
+      const structure = await CompetitionService.getBracketStructure(5)
       setBracketStructure(structure)
       setStep('place-teams')
     } catch (err) {
@@ -175,7 +177,7 @@ function SupercupWizard() {
           <CheckCircle className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Supercopa creada exitosamente</AlertTitle>
           <AlertDescription className="text-green-700">
-            Se ha creado la Supercopa con 6 equipos participantes. Los brackets se han generado correctamente.
+            Se ha creado la Supercopa con 5 equipos participantes. Los brackets se han generado correctamente.
           </AlertDescription>
         </Alert>
         <div className="mt-6 flex gap-4">
@@ -199,7 +201,7 @@ function SupercupWizard() {
           </Button>
           <h1 className="text-3xl font-bold mb-2">Supercopa - Posicionar Equipos</h1>
           <p className="text-muted-foreground">
-            Arrastra los equipos a las posiciones del bracket. Los BYEs estan predefinidos (1 arriba, 1 abajo).
+            Arrastra los equipos a las posiciones del bracket. Los BYEs estan predefinidos (3 BYEs en la primera ronda).
           </p>
         </div>
 
@@ -228,7 +230,7 @@ function SupercupWizard() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Supercopa</h1>
         <p className="text-muted-foreground">
-          Paso 1: Selecciona los 6 equipos que participaran en la Supercopa (Mayores + Kempesitas).
+          Paso 1: Selecciona los 5 equipos que participaran en la Supercopa (Mayores + Kempesitas).
         </p>
       </div>
 
@@ -246,15 +248,15 @@ function SupercupWizard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Crown className="h-5 w-5" />
-              Seleccionar Equipos ({selectedTeamIds.size}/6)
+              Seleccionar Equipos ({selectedTeamIds.size}/5)
             </CardTitle>
-            <CardDescription>Marca los 6 equipos que participaran en la Supercopa</CardDescription>
+            <CardDescription>Marca los 5 equipos que participaran en la Supercopa</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {clubs.map((club) => {
                 const isSelected = selectedTeamIds.has(club.id)
-                const isDisabled = !isSelected && selectedTeamIds.size >= 6
+                const isDisabled = !isSelected && selectedTeamIds.size >= 5
 
                 return (
                   <div
@@ -292,10 +294,10 @@ function SupercupWizard() {
               <strong>Temporada:</strong> {activeSeason?.number}
             </p>
             <p className="text-sm">
-              <strong>Equipos seleccionados:</strong> {selectedTeamIds.size}/6
+              <strong>Equipos seleccionados:</strong> {selectedTeamIds.size}/5
             </p>
             <p className="text-sm">
-              <strong>Formato:</strong> Eliminacion directa (Bracket de 8 con 2 BYEs)
+              <strong>Formato:</strong> Eliminacion directa (Bracket de 8 con 3 BYEs)
             </p>
           </CardContent>
         </Card>
@@ -305,7 +307,7 @@ function SupercupWizard() {
           <Button variant="outline" onClick={() => navigate({ to: '/management/fixtures/cup' })}>
             Cancelar
           </Button>
-          <Button onClick={handleContinueToPlacement} disabled={selectedTeamIds.size !== 6}>
+          <Button onClick={handleContinueToPlacement} disabled={selectedTeamIds.size !== 5}>
             Continuar a Posicionamiento
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>

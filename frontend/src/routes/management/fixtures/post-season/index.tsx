@@ -228,8 +228,8 @@ function PostSeasonPage() {
     if (rules?.league_position === 'BOTTOM') return 'Ultima'
     // Fallback: usar hierarchy
     const hier = comp.competitionType?.hierarchy || comp.type?.hierarchy || 999
-    if (hier <= 2) return '1ra Division'
-    if (hier >= 10) return 'Ultima'
+    if (hier <= 1) return '1ra Division'
+    if (hier >= 3) return 'Ultima'
     return 'Intermedia'
   }
 

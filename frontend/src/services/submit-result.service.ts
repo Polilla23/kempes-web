@@ -19,6 +19,13 @@ export interface PendingMatch {
       hierarchy: number
     }
   }
+  plazo: {
+    id: string
+    title: string
+    order: number
+    deadline: string
+    isOpen: boolean
+  } | null
   isUserHome: boolean
 }
 

@@ -1,0 +1,27 @@
+{
+  "title": "Player Ratings & Salaries",
+  "subtitle": "Update player ratings. Salaries are automatically recalculated based on salary rates.",
+  "search": "Search player...",
+  "filterClub": "All clubs",
+  "table": {
+    "player": "Player",
+    "club": "Club",
+    "currentOverall": "Current Rating",
+    "newOverall": "New Rating",
+    "currentSalary": "Current Salary",
+    "newSalary": "New Salary"
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "reset": "Discard"
+  },
+  "status": {
+    "noChanges": "No pending changes",
+    "pendingChanges": "{{count}} pending change(s)",
+    "modified": "Modified"
+  },
+  "success": "Successfully updated {{count}} player(s)",
+  "error": "Error updating ratings",
+  "empty": "No players found"
+}

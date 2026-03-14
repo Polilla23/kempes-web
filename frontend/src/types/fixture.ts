@@ -286,6 +286,7 @@ export interface CupWizardState {
   activeSeason?: Season
   competitionCategory?: CompetitionCategory
   competitionType?: CompetitionType  // Tipo de competición (COPA_KEMPES, etc.)
+  libreClubId?: string  // ID del club "Libre" detectado por nombre (comodín para grupos)
 }
 
 export interface StepConfig {

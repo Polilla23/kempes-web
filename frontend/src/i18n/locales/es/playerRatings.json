@@ -1,0 +1,27 @@
+{
+  "title": "Medias y Sueldos",
+  "subtitle": "Actualiza las medias de los jugadores. Los sueldos se recalculan automaticamente segun las tarifas salariales.",
+  "search": "Buscar jugador...",
+  "filterClub": "Todos los clubes",
+  "table": {
+    "player": "Jugador",
+    "club": "Club",
+    "currentOverall": "Media Actual",
+    "newOverall": "Nueva Media",
+    "currentSalary": "Sueldo Actual",
+    "newSalary": "Nuevo Sueldo"
+  },
+  "actions": {
+    "save": "Guardar Cambios",
+    "saving": "Guardando...",
+    "reset": "Descartar"
+  },
+  "status": {
+    "noChanges": "Sin cambios pendientes",
+    "pendingChanges": "{{count}} cambio(s) pendiente(s)",
+    "modified": "Modificado"
+  },
+  "success": "Se actualizaron {{count}} jugador(es) correctamente",
+  "error": "Error al actualizar las medias",
+  "empty": "No se encontraron jugadores"
+}

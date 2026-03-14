@@ -20,6 +20,8 @@ import {
   ArrowUpDown,
   DollarSign,
   FileEdit,
+  Clock,
+  Star,
 } from 'lucide-react'
 import { Label } from '../ui/label'
 import {
@@ -55,6 +57,8 @@ const adminItems = [
   { key: 'competitions', icon: Trophy, to: '/management/competitions' },
   { key: 'finances', icon: DollarSign, to: '/management/finances' },
   { key: 'editResults', icon: FileEdit, to: '/management/edit-results' },
+  { key: 'plazos', icon: Clock, to: '/management/plazos' },
+  { key: 'playerRatings', icon: Star, to: '/management/player-ratings' },
 ]
 const fixtureItems = [
   { key: 'createLeague', icon: ListTree, to: '/management/fixtures/league/' },

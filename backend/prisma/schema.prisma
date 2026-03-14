@@ -139,6 +139,7 @@ model Competition {
   competitionType CompetitionType @relation(fields: [competitionTypeId], references: [id])
   teams           Club[]          @relation("CompetitionTeams")
   matches         Match[]
+  plazoScopes     PlazoScope[]
 
   seasonTransitionsFrom SeasonTransition[]  @relation("FromCompetition")
   seasonTransitionsTo   SeasonTransition[]  @relation("ToCompetition")
@@ -201,10 +202,14 @@ model Match {
 
   resultRecordedAt DateTime? @map("result_recorded_at")
 
+  plazoId  String? @map("plazo_id")
+  plazo    Plazo?  @relation(fields: [plazoId], references: [id], onDelete: SetNull)
+
   @@index([competitionId])
   @@index([homeSourceMatchId])
   @@index([awaySourceMatchId])
   @@index([knockoutRound])
+  @@index([plazoId])
 }
 
 model MatchCovid {
@@ -621,6 +626,7 @@ model SeasonHalf {
   season        Season           @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
   // Relaciones
+  plazos                Plazo[]
   transferWindows       TransferWindow[]
   transfers             Transfer[]         @relation("TransferSeasonHalf")
   transfersLoanReturn   Transfer[]         @relation("LoanReturnSeasonHalf")
@@ -816,6 +822,46 @@ model CompetitionPrize {
   @@unique([competitionTypeId, position])
   @@index([competitionTypeId])
   @@map("competition_prizes")
+}
+
+// ============================================
+// PLAZO (MATCH DEADLINE PERIODS) MODELS
+// ============================================
+
+model Plazo {
+  id           String     @id @default(uuid())
+  seasonHalfId String     @map("season_half_id")
+  title        String
+  deadline     DateTime
+  order        Int
+  isOpen       Boolean    @default(false) @map("is_open")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  seasonHalf   SeasonHalf @relation(fields: [seasonHalfId], references: [id], onDelete: Cascade)
+  scopes       PlazoScope[]
+  matches      Match[]
+
+  @@unique([seasonHalfId, order])
+  @@index([seasonHalfId])
+  @@map("plazos")
+}
+
+model PlazoScope {
+  id             String          @id @default(uuid())
+  plazoId        String          @map("plazo_id")
+  competitionId  String          @map("competition_id")
+  matchdayFrom   Int?            @map("matchday_from")
+  matchdayTo     Int?            @map("matchday_to")
+  knockoutRounds KnockoutRound[] @map("knockout_rounds")
+
+  plazo       Plazo       @relation(fields: [plazoId], references: [id], onDelete: Cascade)
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  @@unique([plazoId, competitionId])
+  @@index([plazoId])
+  @@index([competitionId])
+  @@map("plazo_scopes")
 }
 
 // Tracking de dónde jugó cada jugador por media temporada (para calcular salarios)

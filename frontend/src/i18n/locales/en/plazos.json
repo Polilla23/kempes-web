@@ -1,0 +1,130 @@
+{
+  "title": "Deadlines",
+  "subtitle": "Manage match deadline periods for each season half",
+  "tabs": {
+    "firstHalf": "First Half",
+    "secondHalf": "Second Half"
+  },
+  "create": {
+    "button": "Create Deadline",
+    "title": "Create Deadline",
+    "description": "Define a new deadline with its due date and competition scope"
+  },
+  "edit": {
+    "title": "Edit Deadline",
+    "description": "Modify deadline data and its scope"
+  },
+  "fields": {
+    "title": "Title",
+    "titlePlaceholder": "E.g.: Deadline 1",
+    "deadline": "Due Date",
+    "order": "Order",
+    "orderHelp": "Order number within the season half"
+  },
+  "scopes": {
+    "title": "Competition Scope",
+    "add": "Add Competition",
+    "remove": "Remove",
+    "competition": "Competition",
+    "selectCompetition": "Select competition",
+    "matchdayFrom": "From Matchday",
+    "matchdayTo": "To Matchday",
+    "knockoutRounds": "Knockout Rounds",
+    "selectRounds": "Select rounds",
+    "empty": "No scope defined. Matches won't be auto-assigned."
+  },
+  "card": {
+    "deadline": "Due",
+    "matches": "matches",
+    "pending": "pending",
+    "finalized": "finalized",
+    "cancelled": "cancelled",
+    "noMatches": "No matches assigned",
+    "open": "Open",
+    "closed": "Closed",
+    "openedSuccess": "Deadline opened",
+    "closedSuccess": "Deadline closed"
+  },
+  "form": {
+    "isOpen": "Open deadline on creation"
+  },
+  "status": {
+    "overdue": "Overdue",
+    "active": "Active",
+    "upcoming": "Upcoming"
+  },
+  "actions": {
+    "reassignAll": "Reassign All",
+    "overdueReport": "Overdue Report",
+    "edit": "Edit",
+    "delete": "Delete",
+    "createSeasonHalves": "Create Season Halves"
+  },
+  "reassign": {
+    "success": "{{count}} matches reassigned across {{plazos}} deadlines",
+    "error": "Error reassigning deadlines"
+  },
+  "success": {
+    "created": "Deadline created successfully",
+    "updated": "Deadline updated successfully",
+    "deleted": "Deadline deleted successfully",
+    "seasonHalvesCreated": "Season halves created successfully"
+  },
+  "error": {
+    "fetch": "Error loading deadlines",
+    "create": "Error creating deadline",
+    "update": "Error updating deadline",
+    "delete": "Error deleting deadline",
+    "noSeasonHalf": "No season half configured. Create the season halves first.",
+    "createSeasonHalves": "Error creating season halves"
+  },
+  "empty": "No deadlines for this season half",
+  "overdueReport": {
+    "title": "Overdue Matches Report",
+    "subtitle": "Pending matches whose deadline has passed",
+    "totalOverdue": "Total overdue matches",
+    "clubsAffected": "Clubs affected",
+    "noOverdue": "No overdue matches",
+    "plazoDeadline": "Due on",
+    "pendingMatches": "pending matches",
+    "vs": "vs"
+  },
+  "overdue": {
+    "title": "Overdue Report",
+    "summary": {
+      "totalMatches": "Overdue matches",
+      "affectedClubs": "Clubs affected"
+    },
+    "club": {
+      "overdueCount": "{{count}} overdue matches"
+    },
+    "match": {
+      "vs": "vs",
+      "matchday": "Matchday {{n}}",
+      "home": "Home",
+      "away": "Away"
+    },
+    "empty": "No overdue matches"
+  },
+  "knockoutRounds": {
+    "ROUND_OF_64": "Round of 64",
+    "ROUND_OF_32": "Round of 32",
+    "ROUND_OF_16": "Round of 16",
+    "QUARTERFINAL": "Quarterfinal",
+    "SEMIFINAL": "Semifinal",
+    "FINAL": "Final",
+    "THIRD_PLACE": "Third Place",
+    "LIGUILLA": "Liguilla",
+    "TRIANGULAR_SEMI": "Triangular Semi",
+    "TRIANGULAR_FINAL": "Triangular Final",
+    "PLAYOUT": "Playout",
+    "PROMOTION": "Promotion",
+    "REDUCIDO_QUARTER": "Reducido Quarter",
+    "REDUCIDO_SEMI": "Reducido Semi",
+    "REDUCIDO_FINAL": "Reducido Final"
+  },
+  "delete_confirm": {
+    "title": "Delete Deadline?",
+    "description": "Matches assigned to this deadline will lose their assignment. Continue?"
+  }
+}

@@ -823,9 +823,9 @@ export function generatePromotionFixtures(
   const matchCount = Math.min(upperTeams.length, lowerTeams.length)
 
   for (let i = 0; i < matchCount; i++) {
-    // Mejor de inferior vs Peor de superior
-    const lowerTeam = lowerTeams[i]           // Mejor → peor
-    const upperTeam = upperTeams[matchCount - 1 - i]  // Peor → mejor
+    // Mejor de inferior vs Peor de superior (arrays ya vienen ordenados correctamente)
+    const lowerTeam = lowerTeams[i]   // Mejor → peor (ascendente por posición)
+    const upperTeam = upperTeams[i]   // Peor → mejor (descendente por posición)
 
     matches.push({
       competition: { connect: { id: competitionId } },

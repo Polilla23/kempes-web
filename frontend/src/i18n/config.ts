@@ -24,6 +24,8 @@ import enStandings from './locales/en/standings.json'
 import enSeasonDeadlines from './locales/en/seasonDeadlines.json'
 import enDashboard from './locales/en/dashboard.json'
 import enEditResults from './locales/en/edit-results.json'
+import enPlazos from './locales/en/plazos.json'
+import enPlayerRatings from './locales/en/playerRatings.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -47,6 +49,8 @@ import esStandings from './locales/es/standings.json'
 import esSeasonDeadlines from './locales/es/seasonDeadlines.json'
 import esDashboard from './locales/es/dashboard.json'
 import esEditResults from './locales/es/edit-results.json'
+import esPlazos from './locales/es/plazos.json'
+import esPlayerRatings from './locales/es/playerRatings.json'
 
 // Configure i18next
 i18n
@@ -80,6 +84,8 @@ i18n
         seasonDeadlines: enSeasonDeadlines,
         dashboard: enDashboard,
         editResults: enEditResults,
+        plazos: enPlazos,
+        playerRatings: enPlayerRatings,
       },
       es: {
         common: esCommon,
@@ -103,6 +109,8 @@ i18n
         seasonDeadlines: esSeasonDeadlines,
         dashboard: esDashboard,
         editResults: esEditResults,
+        plazos: esPlazos,
+        playerRatings: esPlayerRatings,
       },
     },
 
@@ -138,6 +146,8 @@ i18n
       'seasonDeadlines',
       'dashboard',
       'editResults',
+      'plazos',
+      'playerRatings',
     ],
 
     // Interpolation options

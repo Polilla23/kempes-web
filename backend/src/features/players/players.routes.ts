@@ -49,4 +49,8 @@ export const playerRoutes = async (fastify: FastifyInstance) => {
     schema: playersSchemas.bulkCreate,
     handler: playerController.uploadCSVFile.bind(playerController),
   })
+
+  fastify.post('/update-overalls', {
+    handler: playerController.bulkUpdateOveralls.bind(playerController),
+  })
 }

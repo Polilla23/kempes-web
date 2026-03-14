@@ -121,6 +121,23 @@ export class PlayerController {
     return Response.success(reply, transfers, 'Player transfer history fetched successfully')
   }
 
+  async bulkUpdateOveralls(req: FastifyRequest, reply: FastifyReply) {
+    const { updates } = req.body as { updates: Array<{ playerId: string; overall: number }> }
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      throw new ValidationError('Updates array is required and must not be empty', { field: 'updates' })
+    }
+
+    // Validate each entry
+    const validated = updates.map((u) => ({
+      playerId: Validator.uuid(u.playerId),
+      overall: Validator.number(u.overall, 0, 100),
+    }))
+
+    const result = await this.playerService.bulkUpdateOveralls(validated)
+    return Response.success(reply, result, 'Player overalls updated successfully')
+  }
+
   async uploadCSVFile(req: FastifyRequest, reply: FastifyReply) {
     const data = await (req as any).file()
 

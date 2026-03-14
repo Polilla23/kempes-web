@@ -21,7 +21,9 @@
     "salaryRates": "Tarifas Salariales",
     "competitions": "Competencias",
     "finances": "Finanzas",
-    "editResults": "Editar Resultados"
+    "editResults": "Editar Resultados",
+    "plazos": "Plazos",
+    "playerRatings": "Medias y Sueldos"
   },
   "configuration": {
     "title": "Configuración",

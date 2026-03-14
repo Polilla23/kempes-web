@@ -61,7 +61,9 @@ function CindorCupWizard() {
 
       // Obtener todos los equipos activos
       const clubsResponse = await ClubService.getClubs()
-      const activeClubs = clubsResponse.clubs.filter((c) => c.isActive)
+      const activeClubs = clubsResponse.clubs
+        .filter((c) => c.isActive)
+        .sort((a, b) => a.name.localeCompare(b.name))
       setClubs(activeClubs)
     } catch (err) {
       console.error('Error loading data:', err)

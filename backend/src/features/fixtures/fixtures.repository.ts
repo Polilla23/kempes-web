@@ -275,6 +275,7 @@ export class FixtureRepository implements IFixtureRepository {
       include: {
         homeClub: true,
         awayClub: true,
+        plazo: true,
         competition: {
           include: {
             competitionType: true,

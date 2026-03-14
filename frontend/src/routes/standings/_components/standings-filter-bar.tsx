@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Users, Trophy, Layers, Calendar } from 'lucide-react'
+import { Users, Trophy, Layers, Calendar, Crown } from 'lucide-react'
 import type {
   StandingsFilterState,
   Category,
@@ -85,29 +85,40 @@ export function StandingsFilterBar({
             <Users className="w-3.5 h-3.5" />
             Kempesitas
           </Button>
+          <Button
+            variant={filters.selectedCategory === 'supercopa' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onCategoryChange('supercopa')}
+            className="gap-1.5"
+          >
+            <Crown className="w-3.5 h-3.5" />
+            Supercopa
+          </Button>
         </div>
 
-        {/* Type Tabs */}
-        <div className="flex bg-secondary/50 p-1 rounded-lg">
-          <Button
-            variant={filters.selectedType === 'liga' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onTypeChange('liga')}
-            className="gap-1.5"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            Liga
-          </Button>
-          <Button
-            variant={filters.selectedType === 'copa' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => onTypeChange('copa')}
-            className="gap-1.5"
-          >
-            <Trophy className="w-3.5 h-3.5" />
-            Copa
-          </Button>
-        </div>
+        {/* Type Tabs - ocultar cuando se selecciona Supercopa */}
+        {filters.selectedCategory !== 'supercopa' && (
+          <div className="flex bg-secondary/50 p-1 rounded-lg">
+            <Button
+              variant={filters.selectedType === 'liga' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onTypeChange('liga')}
+              className="gap-1.5"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              Liga
+            </Button>
+            <Button
+              variant={filters.selectedType === 'copa' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onTypeChange('copa')}
+              className="gap-1.5"
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              Copa
+            </Button>
+          </div>
+        )}
 
         {/* Competition Select */}
         <Select

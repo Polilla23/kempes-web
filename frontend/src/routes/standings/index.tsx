@@ -88,7 +88,6 @@ function StandingsPage() {
 
   // Determinar si es knockout (sin tabla de posiciones)
   const isKnockout =
-    selectedCompetitionData?.format === 'CUP' &&
     selectedCompetitionData?.system === 'KNOCKOUT'
 
   return (

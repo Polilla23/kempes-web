@@ -41,4 +41,14 @@ export class SeasonHalfService {
       throw new Error(error instanceof Error ? error.message : 'Error fetching season halves by season')
     }
   }
+
+  // Crear mitades de temporada para una temporada
+  static async createSeasonHalves(seasonId: string): Promise<SeasonHalvesResponse> {
+    try {
+      const response = await api.post<{ data: SeasonHalf[] }>('/api/v1/season-halves', { seasonId })
+      return { seasonHalves: response.data?.data || [] }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error creating season halves')
+    }
+  }
 }
