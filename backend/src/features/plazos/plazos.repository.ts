@@ -201,7 +201,7 @@ export class PlazoRepository implements IPlazoRepository {
       },
       include: {
         matches: {
-          where: { status: 'PENDIENTE' },
+          where: { status: { in: ['PENDIENTE', 'FINALIZADO'] } },
           include: {
             homeClub: { select: { id: true, name: true, logo: true } },
             awayClub: { select: { id: true, name: true, logo: true } },
@@ -209,7 +209,7 @@ export class PlazoRepository implements IPlazoRepository {
               select: {
                 id: true,
                 name: true,
-                competitionType: { select: { name: true, category: true } },
+                competitionType: { select: { name: true, category: true, format: true } },
               },
             },
           },
