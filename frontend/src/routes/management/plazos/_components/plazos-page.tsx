@@ -48,6 +48,8 @@ export default function PlazosPage() {
   const [isCreatingHalves, setIsCreatingHalves] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isReassigning, setIsReassigning] = useState(false)
+  const [isLoadingPlazos, setIsLoadingPlazos] = useState(false)
+  const [isLoadingHalves, setIsLoadingHalves] = useState(false)
 
   // Load seasons on mount
   useEffect(() => {
@@ -88,11 +90,14 @@ export default function PlazosPage() {
   }
 
   const loadSeasonHalves = async (seasonId: string) => {
+    setIsLoadingHalves(true)
     try {
       const response = await SeasonHalfService.getSeasonHalvesBySeasonId(seasonId)
       setSeasonHalves(response.seasonHalves || [])
     } catch {
       setSeasonHalves([])
+    } finally {
+      setIsLoadingHalves(false)
     }
   }
 
@@ -110,12 +115,15 @@ export default function PlazosPage() {
   }
 
   const loadPlazos = async (seasonHalfId: string) => {
+    setIsLoadingPlazos(true)
     try {
       const data = await PlazoService.getBySeasonHalf(seasonHalfId)
       setPlazos(data)
     } catch {
       toast.error(t('error.fetch'))
       setPlazos([])
+    } finally {
+      setIsLoadingPlazos(false)
     }
   }
 
@@ -299,7 +307,41 @@ export default function PlazosPage() {
           )}
         </div>
 
-        {seasonHalves.length === 0 && selectedSeasonId ? (
+        {isLoadingHalves ? (
+          <div className="w-full space-y-3 mb-8">
+            {/* Half tabs skeleton */}
+            <div className="flex bg-secondary/50 p-0.5 rounded-lg w-full animate-pulse">
+              <div className="flex-1 h-8 bg-muted rounded" />
+              <div className="flex-1 h-8 bg-muted rounded" />
+            </div>
+            {/* Plazo cards skeleton */}
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="w-full">
+                <CardContent className="py-4 animate-pulse">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-5 w-32 bg-muted rounded" />
+                        <div className="h-5 w-8 bg-muted rounded" />
+                        <div className="h-5 w-16 bg-muted rounded-full" />
+                      </div>
+                      <div className="h-4 w-40 bg-muted rounded" />
+                      <div className="flex gap-3">
+                        <div className="h-3.5 w-20 bg-muted rounded" />
+                        <div className="h-3.5 w-20 bg-muted rounded" />
+                        <div className="h-3.5 w-20 bg-muted rounded" />
+                      </div>
+                    </div>
+                    <div className="flex gap-1 ml-2">
+                      <div className="h-8 w-8 bg-muted rounded" />
+                      <div className="h-8 w-8 bg-muted rounded" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : seasonHalves.length === 0 && selectedSeasonId ? (
           <Card className="w-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <AlertTriangle className="h-12 w-12 text-amber-500 mb-4" />
@@ -333,7 +375,35 @@ export default function PlazosPage() {
             </div>
 
             {/* Plazos list */}
-            {plazos.length === 0 ? (
+            {isLoadingPlazos ? (
+              <div className="w-full space-y-3 mb-8">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="w-full">
+                    <CardContent className="py-4 animate-pulse">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-5 w-32 bg-muted rounded" />
+                            <div className="h-5 w-8 bg-muted rounded" />
+                            <div className="h-5 w-16 bg-muted rounded-full" />
+                          </div>
+                          <div className="h-4 w-40 bg-muted rounded" />
+                          <div className="flex gap-3">
+                            <div className="h-3.5 w-20 bg-muted rounded" />
+                            <div className="h-3.5 w-20 bg-muted rounded" />
+                            <div className="h-3.5 w-20 bg-muted rounded" />
+                          </div>
+                        </div>
+                        <div className="flex gap-1 ml-2">
+                          <div className="h-8 w-8 bg-muted rounded" />
+                          <div className="h-8 w-8 bg-muted rounded" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : plazos.length === 0 ? (
               <Card className="w-full">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <CalendarClock className="h-12 w-12 text-muted-foreground mb-4" />

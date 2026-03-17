@@ -187,9 +187,13 @@ export class PlazoService {
     const validId = Validator.uuid(seasonId)
     const plazos = await this.plazoRepository.getOverdueReport(validId)
 
+    type OverdueStatus = 'SIN_DISPUTAR' | 'JUGADO_TARDE'
+
     const clubMap = new Map<string, {
       club: { id: string; name: string; logo: string | null }
       totalOverdue: number
+      totalPending: number
+      totalLatePlayed: number
       plazos: Array<{
         plazoId: string
         title: string
@@ -198,25 +202,67 @@ export class PlazoService {
           id: string
           rival: { id: string; name: string; logo: string | null }
           competition: string
+          competitionFormat: string
           matchdayOrder: number
+          knockoutRound: string | null
           isHome: boolean
+          overdueStatus: OverdueStatus
+          score: { home: number; away: number } | null
         }>
       }>
     }>()
 
+    let totalPending = 0
+    let totalLatePlayed = 0
+
     for (const plazo of plazos) {
       for (const match of plazo.matches as any[]) {
+        // Classify: PENDIENTE = sin disputar, FINALIZADO with resultRecordedAt > deadline = jugado tarde
+        // FINALIZADO with resultRecordedAt <= deadline = played on time, SKIP
+        let overdueStatus: OverdueStatus
+        if (match.status === 'PENDIENTE') {
+          overdueStatus = 'SIN_DISPUTAR'
+        } else if (match.status === 'FINALIZADO') {
+          const recordedAt = match.resultRecordedAt ? new Date(match.resultRecordedAt) : null
+          if (recordedAt && recordedAt > new Date(plazo.deadline)) {
+            overdueStatus = 'JUGADO_TARDE'
+          } else {
+            // Played on time or no resultRecordedAt — not overdue, skip
+            continue
+          }
+        } else {
+          continue
+        }
+
         const homeClub = match.homeClub
         const awayClub = match.awayClub
         const competitionName = match.competition?.name || ''
+        const competitionFormat = match.competition?.competitionType?.format || 'LEAGUE'
+        const isSinDisputar = overdueStatus === 'SIN_DISPUTAR'
+
+        if (isSinDisputar) totalPending++
+        else totalLatePlayed++
+
+        const matchBase = {
+          competition: competitionName,
+          competitionFormat,
+          matchdayOrder: match.matchdayOrder,
+          knockoutRound: match.knockoutRound || null,
+          overdueStatus,
+          score: !isSinDisputar
+            ? { home: match.homeClubGoals, away: match.awayClubGoals }
+            : null,
+        }
 
         // Add entry for home club
         if (homeClub) {
           if (!clubMap.has(homeClub.id)) {
-            clubMap.set(homeClub.id, { club: homeClub, totalOverdue: 0, plazos: [] })
+            clubMap.set(homeClub.id, { club: homeClub, totalOverdue: 0, totalPending: 0, totalLatePlayed: 0, plazos: [] })
           }
           const entry = clubMap.get(homeClub.id)!
           entry.totalOverdue++
+          if (isSinDisputar) entry.totalPending++
+          else entry.totalLatePlayed++
           let plazoEntry = entry.plazos.find((p) => p.plazoId === plazo.id)
           if (!plazoEntry) {
             plazoEntry = { plazoId: plazo.id, title: plazo.title, deadline: plazo.deadline, matches: [] }
@@ -225,19 +271,20 @@ export class PlazoService {
           plazoEntry.matches.push({
             id: match.id,
             rival: awayClub || { id: '', name: 'TBD', logo: null },
-            competition: competitionName,
-            matchdayOrder: match.matchdayOrder,
             isHome: true,
+            ...matchBase,
           })
         }
 
         // Add entry for away club
         if (awayClub) {
           if (!clubMap.has(awayClub.id)) {
-            clubMap.set(awayClub.id, { club: awayClub, totalOverdue: 0, plazos: [] })
+            clubMap.set(awayClub.id, { club: awayClub, totalOverdue: 0, totalPending: 0, totalLatePlayed: 0, plazos: [] })
           }
           const entry = clubMap.get(awayClub.id)!
           entry.totalOverdue++
+          if (isSinDisputar) entry.totalPending++
+          else entry.totalLatePlayed++
           let plazoEntry = entry.plazos.find((p) => p.plazoId === plazo.id)
           if (!plazoEntry) {
             plazoEntry = { plazoId: plazo.id, title: plazo.title, deadline: plazo.deadline, matches: [] }
@@ -246,19 +293,20 @@ export class PlazoService {
           plazoEntry.matches.push({
             id: match.id,
             rival: homeClub || { id: '', name: 'TBD', logo: null },
-            competition: competitionName,
-            matchdayOrder: match.matchdayOrder,
             isHome: false,
+            ...matchBase,
           })
         }
       }
     }
 
-    const clubs = Array.from(clubMap.values()).sort((a, b) => b.totalOverdue - a.totalOverdue)
-    const totalOverdueMatches = plazos.reduce((sum, p) => sum + (p.matches as any[]).length, 0)
+    const clubs = Array.from(clubMap.values())
+      .filter((c) => c.totalOverdue > 0)
+      .sort((a, b) => b.totalOverdue - a.totalOverdue)
+    const totalOverdueMatches = totalPending + totalLatePlayed
 
     return {
-      summary: { totalOverdueMatches, affectedClubs: clubs.length },
+      summary: { totalOverdueMatches, totalPending, totalLatePlayed, affectedClubs: clubs.length },
       clubs,
     }
   }

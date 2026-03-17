@@ -88,6 +88,8 @@ export interface OverduePlazo {
 export interface OverdueClubReport {
   club: { id: string; name: string; logo: string | null }
   totalOverdue: number
+  totalPending: number
+  totalLatePlayed: number
   plazos: Array<{
     plazoId: string
     title: string
@@ -96,14 +98,23 @@ export interface OverdueClubReport {
       id: string
       rival: { id: string; name: string; logo: string | null }
       competition: string
+      competitionFormat: string
       matchdayOrder: number
+      knockoutRound: string | null
       isHome: boolean
+      overdueStatus: 'SIN_DISPUTAR' | 'JUGADO_TARDE'
+      score: { home: number; away: number } | null
     }>
   }>
 }
 
 export interface OverdueReport {
-  summary: { totalOverdueMatches: number; affectedClubs: number }
+  summary: {
+    totalOverdueMatches: number
+    totalPending: number
+    totalLatePlayed: number
+    affectedClubs: number
+  }
   clubs: OverdueClubReport[]
 }
 

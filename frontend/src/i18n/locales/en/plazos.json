@@ -81,7 +81,7 @@
   "empty": "No deadlines for this season half",
   "overdueReport": {
     "title": "Overdue Matches Report",
-    "subtitle": "Pending matches whose deadline has passed",
+    "subtitle": "Pending matches and matches played past their deadline",
     "totalOverdue": "Total overdue matches",
     "clubsAffected": "Clubs affected",
     "noOverdue": "No overdue matches",
@@ -93,16 +93,22 @@
     "title": "Overdue Report",
     "summary": {
       "totalMatches": "Overdue matches",
+      "totalPending": "Not played",
+      "totalLatePlayed": "Played late",
       "affectedClubs": "Clubs affected"
     },
     "club": {
-      "overdueCount": "{{count}} overdue matches"
+      "overdueCount": "{{count}} overdue matches",
+      "pendingCount": "{{count}} not played",
+      "latePlayedCount": "{{count}} played late"
     },
     "match": {
       "vs": "vs",
       "matchday": "Matchday {{n}}",
       "home": "Home",
-      "away": "Away"
+      "away": "Away",
+      "sinDisputar": "Not played",
+      "latePlayed": "Played late"
     },
     "empty": "No overdue matches"
   },

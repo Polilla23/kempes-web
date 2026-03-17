@@ -81,7 +81,7 @@
   "empty": "No hay plazos para esta mitad de temporada",
   "overdueReport": {
     "title": "Reporte de Partidos Vencidos",
-    "subtitle": "Partidos pendientes cuyo plazo ya venció",
+    "subtitle": "Partidos pendientes y jugados fuera de plazo",
     "totalOverdue": "Total partidos vencidos",
     "clubsAffected": "Clubes afectados",
     "noOverdue": "No hay partidos vencidos",
@@ -93,16 +93,22 @@
     "title": "Reporte de Vencidos",
     "summary": {
       "totalMatches": "Partidos atrasados",
+      "totalPending": "Sin disputar",
+      "totalLatePlayed": "Jugados tarde",
       "affectedClubs": "Clubes afectados"
     },
     "club": {
-      "overdueCount": "{{count}} partidos atrasados"
+      "overdueCount": "{{count}} partidos atrasados",
+      "pendingCount": "{{count}} sin disputar",
+      "latePlayedCount": "{{count}} jugados tarde"
     },
     "match": {
       "vs": "vs",
       "matchday": "Fecha {{n}}",
       "home": "Local",
-      "away": "Visitante"
+      "away": "Visitante",
+      "sinDisputar": "Sin disputar",
+      "latePlayed": "Jugado tarde"
     },
     "empty": "No hay partidos vencidos"
   },

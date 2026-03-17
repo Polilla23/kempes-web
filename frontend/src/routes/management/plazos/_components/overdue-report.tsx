@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { AlertTriangle, ChevronDown, ChevronLeft, CheckCircle, Shield } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronLeft, CheckCircle, Shield, Clock } from 'lucide-react'
 import { PlazoService, type OverdueReport as OverdueReportType } from '@/services/plazo.service'
 import { toast } from 'sonner'
 
@@ -57,7 +57,7 @@ export function OverdueReport({ seasonId, onBack }: OverdueReportProps) {
     )
   }
 
-  const summary = report?.summary || { totalOverdueMatches: 0, affectedClubs: 0 }
+  const summary = report?.summary || { totalOverdueMatches: 0, totalPending: 0, totalLatePlayed: 0, affectedClubs: 0 }
   const clubs = report?.clubs || []
 
   return (
@@ -75,14 +75,20 @@ export function OverdueReport({ seasonId, onBack }: OverdueReportProps) {
       </div>
 
       {/* Summary */}
-      <div className="flex gap-4">
-        <Card className="flex-1">
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
           <CardContent className="pt-4 pb-4 text-center">
-            <p className="text-2xl font-bold text-destructive">{summary.totalOverdueMatches}</p>
-            <p className="text-xs text-muted-foreground">{t('overdue.summary.totalMatches')}</p>
+            <p className="text-2xl font-bold text-destructive">{summary.totalPending}</p>
+            <p className="text-xs text-muted-foreground">{t('overdue.summary.totalPending')}</p>
           </CardContent>
         </Card>
-        <Card className="flex-1">
+        <Card>
+          <CardContent className="pt-4 pb-4 text-center">
+            <p className="text-2xl font-bold text-amber-500">{summary.totalLatePlayed}</p>
+            <p className="text-xs text-muted-foreground">{t('overdue.summary.totalLatePlayed')}</p>
+          </CardContent>
+        </Card>
+        <Card>
           <CardContent className="pt-4 pb-4 text-center">
             <p className="text-2xl font-bold">{summary.affectedClubs}</p>
             <p className="text-xs text-muted-foreground">{t('overdue.summary.affectedClubs')}</p>
@@ -120,10 +126,18 @@ export function OverdueReport({ seasonId, onBack }: OverdueReportProps) {
                       <CardTitle className="text-base">{clubReport.club.name}</CardTitle>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="destructive" className="gap-1">
-                        <AlertTriangle className="h-3 w-3" />
-                        {t('overdue.club.overdueCount', { count: clubReport.totalOverdue })}
-                      </Badge>
+                      {clubReport.totalPending > 0 && (
+                        <Badge variant="destructive" className="gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          {t('overdue.club.pendingCount', { count: clubReport.totalPending })}
+                        </Badge>
+                      )}
+                      {clubReport.totalLatePlayed > 0 && (
+                        <Badge className="gap-1 bg-amber-500 hover:bg-amber-600 text-white">
+                          <Clock className="h-3 w-3" />
+                          {t('overdue.club.latePlayedCount', { count: clubReport.totalLatePlayed })}
+                        </Badge>
+                      )}
                       <ChevronDown className={`h-4 w-4 transition-transform ${expandedClubs.has(clubReport.club.id) ? 'rotate-180' : ''}`} />
                     </div>
                   </div>
@@ -141,37 +155,63 @@ export function OverdueReport({ seasonId, onBack }: OverdueReportProps) {
                           </span>
                         </div>
                         <div className="space-y-1.5 pl-3 border-l-2 border-muted">
-                          {plazo.matches.map((match) => (
-                            <div
-                              key={match.id}
-                              className="flex items-center justify-between bg-secondary/50 rounded-lg p-2 text-sm"
-                            >
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 rounded flex items-center justify-center overflow-hidden bg-muted border">
-                                  {match.rival.logo ? (
-                                    <img src={match.rival.logo} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <Shield className="w-3 h-3 text-muted-foreground" />
+                          {plazo.matches.map((match) => {
+                            const isSinDisputar = match.overdueStatus === 'SIN_DISPUTAR'
+                            return (
+                              <div
+                                key={match.id}
+                                className={`flex items-center justify-between rounded-lg p-2 text-sm border-l-2 ${
+                                  isSinDisputar
+                                    ? 'bg-destructive/10 border-l-destructive'
+                                    : 'bg-amber-500/10 border-l-amber-500'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="w-5 h-5 rounded flex items-center justify-center overflow-hidden bg-muted border">
+                                    {match.rival.logo ? (
+                                      <img src={match.rival.logo} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <Shield className="w-3 h-3 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  <span className="text-muted-foreground">{t('overdue.match.vs')}</span>
+                                  <span className="font-medium truncate max-w-[140px]">
+                                    {match.rival.name}
+                                  </span>
+                                  {match.score && (
+                                    <span className="text-xs font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                                      {match.isHome
+                                        ? `${match.score.home} - ${match.score.away}`
+                                        : `${match.score.away} - ${match.score.home}`}
+                                    </span>
                                   )}
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {match.isHome ? t('overdue.match.home') : t('overdue.match.away')}
+                                  </Badge>
                                 </div>
-                                <span className="text-muted-foreground">{t('overdue.match.vs')}</span>
-                                <span className="font-medium truncate max-w-[140px]">
-                                  {match.rival.name}
-                                </span>
-                                <Badge variant="outline" className="text-[10px]">
-                                  {match.isHome ? t('overdue.match.home') : t('overdue.match.away')}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    {match.competition}
+                                  </span>
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {match.knockoutRound
+                                      ? t(`knockoutRounds.${match.knockoutRound}` as any)
+                                      : t('overdue.match.matchday', { n: match.matchdayOrder })}
+                                  </Badge>
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] ${
+                                      isSinDisputar
+                                        ? 'border-destructive/50 text-destructive'
+                                        : 'border-amber-500/50 text-amber-600 dark:text-amber-400'
+                                    }`}
+                                  >
+                                    {isSinDisputar ? t('overdue.match.sinDisputar') : t('overdue.match.latePlayed')}
+                                  </Badge>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground">
-                                  {match.competition}
-                                </span>
-                                <Badge variant="outline" className="text-[10px]">
-                                  {t('overdue.match.matchday', { n: match.matchdayOrder })}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       </div>
                     ))}
