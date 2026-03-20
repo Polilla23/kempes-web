@@ -43,6 +43,7 @@ export class ClubService {
     logo,
     userId,
     isActive,
+    logoFile,
   }: CreateClubInput & {
     logoFile?: { buffer: Buffer; filename: string; mimetype: string }
   }) {
@@ -52,36 +53,27 @@ export class ClubService {
       throw new ClubAlreadyExistsError()
     }
 
-    let logoUrl = logo
-
-    // Si viene un archivo, subirlo a Supabase
-    if ((this as any).logoFile) {
-      const uploadResult = await this.storageService.uploadImage({
-        file: (this as any).logoFile.buffer,
-        fileName: (this as any).logoFile.filename,
-        mimeType: (this as any).logoFile.mimetype,
-        entityType: 'CLUB',
-      })
-      logoUrl = uploadResult.publicUrl
-    }
-
     const clubData: Prisma.ClubCreateInput = {
       name,
-      logo: logoUrl as string,
+      logo: logo ?? null,
       isActive: isActive ?? true,
     }
 
-    // Only connect user if userId is provided
     if (userId) {
       clubData.user = { connect: { id: userId } }
     }
 
     const newClub = await this.clubRepository.save(clubData)
 
-    // Update entityId in StorageFile if logo was uploaded
-    if ((this as any).logoFile && logoUrl) {
-      // The entityId is now available from newClub.id
-      // Note: This would require a method in StorageService to update entityId
+    if (logoFile) {
+      const uploadResult = await this.storageService.uploadImage({
+        file: logoFile.buffer,
+        fileName: logoFile.filename,
+        mimeType: logoFile.mimetype,
+        entityType: 'CLUB',
+        entityId: newClub.id,
+      })
+      return await this.clubRepository.updateOneById(newClub.id, { logo: uploadResult.publicUrl })
     }
 
     return newClub

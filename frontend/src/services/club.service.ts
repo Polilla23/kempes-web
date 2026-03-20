@@ -5,8 +5,13 @@ export class ClubService {
     // Crear un nuevo club
     static async createClub(clubData: RegisterClubFormData): Promise<ClubResponse> {
         try {
-            const response = await api.post<{ data: Club; message: string }>('/api/v1/clubs', clubData)
-            // Backend devuelve { data: Club, message, timestamp }
+            const formData = new FormData()
+            formData.append('name', clubData.name)
+            if (clubData.logo instanceof File) formData.append('logo', clubData.logo)
+            if (clubData.userId) formData.append('userId', clubData.userId)
+            if (clubData.isActive !== undefined) formData.append('isActive', String(clubData.isActive))
+
+            const response = await api.post<{ data: Club; message: string }>('/api/v1/clubs', formData)
             return { club: response.data?.data, message: response.data?.message || 'Club created successfully' }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error creating club')
@@ -38,8 +43,13 @@ export class ClubService {
     // Actualizar un club
     static async updateClub(id: string, clubData: RegisterClubFormData): Promise<ClubResponse> {
         try {
-            const response = await api.patch<{ data: Club; message: string }>(`/api/v1/clubs/${id}`, clubData)
-            // Backend devuelve { data: Club, message, timestamp }
+            const formData = new FormData()
+            formData.append('name', clubData.name)
+            if (clubData.logo instanceof File) formData.append('logo', clubData.logo)
+            if (clubData.userId !== undefined) formData.append('userId', clubData.userId ?? '')
+            if (clubData.isActive !== undefined) formData.append('isActive', String(clubData.isActive))
+
+            const response = await api.patch<{ data: Club; message: string }>(`/api/v1/clubs/${id}`, formData)
             return { club: response.data?.data, message: response.data?.message || 'Club updated successfully' }
         } catch (error) {
             throw new Error(error instanceof Error ? error.message : 'Error updating club')

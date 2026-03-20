@@ -2,16 +2,7 @@ export const clubsSchemas = {
   create: {
     description: 'Create new club.',
     tags: ['Clubs'],
-    body: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        logo: { type: 'string' },
-        userId: { type: 'string', nullable: true },
-        isActive: { type: 'boolean' },
-      },
-      required: ['name'],
-    },
+    consumes: ['multipart/form-data'],
     response: {
       201: {
         description: 'Club created successfully.',
@@ -139,16 +130,7 @@ export const clubsSchemas = {
   update: {
     description: 'Update a club by ID.',
     tags: ['Clubs'],
-    body: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        logo: { type: 'string' },
-        userId: { type: 'string' },
-        isActive: { type: 'boolean' },
-      },
-      additionalProperties: false,
-    },
+    consumes: ['multipart/form-data'],
     params: {
       type: 'object',
       properties: {

@@ -171,7 +171,7 @@ export interface NewPasswordFormData {
 
 export interface RegisterClubFormData {
   name: string
-  logo?: string
+  logo?: File
   userId?: string | null
   isActive?: boolean
 }
