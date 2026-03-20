@@ -1,9 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import {
   ShoppingCart,
@@ -12,10 +19,10 @@ import {
   ArrowUpRight,
   Gavel,
   UserPlus,
-  UserX,
   Building2,
-  Search,
+  ChevronsUpDown,
   Check,
+  Search,
 } from 'lucide-react'
 import type {
   TransferWizardState,
@@ -23,11 +30,10 @@ import type {
   WizardStepProps,
   UserTransferRole,
 } from '@/types/transfer-wizard'
-import { TRANSFER_TYPE_CONFIGS, TRANSFER_TYPE_COLORS } from '@/types/transfer-wizard'
+import { TRANSFER_TYPE_CONFIGS } from '@/types/transfer-wizard'
 import { ClubService } from '@/services/club.service'
 import type { Club } from '@/types'
 
-// Icon mapping for transfer types
 const TRANSFER_TYPE_ICONS: Record<TransferTypeOption, React.ElementType> = {
   PURCHASE: ShoppingCart,
   SALE: DollarSign,
@@ -35,10 +41,9 @@ const TRANSFER_TYPE_ICONS: Record<TransferTypeOption, React.ElementType> = {
   LOAN_OUT: ArrowUpRight,
   AUCTION: Gavel,
   FREE_AGENT: UserPlus,
-  INACTIVE_STATUS: UserX,
+  INACTIVE_STATUS: Building2,
 }
 
-// All available transfer types (excluding INACTIVE_STATUS for now as per common usage)
 const TRANSFER_TYPES: TransferTypeOption[] = [
   'PURCHASE',
   'SALE',
@@ -48,7 +53,6 @@ const TRANSFER_TYPES: TransferTypeOption[] = [
   'FREE_AGENT',
 ]
 
-// Translation key mapping
 const TYPE_TO_KEY: Record<TransferTypeOption, string> = {
   PURCHASE: 'purchase',
   SALE: 'sale',
@@ -65,48 +69,77 @@ interface Step1Props extends Omit<WizardStepProps, 'onBack'> {
   userClubLogo: string | null
 }
 
+function ClubAvatar({
+  src,
+  name,
+  size = 'md',
+}: {
+  src?: string | null
+  name: string
+  size?: 'sm' | 'md'
+}) {
+  const sz = size === 'sm' ? 'h-8 w-8' : 'h-10 w-10'
+  return src ? (
+    <img
+      src={src}
+      alt={name}
+      className={cn(sz, 'rounded-full object-cover flex-shrink-0')}
+    />
+  ) : (
+    <div
+      className={cn(
+        sz,
+        'rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0',
+      )}
+    >
+      <Building2 className="h-4 w-4 text-primary" />
+    </div>
+  )
+}
+
 export function Step1TypeAndClubs({
   wizardState,
   onUpdate,
-  onNext,
   userClubId,
   userClubName,
   userClubLogo,
 }: Step1Props) {
   const { t } = useTranslation('transfers')
   const [clubs, setClubs] = useState<Club[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
   const [isLoadingClubs, setIsLoadingClubs] = useState(false)
+  const [comboOpen, setComboOpen] = useState(false)
+  const [clubSearch, setClubSearch] = useState('')
 
-  // Fetch clubs when type is selected
+  const filteredClubs = useMemo(() => {
+    if (!clubSearch.trim()) return clubs
+    const q = clubSearch.toLowerCase()
+    return clubs.filter((c) => c.name.toLowerCase().includes(q))
+  }, [clubs, clubSearch])
+
   useEffect(() => {
+    if (!wizardState.transferType) return
+    const config = TRANSFER_TYPE_CONFIGS[wizardState.transferType]
+    if (!config.requiresOtherClub) return
+    if (clubs.length > 0) return
+
     const fetchClubs = async () => {
-      if (!wizardState.transferType) return
-
-      const config = TRANSFER_TYPE_CONFIGS[wizardState.transferType]
-      if (!config.requiresOtherClub) return
-
       setIsLoadingClubs(true)
       try {
         const response = await ClubService.getClubs()
-        // Filter out user's club
-        const otherClubs = response.clubs.filter((club) => club.id !== userClubId)
-        setClubs(otherClubs)
+        setClubs(response.clubs.filter((c) => c.id !== userClubId))
       } catch (error) {
         console.error('Error fetching clubs:', error)
       } finally {
         setIsLoadingClubs(false)
       }
     }
-
     fetchClubs()
-  }, [wizardState.transferType, userClubId])
+  }, [wizardState.transferType, userClubId, clubs.length])
 
   const handleSelectType = (type: TransferTypeOption) => {
     const config = TRANSFER_TYPE_CONFIGS[type]
     const userRole: UserTransferRole = config.userRole
 
-    // Set clubs based on user role
     let sellerClubId = null
     let sellerClubName = null
     let sellerClubLogo = null
@@ -115,12 +148,10 @@ export function Step1TypeAndClubs({
     let buyerClubLogo = null
 
     if (userRole === 'SELLER') {
-      // User is selling, so user's club is the seller
       sellerClubId = userClubId
       sellerClubName = userClubName
       sellerClubLogo = userClubLogo
     } else {
-      // User is buying, so user's club is the buyer
       buyerClubId = userClubId
       buyerClubName = userClubName
       buyerClubLogo = userClubLogo
@@ -136,7 +167,6 @@ export function Step1TypeAndClubs({
       buyerClubId,
       buyerClubName,
       buyerClubLogo,
-      // Reset dependent fields
       playersToSell: [],
       playersAsPayment: [],
       loanDetails:
@@ -144,16 +174,15 @@ export function Step1TypeAndClubs({
           ? { durationHalves: 2, loanFee: 0, salaryPercentage: 50 }
           : null,
     }))
+  }
 
-    // Reset search
-    setSearchQuery('')
+  const handleComboOpenChange = (open: boolean) => {
+    setComboOpen(open)
+    if (!open) setClubSearch('')
   }
 
   const handleSelectOtherClub = (club: Club) => {
-    const userRole = wizardState.userRole
-
-    if (userRole === 'SELLER') {
-      // User is selling, so the other club is the buyer
+    if (wizardState.userRole === 'SELLER') {
       onUpdate((prev) => ({
         ...prev,
         buyerClubId: club.id,
@@ -161,7 +190,6 @@ export function Step1TypeAndClubs({
         buyerClubLogo: club.logo || null,
       }))
     } else {
-      // User is buying, so the other club is the seller
       onUpdate((prev) => ({
         ...prev,
         sellerClubId: club.id,
@@ -169,250 +197,232 @@ export function Step1TypeAndClubs({
         sellerClubLogo: club.logo || null,
       }))
     }
+    setComboOpen(false)
   }
 
-  // Filter clubs by search query
-  const filteredClubs = clubs.filter((club) =>
-    club.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const config = wizardState.transferType
+    ? TRANSFER_TYPE_CONFIGS[wizardState.transferType]
+    : null
+  const isFreeAgent = wizardState.transferType === 'FREE_AGENT'
+  const isInactive = wizardState.transferType === 'INACTIVE_STATUS'
 
-  // Determine which club to show as selected in the "other club" section
-  const selectedOtherClubId =
-    wizardState.userRole === 'SELLER' ? wizardState.buyerClubId : wizardState.sellerClubId
+  // Other club data (right side)
+  const otherClub =
+    wizardState.userRole === 'SELLER'
+      ? {
+          id: wizardState.buyerClubId,
+          name: wizardState.buyerClubName,
+          logo: wizardState.buyerClubLogo,
+        }
+      : {
+          id: wizardState.sellerClubId,
+          name: wizardState.sellerClubName,
+          logo: wizardState.sellerClubLogo,
+        }
 
-  // Check if we need to show the clubs section
-  const showClubsSection =
-    wizardState.transferType &&
-    TRANSFER_TYPE_CONFIGS[wizardState.transferType].requiresOtherClub
+  const myRoleLabel =
+    wizardState.userRole === 'SELLER'
+      ? t('wizard.roles.seller', 'Vendedor')
+      : t('wizard.roles.buyer', 'Comprador')
+
+  const otherRoleLabel =
+    wizardState.userRole === 'SELLER'
+      ? t('wizard.roles.buyer', 'Comprador')
+      : t('wizard.roles.seller', 'Vendedor')
 
   return (
     <div className="space-y-6">
-      {/* Transfer Type Selection */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium">{t('wizard.steps.type.description')}</Label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {TRANSFER_TYPES.map((type) => {
-            const Icon = TRANSFER_TYPE_ICONS[type]
-            const key = TYPE_TO_KEY[type]
-            const config = TRANSFER_TYPE_CONFIGS[type]
-            const isSelected = wizardState.transferType === type
-            const colorClasses = TRANSFER_TYPE_COLORS[config.color]
-
-            return (
-              <Card
-                key={type}
-                className={cn(
-                  'cursor-pointer transition-all border-2',
-                  isSelected
-                    ? colorClasses
-                    : 'hover:border-gray-300 border-transparent bg-gray-50 dark:bg-gray-800'
-                )}
-                onClick={() => handleSelectType(type)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div
-                    className={cn(
-                      'mx-auto mb-2 p-2 rounded-lg w-fit',
-                      isSelected ? 'bg-white/50' : 'bg-white dark:bg-gray-700'
-                    )}
-                  >
-                    <Icon className={cn('h-5 w-5', !isSelected && 'text-gray-700 dark:text-gray-200')} />
+      {/* Transfer Type Dropdown */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">
+          {t('wizard.steps.typeAndClubs.typeLabel', 'Tipo de transferencia')}
+        </Label>
+        <Select
+          value={wizardState.transferType ?? ''}
+          onValueChange={(v) => handleSelectType(v as TransferTypeOption)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue
+              placeholder={t(
+                'wizard.steps.typeAndClubs.typePlaceholder',
+                'Seleccioná el tipo de operación',
+              )}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {TRANSFER_TYPES.map((type) => {
+              const Icon = TRANSFER_TYPE_ICONS[type]
+              const key = TYPE_TO_KEY[type]
+              return (
+                <SelectItem key={type} value={type}>
+                  <div className="flex items-center gap-2">
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span>{t(`typeCards.${key}.title`)}</span>
                   </div>
-                  <p className={cn(
-                    'text-sm font-medium',
-                    !isSelected && 'text-gray-700 dark:text-gray-200'
-                  )}>
-                    {t(`typeCards.${key}.title`)}
-                  </p>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                </SelectItem>
+              )
+            })}
+          </SelectContent>
+        </Select>
+        {config && (
+          <p className="text-xs text-muted-foreground">
+            {t(`typeCards.${TYPE_TO_KEY[wizardState.transferType!]}.description`)}
+          </p>
+        )}
       </div>
 
-      {/* Clubs Section - Only shown when a type is selected and requires another club */}
-      {showClubsSection && (
-        <Card className="animate-in fade-in slide-in-from-top-2 duration-300">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Building2 className="h-5 w-5" />
-              {t('clubsInvolved.title', 'Equipos Involucrados')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Seller Club */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-muted-foreground">
-                  {t('clubsInvolved.sellerClub', 'Equipo Vendedor')}
-                </Label>
-                {wizardState.userRole === 'SELLER' ? (
-                  // User's club - non-editable
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-                    {wizardState.sellerClubLogo ? (
-                      <img
-                        src={wizardState.sellerClubLogo}
-                        alt={wizardState.sellerClubName || ''}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-primary" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">{wizardState.sellerClubName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t('clubsInvolved.yourClub', 'Tu Club')}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  // Other club - searchable select
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder={t('playerSelection.searchPlaceholder', 'Buscar club...')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                    <ScrollArea className="h-[180px] rounded-md border">
-                      <div className="p-2 space-y-1">
-                        {isLoadingClubs ? (
-                          <p className="text-center py-4 text-sm text-muted-foreground">
-                            Cargando...
-                          </p>
-                        ) : filteredClubs.length === 0 ? (
-                          <p className="text-center py-4 text-sm text-muted-foreground">
-                            No se encontraron clubes
-                          </p>
-                        ) : (
-                          filteredClubs.map((club) => (
-                            <div
-                              key={club.id}
-                              className={cn(
-                                'flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors',
-                                selectedOtherClubId === club.id
-                                  ? 'bg-primary/10 border border-primary'
-                                  : 'hover:bg-muted'
-                              )}
-                              onClick={() => handleSelectOtherClub(club)}
-                            >
-                              {club.logo ? (
-                                <img
-                                  src={club.logo}
-                                  alt={club.name}
-                                  className="h-8 w-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                  <Building2 className="h-4 w-4" />
-                                </div>
-                              )}
-                              <span className="flex-1 text-sm">{club.name}</span>
-                              {selectedOtherClubId === club.id && (
-                                <Check className="h-4 w-4 text-primary" />
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                )}
-              </div>
-
-              {/* Buyer Club */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-muted-foreground">
-                  {t('clubsInvolved.buyerClub', 'Equipo Comprador')}
-                </Label>
-                {wizardState.userRole === 'BUYER' ? (
-                  // User's club - non-editable
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
-                    {wizardState.buyerClubLogo ? (
-                      <img
-                        src={wizardState.buyerClubLogo}
-                        alt={wizardState.buyerClubName || ''}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Building2 className="h-5 w-5 text-primary" />
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium">{wizardState.buyerClubName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t('clubsInvolved.yourClub', 'Tu Club')}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  // Other club - searchable select
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder={t('playerSelection.searchPlaceholder', 'Buscar club...')}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                    <ScrollArea className="h-[180px] rounded-md border">
-                      <div className="p-2 space-y-1">
-                        {isLoadingClubs ? (
-                          <p className="text-center py-4 text-sm text-muted-foreground">
-                            Cargando...
-                          </p>
-                        ) : filteredClubs.length === 0 ? (
-                          <p className="text-center py-4 text-sm text-muted-foreground">
-                            No se encontraron clubes
-                          </p>
-                        ) : (
-                          filteredClubs.map((club) => (
-                            <div
-                              key={club.id}
-                              className={cn(
-                                'flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors',
-                                selectedOtherClubId === club.id
-                                  ? 'bg-primary/10 border border-primary'
-                                  : 'hover:bg-muted'
-                              )}
-                              onClick={() => handleSelectOtherClub(club)}
-                            >
-                              {club.logo ? (
-                                <img
-                                  src={club.logo}
-                                  alt={club.name}
-                                  className="h-8 w-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                  <Building2 className="h-4 w-4" />
-                                </div>
-                              )}
-                              <span className="flex-1 text-sm">{club.name}</span>
-                              {selectedOtherClubId === club.id && (
-                                <Check className="h-4 w-4 text-primary" />
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                )}
+      {/* Clubs — always visible, fixed layout */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">
+          {t('clubsInvolved.title', 'Clubes involucrados')}
+        </Label>
+        <div className="grid grid-cols-2 gap-3">
+          {/* Left: My club (always fixed) */}
+          <div className="space-y-1.5">
+            <div className="h-5 flex items-center">
+              {wizardState.transferType && (
+                <Badge variant="secondary" className="text-[10px] h-5 px-2">
+                  {myRoleLabel}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border h-[62px]">
+              <ClubAvatar src={userClubLogo} name={userClubName ?? ''} />
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{userClubName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('clubsInvolved.yourClub', 'Tu club')}
+                </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {/* Right: Other club */}
+          <div className="space-y-1.5">
+            <div className="h-5 flex items-center">
+              {wizardState.transferType && (
+                <Badge variant="secondary" className="text-[10px] h-5 px-2">
+                  {isFreeAgent
+                    ? t('wizard.roles.freeAgent', 'Sin club')
+                    : isInactive
+                      ? '—'
+                      : otherRoleLabel}
+                </Badge>
+              )}
+            </div>
+
+            {!wizardState.transferType ? (
+              /* No type selected yet */
+              <div className="h-[62px] rounded-lg border border-dashed flex items-center justify-center text-xs text-muted-foreground text-center px-3">
+                {t(
+                  'wizard.steps.typeAndClubs.clubPlaceholder',
+                  'Elegí un tipo de operación',
+                )}
+              </div>
+            ) : isFreeAgent ? (
+              /* FREE_AGENT: right side is "Sin club" */
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border h-[62px]">
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <UserPlus className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">
+                    {t('wizard.roles.freeAgent', 'Sin club')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Agente libre</p>
+                </div>
+              </div>
+            ) : isInactive ? (
+              /* INACTIVE_STATUS: no other club */
+              <div className="h-[62px] rounded-lg border border-dashed flex items-center justify-center text-xs text-muted-foreground">
+                {t('wizard.roles.noOtherClub', 'No aplica')}
+              </div>
+            ) : (
+              /* Searchable combobox — native scroll to bypass react-remove-scroll */
+              <Popover open={comboOpen} onOpenChange={handleComboOpenChange}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboOpen}
+                    className="w-full h-[62px] px-3 justify-between font-normal"
+                  >
+                    {otherClub.id ? (
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ClubAvatar
+                          src={otherClub.logo}
+                          name={otherClub.name ?? ''}
+                          size="sm"
+                        />
+                        <span className="truncate text-sm font-medium">
+                          {otherClub.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">
+                        {t(
+                          'wizard.steps.typeAndClubs.clubSearchPlaceholder',
+                          'Buscar club...',
+                        )}
+                      </span>
+                    )}
+                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-0" align="start">
+                  <div className="flex flex-col">
+                    {/* Search input */}
+                    <div className="flex items-center gap-2 px-3 py-2 border-b">
+                      <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <input
+                        className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
+                        placeholder={t(
+                          'wizard.steps.typeAndClubs.clubSearchPlaceholder',
+                          'Buscar club...',
+                        )}
+                        value={clubSearch}
+                        onChange={(e) => setClubSearch(e.target.value)}
+                      />
+                    </div>
+                    {/* Scrollable list — onWheel stops propagation to Dialog */}
+                    <div
+                      className="overflow-y-auto py-1"
+                      style={{ maxHeight: '200px' }}
+                      onWheel={(e) => e.stopPropagation()}
+                    >
+                      {isLoadingClubs ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">Cargando...</p>
+                      ) : filteredClubs.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          {t('wizard.steps.typeAndClubs.noClubs', 'No se encontraron clubes')}
+                        </p>
+                      ) : (
+                        filteredClubs.map((club) => (
+                          <button
+                            key={club.id}
+                            type="button"
+                            className={cn(
+                              'w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm cursor-default text-left',
+                              otherClub.id === club.id && 'bg-accent',
+                            )}
+                            onClick={() => handleSelectOtherClub(club)}
+                          >
+                            <ClubAvatar src={club.logo} name={club.name} size="sm" />
+                            <span className="flex-1 truncate">{club.name}</span>
+                            {otherClub.id === club.id && (
+                              <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

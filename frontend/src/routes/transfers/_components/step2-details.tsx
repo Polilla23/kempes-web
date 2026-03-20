@@ -1,29 +1,21 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
-  Search,
-  Plus,
-  X,
-  ArrowRightLeft,
-  Building2,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from 'lucide-react'
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import { cn } from '@/lib/utils'
+import { TrendingUp, TrendingDown, ChevronDown, Settings2, X, Check } from 'lucide-react'
 import type { Player } from '@/types'
-import type {
-  TransferWizardState,
-  WizardStepProps,
-  PlayerPaymentConfig,
-  SeasonPeriod,
-} from '@/types/transfer-wizard'
+import type { WizardStepProps, PlayerPaymentConfig, SeasonPeriod } from '@/types/transfer-wizard'
 import { calculateBalance } from '@/types/transfer-wizard'
 import { PlayerPaymentModal } from './player-payment-modal'
 
@@ -33,457 +25,323 @@ interface Step2Props extends WizardStepProps {
   activeSeasonNumber: number
 }
 
+function makeDefaultConfig(player: Player): PlayerPaymentConfig {
+  return {
+    playerId: player.id,
+    playerName: player.fullName,
+    playerPosition: undefined,
+    overall: player.overall ?? null,
+    salary: player.salary,
+    isKempesita: player.isKempesita,
+    valuationAmount: 0,
+    paymentType: 'SINGLE',
+    numberOfInstallments: 1,
+    installments: [],
+  }
+}
+
+interface PlayerDropdownProps {
+  label: string
+  icon: React.ReactNode
+  players: Player[]
+  selected: PlayerPaymentConfig[]
+  onToggle: (player: Player) => void
+  onEdit: (player: Player, config: PlayerPaymentConfig) => void
+  onRemove: (playerId: string) => void
+}
+
+function PlayerDropdown({ label, icon, players, selected, onToggle, onEdit, onRemove }: PlayerDropdownProps) {
+  const [open, setOpen] = useState(false)
+
+  const isSelected = (id: string) => selected.some((p) => p.playerId === id)
+
+  const triggerLabel =
+    selected.length > 0
+      ? `${selected.length} jugador${selected.length > 1 ? 'es' : ''} seleccionado${selected.length > 1 ? 's' : ''}`
+      : 'Seleccioná jugadores...'
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5 text-sm font-medium">
+        {icon}
+        <span>{label}</span>
+        {selected.length > 0 && (
+          <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+            {selected.length}
+          </Badge>
+        )}
+      </div>
+
+      {/* Dropdown trigger */}
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            className="w-full justify-between h-9 font-normal text-sm"
+          >
+            <span className={cn(!selected.length && 'text-muted-foreground')}>{triggerLabel}</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground ml-2 flex-shrink-0" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[280px] p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Buscar jugador..." />
+            <CommandList>
+              <CommandEmpty>No hay jugadores disponibles</CommandEmpty>
+              <CommandGroup>
+                {players.map((player) => {
+                  const checked = isSelected(player.id)
+                  return (
+                    <CommandItem key={player.id} value={player.fullName} onSelect={() => onToggle(player)}>
+                      <div className="flex items-center gap-2 w-full">
+                        <div
+                          className={cn(
+                            'h-4 w-4 rounded border flex items-center justify-center flex-shrink-0',
+                            checked ? 'bg-primary border-primary' : 'border-muted-foreground/40',
+                          )}
+                        >
+                          {checked && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
+                        </div>
+                        <span className="flex-1 text-sm truncate">{player.fullName}</span>
+                        {player.isKempesita && (
+                          <Badge variant="secondary" className="h-4 px-1.5 text-[9px] flex-shrink-0">
+                            Kempesita
+                          </Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground flex-shrink-0 w-6 text-right">
+                          {player.overall ?? '-'}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  )
+                })}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {/* Selected players list */}
+      {selected.length > 0 && (
+        <div
+          className="space-y-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ maxHeight: '180px' }}
+        >
+          {selected.map((config) => {
+            const player = players.find((p) => p.id === config.playerId)
+            const hasAmount = config.valuationAmount > 0
+            return (
+              <div
+                key={config.playerId}
+                className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/50 border text-sm"
+              >
+                <span className="flex-1 font-medium truncate">{config.playerName}</span>
+                <span className="text-xs text-muted-foreground flex-shrink-0">{config.overall ?? '-'}</span>
+                {config.isKempesita && (
+                  <Badge variant="secondary" className="h-4 px-1.5 text-[9px] flex-shrink-0">
+                    Kempesita
+                  </Badge>
+                )}
+                {hasAmount ? (
+                  <span className="text-xs font-mono text-primary flex-shrink-0">
+                    ${config.valuationAmount.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-amber-500 flex-shrink-0">Sin monto</span>
+                )}
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 flex-shrink-0"
+                  onClick={() => player && onEdit(player, config)}
+                  title="Configurar pago"
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 flex-shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => onRemove(config.playerId)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Step2Details({
   wizardState,
   onUpdate,
-  onNext,
-  onBack,
   sellerPlayers,
   buyerPlayers,
   activeSeasonNumber,
 }: Step2Props) {
   const { t } = useTranslation('transfers')
 
-  // Search states
-  const [searchSeller, setSearchSeller] = useState('')
-  const [searchBuyer, setSearchBuyer] = useState('')
-
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null)
   const [isAddingToSell, setIsAddingToSell] = useState(true)
   const [editingConfig, setEditingConfig] = useState<PlayerPaymentConfig | undefined>()
-
-  // Filter players by search
-  const filteredSellerPlayers = useMemo(() => {
-    return sellerPlayers.filter(
-      (p) =>
-        p.isActive &&
-        p.fullName.toLowerCase().includes(searchSeller.toLowerCase())
-    )
-  }, [sellerPlayers, searchSeller])
-
-  const filteredBuyerPlayers = useMemo(() => {
-    return buyerPlayers.filter(
-      (p) =>
-        p.isActive &&
-        p.fullName.toLowerCase().includes(searchBuyer.toLowerCase())
-    )
-  }, [buyerPlayers, searchBuyer])
-
-  // Check if player is already selected
-  const isPlayerSelectedToSell = (playerId: string) =>
-    wizardState.playersToSell.some((p) => p.playerId === playerId)
-
-  const isPlayerSelectedAsPayment = (playerId: string) =>
-    wizardState.playersAsPayment.some((p) => p.playerId === playerId)
 
   // Handle period selection
   const handlePeriodChange = (period: SeasonPeriod) => {
     onUpdate((prev) => ({ ...prev, selectedPeriod: period }))
   }
 
-  // Open modal for adding/editing player
-  const handleOpenModal = (player: Player, toSell: boolean) => {
+  const handleToggleSeller = (player: Player) => {
+    const alreadySelected = wizardState.playersToSell.some((p) => p.playerId === player.id)
+    if (alreadySelected) {
+      onUpdate((prev) => ({
+        ...prev,
+        playersToSell: prev.playersToSell.filter((p) => p.playerId !== player.id),
+      }))
+    } else {
+      onUpdate((prev) => ({
+        ...prev,
+        playersToSell: [...prev.playersToSell, makeDefaultConfig(player)],
+      }))
+    }
+  }
+
+  const handleToggleBuyer = (player: Player) => {
+    const alreadySelected = wizardState.playersAsPayment.some((p) => p.playerId === player.id)
+    if (alreadySelected) {
+      onUpdate((prev) => ({
+        ...prev,
+        playersAsPayment: prev.playersAsPayment.filter((p) => p.playerId !== player.id),
+      }))
+    } else {
+      onUpdate((prev) => ({
+        ...prev,
+        playersAsPayment: [...prev.playersAsPayment, makeDefaultConfig(player)],
+      }))
+    }
+  }
+
+  const handleOpenModal = (player: Player, config: PlayerPaymentConfig, toSell: boolean) => {
     setSelectedPlayer(player)
     setIsAddingToSell(toSell)
-
-    // Check if editing existing
-    const existingConfig = toSell
-      ? wizardState.playersToSell.find((p) => p.playerId === player.id)
-      : wizardState.playersAsPayment.find((p) => p.playerId === player.id)
-
-    setEditingConfig(existingConfig)
+    setEditingConfig(config)
     setModalOpen(true)
   }
 
-  // Handle save from modal
   const handleSavePlayerConfig = (config: PlayerPaymentConfig) => {
     if (isAddingToSell) {
-      // Adding/editing player to sell
-      onUpdate((prev) => {
-        const existing = prev.playersToSell.findIndex(
-          (p) => p.playerId === config.playerId
-        )
-        const newList =
-          existing >= 0
-            ? prev.playersToSell.map((p, i) => (i === existing ? config : p))
-            : [...prev.playersToSell, config]
-        return { ...prev, playersToSell: newList }
-      })
-    } else {
-      // Adding/editing player as payment
-      onUpdate((prev) => {
-        const existing = prev.playersAsPayment.findIndex(
-          (p) => p.playerId === config.playerId
-        )
-        const newList =
-          existing >= 0
-            ? prev.playersAsPayment.map((p, i) => (i === existing ? config : p))
-            : [...prev.playersAsPayment, config]
-        return { ...prev, playersAsPayment: newList }
-      })
-    }
-  }
-
-  // Remove player from list
-  const handleRemovePlayer = (playerId: string, fromSell: boolean) => {
-    if (fromSell) {
       onUpdate((prev) => ({
         ...prev,
-        playersToSell: prev.playersToSell.filter((p) => p.playerId !== playerId),
+        playersToSell: prev.playersToSell.map((p) => (p.playerId === config.playerId ? config : p)),
       }))
     } else {
       onUpdate((prev) => ({
         ...prev,
-        playersAsPayment: prev.playersAsPayment.filter((p) => p.playerId !== playerId),
+        playersAsPayment: prev.playersAsPayment.map((p) => (p.playerId === config.playerId ? config : p)),
       }))
     }
   }
 
-  // Calculate balance
+  const handleRemoveSeller = (playerId: string) => {
+    onUpdate((prev) => ({
+      ...prev,
+      playersToSell: prev.playersToSell.filter((p) => p.playerId !== playerId),
+    }))
+  }
+
+  const handleRemoveBuyer = (playerId: string) => {
+    onUpdate((prev) => ({
+      ...prev,
+      playersAsPayment: prev.playersAsPayment.filter((p) => p.playerId !== playerId),
+    }))
+  }
+
   const balance = calculateBalance(wizardState.playersToSell, wizardState.playersAsPayment)
 
-  // Period selector component
-  const PeriodButton = ({
-    period,
-    label,
-  }: {
-    period: SeasonPeriod
-    label: string
-  }) => (
+  const fmt = (n: number) => `$${n.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
+
+  const PeriodButton = ({ period, label }: { period: SeasonPeriod; label: string }) => (
     <Button
       type="button"
       variant={wizardState.selectedPeriod === period ? 'default' : 'outline'}
       size="sm"
+      className="h-7 px-3 text-xs"
       onClick={() => handlePeriodChange(period)}
     >
       {label}
     </Button>
   )
 
-  // Render player card in list
-  const renderPlayerCard = (player: Player, toSell: boolean) => {
-    const isSelected = toSell
-      ? isPlayerSelectedToSell(player.id)
-      : isPlayerSelectedAsPayment(player.id)
-
-    const config = toSell
-      ? wizardState.playersToSell.find((p) => p.playerId === player.id)
-      : wizardState.playersAsPayment.find((p) => p.playerId === player.id)
-
-    return (
-      <div
-        key={player.id}
-        className={cn(
-          'flex items-center justify-between p-3 rounded-lg border transition-all',
-          isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="font-medium">
-              {player.fullName}
-            </span>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>OVR: {player.overall || '-'}</span>
-              {player.isKempesita && (
-                <Badge variant="secondary" className="text-xs">
-                  K
-                </Badge>
-              )}
-              {player.position && <span>- {player.position}</span>}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {isSelected && config && (
-            <Badge variant="outline" className="font-mono">
-              ${config.valuationAmount.toLocaleString()}
-            </Badge>
-          )}
-          <Button
-            size="sm"
-            variant={isSelected ? 'secondary' : 'outline'}
-            onClick={() => handleOpenModal(player, toSell)}
-          >
-            {isSelected ? (
-              <span className="text-xs">{t('edit.title', 'Editar')}</span>
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-          </Button>
-          {isSelected && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => handleRemovePlayer(player.id, toSell)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // Render selected player chip
-  const renderSelectedChip = (config: PlayerPaymentConfig, fromSell: boolean) => (
-    <div
-      key={config.playerId}
-      className="flex items-center gap-2 p-2 rounded-lg bg-muted"
-    >
-      <div className="flex-1">
-        <span className="text-sm font-medium">
-          {config.playerName}
-        </span>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>OVR: {config.overall || '-'}</span>
-          <span className="font-mono">${config.valuationAmount.toLocaleString()}</span>
-          {config.paymentType === 'INSTALLMENTS' && (
-            <Badge variant="outline" className="text-xs">
-              {config.numberOfInstallments} cuotas
-            </Badge>
-          )}
-        </div>
-      </div>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => {
-          const player = fromSell
-            ? sellerPlayers.find((p) => p.id === config.playerId)
-            : buyerPlayers.find((p) => p.id === config.playerId)
-          if (player) handleOpenModal(player, fromSell)
-        }}
-      >
-        <span className="text-xs">{t('edit.title', 'Editar')}</span>
-      </Button>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => handleRemovePlayer(config.playerId, fromSell)}
-      >
-        <X className="h-4 w-4" />
-      </Button>
-    </div>
-  )
-
   return (
-    <div className="space-y-6">
-      {/* Header with clubs */}
-      <div className="flex items-center justify-center gap-6 py-4 bg-muted/30 rounded-lg">
-        {/* Seller club */}
-        <div className="flex items-center gap-3">
-          {wizardState.sellerClubLogo ? (
-            <img
-              src={wizardState.sellerClubLogo}
-              alt={wizardState.sellerClubName || ''}
-              className="h-12 w-12 rounded-full object-cover border-2 border-background shadow"
-            />
-          ) : (
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center border-2 border-background shadow">
-              <Building2 className="h-6 w-6 text-primary" />
-            </div>
-          )}
-          <span className="font-semibold">{wizardState.sellerClubName}</span>
-        </div>
-
-        {/* Arrow */}
-        <ArrowRightLeft className="h-6 w-6 text-muted-foreground" />
-
-        {/* Buyer club */}
-        <div className="flex items-center gap-3">
-          <span className="font-semibold">{wizardState.buyerClubName}</span>
-          {wizardState.buyerClubLogo ? (
-            <img
-              src={wizardState.buyerClubLogo}
-              alt={wizardState.buyerClubName || ''}
-              className="h-12 w-12 rounded-full object-cover border-2 border-background shadow"
-            />
-          ) : (
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center border-2 border-background shadow">
-              <Building2 className="h-6 w-6 text-primary" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Period selector and season */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <Label className="text-sm font-medium">
-            {t('periodSelector.title', 'Periodo')}:
-          </Label>
-          <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-5 h-full">
+      {/* Period selector */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Label className="text-sm">{t('periodSelector.title', 'Periodo')}:</Label>
+          <div className="flex items-center gap-1">
             <PeriodButton period="START" label={t('periodSelector.start', 'Inicio')} />
             <PeriodButton period="MID" label={t('periodSelector.mid', 'Mitad')} />
             <PeriodButton period="END" label={t('periodSelector.end', 'Final')} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Label className="text-sm text-muted-foreground">
-            {t('labels.season', 'Temporada')}:
-          </Label>
-          <Badge variant="secondary" className="font-mono">
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs text-muted-foreground">{t('labels.season', 'Temporada')}:</Label>
+          <Badge variant="secondary" className="font-mono text-xs">
             T{activeSeasonNumber}
           </Badge>
         </div>
       </div>
 
-      {/* Two columns: Seller players and Buyer players */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Seller's players (to sell) */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              {t('playersPanel.toSell', 'Jugadores a Vender')}
-              {wizardState.playersToSell.length > 0 && (
-                <Badge variant="secondary">{wizardState.playersToSell.length}</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Selected players */}
-            {wizardState.playersToSell.length > 0 && (
-              <div className="space-y-2 mb-4">
-                {wizardState.playersToSell.map((config) =>
-                  renderSelectedChip(config, true)
-                )}
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('playersPanel.searchPlayer', 'Buscar jugador...')}
-                value={searchSeller}
-                onChange={(e) => setSearchSeller(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            {/* Players list */}
-            <ScrollArea className="h-[250px]">
-              <div className="space-y-2 pr-4">
-                {filteredSellerPlayers.length > 0 ? (
-                  filteredSellerPlayers.map((player) =>
-                    renderPlayerCard(player, true)
-                  )
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('playerSelection.noPlayers', 'No hay jugadores disponibles')}
-                  </p>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-
-        {/* Buyer's players (as payment) */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-blue-600" />
-              {t('playersPanel.asPayment', 'Jugadores como Parte de Pago')}
-              {wizardState.playersAsPayment.length > 0 && (
-                <Badge variant="secondary">{wizardState.playersAsPayment.length}</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Selected players */}
-            {wizardState.playersAsPayment.length > 0 && (
-              <div className="space-y-2 mb-4">
-                {wizardState.playersAsPayment.map((config) =>
-                  renderSelectedChip(config, false)
-                )}
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('playersPanel.searchPlayer', 'Buscar jugador...')}
-                value={searchBuyer}
-                onChange={(e) => setSearchBuyer(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-
-            {/* Players list */}
-            <ScrollArea className="h-[250px]">
-              <div className="space-y-2 pr-4">
-                {filteredBuyerPlayers.length > 0 ? (
-                  filteredBuyerPlayers.map((player) =>
-                    renderPlayerCard(player, false)
-                  )
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('playerSelection.noPlayers', 'No hay jugadores disponibles')}
-                  </p>
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+      {/* Two-column player selection */}
+      <div className="grid grid-cols-2 gap-4">
+        <PlayerDropdown
+          label={t('playersPanel.toSell', 'Jugadores a Vender')}
+          icon={<TrendingUp className="h-4 w-4 text-green-500" />}
+          players={sellerPlayers}
+          selected={wizardState.playersToSell}
+          onToggle={handleToggleSeller}
+          onEdit={(player, config) => handleOpenModal(player, config, true)}
+          onRemove={handleRemoveSeller}
+        />
+        <PlayerDropdown
+          label={t('playersPanel.asPayment', 'A recibir')}
+          icon={<TrendingDown className="h-4 w-4 text-blue-500" />}
+          players={buyerPlayers}
+          selected={wizardState.playersAsPayment}
+          onToggle={handleToggleBuyer}
+          onEdit={(player, config) => handleOpenModal(player, config, false)}
+          onRemove={handleRemoveBuyer}
+        />
       </div>
 
-      {/* Balance card */}
-      <Card className="bg-muted/30">
-        <CardContent className="py-4">
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            {/* Selling total */}
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              <span className="text-sm text-muted-foreground">
-                {t('balance.selling', 'Vendo')}:
-              </span>
-              <span className="font-mono font-semibold text-green-600">
-                ${balance.selling.toLocaleString()}
-              </span>
-            </div>
-
-            <Minus className="h-4 w-4 text-muted-foreground" />
-
-            {/* Receiving total */}
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-blue-600" />
-              <span className="text-sm text-muted-foreground">
-                {t('balance.receiving', 'Recibo')}:
-              </span>
-              <span className="font-mono font-semibold text-blue-600">
-                ${balance.receiving.toLocaleString()}
-              </span>
-            </div>
-
-            <span className="text-muted-foreground">=</span>
-
-            {/* Balance */}
-            <div
-              className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-lg',
-                balance.balance > 0
-                  ? 'bg-green-100 text-green-700'
-                  : balance.balance < 0
-                    ? 'bg-red-100 text-red-700'
-                    : 'bg-gray-100 text-gray-700'
-              )}
-            >
-              <span className="text-sm font-medium">
-                {t('balance.balance', 'Balance')}:
-              </span>
-              <span className="font-mono font-bold">
-                {balance.balance > 0 ? '+' : ''}${balance.balance.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Compact balance bar — pinned to bottom */}
+      <div className="mt-auto flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border text-sm flex-wrap">
+        <TrendingUp className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+        <span className="text-muted-foreground text-xs">{t('balance.selling', 'Vendo')}:</span>
+        <span className="font-mono font-semibold text-green-600 text-xs">{fmt(balance.selling)}</span>
+        <span className="text-muted-foreground mx-1 text-xs">—</span>
+        <TrendingDown className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+        <span className="text-muted-foreground text-xs">{t('balance.receiving', 'Recibo')}:</span>
+        <span className="font-mono font-semibold text-blue-600 text-xs">{fmt(balance.receiving)}</span>
+        <span className="text-muted-foreground mx-1 text-xs">=</span>
+        <span
+          className={cn(
+            'font-mono font-bold text-xs',
+            balance.balance > 0
+              ? 'text-green-600'
+              : balance.balance < 0
+                ? 'text-red-500'
+                : 'text-muted-foreground',
+          )}
+        >
+          {balance.balance > 0 ? '+' : ''}
+          {fmt(balance.balance)}
+        </span>
+      </div>
 
       {/* Payment Modal */}
       <PlayerPaymentModal

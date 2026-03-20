@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, ArrowRight, Check, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UserClub } from '@/services/home.service'
@@ -34,13 +33,7 @@ const STEPS = [
   { key: 'summary', number: 2 },
 ] as const
 
-export function NewTransferTab({
-  userClub,
-  clubs,
-  players,
-  seasonHalves,
-  onTransferCreated,
-}: NewTransferTabProps) {
+export function NewTransferTab({ userClub, players, seasonHalves, onTransferCreated }: NewTransferTabProps) {
   const { t } = useTranslation('transfers')
   const [wizardState, setWizardState] = useState<TransferWizardState>({
     ...INITIAL_WIZARD_STATE,
@@ -56,7 +49,7 @@ export function NewTransferTab({
       if (activeHalf) {
         setWizardState((prev) => ({
           ...prev,
-          activeSeasonNumber: activeHalf.season?.seasonNumber || 1,
+          activeSeasonNumber: activeHalf.seasonNumber || 1,
         }))
       }
     }
@@ -76,7 +69,8 @@ export function NewTransferTab({
   // Validate current step
   const validateStep = (step: TransferWizardStep): boolean => {
     switch (step) {
-      case 0: // Type + Clubs
+      case 0: {
+        // Type + Clubs
         if (!wizardState.transferType) return false
         const config = TRANSFER_TYPE_CONFIGS[wizardState.transferType]
         // If it requires another club, both must be set
@@ -85,13 +79,11 @@ export function NewTransferTab({
         }
         // For transfers that don't require another club (FREE_AGENT, INACTIVE_STATUS)
         return Boolean(wizardState.userRole)
+      }
 
       case 1: // Details
         // Must have at least one player selected
-        return (
-          wizardState.playersToSell.length > 0 ||
-          wizardState.playersAsPayment.length > 0
-        )
+        return wizardState.playersToSell.length > 0 || wizardState.playersAsPayment.length > 0
 
       case 2: // Summary
         return true
@@ -146,16 +138,12 @@ export function NewTransferTab({
           toClubId: wizardState.buyerClubId || '',
           initiatorClubId: userClub.id,
           totalAmount: playerConfig.valuationAmount,
-          numberOfInstallments:
-            playerConfig.paymentType === 'SINGLE' ? 1 : playerConfig.numberOfInstallments,
+          numberOfInstallments: playerConfig.paymentType === 'SINGLE' ? 1 : playerConfig.numberOfInstallments,
           notes: wizardState.notes || undefined,
         }
 
         // Add installments if paying in installments
-        if (
-          playerConfig.paymentType === 'INSTALLMENTS' &&
-          playerConfig.installments.length > 0
-        ) {
+        if (playerConfig.paymentType === 'INSTALLMENTS' && playerConfig.installments.length > 0) {
           // We need to map installments to use dueSeasonHalfId
           // For now, we'll use a placeholder since the backend might need this mapping
           transferInput.installments = playerConfig.installments.map((inst) => ({
@@ -173,10 +161,7 @@ export function NewTransferTab({
         }
 
         // Handle different transfer types
-        if (
-          wizardState.transferType === 'LOAN_IN' ||
-          wizardState.transferType === 'LOAN_OUT'
-        ) {
+        if (wizardState.transferType === 'LOAN_IN' || wizardState.transferType === 'LOAN_OUT') {
           const loanInput = {
             playerId: playerConfig.playerId,
             fromClubId: wizardState.sellerClubId || '',
@@ -185,9 +170,7 @@ export function NewTransferTab({
             loanFee: wizardState.loanDetails?.loanFee || 0,
             loanSalaryPercentage: wizardState.loanDetails?.salaryPercentage || 50,
             numberOfInstallments:
-              playerConfig.paymentType === 'SINGLE'
-                ? 1
-                : playerConfig.numberOfInstallments,
+              playerConfig.paymentType === 'SINGLE' ? 1 : playerConfig.numberOfInstallments,
             notes: wizardState.notes || undefined,
           }
           await TransferService.createLoan(loanInput)
@@ -236,9 +219,7 @@ export function NewTransferTab({
   const findSeasonHalfId = (period: string, seasonNumber: number): string => {
     // Map period to half type
     const halfType = period === 'START' || period === 'MID' ? 'FIRST_HALF' : 'SECOND_HALF'
-    const seasonHalf = seasonHalves.find(
-      (sh) => sh.season?.seasonNumber === seasonNumber && sh.type === halfType
-    )
+    const seasonHalf = seasonHalves.find((sh) => sh.seasonNumber === seasonNumber && sh.halfType === halfType)
     return seasonHalf?.id || ''
   }
 
@@ -257,63 +238,61 @@ export function NewTransferTab({
   const canProceed = validateStep(wizardState.currentStep)
 
   return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between flex-wrap gap-4">
-          <span>{t('wizard.title')}</span>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-4 border-b flex-shrink-0">
+        <CardTitle className="text-lg font-semibold">{t('wizard.title')}</CardTitle>
 
-          {/* Step indicator */}
-          <div className="flex items-center gap-2">
-            {STEPS.map((step, idx) => {
-              const isActive = idx === wizardState.currentStep
-              const isCompleted = idx < wizardState.currentStep
-
-              return (
-                <div key={step.key} className="flex items-center">
-                  <div
-                    className={cn(
-                      'flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all',
-                      isActive
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : isCompleted
-                          ? 'bg-primary/20 text-primary'
-                          : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    <Badge
-                      variant={isActive ? 'secondary' : 'outline'}
-                      className={cn(
-                        'h-6 w-6 rounded-full p-0 flex items-center justify-center',
-                        isCompleted && 'bg-primary text-primary-foreground'
-                      )}
-                    >
-                      {isCompleted ? <Check className="h-3 w-3" /> : idx + 1}
-                    </Badge>
-                    <span className="hidden sm:inline">
-                      {t(`wizard.steps.${step.key}.label`, step.key)}
-                    </span>
-                  </div>
-                  {idx < STEPS.length - 1 && (
-                    <div
-                      className={cn(
-                        'w-8 h-0.5 mx-1',
-                        idx < wizardState.currentStep ? 'bg-primary' : 'bg-muted'
-                      )}
-                    />
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mt-1">
           {t(`wizard.steps.${currentStepInfo.key}.description`, currentStepInfo.key)}
         </p>
+
+        {/* Step indicator — centered below description */}
+        <div className="flex items-center justify-center gap-1 mt-3">
+          {STEPS.map((step, idx) => {
+            const isActive = idx === wizardState.currentStep
+            const isCompleted = idx < wizardState.currentStep
+
+            return (
+              <div key={step.key} className="flex items-center">
+                <div className="flex flex-col items-center gap-1">
+                  <div
+                    className={cn(
+                      'h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all',
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : isCompleted
+                          ? 'bg-primary/80 text-primary-foreground'
+                          : 'bg-muted text-muted-foreground',
+                    )}
+                  >
+                    {isCompleted ? <Check className="h-3.5 w-3.5" /> : idx + 1}
+                  </div>
+                  <span
+                    className={cn(
+                      'text-[10px] leading-none',
+                      isActive ? 'text-primary font-medium' : 'text-muted-foreground',
+                    )}
+                  >
+                    {t(`wizard.steps.${step.key}.label`, step.key)}
+                  </span>
+                </div>
+                {idx < STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      'w-12 h-0.5 mb-4 mx-2',
+                      idx < wizardState.currentStep ? 'bg-primary/80' : 'bg-muted',
+                    )}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="flex-1 flex flex-col overflow-hidden p-0 h-full">
         {/* Step content */}
-        <div className="min-h-[450px]">
+        <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden p-6 h-full">
           {wizardState.currentStep === 0 && (
             <Step1TypeAndClubs
               wizardState={wizardState}
@@ -346,8 +325,8 @@ export function NewTransferTab({
           )}
         </div>
 
-        {/* Navigation buttons */}
-        <div className="flex justify-between items-center mt-6 pt-4 border-t">
+        {/* Navigation buttons — pinned at bottom */}
+        <div className="flex justify-between items-center px-6 py-4 border-t flex-shrink-0">
           <div>
             {!isFirstStep && (
               <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>

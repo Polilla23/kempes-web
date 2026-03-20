@@ -34,7 +34,13 @@
       },
       "typeAndClubs": {
         "label": "Type & Clubs",
-        "description": "Select the transfer type and clubs involved"
+        "description": "Select the transfer type and clubs involved",
+        "typeLabel": "Transfer type",
+        "typePlaceholder": "Select operation type",
+        "clubsLabel": "Clubs involved",
+        "clubPlaceholder": "Choose an operation type first",
+        "clubSearchPlaceholder": "Search club...",
+        "noClubs": "No clubs found"
       },
       "details": {
         "label": "Details",
@@ -44,6 +50,12 @@
         "label": "Summary",
         "description": "Review and confirm the transfer"
       }
+    },
+    "roles": {
+      "buyer": "Buyer",
+      "seller": "Seller",
+      "freeAgent": "No club",
+      "noOtherClub": "Not applicable"
     },
     "buttons": {
       "next": "Next",
@@ -79,6 +91,10 @@
     "inactive": {
       "title": "Mark Inactive",
       "description": "Deactivate a player"
+    },
+    "returnFromLoan": {
+      "title": "Return from Loan",
+      "description": "Player returning from loan"
     }
   },
   "clubsInvolved": {
@@ -337,5 +353,60 @@
     "noActiveLoans": "No active loans",
     "windowClosed": "Transfer window is closed",
     "rosterLimitExceeded": "Roster limit exceeded"
-  }
+  },
+  "filters": {
+    "dateFrom": "From",
+    "dateTo": "To",
+    "club": "Club",
+    "type": "Type",
+    "status": "Status",
+    "allClubs": "All clubs",
+    "allTypes": "All types",
+    "allStatuses": "All statuses",
+    "clear": "Clear"
+  },
+  "statusLabels": {
+    "PENDING": "Pending",
+    "ACTIVE": "Active",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled",
+    "PARTIALLY_PAID": "Partially Paid"
+  },
+  "installmentStatus": {
+    "PENDING": "Pending",
+    "DUE": "Due soon",
+    "PAID": "Paid",
+    "OVERDUE": "Overdue"
+  },
+  "list": {
+    "empty": "No transfers found",
+    "emptyFiltered": "No results for the applied filters",
+    "columns": {
+      "type": "Type",
+      "player": "Player",
+      "clubs": "Clubs",
+      "amount": "Amount",
+      "status": "Status",
+      "date": "Date"
+    }
+  },
+  "detail": {
+    "empty": "Select a transfer to see the details",
+    "player": "Player",
+    "clubs": "Clubs",
+    "financial": "Financial info",
+    "totalAmount": "Total amount",
+    "paymentType": "Payment type",
+    "singlePayment": "Single payment",
+    "installments": "Installments",
+    "playersAsPayment": "Players as payment",
+    "loanInfo": "Loan details",
+    "loanDuration": "Duration",
+    "loanDurationHalves": "{{n}} half-seasons",
+    "loanFee": "Loan fee",
+    "loanSalary": "% salary paid by receiving club",
+    "notes": "Notes",
+    "loading": "Loading detail..."
+  },
+  "newButton": "New Transfer"
 }

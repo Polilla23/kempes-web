@@ -1,368 +1,259 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import {
-  ArrowRight,
   Building2,
   User,
-  Calendar,
-  FileText,
   Clock,
-  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  ArrowLeftRight,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TransferWizardState, WizardStepProps, PlayerPaymentConfig } from '@/types/transfer-wizard'
-import { TRANSFER_TYPE_CONFIGS, calculateBalance } from '@/types/transfer-wizard'
+import { calculateBalance } from '@/types/transfer-wizard'
 
 interface Step3Props extends WizardStepProps {
   activeSeasonNumber: number
 }
 
-export function Step3Summary({
-  wizardState,
-  onUpdate,
-  onNext,
-  onBack,
-  activeSeasonNumber,
-}: Step3Props) {
+const PERIOD_LABELS: Record<string, string> = {
+  START: 'Inicio',
+  MID: 'Mitad',
+  END: 'Final',
+}
+
+export function Step3Summary({ wizardState, onUpdate }: Step3Props) {
   const { t } = useTranslation('transfers')
+  const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(new Set())
 
-  // Get transfer type info
-  const typeConfig = wizardState.transferType
-    ? TRANSFER_TYPE_CONFIGS[wizardState.transferType]
-    : null
-
-  // Calculate totals
   const balance = calculateBalance(wizardState.playersToSell, wizardState.playersAsPayment)
+  const isFreeAgent = wizardState.transferType === 'FREE_AGENT'
 
-  // Collect all installments from all players
-  const allInstallments = [
-    ...wizardState.playersToSell.flatMap((p) =>
-      p.installments.map((inst) => ({
-        ...inst,
-        playerName: p.playerName,
-        direction: 'receive' as const, // Seller receives money
-      }))
-    ),
-    ...wizardState.playersAsPayment.flatMap((p) =>
-      p.installments.map((inst) => ({
-        ...inst,
-        playerName: p.playerName,
-        direction: 'pay' as const, // Buyer pays money
-      }))
-    ),
-  ].sort((a, b) => {
-    // Sort by season, then by period
-    if (a.seasonNumber !== b.seasonNumber) return a.seasonNumber - b.seasonNumber
-    const periodOrder = { START: 0, MID: 1, END: 2 }
-    return periodOrder[a.period] - periodOrder[b.period]
-  })
+  const fmt = (n: number) => `$${n.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
 
-  // Handle notes change
   const handleNotesChange = (notes: string) => {
     onUpdate((prev) => ({ ...prev, notes }))
   }
 
-  // Get period label
-  const getPeriodLabel = (period: string) => {
-    switch (period) {
-      case 'START':
-        return t('periodSelector.start', 'Inicio')
-      case 'MID':
-        return t('periodSelector.mid', 'Mitad')
-      case 'END':
-        return t('periodSelector.end', 'Final')
-      default:
-        return period
-    }
+  const togglePlayer = (playerId: string) => {
+    setExpandedPlayers((prev) => {
+      const next = new Set(prev)
+      if (next.has(playerId)) next.delete(playerId)
+      else next.add(playerId)
+      return next
+    })
   }
 
-  // Render player card in summary
-  const renderPlayerSummary = (player: PlayerPaymentConfig, direction: 'out' | 'in') => (
-    <div
-      key={player.playerId}
-      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-    >
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-          <User className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <p className="font-medium">
-            {player.playerName}
-          </p>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {player.playerPosition && <span>{player.playerPosition}</span>}
-            <span>OVR: {player.overall || '-'}</span>
-            {player.isKempesita && (
-              <Badge variant="secondary" className="text-xs">
-                K
-              </Badge>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="text-right">
-        <p
-          className={cn(
-            'font-mono font-semibold',
-            direction === 'out' ? 'text-green-600' : 'text-blue-600'
-          )}
+  const renderPlayerCard = (player: PlayerPaymentConfig, direction: 'out' | 'in') => {
+    const isExpanded = expandedPlayers.has(player.playerId)
+    const hasDetails =
+      player.paymentType === 'INSTALLMENTS'
+        ? player.installments.length > 0
+        : player.valuationAmount > 0
+
+    return (
+      <div key={player.playerId} className="rounded-lg border overflow-hidden">
+        {/* Header row — always visible */}
+        <button
+          type="button"
+          className="w-full flex items-center gap-3 px-3 py-2 bg-muted/50 hover:bg-muted/70 transition-colors text-left"
+          onClick={() => togglePlayer(player.playerId)}
         >
-          ${player.valuationAmount.toLocaleString()}
-        </p>
-        {player.paymentType === 'INSTALLMENTS' && (
-          <Badge variant="outline" className="text-xs">
-            {player.numberOfInstallments} {t('payment.installments', 'cuotas')}
-          </Badge>
-        )}
-      </div>
-    </div>
-  )
-
-  return (
-    <div className="space-y-6">
-      {/* Header: Clubs with arrow */}
-      <Card className="overflow-hidden">
-        <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 p-6">
-          <div className="flex items-center justify-center gap-8">
-            {/* Seller */}
-            <div className="flex flex-col items-center gap-2">
-              {wizardState.sellerClubLogo ? (
-                <img
-                  src={wizardState.sellerClubLogo}
-                  alt={wizardState.sellerClubName || ''}
-                  className="h-16 w-16 rounded-full object-cover border-4 border-background shadow-lg"
-                />
-              ) : (
-                <div className="h-16 w-16 rounded-full bg-background flex items-center justify-center border-4 border-primary/20 shadow-lg">
-                  <Building2 className="h-8 w-8 text-primary" />
-                </div>
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <User className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium truncate">{player.playerName}</span>
+              {player.isKempesita && (
+                <Badge variant="secondary" className="h-4 px-1.5 text-[9px] flex-shrink-0">
+                  Kempesita
+                </Badge>
               )}
-              <span className="font-semibold text-center">
-                {wizardState.sellerClubName}
+              <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                OVR: {player.overall ?? '-'}
               </span>
-              <Badge variant="outline" className="text-xs">
-                {t('clubsInvolved.sellerClub', 'Vendedor')}
-              </Badge>
             </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {player.paymentType === 'SINGLE'
+                ? `${t('payment.single', 'Pago único')}: ${fmt(player.valuationAmount)}`
+                : `${player.numberOfInstallments} ${t('payment.installments', 'cuotas')} — ${fmt(player.valuationAmount)} total`}
+            </p>
+          </div>
+          <span
+            className={cn(
+              'font-mono font-semibold text-sm flex-shrink-0 mr-1',
+              direction === 'out' ? 'text-green-600' : 'text-blue-600',
+            )}
+          >
+            {fmt(player.valuationAmount)}
+          </span>
+          {isExpanded ? (
+            <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          )}
+        </button>
 
-            {/* Arrow with players count */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background shadow">
-                <span className="text-sm font-medium">
-                  {wizardState.playersToSell.length} jugador(es)
+        {/* Expanded payment details */}
+        {isExpanded && (
+          <div className="px-3 py-2 border-t bg-background space-y-1">
+            {!hasDetails ? (
+              <p className="text-xs text-muted-foreground italic">
+                {t('preview.noPaymentDetails', 'Sin detalles de pago configurados')}
+              </p>
+            ) : player.paymentType === 'SINGLE' ? (
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">
+                  {t('payment.single', 'Pago único')}
                 </span>
-                <ArrowRight className="h-5 w-5 text-primary" />
+                <span className={cn('font-mono font-semibold', direction === 'out' ? 'text-green-600' : 'text-blue-600')}>
+                  {fmt(player.valuationAmount)}
+                </span>
               </div>
-              {wizardState.playersAsPayment.length > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background shadow">
-                  <ArrowRight className="h-5 w-5 rotate-180 text-blue-500" />
-                  <span className="text-sm font-medium">
-                    {wizardState.playersAsPayment.length} jugador(es)
+            ) : (
+              player.installments.map((inst) => (
+                <div
+                  key={inst.installmentNumber}
+                  className="flex items-center justify-between text-xs"
+                >
+                  <span className="text-muted-foreground">
+                    {t('payment.installment', 'Cuota')} {inst.installmentNumber}
+                    {inst.seasonNumber
+                      ? ` — ${PERIOD_LABELS[inst.period] ?? inst.period} T${inst.seasonNumber}`
+                      : ''}
+                  </span>
+                  <span className={cn('font-mono font-semibold', direction === 'out' ? 'text-green-600' : 'text-blue-600')}>
+                    {fmt(inst.amount)}
                   </span>
                 </div>
-              )}
-            </div>
-
-            {/* Buyer */}
-            <div className="flex flex-col items-center gap-2">
-              {wizardState.buyerClubLogo ? (
-                <img
-                  src={wizardState.buyerClubLogo}
-                  alt={wizardState.buyerClubName || ''}
-                  className="h-16 w-16 rounded-full object-cover border-4 border-background shadow-lg"
-                />
-              ) : (
-                <div className="h-16 w-16 rounded-full bg-background flex items-center justify-center border-4 border-primary/20 shadow-lg">
-                  <Building2 className="h-8 w-8 text-primary" />
-                </div>
-              )}
-              <span className="font-semibold text-center">
-                {wizardState.buyerClubName}
-              </span>
-              <Badge variant="outline" className="text-xs">
-                {t('clubsInvolved.buyerClub', 'Comprador')}
-              </Badge>
-            </div>
+              ))
+            )}
           </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-4 h-full">
+      {/* Clubs — compact with exchange arrows */}
+      <div className="flex items-center justify-center gap-6 py-3 px-4 border rounded-lg bg-muted/20">
+        {/* Seller */}
+        <div className="flex flex-col items-center gap-1">
+          {wizardState.sellerClubLogo ? (
+            <img
+              src={wizardState.sellerClubLogo}
+              alt={wizardState.sellerClubName || ''}
+              className="h-10 w-10 rounded-full object-cover border-2 border-background shadow"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border-2 border-background shadow">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+          <span className="text-sm font-medium text-center truncate max-w-[110px]">
+            {isFreeAgent
+              ? t('wizard.roles.freeAgent', 'Sin club')
+              : (wizardState.sellerClubName ?? '—')}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {t('clubsInvolved.sellerClub', 'Vendedor')}
+          </span>
         </div>
-      </Card>
 
-      {/* Transfer info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Players being transferred */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" />
-              {t('preview.giving', 'Jugadores Transferidos')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {wizardState.playersToSell.length > 0 ? (
-              <div className="space-y-3">
-                {wizardState.playersToSell.map((player) =>
-                  renderPlayerSummary(player, 'out')
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t('preview.noPlayersGiven', 'Sin jugadores')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <ArrowLeftRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
 
-        {/* Players as payment */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <User className="h-4 w-4" />
-              {t('preview.receiving', 'Jugadores como Pago')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {wizardState.playersAsPayment.length > 0 ? (
-              <div className="space-y-3">
-                {wizardState.playersAsPayment.map((player) =>
-                  renderPlayerSummary(player, 'in')
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                {t('preview.noPlayersReceived', 'Sin jugadores')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Buyer */}
+        <div className="flex flex-col items-center gap-1">
+          {wizardState.buyerClubLogo ? (
+            <img
+              src={wizardState.buyerClubLogo}
+              alt={wizardState.buyerClubName || ''}
+              className="h-10 w-10 rounded-full object-cover border-2 border-background shadow"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center border-2 border-background shadow">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+            </div>
+          )}
+          <span className="text-sm font-medium text-center truncate max-w-[110px]">
+            {wizardState.buyerClubName ?? '—'}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {t('clubsInvolved.buyerClub', 'Comprador')}
+          </span>
+        </div>
       </div>
 
-      {/* Payment Schedule */}
-      {allInstallments.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              {t('preview.paymentSchedule', 'Cronograma de Pagos')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-2">
-                {allInstallments.map((inst, index) => (
-                  <div
-                    key={`${inst.id}-${index}`}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline">#{inst.installmentNumber}</Badge>
-                      <div>
-                        <p className="text-sm font-medium">{inst.playerName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {getPeriodLabel(inst.period)} T{inst.seasonNumber}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={cn(
-                        'font-mono font-semibold',
-                        inst.direction === 'receive' ? 'text-green-600' : 'text-blue-600'
-                      )}
-                    >
-                      {inst.direction === 'receive' ? '+' : '-'}$
-                      {inst.amount.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
+      {/* Players to sell — dynamic, only if non-empty */}
+      {wizardState.playersToSell.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 text-sm font-medium">
+            <TrendingUp className="h-4 w-4 text-green-500" />
+            <span>{t('playersPanel.toSell', 'Jugadores a transferir')}</span>
+          </div>
+          {wizardState.playersToSell.map((p) => renderPlayerCard(p, 'out'))}
+        </div>
       )}
 
-      {/* Balance Summary */}
-      <Card
-        className={cn(
-          'border-2',
-          balance.balance > 0
-            ? 'border-green-200 bg-green-50/50'
-            : balance.balance < 0
-              ? 'border-red-200 bg-red-50/50'
-              : 'border-gray-200'
-        )}
-      >
-        <CardContent className="py-4">
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                {t('balance.selling', 'Total Venta')}
-              </p>
-              <p className="text-xl font-mono font-bold text-green-600">
-                ${balance.selling.toLocaleString()}
-              </p>
-            </div>
-            <Separator orientation="vertical" className="h-12" />
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                {t('balance.receiving', 'Total Recibido')}
-              </p>
-              <p className="text-xl font-mono font-bold text-blue-600">
-                ${balance.receiving.toLocaleString()}
-              </p>
-            </div>
-            <Separator orientation="vertical" className="h-12" />
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                {t('balance.balance', 'Balance Neto')}
-              </p>
-              <p
-                className={cn(
-                  'text-xl font-mono font-bold',
-                  balance.balance > 0
-                    ? 'text-green-600'
-                    : balance.balance < 0
-                      ? 'text-red-600'
-                      : 'text-gray-600'
-                )}
-              >
-                {balance.balance > 0 ? '+' : ''}${balance.balance.toLocaleString()}
-              </p>
-            </div>
+      {/* Players as payment — dynamic, only if non-empty */}
+      {wizardState.playersAsPayment.length > 0 && (
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 text-sm font-medium">
+            <TrendingDown className="h-4 w-4 text-blue-500" />
+            <span>{t('playersPanel.asPayment', 'Jugadores como pago')}</span>
           </div>
-        </CardContent>
-      </Card>
+          {wizardState.playersAsPayment.map((p) => renderPlayerCard(p, 'in'))}
+        </div>
+      )}
 
-      {/* Notes */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            {t('preview.notes', 'Notas')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder={t('preview.notesPlaceholder', 'Agregar notas adicionales...')}
-            value={wizardState.notes}
-            onChange={(e) => handleNotesChange(e.target.value)}
-            rows={3}
-          />
-        </CardContent>
-      </Card>
+      {/* Balance bar — compact, no background */}
+      <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm flex-wrap">
+        <TrendingUp className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+        <span className="text-muted-foreground text-xs">{t('balance.selling', 'Vendo')}:</span>
+        <span className="font-mono font-semibold text-green-600 text-xs">{fmt(balance.selling)}</span>
+        <span className="text-muted-foreground mx-1 text-xs">—</span>
+        <TrendingDown className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
+        <span className="text-muted-foreground text-xs">{t('balance.receiving', 'Recibo')}:</span>
+        <span className="font-mono font-semibold text-blue-600 text-xs">{fmt(balance.receiving)}</span>
+        <span className="text-muted-foreground mx-1 text-xs">=</span>
+        <span
+          className={cn(
+            'font-mono font-bold text-xs',
+            balance.balance > 0
+              ? 'text-green-600'
+              : balance.balance < 0
+                ? 'text-red-500'
+                : 'text-muted-foreground',
+          )}
+        >
+          {balance.balance > 0 ? '+' : ''}
+          {fmt(balance.balance)}
+        </span>
+      </div>
 
-      {/* Pending approval warning */}
-      <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
-        <Clock className="h-5 w-5 shrink-0" />
-        <div>
-          <p className="font-medium">{t('pending.title', 'Pendiente de Aprobación')}</p>
-          <p className="text-sm opacity-80">
-            {t('preview.pendingApproval', 'Esta transferencia requerirá la aprobación del otro club antes de ejecutarse.')}
-          </p>
+      {/* Notes + approval — compact, pinned to bottom */}
+      <div className="space-y-2 mt-auto">
+        <Textarea
+          placeholder={t('preview.notesPlaceholder', 'Notas adicionales...')}
+          value={wizardState.notes}
+          onChange={(e) => handleNotesChange(e.target.value)}
+          rows={2}
+          className="resize-none text-sm"
+        />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50/50 border border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
+          <span className="text-xs">
+            {t(
+              'preview.pendingApproval',
+              'Esta transferencia requerirá la aprobación del otro club antes de ejecutarse.',
+            )}
+          </span>
         </div>
       </div>
     </div>
