@@ -35,7 +35,14 @@
       "Bash(npx jest --testPathPatterns=\"standings\" --no-coverage)",
       "Bash(npx vite:*)",
       "Bash(find /c/Users/Leand/kempes-web/backend -name \"*standings*\" -type f | grep -E \"\\\\.\\(ts\\)$\" | head -10)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npx jest:*)",
+      "Bash(mv node_modules/.prisma/client/query_engine-windows.dll.node node_modules/.prisma/client/query_engine-windows.dll.node.bak)",
+      "Bash(rm -f node_modules/.prisma/client/query_engine-windows.dll.node.bak)",
+      "Bash(npx ts-node -e \":*)",
+      "Bash(node -e \":*)",
+      "Bash(/tmp/cup_finals_summary.txt:*)",
+      "Read(//tmp/**)"
     ]
   }
 }

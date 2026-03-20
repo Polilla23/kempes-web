@@ -365,36 +365,28 @@ export class MyAccountRepository {
         },
       }),
       previousSeason
-        ? this.prisma.clubHistory.findMany({
+        ? this.prisma.titleHistory.findMany({
             where: {
               seasonId: previousSeason.id,
-              finalPosition: 1,
-              competition: {
-                competitionType: {
-                  name: {
-                    in: [CompetitionName.LEAGUE_A, CompetitionName.GOLD_CUP, CompetitionName.CINDOR_CUP],
-                  },
-                },
+              competitionName: {
+                in: [CompetitionName.LEAGUE_A, CompetitionName.GOLD_CUP, CompetitionName.CINDOR_CUP, CompetitionName.SUPER_CUP, CompetitionName.SILVER_CUP],
               },
             },
             include: {
               club: { select: { id: true, name: true, logo: true } },
-              competition: {
-                include: { competitionType: { select: { name: true } } },
-              },
             },
           })
         : Promise.resolve([]),
     ])
 
-    // Map champions in a fixed order: LEAGUE_A, GOLD_CUP, CINDOR_CUP
-    const championOrder = [CompetitionName.LEAGUE_A, CompetitionName.GOLD_CUP, CompetitionName.CINDOR_CUP]
+    // Map champions in a fixed order: LEAGUE_A, GOLD_CUP, SUPER_CUP, SILVER_CUP, CINDOR_CUP
+    const championOrder = [CompetitionName.LEAGUE_A, CompetitionName.GOLD_CUP, CompetitionName.SUPER_CUP, CompetitionName.SILVER_CUP, CompetitionName.CINDOR_CUP]
     const champions = championOrder
       .map((compName) => {
-        const ch = championsData.find((c) => c.competition.competitionType.name === compName)
+        const ch = championsData.find((c) => c.competitionName === compName)
         if (!ch) return null
         return {
-          competitionType: ch.competition.competitionType.name,
+          competitionType: ch.competitionName,
           clubName: ch.club.name,
           clubLogo: ch.club.logo,
         }

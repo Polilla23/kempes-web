@@ -26,6 +26,7 @@ import enDashboard from './locales/en/dashboard.json'
 import enEditResults from './locales/en/edit-results.json'
 import enPlazos from './locales/en/plazos.json'
 import enPlayerRatings from './locales/en/playerRatings.json'
+import enTitles from './locales/en/titles.json'
 
 // Import Spanish translations
 import esCommon from './locales/es/common.json'
@@ -51,6 +52,7 @@ import esDashboard from './locales/es/dashboard.json'
 import esEditResults from './locales/es/edit-results.json'
 import esPlazos from './locales/es/plazos.json'
 import esPlayerRatings from './locales/es/playerRatings.json'
+import esTitles from './locales/es/titles.json'
 
 // Configure i18next
 i18n
@@ -86,6 +88,7 @@ i18n
         editResults: enEditResults,
         plazos: enPlazos,
         playerRatings: enPlayerRatings,
+        titles: enTitles,
       },
       es: {
         common: esCommon,
@@ -111,6 +114,7 @@ i18n
         editResults: esEditResults,
         plazos: esPlazos,
         playerRatings: esPlayerRatings,
+        titles: esTitles,
       },
     },
 
@@ -148,6 +152,7 @@ i18n
       'editResults',
       'plazos',
       'playerRatings',
+      'titles',
     ],
 
     // Interpolation options

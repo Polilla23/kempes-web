@@ -1,5 +1,5 @@
 import { IClubRepository, ClubTitle, ClubHistoryEntry, ClubFinanceEntry } from '@/features/clubs/interfaces/IClubRepository'
-import { Prisma, PrismaClient, MovementType, CupPhase, CompetitionFormat } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 export class ClubRepository implements IClubRepository {
   private prisma: PrismaClient
@@ -96,47 +96,19 @@ export class ClubRepository implements IClubRepository {
   }
 
   async findTitles(clubId: string): Promise<{ total: number; titles: ClubTitle[] }> {
-    // Títulos de liga: SeasonTransition WHERE movementType = CHAMPION
-    const leagueTitles = await this.prisma.seasonTransition.findMany({
-      where: {
-        clubId,
-        movementType: MovementType.CHAMPION,
-      },
-      include: {
-        season: { select: { number: true } },
-        fromCompetition: {
-          include: { competitionType: { select: { name: true, format: true } } },
-        },
-      },
-      orderBy: { season: { number: 'desc' } },
-    })
-
-    // Títulos de copa: CoefKempes WHERE cupPhase = CHAMPION
-    const cupTitles = await this.prisma.coefKempes.findMany({
-      where: {
-        clubId,
-        cupPhase: CupPhase.CHAMPION,
-      },
+    const titleHistory = await this.prisma.titleHistory.findMany({
+      where: { clubId },
       include: {
         season: { select: { number: true } },
       },
       orderBy: { season: { number: 'desc' } },
     })
 
-    const titles: ClubTitle[] = [
-      ...leagueTitles.map((t) => ({
-        seasonNumber: t.season.number,
-        competitionName: t.fromCompetition.competitionType.name,
-        type: 'LEAGUE' as const,
-      })),
-      ...cupTitles.map((t) => ({
-        seasonNumber: t.season.number,
-        competitionName: t.cupName,
-        type: 'CUP' as const,
-      })),
-    ]
-
-    titles.sort((a, b) => b.seasonNumber - a.seasonNumber)
+    const titles: ClubTitle[] = titleHistory.map((t) => ({
+      seasonNumber: t.season.number,
+      competitionName: t.competitionName,
+      type: t.type === 'LEAGUE' ? ('LEAGUE' as const) : ('CUP' as const),
+    }))
 
     return { total: titles.length, titles }
   }

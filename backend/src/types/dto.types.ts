@@ -396,3 +396,75 @@ export type FinancialReportDTO = {
   pendingInstallmentsAmount: number
   pendingInstallmentsCount: number
 }
+
+// ============================================
+// TITLE HISTORY DTOs
+// ============================================
+
+export type TitleHistoryDTO = {
+  id: string
+  clubId: string
+  clubName: string
+  clubLogo: string | null
+  seasonId: string
+  seasonNumber: number
+  competitionName: string
+  type: string
+  category: string
+}
+
+export type TitlePointConfigDTO = {
+  id: string
+  competitionName: string
+  category: string
+  points: number
+  isActive: boolean
+}
+
+export type GlobalRankingEntryDTO = {
+  club: {
+    id: string
+    name: string
+    logo: string | null
+  }
+  totalPoints: number
+  totalTitles: number
+  breakdown: Record<string, number> // "competitionName:category" → count
+}
+
+export type SeasonChampionsDTO = {
+  seasonNumber: number
+  seasonId: string
+  champions: {
+    competitionName: string
+    type: string
+    category: string
+    club: {
+      id: string
+      name: string
+      logo: string | null
+    }
+    titleCount: number // cuantas veces este club gano esta competicion hasta esta temporada
+  }[]
+}
+
+export type CompetitionChampionsDTO = {
+  competitionName: string
+  champions: {
+    seasonNumber: number
+    club: {
+      id: string
+      name: string
+      logo: string | null
+    }
+    titleNumber: number // ej: 1ra vez, 2da vez, etc
+  }[]
+  mostSuccessful: {
+    club: {
+      id: string
+      name: string
+      logo: string | null
+    }
+    count: number
+  } | null
+}

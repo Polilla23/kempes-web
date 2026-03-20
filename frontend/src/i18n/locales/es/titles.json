@@ -1,0 +1,35 @@
+{
+  "title": "Palmarés",
+  "tabs": {
+    "ranking": "Ranking",
+    "champions": "Campeones"
+  },
+  "ranking": {
+    "position": "#",
+    "club": "Club",
+    "totalPoints": "Puntos",
+    "totalTitles": "Títulos",
+    "noData": "Aún no hay títulos registrados",
+    "noDataDescription": "Los datos aparecerán cuando se completen competencias"
+  },
+  "champions": {
+    "season": "Temporada",
+    "filterCategory": "Categoría",
+    "all": "Todas",
+    "senior": "Mayores",
+    "kempesita": "Kempesita",
+    "noData": "Sin campeones registrados",
+    "noDataDescription": "Los campeones aparecerán cuando se completen temporadas"
+  },
+  "pointConfig": {
+    "title": "Configuración de Puntos",
+    "description": "Asignar puntos por tipo de competencia para el ranking",
+    "competition": "Competencia",
+    "points": "Puntos",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "success": "Configuración actualizada exitosamente",
+    "error": "Error al actualizar configuración"
+  },
+  "loading": "Cargando..."
+}

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TransfersIndexRouteImport } from './routes/transfers/index'
+import { Route as TitlesIndexRouteImport } from './routes/titles/index'
 import { Route as SubmitResultIndexRouteImport } from './routes/submit-result/index'
 import { Route as StandingsIndexRouteImport } from './routes/standings/index'
 import { Route as NewsIndexRouteImport } from './routes/news/index'
@@ -67,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
 const TransfersIndexRoute = TransfersIndexRouteImport.update({
   id: '/transfers/',
   path: '/transfers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TitlesIndexRoute = TitlesIndexRouteImport.update({
+  id: '/titles/',
+  path: '/titles/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SubmitResultIndexRoute = SubmitResultIndexRouteImport.update({
@@ -339,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/news': typeof NewsIndexRoute
   '/standings': typeof StandingsIndexRoute
   '/submit-result': typeof SubmitResultIndexRoute
+  '/titles': typeof TitlesIndexRoute
   '/transfers': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
@@ -390,6 +397,7 @@ export interface FileRoutesByTo {
   '/news': typeof NewsIndexRoute
   '/standings': typeof StandingsIndexRoute
   '/submit-result': typeof SubmitResultIndexRoute
+  '/titles': typeof TitlesIndexRoute
   '/transfers': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
@@ -442,6 +450,7 @@ export interface FileRoutesById {
   '/news/': typeof NewsIndexRoute
   '/standings/': typeof StandingsIndexRoute
   '/submit-result/': typeof SubmitResultIndexRoute
+  '/titles/': typeof TitlesIndexRoute
   '/transfers/': typeof TransfersIndexRoute
   '/club/delete/$id': typeof ClubDeleteIdRoute
   '/club/findOne/$id': typeof ClubFindOneIdRoute
@@ -495,6 +504,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/standings'
     | '/submit-result'
+    | '/titles'
     | '/transfers'
     | '/club/delete/$id'
     | '/club/findOne/$id'
@@ -546,6 +556,7 @@ export interface FileRouteTypes {
     | '/news'
     | '/standings'
     | '/submit-result'
+    | '/titles'
     | '/transfers'
     | '/club/delete/$id'
     | '/club/findOne/$id'
@@ -597,6 +608,7 @@ export interface FileRouteTypes {
     | '/news/'
     | '/standings/'
     | '/submit-result/'
+    | '/titles/'
     | '/transfers/'
     | '/club/delete/$id'
     | '/club/findOne/$id'
@@ -649,6 +661,7 @@ export interface RootRouteChildren {
   NewsIndexRoute: typeof NewsIndexRoute
   StandingsIndexRoute: typeof StandingsIndexRoute
   SubmitResultIndexRoute: typeof SubmitResultIndexRoute
+  TitlesIndexRoute: typeof TitlesIndexRoute
   TransfersIndexRoute: typeof TransfersIndexRoute
   ClubDeleteIdRoute: typeof ClubDeleteIdRoute
   ClubFindOneIdRoute: typeof ClubFindOneIdRoute
@@ -700,6 +713,13 @@ declare module '@tanstack/react-router' {
       path: '/transfers'
       fullPath: '/transfers'
       preLoaderRoute: typeof TransfersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/titles/': {
+      id: '/titles/'
+      path: '/titles'
+      fullPath: '/titles'
+      preLoaderRoute: typeof TitlesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/submit-result/': {
@@ -1049,6 +1069,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewsIndexRoute: NewsIndexRoute,
   StandingsIndexRoute: StandingsIndexRoute,
   SubmitResultIndexRoute: SubmitResultIndexRoute,
+  TitlesIndexRoute: TitlesIndexRoute,
   TransfersIndexRoute: TransfersIndexRoute,
   ClubDeleteIdRoute: ClubDeleteIdRoute,
   ClubFindOneIdRoute: ClubFindOneIdRoute,

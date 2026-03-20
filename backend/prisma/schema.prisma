@@ -54,6 +54,8 @@ model Club {
   seasonBalances        ClubSeasonBalance[]
   playerSeasonHalfClubs PlayerSeasonHalfClub[]
 
+  titleHistory          TitleHistory[]
+
   @@index([userId])
   @@map("clubs")
 }
@@ -115,6 +117,8 @@ model Season {
   clubHistory       ClubHistory[]
   playerSeasonStats PlayerSeasonStats[]
   coefKempes    CoefKempes[]
+
+  titleHistory      TitleHistory[]
 
   // Season halves relation
   seasonHalves  SeasonHalf[]
@@ -609,6 +613,39 @@ model CoefKempes {
   @@index([clubId])
   @@index([seasonId])
   @@map("coef_kempes")
+}
+
+// ============================================
+// TITLE HISTORY AND RANKING MODELS
+// ============================================
+
+model TitleHistory {
+  id              String              @id @default(uuid())
+  clubId          String              @map("club_id")
+  seasonId        String              @map("season_id")
+  competitionName CompetitionName     @map("competition_name")
+  type            CompetitionFormat   // LEAGUE o CUP
+  category        CompetitionCategory // SENIOR, KEMPESITA, MIXED
+
+  club   Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, competitionName])
+  @@index([clubId])
+  @@index([seasonId])
+  @@index([competitionName])
+  @@map("title_history")
+}
+
+model TitlePointConfig {
+  id              String              @id @default(uuid())
+  competitionName CompetitionName     @map("competition_name")
+  category        CompetitionCategory @map("category")
+  points          Int
+  isActive        Boolean             @default(true) @map("is_active")
+
+  @@unique([competitionName, category])
+  @@map("title_point_configs")
 }
 
 // ============================================
