@@ -354,12 +354,23 @@ export class SeasonService {
       })
     }
 
+    // Verificar si ya hay historial de títulos
+    const existingTitleHistory = await this.prisma.titleHistory.count({
+      where: { seasonId: currentSeason.id },
+    })
+
+    let titleHistorySaved = existingTitleHistory
+    if (existingTitleHistory === 0) {
+      titleHistorySaved = await this.standingsService.saveTitleHistory(currentSeason.id)
+    }
+
     return {
       season: { id: currentSeason.id, number: currentSeason.number },
       movementsSaved,
       clubHistorySaved,
       playerStatsSaved,
       coefKempesSaved,
+      titleHistorySaved,
       alreadyExisted: existingTransitions.length > 0,
     }
   }

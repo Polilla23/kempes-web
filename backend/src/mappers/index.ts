@@ -18,3 +18,6 @@ export { SeasonHalfMapper } from './season-half.mapper'
 export { TransferWindowMapper } from './transfer-window.mapper'
 export { TransferMapper } from './transfer.mapper'
 export { FinanceMapper } from './finance.mapper'
+
+// Title mapper
+export { TitleMapper } from './title.mapper'

@@ -48,6 +48,7 @@ const navItems = [
   { key: 'submitResult', icon: Upload, to: '/submit-result' },
   { key: 'statistics', icon: ChartColumn, to: '/stats' },
   { key: 'transfers', icon: ArrowLeftRight, to: '/transfers' },
+  { key: 'palmares', icon: Award, to: '/titles' },
 ]
 const adminItems = [
   { key: 'users', icon: UserCog, to: '/management/users' },

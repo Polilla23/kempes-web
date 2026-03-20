@@ -205,10 +205,22 @@ export const myAccountSchemas = {
             type: 'object',
             properties: {
               seasonNumber: { type: 'number' },
+              seasonId: { type: 'string' },
               playedMatches: { type: 'number' },
               pendingMatches: { type: 'number' },
               cancelledMatches: { type: 'number' },
               totalTransfers: { type: 'number' },
+              champions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    competitionType: { type: 'string' },
+                    clubName: { type: 'string' },
+                    clubLogo: { type: 'string', nullable: true },
+                  },
+                },
+              },
             },
           },
         },

@@ -1015,29 +1015,72 @@ export class StandingsService {
       [CupPhase.CHAMPION]: 32,
     }
 
+    // Ordered phase hierarchy for comparison
+    const phaseOrder: CupPhase[] = [
+      CupPhase.GROUPS,
+      CupPhase.ROUND_OF_16,
+      CupPhase.QUARTERFINALS,
+      CupPhase.SEMIFINALS,
+      CupPhase.FINAL,
+      CupPhase.CHAMPION,
+    ]
+
+    // Map KnockoutRound → CupPhase that indicates the team reached that stage
+    const knockoutToPhase: Partial<Record<KnockoutRound, CupPhase>> = {
+      [KnockoutRound.ROUND_OF_64]: CupPhase.ROUND_OF_16,
+      [KnockoutRound.ROUND_OF_32]: CupPhase.ROUND_OF_16,
+      [KnockoutRound.ROUND_OF_16]: CupPhase.ROUND_OF_16,
+      [KnockoutRound.QUARTERFINAL]: CupPhase.QUARTERFINALS,
+      [KnockoutRound.SEMIFINAL]: CupPhase.SEMIFINALS,
+      [KnockoutRound.THIRD_PLACE]: CupPhase.SEMIFINALS, // played for 3rd → reached semis
+      [KnockoutRound.FINAL]: CupPhase.FINAL,
+    }
+
     const allCoefData: Prisma.CoefKempesCreateManyInput[] = []
 
     for (const competition of season.competitions) {
       // Determinar la fase máxima alcanzada por cada equipo
       const teamPhases = new Map<string, CupPhase>()
 
+      // Inicializar todos los equipos con GROUPS (fase mínima)
       competition.teams.forEach((club) => {
-        // Lógica simplificada: contar victorias en knockout
-        const wins = competition.matches.filter(
-          (m) =>
-            m.homeClubId === club.id &&
-            m.homeClubGoals > m.awayClubGoals
-        ).length
-
-        let phase: CupPhase = CupPhase.GROUPS
-        if (wins >= 4) phase = CupPhase.CHAMPION
-        else if (wins >= 3) phase = CupPhase.FINAL
-        else if (wins >= 2) phase = CupPhase.SEMIFINALS
-        else if (wins >= 1) phase = CupPhase.QUARTERFINALS
-        else phase = CupPhase.ROUND_OF_16
-
-        teamPhases.set(club.id, phase)
+        teamPhases.set(club.id, CupPhase.GROUPS)
       })
+
+      // Procesar cada partido finalizado para determinar la fase máxima por equipo
+      for (const match of competition.matches) {
+        if (!match.knockoutRound) continue // partido de fase de grupos, ya cuentan como GROUPS
+
+        const phase = knockoutToPhase[match.knockoutRound]
+        if (!phase) continue // knockout rounds no relevantes para copas (LIGUILLA, etc.)
+
+        // Actualizar ambos equipos (local y visitante participaron en esta fase)
+        const clubs = [match.homeClubId, match.awayClubId].filter(Boolean) as string[]
+        for (const clubId of clubs) {
+          const current = teamPhases.get(clubId) || CupPhase.GROUPS
+          if (phaseOrder.indexOf(phase) > phaseOrder.indexOf(current)) {
+            teamPhases.set(clubId, phase)
+          }
+        }
+      }
+
+      // Determinar campeón desde el partido FINAL
+      const finalMatch = competition.matches.find(
+        (m) => m.knockoutRound === KnockoutRound.FINAL
+      )
+
+      if (finalMatch && finalMatch.homeClubId && finalMatch.awayClubId) {
+        const winnerId =
+          finalMatch.homeClubGoals > finalMatch.awayClubGoals
+            ? finalMatch.homeClubId
+            : finalMatch.awayClubGoals > finalMatch.homeClubGoals
+              ? finalMatch.awayClubId
+              : null // empate (no debería pasar en una final)
+
+        if (winnerId) {
+          teamPhases.set(winnerId, CupPhase.CHAMPION)
+        }
+      }
 
       // Acumular coeficientes para batch insert
       for (const [clubId, phase] of teamPhases.entries()) {
@@ -1443,8 +1486,8 @@ export class StandingsService {
 
     if (h2hMatches.length === 0) {
       // Sin partidos entre sí, caer a DG general
-      if (teamB.goalDifference !== teamA.goalDifference) return teamA.goalDifference - teamB.goalDifference
-      return teamA.goalsFor - teamB.goalsFor
+      if (teamB.goalDifference !== teamA.goalDifference) return teamB.goalDifference - teamA.goalDifference
+      return teamB.goalsFor - teamA.goalsFor
     }
 
     // Contar victorias y goles head-to-head
@@ -1467,8 +1510,8 @@ export class StandingsService {
     if (h2hGoalsA !== h2hGoalsB) return h2hGoalsB - h2hGoalsA
 
     // Criterio 3: DG general
-    if (teamB.goalDifference !== teamA.goalDifference) return teamA.goalDifference - teamB.goalDifference
-    return teamA.goalsFor - teamB.goalsFor
+    if (teamB.goalDifference !== teamA.goalDifference) return teamB.goalDifference - teamA.goalDifference
+    return teamB.goalsFor - teamA.goalsFor
   }
 
   // ===================== ZONE ASSIGNMENT =====================
@@ -1823,5 +1866,70 @@ export class StandingsService {
     }).catch(() => {})
 
     return standingsData
+  }
+
+  /**
+   * Guarda el historial de títulos (campeones) de la temporada
+   * Extrae campeones de SeasonTransition (ligas) y CoefKempes (copas)
+   * y los persiste en TitleHistory para consultas rápidas
+   */
+  async saveTitleHistory(seasonId: string): Promise<number> {
+    // League champions from SeasonTransition
+    const leagueChampions = await this.prisma.seasonTransition.findMany({
+      where: {
+        seasonId,
+        movementType: MovementType.CHAMPION,
+      },
+      include: {
+        fromCompetition: {
+          include: {
+            competitionType: {
+              select: { name: true, format: true, category: true },
+            },
+          },
+        },
+      },
+    })
+
+    // Cup champions from CoefKempes
+    const cupChampions = await this.prisma.coefKempes.findMany({
+      where: {
+        seasonId,
+        cupPhase: CupPhase.CHAMPION,
+      },
+    })
+
+    // Build lookup for cup categories
+    const cupCompTypes = await this.prisma.competitionType.findMany({
+      where: { format: CompetitionFormat.CUP },
+      select: { name: true, category: true },
+    })
+    const cupCategoryMap = new Map(cupCompTypes.map((ct) => [ct.name, ct.category]))
+
+    const titleRecords: Prisma.TitleHistoryCreateManyInput[] = [
+      ...leagueChampions.map((lc) => ({
+        clubId: lc.clubId,
+        seasonId,
+        competitionName: lc.fromCompetition.competitionType.name,
+        type: lc.fromCompetition.competitionType.format,
+        category: lc.fromCompetition.competitionType.category,
+      })),
+      ...cupChampions.map((cc) => ({
+        clubId: cc.clubId,
+        seasonId,
+        competitionName: cc.cupName,
+        type: CompetitionFormat.CUP as any,
+        category: (cupCategoryMap.get(cc.cupName) || CompetitionCategory.SENIOR) as any,
+      })),
+    ]
+
+    if (titleRecords.length === 0) return 0
+
+    const result = await this.prisma.titleHistory.createMany({
+      data: titleRecords,
+      skipDuplicates: true,
+    })
+
+    return result.count
   }
 }

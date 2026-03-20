@@ -659,3 +659,47 @@ export interface TransferWindowResponse {
   transferWindow?: TransferWindow
   message?: string
 }
+
+// ============================================
+// Title History Types
+// ============================================
+
+export interface TitlePointConfig {
+  id: string
+  competitionName: string
+  category: string
+  points: number
+  isActive: boolean
+}
+
+export interface GlobalRankingEntry {
+  club: { id: string; name: string; logo: string | null }
+  totalPoints: number
+  totalTitles: number
+  breakdown: Record<string, number>
+}
+
+export interface SeasonChampions {
+  seasonNumber: number
+  seasonId: string
+  champions: {
+    competitionName: string
+    type: string
+    category: string
+    club: { id: string; name: string; logo: string | null }
+    titleCount: number
+  }[]
+}
+
+export interface CompetitionChampions {
+  competitionName: string
+  champions: {
+    seasonNumber: number
+    club: { id: string; name: string; logo: string | null }
+    titleNumber: number
+  }[]
+  mostSuccessful: {
+    club: { id: string; name: string; logo: string | null }
+    count: number
+  } | null
+}

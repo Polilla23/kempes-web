@@ -1,5 +1,5 @@
 import { IPlayerRespository, PlayerCareerByClub, PlayerCareerTotals, PlayerSeasonStatsEntry, PlayerTitle } from '@/features/players/interface/IPlayerRepository'
-import { Prisma, PrismaClient, MovementType, CupPhase } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 
 export class PlayerRepository implements IPlayerRespository {
   private prisma: PrismaClient
@@ -168,63 +168,30 @@ export class PlayerRepository implements IPlayerRespository {
     if (playerStats.length === 0) return []
 
     // Crear pares únicos de (clubId, seasonId)
-    const clubSeasonPairs = [...new Set(playerStats.map((ps) => `${ps.clubId}:${ps.seasonId}`))]
-
-    const titles: PlayerTitle[] = []
-
-    // Títulos de liga
-    const leagueTitles = await this.prisma.seasonTransition.findMany({
-      where: {
-        movementType: MovementType.CHAMPION,
-        OR: clubSeasonPairs.map((pair) => {
-          const [clubId, seasonId] = pair.split(':')
-          return { clubId, seasonId }
-        }),
-      },
-      include: {
-        season: { select: { number: true } },
-        club: { select: { id: true, name: true, logo: true } },
-        fromCompetition: {
-          include: { competitionType: { select: { name: true } } },
-        },
-      },
-    })
-
-    for (const t of leagueTitles) {
-      titles.push({
-        seasonNumber: t.season.number,
-        competitionName: t.fromCompetition.competitionType.name,
-        type: 'LEAGUE',
-        club: t.club,
+    const uniquePairs = [...new Set(playerStats.map((ps) => `${ps.clubId}:${ps.seasonId}`))]
+      .map((pair) => {
+        const [clubId, seasonId] = pair.split(':')
+        return { clubId, seasonId }
       })
-    }
 
-    // Títulos de copa
-    const cupTitles = await this.prisma.coefKempes.findMany({
+    // Una sola query a TitleHistory
+    const titleHistory = await this.prisma.titleHistory.findMany({
       where: {
-        cupPhase: CupPhase.CHAMPION,
-        OR: clubSeasonPairs.map((pair) => {
-          const [clubId, seasonId] = pair.split(':')
-          return { clubId, seasonId }
-        }),
+        OR: uniquePairs,
       },
       include: {
         season: { select: { number: true } },
         club: { select: { id: true, name: true, logo: true } },
       },
+      orderBy: { season: { number: 'desc' } },
     })
 
-    for (const t of cupTitles) {
-      titles.push({
-        seasonNumber: t.season.number,
-        competitionName: t.cupName,
-        type: 'CUP',
-        club: t.club,
-      })
-    }
-
-    titles.sort((a, b) => b.seasonNumber - a.seasonNumber)
-    return titles
+    return titleHistory.map((t) => ({
+      seasonNumber: t.season.number,
+      competitionName: t.competitionName,
+      type: t.type === 'LEAGUE' ? 'LEAGUE' : 'CUP',
+      club: t.club,
+    }))
   }
 
   async findTransferHistory(playerId: string): Promise<any[]> {

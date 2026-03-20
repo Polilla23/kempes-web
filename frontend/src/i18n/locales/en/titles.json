@@ -1,0 +1,35 @@
+{
+  "title": "Hall of Fame",
+  "tabs": {
+    "ranking": "Ranking",
+    "champions": "Champions"
+  },
+  "ranking": {
+    "position": "#",
+    "club": "Club",
+    "totalPoints": "Points",
+    "totalTitles": "Titles",
+    "noData": "No titles recorded yet",
+    "noDataDescription": "Data will appear once competitions are completed"
+  },
+  "champions": {
+    "season": "Season",
+    "filterCategory": "Category",
+    "all": "All",
+    "senior": "Senior",
+    "kempesita": "Kempesita",
+    "noData": "No champions recorded",
+    "noDataDescription": "Champions will appear once seasons are completed"
+  },
+  "pointConfig": {
+    "title": "Point Configuration",
+    "description": "Assign points per competition type for the ranking",
+    "competition": "Competition",
+    "points": "Points",
+    "save": "Save",
+    "cancel": "Cancel",
+    "success": "Configuration updated successfully",
+    "error": "Error updating configuration"
+  },
+  "loading": "Loading..."
+}
