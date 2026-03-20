@@ -32,14 +32,15 @@
   },
   "labels": {
     "clubName": "Nombre del Club",
-    "logoUrl": "URL del Logo",
+    "logoUrl": "Logo del Club",
+    "changeImage": "Cambiar imagen",
     "clubOwner": "Propietario del Club",
     "activeStatus": "Estado Activo",
     "activeDescription": "Permitir que este club participe en competencias y transferencias"
   },
   "placeholders": {
     "clubName": "Ingresa el nombre del club",
-    "logoUrl": "Ingresa la URL del logo (opcional)",
+    "logoUrl": "Seleccionar imagen (opcional)",
     "selectOwner": "Selecciona el propietario del club",
     "noOwner": "Sin propietario"
   },

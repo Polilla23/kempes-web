@@ -13,22 +13,28 @@ export class ClubController {
   }
 
   async create(req: FastifyRequest, reply: FastifyReply) {
-    const { name, logo, userId, isActive } = req.body as {
-      name: string
-      logo: string
-      userId?: string | null
-      isActive?: boolean
+    const fields: Record<string, string> = {}
+    let logoFile: { buffer: Buffer; filename: string; mimetype: string } | undefined
+
+    for await (const part of (req as any).parts()) {
+      if (part.type === 'file' && part.fieldname === 'logo') {
+        const buffer = await part.toBuffer()
+        logoFile = { buffer, filename: part.filename, mimetype: part.mimetype }
+      } else if (part.type === 'field') {
+        fields[part.fieldname] = part.value as string
+      }
     }
+
+    const { name, userId, isActive } = fields
 
     try {
       const validatedData = {
         name: Validator.string(name, 1, 100),
-        ...(logo && { logo: Validator.url(logo) }),
         ...(userId && { userId }),
         ...(isActive !== undefined && { isActive: Validator.boolean(isActive) }),
       }
 
-      const newClub = await this.clubService.createClub(validatedData)
+      const newClub = await this.clubService.createClub({ ...validatedData, logoFile })
       const clubDTO = ClubMapper.toDTO(newClub)
 
       return Response.created(reply, clubDTO, 'Club created successfully')
@@ -105,21 +111,30 @@ export class ClubController {
     }
   }
   
-  async update(req: FastifyRequest<{ Params: { id: string }; Body: Partial<Club> }>, reply: FastifyReply) {
-    const data = req.body
+  async update(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const { id } = req.params
+    const fields: Record<string, string> = {}
+    let logoFile: { buffer: Buffer; filename: string; mimetype: string } | undefined
+
+    for await (const part of (req as any).parts()) {
+      if (part.type === 'file' && part.fieldname === 'logo') {
+        const buffer = await part.toBuffer()
+        logoFile = { buffer, filename: part.filename, mimetype: part.mimetype }
+      } else if (part.type === 'field') {
+        fields[part.fieldname] = part.value as string
+      }
+    }
 
     try {
       const validId = Validator.uuid(id)
-      const validatedData: Partial<Club> = {}
-      
-      if (data.name) validatedData.name = Validator.string(data.name, 1, 100)
-      if (data.logo !== undefined) validatedData.logo = data.logo ? Validator.url(data.logo) : data.logo
-      if (data.userId !== undefined) validatedData.userId = data.userId
-      if (data.isActive !== undefined) validatedData.isActive = Validator.boolean(data.isActive)
+      const validatedData: Record<string, any> = {}
+
+      if (fields.name) validatedData.name = Validator.string(fields.name, 1, 100)
+      if (fields.userId !== undefined) validatedData.userId = fields.userId
+      if (fields.isActive !== undefined) validatedData.isActive = Validator.boolean(fields.isActive)
+      if (logoFile) validatedData.logoFile = logoFile
 
       const updated = await this.clubService.updateClub(validId, validatedData)
-      
       const updatedDTO = ClubMapper.toDTO(updated)
 
       return Response.success(reply, updatedDTO, 'Club updated successfully')

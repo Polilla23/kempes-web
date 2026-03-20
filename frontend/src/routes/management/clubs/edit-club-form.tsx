@@ -17,7 +17,7 @@ import { ClubService } from '@/services/club.service'
 import type { Club, User } from '@/types'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Building2, Image, Loader2, UserIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import type { z } from 'zod'
@@ -33,12 +33,14 @@ interface EditClubFormProps {
 function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubFormProps) {
   const { t } = useTranslation('clubs')
   const [verificationStatus, setVerificationStatus] = useState<'loading' | 'success' | 'error' | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(club.logo || null)
+  const logoInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<z.infer<typeof FormSchemas.ClubSchema>>({
     resolver: zodResolver(FormSchemas.ClubSchema),
     defaultValues: {
       name: club.name || '',
-      logo: club.logo || '',
+      logo: undefined,
       userId: club.user?.id || club.userId || 'none',
       isActive: club.isActive ?? true,
     },
@@ -50,7 +52,7 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
 
       const updateData = {
         name: values.name,
-        logo: values.logo || '',
+        logo: values.logo,
         userId: values.userId === 'none' ? undefined : values.userId,
         isActive: values.isActive,
       }
@@ -103,20 +105,38 @@ function EditClubForm({ onSuccess, onClose, club, availableUsers }: EditClubForm
             <FormField
               control={form.control}
               name="logo"
-              render={({ field }) => (
+              render={({ field: { onChange } }) => (
                 <FormItem>
                   <FormLabel className="select-none">{t('labels.logoUrl')}</FormLabel>
                   <FormControl>
-                    <div className="relative select-none">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-10 select-none">
-                        <Image className="size-4 text-gray-400 select-none" />
-                      </div>
-                      <Input
-                        type="url"
-                        placeholder={t('placeholders.logoUrl')}
-                        className="pl-12 h-11 border-gray-300 focus:border-cyan-500 focus:ring-cyan-500"
-                        {...field}
+                    <div className="flex items-center gap-3">
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            onChange(file)
+                            setLogoPreview(URL.createObjectURL(file))
+                          }
+                        }}
                       />
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        className="flex items-center justify-center h-16 w-16 rounded border-2 border-dashed border-gray-300 hover:border-cyan-500 transition-colors shrink-0 overflow-hidden"
+                      >
+                        {logoPreview ? (
+                          <img src={logoPreview} alt="Logo preview" className="h-full w-full object-contain" />
+                        ) : (
+                          <Image className="size-6 text-gray-400" />
+                        )}
+                      </button>
+                      <span className="text-sm text-muted-foreground">
+                        {logoPreview ? t('labels.changeImage') : t('placeholders.logoUrl')}
+                      </span>
                     </div>
                   </FormControl>
                   <FormMessage />

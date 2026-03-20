@@ -52,7 +52,7 @@ class FormSchemas {
   })
   static ClubSchema = z.object({
     name: z.string().min(2, { message: 'Club name must be at least 2 characters.' }),
-    logo: z.string().optional(),
+    logo: z.instanceof(File).optional(),
     userId: z.string().optional(),
     isActive: z.boolean(),
   })

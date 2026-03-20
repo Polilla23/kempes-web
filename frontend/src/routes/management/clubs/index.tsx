@@ -137,7 +137,7 @@ function ClubManagement() {
         cell: (info) => {
           const logo = info.getValue()
           return logo ? (
-            <img src={logo} alt="Club logo" className="h-8 w-8 rounded" />
+            <img src={logo} alt="Club logo" className="h-8 w-8 rounded object-contain mx-auto" />
           ) : (
             <span className="text-gray-500">No logo</span>
           )
