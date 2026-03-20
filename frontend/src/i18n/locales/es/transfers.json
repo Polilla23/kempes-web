@@ -34,7 +34,13 @@
       },
       "typeAndClubs": {
         "label": "Tipo y Equipos",
-        "description": "Selecciona el tipo de transferencia y los clubes involucrados"
+        "description": "Selecciona el tipo de transferencia y los clubes involucrados",
+        "typeLabel": "Tipo de transferencia",
+        "typePlaceholder": "Seleccioná el tipo de operación",
+        "clubsLabel": "Clubes involucrados",
+        "clubPlaceholder": "Elegí un tipo de operación",
+        "clubSearchPlaceholder": "Buscar club...",
+        "noClubs": "No se encontraron clubes"
       },
       "details": {
         "label": "Detalles",
@@ -44,6 +50,12 @@
         "label": "Resumen",
         "description": "Revisa y confirma la transferencia"
       }
+    },
+    "roles": {
+      "buyer": "Comprador",
+      "seller": "Vendedor",
+      "freeAgent": "Sin club",
+      "noOtherClub": "No aplica"
     },
     "buttons": {
       "next": "Siguiente",
@@ -79,6 +91,10 @@
     "inactive": {
       "title": "Marcar Inactivo",
       "description": "Dar de baja a un jugador"
+    },
+    "returnFromLoan": {
+      "title": "Retorno de Préstamo",
+      "description": "Jugador que retorna de préstamo"
     }
   },
   "clubsInvolved": {
@@ -95,7 +111,7 @@
   },
   "playersPanel": {
     "toSell": "Jugadores a Vender",
-    "asPayment": "Jugadores como Parte de Pago",
+    "asPayment": "Jugadores a recibir",
     "searchPlayer": "Buscar jugador..."
   },
   "paymentModal": {
@@ -121,7 +137,7 @@
     "playersToGive": "Jugadores que das",
     "playersToReceive": "Jugadores que recibes",
     "mainPlayer": "Jugador principal",
-    "asPayment": "Como parte del pago",
+    "asPayment": "A recibir",
     "valuation": "Valoración",
     "noPlayers": "No hay jugadores disponibles",
     "searchPlaceholder": "Buscar jugador..."
@@ -337,5 +353,60 @@
     "noActiveLoans": "No hay préstamos activos",
     "windowClosed": "La ventana de transferencias está cerrada",
     "rosterLimitExceeded": "Se ha excedido el límite de plantilla"
-  }
+  },
+  "filters": {
+    "dateFrom": "Desde",
+    "dateTo": "Hasta",
+    "club": "Club",
+    "type": "Tipo",
+    "status": "Estado",
+    "allClubs": "Todos los clubes",
+    "allTypes": "Todos los tipos",
+    "allStatuses": "Todos los estados",
+    "clear": "Limpiar"
+  },
+  "statusLabels": {
+    "PENDING": "Pendiente",
+    "ACTIVE": "Activa",
+    "COMPLETED": "Completada",
+    "CANCELLED": "Cancelada",
+    "PARTIALLY_PAID": "Pago Parcial"
+  },
+  "installmentStatus": {
+    "PENDING": "Pendiente",
+    "DUE": "Por vencer",
+    "PAID": "Pagada",
+    "OVERDUE": "Vencida"
+  },
+  "list": {
+    "empty": "No hay transferencias",
+    "emptyFiltered": "No hay resultados para los filtros aplicados",
+    "columns": {
+      "type": "Tipo",
+      "player": "Jugador",
+      "clubs": "Clubes",
+      "amount": "Monto",
+      "status": "Estado",
+      "date": "Fecha"
+    }
+  },
+  "detail": {
+    "empty": "Seleccioná una transferencia para ver el detalle",
+    "player": "Jugador",
+    "clubs": "Clubes",
+    "financial": "Información financiera",
+    "totalAmount": "Monto total",
+    "paymentType": "Tipo de pago",
+    "singlePayment": "Pago único",
+    "installments": "Cuotas",
+    "playersAsPayment": "Jugadores en pago",
+    "loanInfo": "Detalles del préstamo",
+    "loanDuration": "Duración",
+    "loanDurationHalves": "{{n}} medias temporadas",
+    "loanFee": "Cargo de préstamo",
+    "loanSalary": "% salario a cargo del receptor",
+    "notes": "Notas",
+    "loading": "Cargando detalle..."
+  },
+  "newButton": "Nueva Transferencia"
 }

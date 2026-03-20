@@ -12,29 +12,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Check, AlertCircle, Coins, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Player } from '@/types'
-import type {
-  PlayerPaymentConfig,
-  InstallmentConfig,
-  SeasonPeriod,
-} from '@/types/transfer-wizard'
-import {
-  generateCorrelativeInstallments,
-  MAX_INSTALLMENTS,
-  MIN_INSTALLMENTS,
-} from '@/types/transfer-wizard'
+import type { PlayerPaymentConfig, InstallmentConfig, SeasonPeriod } from '@/types/transfer-wizard'
+import { generateCorrelativeInstallments, MAX_INSTALLMENTS, MIN_INSTALLMENTS } from '@/types/transfer-wizard'
 
 interface PlayerPaymentModalProps {
   open: boolean
@@ -88,16 +74,14 @@ export function PlayerPaymentModal({
       valuationAmount,
       numberOfInstallments,
       selectedPeriod,
-      activeSeasonNumber
+      activeSeasonNumber,
     )
     setInstallments(generated)
   }
 
   // Handle installment amount change
   const handleInstallmentAmountChange = (id: string, amount: number) => {
-    setInstallments((prev) =>
-      prev.map((inst) => (inst.id === id ? { ...inst, amount } : inst))
-    )
+    setInstallments((prev) => prev.map((inst) => (inst.id === id ? { ...inst, amount } : inst)))
   }
 
   // Handle installment period change
@@ -105,14 +89,13 @@ export function PlayerPaymentModal({
     setInstallments((prev) =>
       prev.map((inst) => {
         if (inst.id !== id) return inst
-        const periodLabel =
-          period === 'START' ? 'Inicio' : period === 'MID' ? 'Mitad' : 'Final'
+        const periodLabel = period === 'START' ? 'Inicio' : period === 'MID' ? 'Mitad' : 'Final'
         return {
           ...inst,
           period,
           dueSeasonHalfLabel: `${periodLabel} T${inst.seasonNumber}`,
         }
-      })
+      }),
     )
   }
 
@@ -121,14 +104,13 @@ export function PlayerPaymentModal({
     setInstallments((prev) =>
       prev.map((inst) => {
         if (inst.id !== id) return inst
-        const periodLabel =
-          inst.period === 'START' ? 'Inicio' : inst.period === 'MID' ? 'Mitad' : 'Final'
+        const periodLabel = inst.period === 'START' ? 'Inicio' : inst.period === 'MID' ? 'Mitad' : 'Final'
         return {
           ...inst,
           seasonNumber,
           dueSeasonHalfLabel: `${periodLabel} T${seasonNumber}`,
         }
-      })
+      }),
     )
   }
 
@@ -143,7 +125,7 @@ export function PlayerPaymentModal({
     const config: PlayerPaymentConfig = {
       playerId: player.id,
       playerName: player.fullName,
-      playerPosition: player.position || undefined,
+      playerPosition: undefined,
       overall: player.overall,
       salary: player.salary,
       isKempesita: player.isKempesita,
@@ -174,17 +156,14 @@ export function PlayerPaymentModal({
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-medium text-foreground">
-                  {player.fullName}
-                </p>
+                <p className="font-medium text-foreground">{player.fullName}</p>
                 <div className="flex items-center gap-2 text-sm">
                   <span>OVR: {player.overall || '-'}</span>
                   {player.isKempesita && (
-                    <Badge variant="secondary" className="text-xs">
-                      K
+                    <Badge variant="secondary" className="h-4 px-1.5 text-[9px]">
+                      Kempesita
                     </Badge>
                   )}
-                  {player.position && <span>- {player.position}</span>}
                 </div>
               </div>
             </div>
@@ -196,9 +175,7 @@ export function PlayerPaymentModal({
           <div className="space-y-2">
             <Label htmlFor="valuation">{t('paymentModal.value', 'Valor')}</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                $
-              </span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <Input
                 id="valuation"
                 type="number"
@@ -225,7 +202,7 @@ export function PlayerPaymentModal({
                   'flex items-center justify-center gap-2 rounded-lg border-2 p-4 cursor-pointer transition-all',
                   paymentType === 'SINGLE'
                     ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-gray-300'
+                    : 'border-muted hover:border-gray-300',
                 )}
               >
                 <RadioGroupItem value="SINGLE" id="single" className="sr-only" />
@@ -238,16 +215,12 @@ export function PlayerPaymentModal({
                   'flex items-center justify-center gap-2 rounded-lg border-2 p-4 cursor-pointer transition-all',
                   paymentType === 'INSTALLMENTS'
                     ? 'border-primary bg-primary/5'
-                    : 'border-muted hover:border-gray-300'
+                    : 'border-muted hover:border-gray-300',
                 )}
               >
                 <RadioGroupItem value="INSTALLMENTS" id="installments" className="sr-only" />
-                <span className="font-medium">
-                  {t('paymentModal.installments', 'Cuotas')}
-                </span>
-                {paymentType === 'INSTALLMENTS' && (
-                  <Check className="h-4 w-4 text-primary" />
-                )}
+                <span className="font-medium">{t('paymentModal.installments', 'Cuotas')}</span>
+                {paymentType === 'INSTALLMENTS' && <Check className="h-4 w-4 text-primary" />}
               </Label>
             </RadioGroup>
           </div>
@@ -269,7 +242,7 @@ export function PlayerPaymentModal({
                     <SelectContent>
                       {Array.from(
                         { length: MAX_INSTALLMENTS - MIN_INSTALLMENTS + 1 },
-                        (_, i) => MIN_INSTALLMENTS + i
+                        (_, i) => MIN_INSTALLMENTS + i,
                       ).map((num) => (
                         <SelectItem key={num} value={num.toString()}>
                           {num}
@@ -292,7 +265,7 @@ export function PlayerPaymentModal({
               {installments.length > 0 && (
                 <ScrollArea className="h-[200px] rounded-md border">
                   <div className="p-3 space-y-3">
-                    {installments.map((inst, index) => (
+                    {installments.map((inst) => (
                       <Card key={inst.id} className="border-muted">
                         <CardContent className="p-3">
                           <div className="flex items-center gap-3">
@@ -306,10 +279,7 @@ export function PlayerPaymentModal({
                                 min={0}
                                 value={inst.amount || ''}
                                 onChange={(e) =>
-                                  handleInstallmentAmountChange(
-                                    inst.id,
-                                    Number(e.target.value) || 0
-                                  )
+                                  handleInstallmentAmountChange(inst.id, Number(e.target.value) || 0)
                                 }
                                 className="text-right font-mono text-sm"
                               />
@@ -324,15 +294,9 @@ export function PlayerPaymentModal({
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="START">
-                                    {t('periodSelector.start', 'Inicio')}
-                                  </SelectItem>
-                                  <SelectItem value="MID">
-                                    {t('periodSelector.mid', 'Mitad')}
-                                  </SelectItem>
-                                  <SelectItem value="END">
-                                    {t('periodSelector.end', 'Final')}
-                                  </SelectItem>
+                                  <SelectItem value="START">{t('periodSelector.start', 'Inicio')}</SelectItem>
+                                  <SelectItem value="MID">{t('periodSelector.mid', 'Mitad')}</SelectItem>
+                                  <SelectItem value="END">{t('periodSelector.end', 'Final')}</SelectItem>
                                 </SelectContent>
                               </Select>
                               {/* Season */}
@@ -345,7 +309,7 @@ export function PlayerPaymentModal({
                                   onChange={(e) =>
                                     handleInstallmentSeasonChange(
                                       inst.id,
-                                      Number(e.target.value) || activeSeasonNumber
+                                      Number(e.target.value) || activeSeasonNumber,
                                     )
                                   }
                                   className="text-center text-sm"
@@ -365,19 +329,14 @@ export function PlayerPaymentModal({
                 <div
                   className={cn(
                     'flex items-center justify-between p-3 rounded-lg',
-                    isSumValid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                    isSumValid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700',
                   )}
                 >
                   <span className="text-sm font-medium">
                     {t('paymentModal.sum', 'Suma')}: ${installmentsSum.toLocaleString()} /{' '}
-                    {t('installmentsEditor.expected', 'Total')}: $
-                    {valuationAmount.toLocaleString()}
+                    {t('installmentsEditor.expected', 'Total')}: ${valuationAmount.toLocaleString()}
                   </span>
-                  {isSumValid ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4" />
-                  )}
+                  {isSumValid ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
                 </div>
               )}
             </div>
@@ -388,10 +347,7 @@ export function PlayerPaymentModal({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             {t('paymentModal.cancel', 'Cancelar')}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={valuationAmount <= 0 || !isSumValid}
-          >
+          <Button onClick={handleSave} disabled={valuationAmount <= 0 || !isSumValid}>
             <Check className="h-4 w-4 mr-2" />
             {t('paymentModal.save', 'Guardar')}
           </Button>
