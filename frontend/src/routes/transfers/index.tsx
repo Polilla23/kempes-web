@@ -4,6 +4,7 @@ import { ArrowLeftRight, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ClubAndUserTableSkeleton } from '@/components/ui/form-skeletons'
 import HomeService, { type UserClub } from '@/services/home.service'
 import { TransferService } from '@/services/transfer.service'
@@ -14,6 +15,7 @@ import { NewTransferTab } from './_components/new-transfer-tab'
 import { TransferFilters, type TransferFiltersState } from './_components/transfer-filters'
 import { TransferListPanel } from './_components/transfer-list-panel'
 import { TransferDetailPanel } from './_components/transfer-detail-panel'
+import { TransferHistoryTab } from './_components/transfer-history-tab'
 import type { Transfer, Club, Player, SeasonHalf } from '@/types'
 
 export const Route = createFileRoute('/transfers/')({
@@ -158,19 +160,39 @@ function TransferCenter() {
         )}
       </div>
 
-      {/* Filters */}
-      <TransferFilters filters={filters} onFiltersChange={setFilters} clubNames={clubNames} />
+      {/* Tabs: Mercado / Historial */}
+      <Tabs defaultValue="market">
+        <TabsList>
+          <TabsTrigger value="market">Mercado</TabsTrigger>
+          <TabsTrigger value="history">Historial</TabsTrigger>
+        </TabsList>
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <TransferListPanel
-          transfers={filteredTransfers}
-          selectedId={selectedId}
-          onSelect={handleSelectTransfer}
-          isFiltered={isFiltered}
-        />
-        <TransferDetailPanel transfer={detail} isLoading={detailLoading} />
-      </div>
+        <TabsContent value="market" className="mt-4 space-y-4">
+          {/* Filters */}
+          <TransferFilters filters={filters} onFiltersChange={setFilters} clubNames={clubNames} />
+
+          {/* Two-column layout */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <TransferListPanel
+              transfers={filteredTransfers}
+              selectedId={selectedId}
+              onSelect={handleSelectTransfer}
+              isFiltered={isFiltered}
+            />
+            <TransferDetailPanel transfer={detail} isLoading={detailLoading} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-4">
+          <TransferHistoryTab
+            transfers={transfers}
+            onSelectTransfer={handleSelectTransfer}
+            selectedId={selectedId}
+            detail={detail}
+            detailLoading={detailLoading}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* New Transfer Dialog */}
       {userClub && (

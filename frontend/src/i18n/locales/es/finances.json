@@ -142,12 +142,6 @@
     "noBalanceFound": "No se encontró balance para este club",
     "balanceInitialized": "Balance inicializado correctamente"
   },
-  "tabs": {
-    "overview": "Resumen",
-    "prizes": "Premios",
-    "installments": "Cuotas",
-    "salaries": "Salarios"
-  },
   "installments": {
     "title": "Cuotas Pendientes",
     "pay": "Pagar Cuota",
@@ -210,10 +204,60 @@
     "income": "Ingresos",
     "expenses": "Gastos",
     "endingBalance": "Balance Final",
+    "futureReceivable": "Por Cobrar",
+    "futurePayable": "Por Pagar",
+    "projectedBalance": "Balance Proyectado",
+    "deficitsTitle": "Clubes en Déficit",
     "noBalances": "No hay balances para esta media temporada",
     "totalLeagueIncome": "Ingresos Totales Liga",
     "totalLeagueExpenses": "Gastos Totales Liga",
     "totalLeagueSalaries": "Salarios Totales Liga",
     "selectSeasonHalf": "Seleccionar media temporada"
+  },
+  "tabs": {
+    "overview": "Resumen",
+    "prizes": "Premios",
+    "installments": "Cuotas",
+    "salaries": "Salarios",
+    "report": "Reporte de Temporada"
+  },
+  "salaryPreview": {
+    "infoBanner": "Los salarios se procesan automáticamente al inicio de cada período. Podés revisar el detalle antes de ejecutar el procesamiento.",
+    "clubsToProcess": "Clubes a procesar",
+    "totalAmount": "Total a pagar",
+    "averagePerClub": "Promedio por club",
+    "grossSalary": "Salario bruto",
+    "loanAdjustments": "Ajustes préstamos",
+    "finalSalary": "Salario final",
+    "playerName": "Jugador",
+    "overall": "OVR",
+    "salary": "Salario",
+    "status": "Estado",
+    "percentageToPay": "% a pagar",
+    "amountToPay": "Monto",
+    "statusActive": "Titular",
+    "statusLoanPartial": "Cedido"
+  },
+  "seasonReport": {
+    "title": "Reporte de Temporada",
+    "selectSeason": "Seleccionar temporada",
+    "noReport": "Seleccioná una temporada para ver el reporte",
+    "totalTransferVolume": "Volumen de Transferencias",
+    "totalPrizesPaid": "Premios Distribuidos",
+    "totalSalariesPaid": "Salarios Pagados",
+    "clubsInDeficit": "Clubes en Déficit",
+    "rankings": "Rankings Financieros",
+    "richestClub": "Club Más Rico",
+    "biggestSpender": "Mayor Gasto en Transferencias",
+    "biggestSeller": "Mayor Recaudación por Ventas",
+    "biggestPayroll": "Mayor Masa Salarial",
+    "prizesByCompetition": "Premios por Competición",
+    "deficitClubs": "Clubes en Déficit",
+    "noDeficitClubs": "Ningún club en déficit este período",
+    "competition": "Competición",
+    "totalPrize": "Total premios",
+    "club": "Club",
+    "position": "Posición",
+    "amount": "Monto"
   }
 }

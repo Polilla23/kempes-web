@@ -175,7 +175,7 @@ export class FinanceController {
     try {
       const validSeasonHalfId = Validator.uuid(seasonHalfId)
       const balances = await this.financeService.getSeasonHalfBalances(validSeasonHalfId)
-      const dtos = FinanceMapper.toBalanceDTOArray(balances ?? [])
+      const dtos = FinanceMapper.toBalanceWithProjectionDTOArray(balances ?? [])
 
       return Response.success(reply, dtos, 'Season half balances fetched successfully')
     } catch (error) {
@@ -444,6 +444,26 @@ export class FinanceController {
     }
   }
 
+  // ==================== Salary Preview ====================
+
+  async getSalariesPreview(
+    req: FastifyRequest<{ Querystring: { seasonHalfId?: string } }>,
+    reply: FastifyReply
+  ) {
+    try {
+      const result = await this.financeService.getSalariesPreview(req.query.seasonHalfId)
+      return Response.success(reply, result, 'Salary preview fetched successfully')
+    } catch (error) {
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error fetching salary preview',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
   // ==================== Salary Processing ====================
 
   async processSalaries(
@@ -465,6 +485,32 @@ export class FinanceController {
         reply,
         'PROCESS_ERROR',
         'Error while processing salaries',
+        500,
+        error instanceof Error ? error.message : error
+      )
+    }
+  }
+
+  // ==================== Season Financial Report ====================
+
+  async getSeasonFinancialReport(
+    req: FastifyRequest<{ Params: { seasonId: string } }>,
+    reply: FastifyReply
+  ) {
+    const { seasonId } = req.params
+
+    try {
+      const validSeasonId = Validator.uuid(seasonId)
+      const report = await this.financeService.getSeasonFinancialReport(validSeasonId)
+      return Response.success(reply, report, 'Season financial report fetched successfully')
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        return Response.notFound(reply, 'Season', seasonId)
+      }
+      return Response.error(
+        reply,
+        'FETCH_ERROR',
+        'Error fetching season financial report',
         500,
         error instanceof Error ? error.message : error
       )

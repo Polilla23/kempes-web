@@ -42,6 +42,7 @@ import { useTranslation } from 'react-i18next'
 const navItems = [
   { key: 'home', icon: House, to: '/' },
   { key: 'dashboard', icon: LayoutDashboard, to: '/dashboard' },
+  { key: 'myFinances', icon: DollarSign, to: '/dashboard/finances' },
   { key: 'news', icon: Newspaper, to: '/news' },
   { key: 'standings', icon: ListOrdered, to: '/standings' },
   { key: 'fixture', icon: CalendarRange, to: '/fixtures' },

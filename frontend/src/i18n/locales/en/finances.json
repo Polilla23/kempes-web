@@ -142,12 +142,6 @@
     "noBalanceFound": "No balance found for this club",
     "balanceInitialized": "Balance initialized successfully"
   },
-  "tabs": {
-    "overview": "Overview",
-    "prizes": "Prizes",
-    "installments": "Installments",
-    "salaries": "Salaries"
-  },
   "installments": {
     "title": "Pending Installments",
     "pay": "Pay Installment",
@@ -210,10 +204,60 @@
     "income": "Income",
     "expenses": "Expenses",
     "endingBalance": "Ending Balance",
+    "futureReceivable": "Receivable",
+    "futurePayable": "Payable",
+    "projectedBalance": "Projected Balance",
+    "deficitsTitle": "Clubs in Deficit",
     "noBalances": "No balances for this season half",
     "totalLeagueIncome": "Total League Income",
     "totalLeagueExpenses": "Total League Expenses",
     "totalLeagueSalaries": "Total League Salaries",
     "selectSeasonHalf": "Select season half"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "prizes": "Prizes",
+    "installments": "Installments",
+    "salaries": "Salaries",
+    "report": "Season Report"
+  },
+  "salaryPreview": {
+    "infoBanner": "Salaries are processed automatically at the start of each period. You can review the details before executing the processing.",
+    "clubsToProcess": "Clubs to process",
+    "totalAmount": "Total to pay",
+    "averagePerClub": "Average per club",
+    "grossSalary": "Gross salary",
+    "loanAdjustments": "Loan adjustments",
+    "finalSalary": "Final salary",
+    "playerName": "Player",
+    "overall": "OVR",
+    "salary": "Salary",
+    "status": "Status",
+    "percentageToPay": "% to pay",
+    "amountToPay": "Amount",
+    "statusActive": "Active",
+    "statusLoanPartial": "On Loan"
+  },
+  "seasonReport": {
+    "title": "Season Report",
+    "selectSeason": "Select season",
+    "noReport": "Select a season to view the report",
+    "totalTransferVolume": "Transfer Volume",
+    "totalPrizesPaid": "Prizes Distributed",
+    "totalSalariesPaid": "Salaries Paid",
+    "clubsInDeficit": "Clubs in Deficit",
+    "rankings": "Financial Rankings",
+    "richestClub": "Richest Club",
+    "biggestSpender": "Biggest Transfer Spender",
+    "biggestSeller": "Biggest Transfer Earner",
+    "biggestPayroll": "Biggest Payroll",
+    "prizesByCompetition": "Prizes by Competition",
+    "deficitClubs": "Clubs in Deficit",
+    "noDeficitClubs": "No clubs in deficit this period",
+    "competition": "Competition",
+    "totalPrize": "Total Prizes",
+    "club": "Club",
+    "position": "Position",
+    "amount": "Amount"
   }
 }

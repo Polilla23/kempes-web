@@ -1,8 +1,9 @@
-import { MousePointerClick } from 'lucide-react'
+import { MousePointerClick, Calendar, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { Transfer, InstallmentStatus, TransferStatus } from '@/types'
@@ -24,6 +25,14 @@ const STATUS_CLASSES: Record<TransferStatus, string> = {
 
 function formatAmount(amount: number) {
   return `$${amount.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`
+}
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 interface TransferDetailPanelProps {
@@ -61,6 +70,16 @@ export function TransferDetailPanel({ transfer, isLoading }: TransferDetailPanel
   const hasInstallments = transfer.installments && transfer.installments.length > 0
   const hasPlayersAsPayment = transfer.playersAsPayment && transfer.playersAsPayment.length > 0
 
+  const paidCount = transfer.installments?.filter((i) => i.status === 'PAID').length ?? 0
+  const totalInstallments = transfer.installments?.length ?? 0
+  const paidProgress = totalInstallments > 0 ? (paidCount / totalInstallments) * 100 : 0
+
+  const seasonHalfLabel = transfer.seasonHalf
+    ? transfer.seasonHalf.halfType === 'FIRST_HALF'
+      ? `1ra Mitad`
+      : `2da Mitad`
+    : null
+
   return (
     <Card className="overflow-y-auto max-h-[calc(100vh-320px)] min-h-[400px]">
       <CardHeader className="pb-3">
@@ -85,11 +104,11 @@ export function TransferDetailPanel({ transfer, isLoading }: TransferDetailPanel
           <div className="flex items-center gap-3 p-3 bg-muted/40 rounded-lg">
             <Avatar className="h-10 w-10">
               <AvatarFallback className="text-sm font-bold">
-                {transfer.player.name.slice(0, 2).toUpperCase()}
+                {transfer.player.fullName.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="font-semibold text-sm">{transfer.player.name}</p>
+              <p className="font-semibold text-sm">{transfer.player.fullName}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 {transfer.player.position && (
                   <Badge variant="outline" className="text-[10px] h-4 px-1">
@@ -130,6 +149,39 @@ export function TransferDetailPanel({ transfer, isLoading }: TransferDetailPanel
           </div>
         </div>
 
+        {/* Metadata */}
+        <div>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">Detalles</p>
+          <div className="space-y-1.5 text-sm">
+            {seasonHalfLabel && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" /> Período
+                </span>
+                <span>{seasonHalfLabel}</span>
+              </div>
+            )}
+            {transfer.transferWindow && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Ventana</span>
+                <span>{transfer.transferWindow.name}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Fecha</span>
+              <span>{formatDate(transfer.createdAt)}</span>
+            </div>
+            {transfer.initiatorClub && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <User className="h-3 w-3" /> Iniciador
+                </span>
+                <span>{transfer.initiatorClub.name}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Financial */}
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">{t('detail.financial')}</p>
@@ -147,34 +199,53 @@ export function TransferDetailPanel({ transfer, isLoading }: TransferDetailPanel
           </div>
 
           {hasInstallments && (
-            <div className="mt-3">
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-muted-foreground font-medium">Componente Monetario</p>
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-1 text-muted-foreground font-medium">#</th>
                     <th className="text-right py-1 text-muted-foreground font-medium">{t('detail.totalAmount')}</th>
+                    <th className="text-right py-1 text-muted-foreground font-medium">Vencimiento</th>
                     <th className="text-right py-1 text-muted-foreground font-medium">{t('list.columns.status')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {transfer.installments!.map((inst) => (
-                    <tr key={inst.id} className="border-b border-border/50">
-                      <td className="py-1.5 font-medium">{inst.installmentNumber}</td>
-                      <td className="py-1.5 text-right">{formatAmount(inst.amount)}</td>
-                      <td className="py-1.5 text-right">
-                        <span
-                          className={cn(
-                            'px-1.5 py-0.5 rounded text-[10px] font-semibold',
-                            INSTALLMENT_STATUS_CLASSES[inst.status]
-                          )}
-                        >
-                          {t(`installmentStatus.${inst.status}`)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {transfer.installments!.map((inst) => {
+                    const dueLabel = inst.dueSeasonHalf
+                      ? inst.dueSeasonHalf.halfType === 'FIRST_HALF'
+                        ? '1ra Mitad'
+                        : '2da Mitad'
+                      : '—'
+                    return (
+                      <tr key={inst.id} className="border-b border-border/50">
+                        <td className="py-1.5 font-medium">{inst.installmentNumber}</td>
+                        <td className="py-1.5 text-right">{formatAmount(inst.amount)}</td>
+                        <td className="py-1.5 text-right text-muted-foreground">{dueLabel}</td>
+                        <td className="py-1.5 text-right">
+                          <span
+                            className={cn(
+                              'px-1.5 py-0.5 rounded text-[10px] font-semibold',
+                              INSTALLMENT_STATUS_CLASSES[inst.status]
+                            )}
+                          >
+                            {t(`installmentStatus.${inst.status}`)}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
+
+              {/* Progress bar */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{paidCount} de {totalInstallments} cuotas pagadas</span>
+                  <span>{Math.round(paidProgress)}%</span>
+                </div>
+                <Progress value={paidProgress} className="h-1.5" />
+              </div>
             </div>
           )}
         </div>
@@ -183,7 +254,7 @@ export function TransferDetailPanel({ transfer, isLoading }: TransferDetailPanel
         {hasPlayersAsPayment && (
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
-              {t('detail.playersAsPayment')}
+              Jugadores como Pago
             </p>
             <div className="space-y-1.5">
               {transfer.playersAsPayment!.map((pp) => (
@@ -194,10 +265,10 @@ export function TransferDetailPanel({ transfer, isLoading }: TransferDetailPanel
                   <div className="flex items-center gap-2 min-w-0">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-[10px]">
-                        {pp.player?.name?.slice(0, 2).toUpperCase() ?? '?'}
+                        {pp.player?.fullName?.slice(0, 2).toUpperCase() ?? '?'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="truncate">{pp.player?.name ?? pp.playerId}</span>
+                    <span className="truncate">{pp.player?.fullName ?? pp.playerId}</span>
                     {pp.player?.position && (
                       <Badge variant="outline" className="text-[9px] h-4 px-1">
                         {pp.player.position}

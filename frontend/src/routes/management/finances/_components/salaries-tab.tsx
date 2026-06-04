@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DataTable } from '@/components/table/data-table'
-import { createColumnHelper } from '@tanstack/react-table'
-import { DefaultHeader } from '@/components/table/table-header'
-import { Loader2, Play } from 'lucide-react'
+import { Loader2, Play, Info, Users, DollarSign, BarChart2 } from 'lucide-react'
 import { FinanceService } from '@/services/finance.service'
-import type { SeasonHalf, ProcessSalariesResponse } from '@/types'
+import { SalaryClubRow } from './salary-club-row'
+import { formatCurrency } from '@/lib/finance-utils'
+import type { SeasonHalf, ProcessSalariesResponse, SalaryProcessingPreview } from '@/types'
 
 interface SalariesTabProps {
   seasonHalves: SeasonHalf[]
@@ -33,17 +32,6 @@ interface SalariesTabProps {
   onSeasonHalfChange: (id: string) => void
   onRefresh: () => void
 }
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-type SalaryDetail = ProcessSalariesResponse['details'][number]
 
 export function SalariesTab({
   seasonHalves,
@@ -56,11 +44,30 @@ export function SalariesTab({
   const [isProcessing, setIsProcessing] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [lastResult, setLastResult] = useState<ProcessSalariesResponse | null>(null)
+  const [preview, setPreview] = useState<SalaryProcessingPreview | null>(null)
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const [expandedClubs, setExpandedClubs] = useState<Set<string>>(new Set())
 
   const getSeasonHalfLabel = (half: SeasonHalf) => {
     const halfLabel = half.halfType === 'FIRST_HALF' ? t('labels.firstHalf') : t('labels.secondHalf')
     return half.seasonNumber ? `T${half.seasonNumber} - ${halfLabel}` : halfLabel
   }
+
+  useEffect(() => {
+    if (!activeSeasonHalf) return
+    const fetchPreview = async () => {
+      setIsLoadingPreview(true)
+      try {
+        const res = await FinanceService.getSalaryProcessingPreview(activeSeasonHalf.id)
+        setPreview(res.preview ?? null)
+      } catch {
+        setPreview(null)
+      } finally {
+        setIsLoadingPreview(false)
+      }
+    }
+    fetchPreview()
+  }, [activeSeasonHalf])
 
   const handleProcess = async () => {
     if (!activeSeasonHalf) return
@@ -83,33 +90,21 @@ export function SalariesTab({
     }
   }
 
-  const columnHelper = createColumnHelper<SalaryDetail>()
-
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('clubName', {
-        header: (info) => <DefaultHeader info={info} name={t('salaries.clubName')} type="string" />,
-        cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor('playerCount', {
-        header: (info) => <DefaultHeader info={info} name={t('salaries.players')} type="number" />,
-        cell: (info) => <Badge variant="secondary">{info.getValue()}</Badge>,
-      }),
-      columnHelper.accessor('totalSalary', {
-        header: (info) => <DefaultHeader info={info} name={t('salaries.totalSalary')} type="number" />,
-        cell: (info) => (
-          <span className="font-mono text-red-600 font-medium">
-            -{formatCurrency(info.getValue())}
-          </span>
-        ),
-      }),
-    ],
-    [t]
-  )
+  const toggleClub = (clubId: string) => {
+    setExpandedClubs((prev) => {
+      const next = new Set(prev)
+      if (next.has(clubId)) {
+        next.delete(clubId)
+      } else {
+        next.add(clubId)
+      }
+      return next
+    })
+  }
 
   return (
     <div className="space-y-6">
-      {/* Season Half Selector */}
+      {/* Season Half Selector + Process Button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <label className="text-sm font-medium select-none">{t('overview.selectSeasonHalf')}:</label>
@@ -128,13 +123,106 @@ export function SalariesTab({
           </Select>
         </div>
 
-        <Button
-          onClick={() => setShowConfirm(true)}
-          disabled={!activeSeasonHalf}
-        >
+        <Button onClick={() => setShowConfirm(true)} disabled={!activeSeasonHalf}>
           <Play className="size-4 mr-1" /> {t('salaries.process')}
         </Button>
       </div>
+
+      {/* Info Banner */}
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>{t('salaryPreview.infoBanner')}</AlertDescription>
+      </Alert>
+
+      {/* Preview Section */}
+      {isLoadingPreview && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="animate-spin h-6 w-6 text-muted-foreground" />
+        </div>
+      )}
+
+      {!isLoadingPreview && preview && (
+        <div className="space-y-4">
+          {/* Stat Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-4 rounded-xl border p-4">
+              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
+                <Users className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t('salaryPreview.clubsToProcess')}</p>
+                <p className="text-2xl font-bold">{preview.clubsToProcess}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 rounded-xl border p-4">
+              <div className="rounded-full bg-red-100 p-3 dark:bg-red-900">
+                <DollarSign className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t('salaryPreview.totalAmount')}</p>
+                <p className="text-2xl font-bold text-red-600">{formatCurrency(preview.totalSalaryAmount)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 rounded-xl border p-4">
+              <div className="rounded-full bg-muted p-3">
+                <BarChart2 className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{t('salaryPreview.averagePerClub')}</p>
+                <p className="text-2xl font-bold">{formatCurrency(preview.averagePerClub)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Expandable Club Table */}
+          <div className="rounded-md border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t('salaries.clubName')}</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t('salaries.players')}</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t('salaryPreview.grossSalary')}</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t('salaryPreview.loanAdjustments')}</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t('salaryPreview.finalSalary')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {preview.clubs.map((club) => (
+                  <SalaryClubRow
+                    key={club.clubId}
+                    club={club}
+                    isExpanded={expandedClubs.has(club.clubId)}
+                    onToggle={() => toggleClub(club.clubId)}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {!isLoadingPreview && !preview && !lastResult && (
+        <p className="text-muted-foreground text-center py-8">{t('salaries.noSalaryData')}</p>
+      )}
+
+      {/* Last Processing Result */}
+      {lastResult && (
+        <div className="space-y-4 pt-4 border-t">
+          <h3 className="text-base font-semibold">{t('salaries.details')}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-xl border p-4">
+              <p className="text-sm text-muted-foreground">{t('salaries.clubsProcessed')}</p>
+              <p className="text-2xl font-bold">{lastResult.clubsProcessed}</p>
+            </div>
+            <div className="rounded-xl border p-4">
+              <p className="text-sm text-muted-foreground">{t('salaries.totalPaid')}</p>
+              <p className="text-2xl font-bold text-red-600">
+                {formatCurrency(lastResult.totalSalariesPaid)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Process Confirmation Dialog */}
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
@@ -159,35 +247,6 @@ export function SalariesTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Results */}
-      {lastResult && (
-        <div className="space-y-4">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border p-4">
-              <p className="text-sm text-muted-foreground">{t('salaries.clubsProcessed')}</p>
-              <p className="text-2xl font-bold">{lastResult.clubsProcessed}</p>
-            </div>
-            <div className="rounded-xl border p-4">
-              <p className="text-sm text-muted-foreground">{t('salaries.totalPaid')}</p>
-              <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(lastResult.totalSalariesPaid)}
-              </p>
-            </div>
-          </div>
-
-          {/* Details Table */}
-          <div>
-            <h3 className="text-lg font-semibold mb-3 select-none">{t('salaries.details')}</h3>
-            <DataTable<SalaryDetail, any> columns={columns} data={lastResult.details} />
-          </div>
-        </div>
-      )}
-
-      {!lastResult && (
-        <p className="text-muted-foreground text-center py-8">{t('salaries.noSalaryData')}</p>
-      )}
     </div>
   )
 }

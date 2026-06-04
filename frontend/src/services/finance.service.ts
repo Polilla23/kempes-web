@@ -17,6 +17,8 @@ import type {
   PrizesResponse,
   FinancialReportResponse,
   ProcessSalariesResponse,
+  SalaryProcessingPreviewResponse,
+  SeasonFinancialReportResponse,
 } from '@/types'
 
 export class FinanceService {
@@ -241,6 +243,22 @@ export class FinanceService {
     }
   }
 
+  // ==================== Salary Preview ====================
+
+  // Obtener preview de procesamiento de salarios
+  static async getSalaryProcessingPreview(
+    seasonHalfId: string
+  ): Promise<SalaryProcessingPreviewResponse> {
+    try {
+      const response = await api.get<{ data: SalaryProcessingPreviewResponse['preview']; message: string }>(
+        `/api/v1/finances/salaries/preview?seasonHalfId=${seasonHalfId}`
+      )
+      return { preview: response.data?.data, message: response.data?.message }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error fetching salary preview')
+    }
+  }
+
   // ==================== Reports ====================
 
   // Obtener reporte financiero de un club
@@ -256,6 +274,18 @@ export class FinanceService {
       return { report: response.data?.data, message: response.data?.message }
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Error fetching financial report')
+    }
+  }
+
+  // Obtener reporte financiero de una temporada
+  static async getSeasonFinancialReport(seasonId: string): Promise<SeasonFinancialReportResponse> {
+    try {
+      const response = await api.get<{ data: SeasonFinancialReportResponse['report']; message: string }>(
+        `/api/v1/finances/report/season/${seasonId}`
+      )
+      return { report: response.data?.data, message: response.data?.message }
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Error fetching season financial report')
     }
   }
 }

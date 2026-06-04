@@ -35,6 +35,7 @@ import { Route as ManagementFinancesIndexRouteImport } from './routes/management
 import { Route as ManagementEditResultsIndexRouteImport } from './routes/management/edit-results/index'
 import { Route as ManagementCompetitionsIndexRouteImport } from './routes/management/competitions/index'
 import { Route as ManagementClubsIndexRouteImport } from './routes/management/clubs/index'
+import { Route as DashboardFinancesIndexRouteImport } from './routes/dashboard/finances/index'
 import { Route as ConfigurationSeasonsIndexRouteImport } from './routes/configuration/seasons/index'
 import { Route as ConfigurationEventTypesIndexRouteImport } from './routes/configuration/event-types/index'
 import { Route as ConfigurationCompetitionTypesIndexRouteImport } from './routes/configuration/competition-types/index'
@@ -53,6 +54,7 @@ import { Route as AuthResetPasswordIndexTokenRouteImport } from './routes/_auth/
 import { Route as ManagementFixturesPostSeasonIndexRouteImport } from './routes/management/fixtures/post-season/index'
 import { Route as ManagementFixturesLeagueIndexRouteImport } from './routes/management/fixtures/league/index'
 import { Route as ManagementFixturesCupIndexRouteImport } from './routes/management/fixtures/cup/index'
+import { Route as ManagementPlayersPlayerIdTransfersRouteImport } from './routes/management/players/$playerId/transfers'
 import { Route as ManagementFinancesClubClubIdRouteImport } from './routes/management/finances/club.$clubId'
 import { Route as ManagementFixturesCupSupercopaIndexRouteImport } from './routes/management/fixtures/cup/supercopa/index'
 import { Route as ManagementFixturesCupKempesIndexRouteImport } from './routes/management/fixtures/cup/kempes/index'
@@ -194,6 +196,11 @@ const ManagementClubsIndexRoute = ManagementClubsIndexRouteImport.update({
   path: '/management/clubs/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardFinancesIndexRoute = DashboardFinancesIndexRouteImport.update({
+  id: '/dashboard/finances/',
+  path: '/dashboard/finances/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConfigurationSeasonsIndexRoute =
   ConfigurationSeasonsIndexRouteImport.update({
     id: '/configuration/seasons/',
@@ -293,6 +300,12 @@ const ManagementFixturesCupIndexRoute =
     path: '/management/fixtures/cup/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ManagementPlayersPlayerIdTransfersRoute =
+  ManagementPlayersPlayerIdTransfersRouteImport.update({
+    id: '/management/players/$playerId/transfers',
+    path: '/management/players/$playerId/transfers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ManagementFinancesClubClubIdRoute =
   ManagementFinancesClubClubIdRouteImport.update({
     id: '/management/finances/club/$clubId',
@@ -361,6 +374,7 @@ export interface FileRoutesByFullPath {
   '/configuration/competition-types': typeof ConfigurationCompetitionTypesIndexRoute
   '/configuration/event-types': typeof ConfigurationEventTypesIndexRoute
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
+  '/dashboard/finances': typeof DashboardFinancesIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
   '/management/edit-results': typeof ManagementEditResultsIndexRoute
@@ -372,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
+  '/management/players/$playerId/transfers': typeof ManagementPlayersPlayerIdTransfersRoute
   '/management/fixtures/cup': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
   '/management/fixtures/post-season': typeof ManagementFixturesPostSeasonIndexRoute
@@ -413,6 +428,7 @@ export interface FileRoutesByTo {
   '/configuration/competition-types': typeof ConfigurationCompetitionTypesIndexRoute
   '/configuration/event-types': typeof ConfigurationEventTypesIndexRoute
   '/configuration/seasons': typeof ConfigurationSeasonsIndexRoute
+  '/dashboard/finances': typeof DashboardFinancesIndexRoute
   '/management/clubs': typeof ManagementClubsIndexRoute
   '/management/competitions': typeof ManagementCompetitionsIndexRoute
   '/management/edit-results': typeof ManagementEditResultsIndexRoute
@@ -424,6 +440,7 @@ export interface FileRoutesByTo {
   '/management/salary-rates': typeof ManagementSalaryRatesIndexRoute
   '/management/users': typeof ManagementUsersIndexRoute
   '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
+  '/management/players/$playerId/transfers': typeof ManagementPlayersPlayerIdTransfersRoute
   '/management/fixtures/cup': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league': typeof ManagementFixturesLeagueIndexRoute
   '/management/fixtures/post-season': typeof ManagementFixturesPostSeasonIndexRoute
@@ -466,6 +483,7 @@ export interface FileRoutesById {
   '/configuration/competition-types/': typeof ConfigurationCompetitionTypesIndexRoute
   '/configuration/event-types/': typeof ConfigurationEventTypesIndexRoute
   '/configuration/seasons/': typeof ConfigurationSeasonsIndexRoute
+  '/dashboard/finances/': typeof DashboardFinancesIndexRoute
   '/management/clubs/': typeof ManagementClubsIndexRoute
   '/management/competitions/': typeof ManagementCompetitionsIndexRoute
   '/management/edit-results/': typeof ManagementEditResultsIndexRoute
@@ -477,6 +495,7 @@ export interface FileRoutesById {
   '/management/salary-rates/': typeof ManagementSalaryRatesIndexRoute
   '/management/users/': typeof ManagementUsersIndexRoute
   '/management/finances/club/$clubId': typeof ManagementFinancesClubClubIdRoute
+  '/management/players/$playerId/transfers': typeof ManagementPlayersPlayerIdTransfersRoute
   '/management/fixtures/cup/': typeof ManagementFixturesCupIndexRoute
   '/management/fixtures/league/': typeof ManagementFixturesLeagueIndexRoute
   '/management/fixtures/post-season/': typeof ManagementFixturesPostSeasonIndexRoute
@@ -520,6 +539,7 @@ export interface FileRouteTypes {
     | '/configuration/competition-types'
     | '/configuration/event-types'
     | '/configuration/seasons'
+    | '/dashboard/finances'
     | '/management/clubs'
     | '/management/competitions'
     | '/management/edit-results'
@@ -531,6 +551,7 @@ export interface FileRouteTypes {
     | '/management/salary-rates'
     | '/management/users'
     | '/management/finances/club/$clubId'
+    | '/management/players/$playerId/transfers'
     | '/management/fixtures/cup'
     | '/management/fixtures/league'
     | '/management/fixtures/post-season'
@@ -572,6 +593,7 @@ export interface FileRouteTypes {
     | '/configuration/competition-types'
     | '/configuration/event-types'
     | '/configuration/seasons'
+    | '/dashboard/finances'
     | '/management/clubs'
     | '/management/competitions'
     | '/management/edit-results'
@@ -583,6 +605,7 @@ export interface FileRouteTypes {
     | '/management/salary-rates'
     | '/management/users'
     | '/management/finances/club/$clubId'
+    | '/management/players/$playerId/transfers'
     | '/management/fixtures/cup'
     | '/management/fixtures/league'
     | '/management/fixtures/post-season'
@@ -624,6 +647,7 @@ export interface FileRouteTypes {
     | '/configuration/competition-types/'
     | '/configuration/event-types/'
     | '/configuration/seasons/'
+    | '/dashboard/finances/'
     | '/management/clubs/'
     | '/management/competitions/'
     | '/management/edit-results/'
@@ -635,6 +659,7 @@ export interface FileRouteTypes {
     | '/management/salary-rates/'
     | '/management/users/'
     | '/management/finances/club/$clubId'
+    | '/management/players/$playerId/transfers'
     | '/management/fixtures/cup/'
     | '/management/fixtures/league/'
     | '/management/fixtures/post-season/'
@@ -677,6 +702,7 @@ export interface RootRouteChildren {
   ConfigurationCompetitionTypesIndexRoute: typeof ConfigurationCompetitionTypesIndexRoute
   ConfigurationEventTypesIndexRoute: typeof ConfigurationEventTypesIndexRoute
   ConfigurationSeasonsIndexRoute: typeof ConfigurationSeasonsIndexRoute
+  DashboardFinancesIndexRoute: typeof DashboardFinancesIndexRoute
   ManagementClubsIndexRoute: typeof ManagementClubsIndexRoute
   ManagementCompetitionsIndexRoute: typeof ManagementCompetitionsIndexRoute
   ManagementEditResultsIndexRoute: typeof ManagementEditResultsIndexRoute
@@ -688,6 +714,7 @@ export interface RootRouteChildren {
   ManagementSalaryRatesIndexRoute: typeof ManagementSalaryRatesIndexRoute
   ManagementUsersIndexRoute: typeof ManagementUsersIndexRoute
   ManagementFinancesClubClubIdRoute: typeof ManagementFinancesClubClubIdRoute
+  ManagementPlayersPlayerIdTransfersRoute: typeof ManagementPlayersPlayerIdTransfersRoute
   ManagementFixturesCupIndexRoute: typeof ManagementFixturesCupIndexRoute
   ManagementFixturesLeagueIndexRoute: typeof ManagementFixturesLeagueIndexRoute
   ManagementFixturesPostSeasonIndexRoute: typeof ManagementFixturesPostSeasonIndexRoute
@@ -883,6 +910,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementClubsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/finances/': {
+      id: '/dashboard/finances/'
+      path: '/dashboard/finances'
+      fullPath: '/dashboard/finances'
+      preLoaderRoute: typeof DashboardFinancesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/configuration/seasons/': {
       id: '/configuration/seasons/'
       path: '/configuration/seasons'
@@ -1009,6 +1043,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementFixturesCupIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/management/players/$playerId/transfers': {
+      id: '/management/players/$playerId/transfers'
+      path: '/management/players/$playerId/transfers'
+      fullPath: '/management/players/$playerId/transfers'
+      preLoaderRoute: typeof ManagementPlayersPlayerIdTransfersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/management/finances/club/$clubId': {
       id: '/management/finances/club/$clubId'
       path: '/management/finances/club/$clubId'
@@ -1086,6 +1127,7 @@ const rootRouteChildren: RootRouteChildren = {
     ConfigurationCompetitionTypesIndexRoute,
   ConfigurationEventTypesIndexRoute: ConfigurationEventTypesIndexRoute,
   ConfigurationSeasonsIndexRoute: ConfigurationSeasonsIndexRoute,
+  DashboardFinancesIndexRoute: DashboardFinancesIndexRoute,
   ManagementClubsIndexRoute: ManagementClubsIndexRoute,
   ManagementCompetitionsIndexRoute: ManagementCompetitionsIndexRoute,
   ManagementEditResultsIndexRoute: ManagementEditResultsIndexRoute,
@@ -1097,6 +1139,8 @@ const rootRouteChildren: RootRouteChildren = {
   ManagementSalaryRatesIndexRoute: ManagementSalaryRatesIndexRoute,
   ManagementUsersIndexRoute: ManagementUsersIndexRoute,
   ManagementFinancesClubClubIdRoute: ManagementFinancesClubClubIdRoute,
+  ManagementPlayersPlayerIdTransfersRoute:
+    ManagementPlayersPlayerIdTransfersRoute,
   ManagementFixturesCupIndexRoute: ManagementFixturesCupIndexRoute,
   ManagementFixturesLeagueIndexRoute: ManagementFixturesLeagueIndexRoute,
   ManagementFixturesPostSeasonIndexRoute:

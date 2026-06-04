@@ -5,8 +5,10 @@ import { DataTable } from '@/components/table/data-table'
 import { createColumnHelper } from '@tanstack/react-table'
 import { DefaultHeader } from '@/components/table/table-header'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DollarSign, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, AlertTriangle } from 'lucide-react'
+import { formatCurrency } from '@/lib/finance-utils'
 import type { ClubSeasonBalance, SeasonHalf } from '@/types'
 
 interface OverviewTabProps {
@@ -14,15 +16,6 @@ interface OverviewTabProps {
   seasonHalves: SeasonHalf[]
   selectedSeasonHalfId: string
   onSeasonHalfChange: (id: string) => void
-}
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
 }
 
 export function OverviewTab({
@@ -49,6 +42,11 @@ export function OverviewTab({
       { income: 0, expenses: 0, salaries: 0 }
     )
   }, [balances])
+
+  const deficitClubs = useMemo(
+    () => balances.filter((b) => b.endingBalance < 0).sort((a, b) => a.endingBalance - b.endingBalance),
+    [balances]
+  )
 
   const getSeasonHalfLabel = (half: SeasonHalf) => {
     const halfLabel = half.halfType === 'FIRST_HALF' ? t('labels.firstHalf') : t('labels.secondHalf')
@@ -90,6 +88,40 @@ export function OverviewTab({
           return (
             <Badge variant={value >= 0 ? 'default' : 'destructive'} className="font-mono">
               {formatCurrency(value)}
+            </Badge>
+          )
+        },
+      }),
+      columnHelper.accessor('futureInstallmentsReceivable', {
+        header: (info) => <DefaultHeader info={info} name={t('overview.futureReceivable')} type="number" />,
+        cell: (info) => {
+          const value = info.getValue()
+          if (value == null) return <span className="text-muted-foreground">—</span>
+          return <span className="text-green-600 font-medium">+{formatCurrency(value)}</span>
+        },
+      }),
+      columnHelper.accessor('futureInstallmentsPayable', {
+        header: (info) => <DefaultHeader info={info} name={t('overview.futurePayable')} type="number" />,
+        cell: (info) => {
+          const value = info.getValue()
+          if (value == null) return <span className="text-muted-foreground">—</span>
+          return <span className="text-red-600 font-medium">-{formatCurrency(value)}</span>
+        },
+      }),
+      columnHelper.display({
+        id: 'projectedBalance',
+        header: (info) => <DefaultHeader info={info} name={t('overview.projectedBalance')} type="number" />,
+        cell: ({ row }) => {
+          const b = row.original
+          const projected =
+            b.projectedBalance ??
+            (b.futureInstallmentsReceivable != null && b.futureInstallmentsPayable != null
+              ? b.endingBalance + b.futureInstallmentsReceivable - b.futureInstallmentsPayable
+              : null)
+          if (projected == null) return <span className="text-muted-foreground">—</span>
+          return (
+            <Badge variant={projected >= 0 ? 'outline' : 'destructive'} className="font-mono">
+              {formatCurrency(projected)}
             </Badge>
           )
         },
@@ -150,6 +182,29 @@ export function OverviewTab({
           </div>
         </div>
       </div>
+
+      {/* Deficit Alert */}
+      {deficitClubs.length > 0 && (
+        <Alert variant="destructive" className="border-destructive/50">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{t('overview.deficitsTitle')} ({deficitClubs.length})</AlertTitle>
+          <AlertDescription>
+            <ul className="mt-2 space-y-1">
+              {deficitClubs.map((b) => (
+                <li key={b.clubId} className="flex justify-between text-sm">
+                  <span
+                    className="cursor-pointer hover:underline"
+                    onClick={() => navigate({ to: '/management/finances/club/$clubId', params: { clubId: b.clubId } })}
+                  >
+                    {b.club?.name || b.clubId}
+                  </span>
+                  <span className="font-mono font-semibold">{formatCurrency(b.endingBalance)}</span>
+                </li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Balances Table */}
       <div>

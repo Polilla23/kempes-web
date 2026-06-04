@@ -143,7 +143,42 @@ export class FinanceService {
   }
 
   async getSeasonHalfBalances(seasonHalfId: string) {
-    return await this.financeRepository.findAllBalancesBySeasonHalf(seasonHalfId)
+    const balances = await this.financeRepository.findAllBalancesBySeasonHalf(seasonHalfId)
+    if (!balances || balances.length === 0) return []
+
+    const clubIds = balances.map((b: any) => b.clubId)
+
+    const [receivableInstallments, payableInstallments] = await Promise.all([
+      this.prisma.transferInstallment.findMany({
+        where: { status: { in: ['PENDING', 'DUE'] }, transfer: { fromClubId: { in: clubIds } } },
+        select: { amount: true, transfer: { select: { fromClubId: true } } },
+      }),
+      this.prisma.transferInstallment.findMany({
+        where: { status: { in: ['PENDING', 'DUE'] }, transfer: { toClubId: { in: clubIds } } },
+        select: { amount: true, transfer: { select: { toClubId: true } } },
+      }),
+    ])
+
+    const receivableMap = new Map<string, number>()
+    for (const inst of receivableInstallments) {
+      const cid = inst.transfer.fromClubId
+      receivableMap.set(cid, (receivableMap.get(cid) ?? 0) + inst.amount)
+    }
+
+    const payableMap = new Map<string, number>()
+    for (const inst of payableInstallments) {
+      const cid = inst.transfer.toClubId
+      payableMap.set(cid, (payableMap.get(cid) ?? 0) + inst.amount)
+    }
+
+    return balances.map((b: any) => ({
+      ...b,
+      futureInstallmentsReceivable: receivableMap.get(b.clubId) ?? 0,
+      futureInstallmentsPayable: payableMap.get(b.clubId) ?? 0,
+      projectedBalance: b.endingBalance
+        + (receivableMap.get(b.clubId) ?? 0)
+        - (payableMap.get(b.clubId) ?? 0),
+    }))
   }
 
   async initializeClubBalance(clubId: string, seasonHalfId: string, startingBalance: number = 0) {
@@ -488,6 +523,279 @@ export class FinanceService {
       clubsProcessed: details.length,
       totalSalariesPaid,
       details,
+    }
+  }
+
+  // ==================== Salary Preview ====================
+
+  async getSalariesPreview(seasonHalfId?: string) {
+    let targetId = seasonHalfId
+    if (!targetId) {
+      const active = await this.seasonHalfRepository.findActive()
+      if (!active) throw new Error('No active season half found')
+      targetId = active.id
+    }
+
+    // Mismo check de idempotencia que processSalaries
+    const existing = await this.financeRepository.findAllTransactions({
+      seasonHalfId: targetId,
+      type: 'SALARY_EXPENSE',
+    })
+    const alreadyProcessed = (existing?.length ?? 0) > 0
+
+    const players = await this.prisma.player.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        fullName: true,
+        salary: true,
+        actualClubId: true,
+        ownerClubId: true,
+        overall: true,
+        position: true,
+        actualClub: { select: { id: true, name: true, logo: true } },
+        ownerClub: { select: { id: true, name: true, logo: true } },
+      },
+    })
+
+    const activeLoans = await this.prisma.transfer.findMany({
+      where: {
+        type: { in: [TransferType.LOAN_OUT, TransferType.LOAN_IN] },
+        status: TransferStatus.ACTIVE,
+      },
+      select: { playerId: true, toClubId: true, fromClubId: true, loanSalaryPercentage: true },
+    })
+    const loanMap = new Map(activeLoans.map((l) => [l.playerId, l]))
+
+    type ClubEntry = {
+      clubId: string
+      clubName: string
+      clubLogo?: string
+      totalAmount: number
+      players: Array<{
+        playerId: string
+        fullName: string
+        overall: number | null
+        salary: number
+        loanSalaryPercentage: number
+        amountToPay: number
+        isOnLoan: boolean
+        position?: string
+      }>
+    }
+    const clubMap = new Map<string, ClubEntry>()
+
+    const getOrCreate = (club: { id: string; name: string; logo?: string | null }): ClubEntry => {
+      if (!clubMap.has(club.id)) {
+        clubMap.set(club.id, {
+          clubId: club.id,
+          clubName: club.name,
+          clubLogo: club.logo ?? undefined,
+          totalAmount: 0,
+          players: [],
+        })
+      }
+      return clubMap.get(club.id)!
+    }
+
+    for (const player of players) {
+      const loan = loanMap.get(player.id)
+      const percentage = loan ? (loan.loanSalaryPercentage ?? 100) : 100
+      const amountToPay = (player.salary * percentage) / 100
+
+      const entry = getOrCreate(player.actualClub)
+      entry.players.push({
+        playerId: player.id,
+        fullName: player.fullName,
+        overall: player.overall,
+        salary: player.salary,
+        loanSalaryPercentage: percentage,
+        amountToPay,
+        isOnLoan: !!loan,
+        position: player.position ?? undefined,
+      })
+      entry.totalAmount += amountToPay
+
+      // Si el dueño paga la parte restante
+      if (loan && percentage < 100) {
+        const ownerPortion = (player.salary * (100 - percentage)) / 100
+        const ownerEntry = getOrCreate(player.ownerClub)
+        ownerEntry.players.push({
+          playerId: player.id,
+          fullName: player.fullName,
+          overall: player.overall,
+          salary: player.salary,
+          loanSalaryPercentage: 100 - percentage,
+          amountToPay: ownerPortion,
+          isOnLoan: true,
+          position: player.position ?? undefined,
+        })
+        ownerEntry.totalAmount += ownerPortion
+      }
+    }
+
+    const clubs = Array.from(clubMap.values())
+    return {
+      seasonHalfId: targetId,
+      alreadyProcessed,
+      clubs,
+      totalAmount: clubs.reduce((s, c) => s + c.totalAmount, 0),
+      totalClubs: clubs.length,
+    }
+  }
+
+  // ==================== Season Financial Report ====================
+
+  async getSeasonFinancialReport(seasonId: string) {
+    const season = await this.prisma.season.findUnique({ where: { id: seasonId } })
+    if (!season) throw new Error(`Season ${seasonId} not found`)
+
+    const seasonHalves = await this.prisma.seasonHalf.findMany({
+      where: { seasonId },
+      orderBy: { halfType: 'asc' },
+    })
+
+    if (seasonHalves.length === 0) {
+      return {
+        seasonId,
+        seasonNumber: season.number,
+        totalPrizesPaid: 0,
+        totalSalariesPaid: 0,
+        totalTransferVolume: 0,
+        clubs: [],
+        topEarner: null,
+        topSpender: null,
+        highestNetBalance: null,
+        lowestNetBalance: null,
+        prizesByCompetition: [],
+        deficitClubs: [],
+      }
+    }
+
+    const halfIds = seasonHalves.map((h) => h.id)
+
+    // 1. Agregar ClubSeasonBalance por club
+    const allBalances = await this.prisma.clubSeasonBalance.findMany({
+      where: { seasonHalfId: { in: halfIds } },
+      include: {
+        club: { select: { id: true, name: true, logo: true } },
+        seasonHalf: true,
+      },
+      orderBy: { seasonHalf: { halfType: 'asc' } },
+    })
+
+    type ClubAgg = {
+      clubId: string
+      clubName: string
+      clubLogo?: string
+      totalIncome: number
+      totalExpenses: number
+      totalSalaries: number
+      startingBalance: number
+      endingBalance: number
+    }
+    const aggMap = new Map<string, ClubAgg>()
+
+    for (const b of allBalances) {
+      if (!aggMap.has(b.clubId)) {
+        aggMap.set(b.clubId, {
+          clubId: b.clubId,
+          clubName: b.club.name,
+          clubLogo: b.club.logo ?? undefined,
+          totalIncome: 0,
+          totalExpenses: 0,
+          totalSalaries: 0,
+          startingBalance: b.startingBalance,
+          endingBalance: b.endingBalance,
+        })
+      }
+      const agg = aggMap.get(b.clubId)!
+      agg.totalIncome += b.totalIncome
+      agg.totalExpenses += b.totalExpenses
+      agg.totalSalaries += b.totalSalaries
+      if (b.seasonHalf.halfType === 'FIRST_HALF') agg.startingBalance = b.startingBalance
+      if (b.seasonHalf.halfType === 'SECOND_HALF') agg.endingBalance = b.endingBalance
+    }
+
+    const clubs = Array.from(aggMap.values()).map((a) => ({
+      ...a,
+      netBalance: a.totalIncome - a.totalExpenses - a.totalSalaries,
+    }))
+
+    // 2. Aggregates via Prisma aggregate (paralelo)
+    const [prizeAgg, salaryAgg, transferAgg] = await Promise.all([
+      this.prisma.financialTransaction.aggregate({
+        _sum: { amount: true },
+        where: { seasonHalfId: { in: halfIds }, type: 'PRIZE_INCOME' },
+      }),
+      this.prisma.financialTransaction.aggregate({
+        _sum: { amount: true },
+        where: { seasonHalfId: { in: halfIds }, type: 'SALARY_EXPENSE' },
+      }),
+      this.prisma.financialTransaction.aggregate({
+        _sum: { amount: true },
+        where: { seasonHalfId: { in: halfIds }, type: 'TRANSFER_EXPENSE' },
+      }),
+    ])
+
+    // 3. Rankings (sin queries adicionales)
+    const byIncome = [...clubs].sort((a, b) => b.totalIncome - a.totalIncome)
+    const byExpenses = [...clubs].sort((a, b) => b.totalExpenses - a.totalExpenses)
+    const byNet = [...clubs].sort((a, b) => b.netBalance - a.netBalance)
+
+    const rankFirst = (arr: typeof clubs, key: keyof typeof clubs[0]) =>
+      arr[0] ? { clubId: arr[0].clubId, clubName: arr[0].clubName, amount: arr[0][key] as number } : null
+
+    // 4. Premios por competición (parse de description)
+    const prizeTxs = await this.prisma.financialTransaction.findMany({
+      where: { seasonHalfId: { in: halfIds }, type: 'PRIZE_INCOME' },
+      select: { clubId: true, amount: true, description: true },
+    })
+    const clubNameMap = new Map(clubs.map((c) => [c.clubId, c.clubName]))
+    const compMap = new Map<string, { totalPaid: number; recipients: Map<string, number> }>()
+
+    for (const tx of prizeTxs) {
+      const parts = tx.description.split(' - ')
+      const compName =
+        parts.length > 1 ? parts.slice(1).join(' - ').trim() : tx.description || 'Sin competencia'
+      if (!compMap.has(compName)) compMap.set(compName, { totalPaid: 0, recipients: new Map() })
+      const c = compMap.get(compName)!
+      c.totalPaid += tx.amount
+      c.recipients.set(tx.clubId, (c.recipients.get(tx.clubId) ?? 0) + tx.amount)
+    }
+
+    const prizesByCompetition = Array.from(compMap.entries()).map(([name, d]) => ({
+      competitionName: name,
+      totalPaid: d.totalPaid,
+      recipients: Array.from(d.recipients.entries()).map(([clubId, amount]) => ({
+        clubId,
+        clubName: clubNameMap.get(clubId) ?? 'Unknown',
+        amount,
+      })),
+    }))
+
+    return {
+      seasonId,
+      seasonNumber: season.number,
+      totalPrizesPaid: prizeAgg._sum.amount ?? 0,
+      totalSalariesPaid: Math.abs(salaryAgg._sum.amount ?? 0),
+      totalTransferVolume: Math.abs(transferAgg._sum.amount ?? 0),
+      clubs,
+      topEarner: rankFirst(byIncome, 'totalIncome'),
+      topSpender: rankFirst(byExpenses, 'totalExpenses'),
+      highestNetBalance: rankFirst(byNet, 'netBalance'),
+      lowestNetBalance:
+        byNet.length > 0
+          ? {
+              clubId: byNet[byNet.length - 1].clubId,
+              clubName: byNet[byNet.length - 1].clubName,
+              amount: byNet[byNet.length - 1].netBalance,
+            }
+          : null,
+      prizesByCompetition,
+      deficitClubs: clubs
+        .filter((c) => c.endingBalance < 0)
+        .map((c) => ({ clubId: c.clubId, clubName: c.clubName, balance: c.endingBalance })),
     }
   }
 

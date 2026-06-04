@@ -435,6 +435,9 @@ export interface ClubSeasonBalance {
   totalExpenses: number
   endingBalance: number
   totalSalaries: number
+  futureInstallmentsReceivable?: number
+  futureInstallmentsPayable?: number
+  projectedBalance?: number
   club?: {
     id: string
     name: string
@@ -629,6 +632,79 @@ export interface ProcessSalariesResponse {
     totalSalary: number
     playerCount: number
   }>
+}
+
+export interface SalaryProcessingPreviewPlayer {
+  playerId: string
+  playerName: string
+  overall: number | null
+  salary: number
+  salaryStatus: 'ACTIVE' | 'LOAN_PARTIAL'
+  loanPercentage?: number
+  amountToPay: number
+}
+
+export interface SalaryProcessingPreviewClub {
+  clubId: string
+  clubName: string
+  playerCount: number
+  grossSalary: number
+  loanAdjustments: number
+  finalSalary: number
+  players: SalaryProcessingPreviewPlayer[]
+}
+
+export interface SalaryProcessingPreview {
+  seasonHalfId: string
+  clubsToProcess: number
+  totalSalaryAmount: number
+  averagePerClub: number
+  clubs: SalaryProcessingPreviewClub[]
+}
+
+export interface SalaryProcessingPreviewResponse {
+  preview?: SalaryProcessingPreview
+  message?: string
+}
+
+export interface SeasonFinancialReportClub {
+  clubId: string
+  clubName: string
+  clubLogo?: string
+  balance?: number
+  amount?: number
+}
+
+export interface SeasonFinancialReportPrizeClub {
+  clubName: string
+  position: number
+  amount: number
+}
+
+export interface SeasonFinancialReportCompetitionPrize {
+  competitionName: string
+  totalPrizeAmount: number
+  clubs: SeasonFinancialReportPrizeClub[]
+}
+
+export interface SeasonFinancialReport {
+  seasonId: string
+  seasonNumber: number
+  totalTransferVolume: number
+  totalPrizesPaid: number
+  totalSalariesPaid: number
+  clubsInDeficit: number
+  richestClub: SeasonFinancialReportClub | null
+  biggestSpender: SeasonFinancialReportClub | null
+  biggestSeller: SeasonFinancialReportClub | null
+  biggestPayroll: SeasonFinancialReportClub | null
+  prizesByCompetition: SeasonFinancialReportCompetitionPrize[]
+  deficitClubs: SeasonFinancialReportClub[]
+}
+
+export interface SeasonFinancialReportResponse {
+  report?: SeasonFinancialReport
+  message?: string
 }
 
 export interface UpdateInstallmentStatusesResponse {

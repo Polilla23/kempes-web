@@ -81,6 +81,19 @@ export class FinanceMapper {
     return balances.map((b) => this.toBalanceDTO(b))
   }
 
+  static toBalanceWithProjectionDTO(balance: BalanceWithRelations): ClubSeasonBalanceDTO {
+    return {
+      ...this.toBalanceDTO(balance),
+      futureInstallmentsReceivable: balance.futureInstallmentsReceivable ?? 0,
+      futureInstallmentsPayable: balance.futureInstallmentsPayable ?? 0,
+      projectedBalance: balance.projectedBalance ?? 0,
+    }
+  }
+
+  static toBalanceWithProjectionDTOArray(balances: BalanceWithRelations[]): ClubSeasonBalanceDTO[] {
+    return balances.map((b) => this.toBalanceWithProjectionDTO(b))
+  }
+
   // ==================== Prize Mappers ====================
 
   static toPrizeDTO(prize: PrizeWithRelations): CompetitionPrizeDTO {

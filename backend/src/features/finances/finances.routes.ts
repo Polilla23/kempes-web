@@ -110,11 +110,25 @@ export const financeRoutes = async (fastify: FastifyInstance) => {
     handler: financeController.recordBonus.bind(financeController),
   })
 
+  // ==================== Salary Preview ====================
+  fastify.get('/salaries/preview', {
+    preHandler: [fastify.authenticate],
+    schema: financesSchemas.getSalariesPreview,
+    handler: financeController.getSalariesPreview.bind(financeController),
+  })
+
   // ==================== Salary Processing ====================
   fastify.post('/salaries/process', {
     preHandler: [fastify.authenticate],
     schema: financesSchemas.processSalaries,
     handler: financeController.processSalaries.bind(financeController),
+  })
+
+  // ==================== Season Financial Report ====================
+  fastify.get('/report/season/:seasonId', {
+    preHandler: [fastify.authenticate],
+    schema: financesSchemas.getSeasonFinancialReport,
+    handler: financeController.getSeasonFinancialReport.bind(financeController),
   })
 
   // ==================== Financial Report ====================

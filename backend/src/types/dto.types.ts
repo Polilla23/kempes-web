@@ -347,6 +347,9 @@ export type ClubSeasonBalanceDTO = {
   totalExpenses: number
   endingBalance: number
   totalSalaries: number
+  futureInstallmentsReceivable?: number
+  futureInstallmentsPayable?: number
+  projectedBalance?: number
   club?: {
     id: string
     name: string

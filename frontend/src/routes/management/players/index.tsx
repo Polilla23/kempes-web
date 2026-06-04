@@ -11,11 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Ellipsis, Pencil, Trash2 } from 'lucide-react'
+import { Ellipsis, Pencil, Trash2, History } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PlayerService } from '@/services/player.service'
 import type { Club, Player } from '@/types'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo } from 'react'
 import CreatePlayerForm from './create-player-form'
 import { createColumnHelper } from '@tanstack/react-table'
@@ -31,6 +31,7 @@ export const Route = createFileRoute('/management/players/')({
 
 function PlayerManagement() {
   const { t } = useTranslation('players')
+  const navigate = useNavigate()
   const [players, setPlayers] = useState<Player[]>([])
   const [clubs, setClubs] = useState<Club[]>([])
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(true)
@@ -222,6 +223,12 @@ function PlayerManagement() {
                 <DropdownMenuContent>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditPlayer(player)}>
                     <Pencil className="size-4" /> {t('edit.action')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => navigate({ to: '/management/players/$playerId/transfers', params: { playerId: player.id } })}
+                  >
+                    <History className="size-4" /> Historial de transfers
                   </DropdownMenuItem>
                   <DropdownMenuItem className="cursor-pointer" onClick={() => handleDeletePlayer(player.id)}>
                     <Trash2 className="size-4 text-destructive" /> {t('delete.action')}

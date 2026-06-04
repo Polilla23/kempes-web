@@ -49,6 +49,16 @@ const balanceResponse = {
   },
 }
 
+const balanceWithProjectionResponse = {
+  type: 'object',
+  properties: {
+    ...balanceResponse.properties,
+    futureInstallmentsReceivable: { type: 'number' },
+    futureInstallmentsPayable: { type: 'number' },
+    projectedBalance: { type: 'number' },
+  },
+}
+
 const prizeResponse = {
   type: 'object',
   properties: {
@@ -238,7 +248,7 @@ export const financesSchemas: Record<string, FastifySchema> = {
 
   getSeasonHalfBalances: {
     summary: 'Get season half balances',
-    description: 'Get all club balances for a specific season half',
+    description: 'Get all club balances for a specific season half with projection fields',
     tags: ['Finances'],
     params: {
       type: 'object',
@@ -248,7 +258,7 @@ export const financesSchemas: Record<string, FastifySchema> = {
       },
     },
     response: {
-      200: arraySuccessResponse(balanceResponse),
+      200: arraySuccessResponse(balanceWithProjectionResponse),
       500: errorResponse,
     },
   },
@@ -457,6 +467,29 @@ export const financesSchemas: Record<string, FastifySchema> = {
   },
 
   // ==================== Salary Processing ====================
+  getSalariesPreview: {
+    summary: 'Preview salary processing',
+    description: 'Preview salary processing for a season half without executing it',
+    tags: ['Finances'],
+    querystring: {
+      type: 'object',
+      properties: {
+        seasonHalfId: { type: 'string', format: 'uuid' },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          data: { type: 'object', additionalProperties: true },
+          message: { type: 'string' },
+        },
+      },
+      500: errorResponse,
+    },
+  },
+
   processSalaries: {
     summary: 'Process salaries',
     description: 'Process salary payments for all clubs in a season half',
@@ -496,6 +529,32 @@ export const financesSchemas: Record<string, FastifySchema> = {
         },
       },
       400: errorResponse,
+      500: errorResponse,
+    },
+  },
+
+  // ==================== Season Financial Report ====================
+  getSeasonFinancialReport: {
+    summary: 'Get season financial report',
+    description: 'Get aggregated financial report for all clubs in a season',
+    tags: ['Finances'],
+    params: {
+      type: 'object',
+      required: ['seasonId'],
+      properties: {
+        seasonId: { type: 'string', format: 'uuid' },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          data: { type: 'object', additionalProperties: true },
+          message: { type: 'string' },
+        },
+      },
+      404: errorResponse,
       500: errorResponse,
     },
   },

@@ -10,7 +10,9 @@ import { InstallmentsTab } from './_components/installments-tab'
 import { SalariesTab } from './_components/salaries-tab'
 import { SeasonHalfService } from '@/services/season-half.service'
 import { FinanceService } from '@/services/finance.service'
-import type { SeasonHalf, ClubSeasonBalance, CompetitionPrize } from '@/types'
+import { SeasonService } from '@/services/season.service'
+import { SeasonReportTab } from './_components/season-report-tab'
+import type { SeasonHalf, ClubSeasonBalance, CompetitionPrize, Season } from '@/types'
 
 export const Route = createFileRoute('/management/finances/')({
   component: FinancesManagement,
@@ -24,6 +26,7 @@ function FinancesManagement() {
   const [selectedSeasonHalfId, setSelectedSeasonHalfId] = useState<string>('')
   const [balances, setBalances] = useState<ClubSeasonBalance[]>([])
   const [prizes, setPrizes] = useState<CompetitionPrize[]>([])
+  const [seasons, setSeasons] = useState<Season[]>([])
 
   const fetchSeasonHalves = async () => {
     try {
@@ -68,11 +71,20 @@ function FinancesManagement() {
     }
   }
 
+  const fetchSeasons = async () => {
+    try {
+      const response = await SeasonService.getSeasons()
+      setSeasons(response.seasons || [])
+    } catch (error) {
+      console.error('Error fetching seasons:', error)
+      setSeasons([])
+    }
+  }
+
   const loadData = async () => {
     setIsLoading(true)
     try {
-      await fetchSeasonHalves()
-      await fetchPrizes()
+      await Promise.all([fetchSeasonHalves(), fetchPrizes(), fetchSeasons()])
     } finally {
       setIsLoading(false)
     }
@@ -110,6 +122,7 @@ function FinancesManagement() {
             <TabsTrigger value="prizes">{t('tabs.prizes')}</TabsTrigger>
             <TabsTrigger value="installments">{t('tabs.installments')}</TabsTrigger>
             <TabsTrigger value="salaries">{t('tabs.salaries')}</TabsTrigger>
+            <TabsTrigger value="report">{t('tabs.report')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -141,6 +154,10 @@ function FinancesManagement() {
               onSeasonHalfChange={setSelectedSeasonHalfId}
               onRefresh={handleRefresh}
             />
+          </TabsContent>
+
+          <TabsContent value="report">
+            <SeasonReportTab seasons={seasons} />
           </TabsContent>
         </Tabs>
       </div>
